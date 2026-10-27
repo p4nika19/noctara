@@ -12,6 +12,22 @@ GlassPanel {
     signal navigate(string id)
     signal secondaryActivated(string id)
 
+    // Geometry of the destinations, so the pill's position is a plain binding: it follows resizes (the footer
+    // moves with the window height) and never depends on when delegates were created.
+    readonly property real itemHeight: Theme.space.controlHeight + Theme.space.md
+    readonly property real pillY: {
+        let index = destinations.findIndex(d => d.id === current)
+        if (index >= 0)
+            return Theme.space.md + index * itemHeight + (itemHeight - pill.height) / 2
+        index = footer.findIndex(d => d.id === current)
+        if (index >= 0)
+            return height - Theme.space.md - (footer.length - index) * itemHeight + (itemHeight - pill.height) / 2
+        return 0
+    }
+
+    property bool gliding: false
+    onCurrentChanged: gliding = true
+
     level: 0
     liquid: true
     radius: Theme.radius.lg
@@ -24,12 +40,15 @@ GlassPanel {
         required property var modelData
         readonly property bool selected: root.current === modelData.id
         width: root.width
-        height: Theme.space.controlHeight + Theme.space.md
+        height: root.itemHeight
 
         IconButton {
             anchors.centerIn: parent
             implicitWidth: Theme.space.controlHeight + Theme.space.xs
             implicitHeight: Theme.space.controlHeight + Theme.space.xxs
+            // The moving pill is the selection; a hover surface on the newly selected item would appear
+            // instantly and look like a second highlight while the pill is still on its way.
+            surface: !item.selected
             iconName: item.modelData.icon
             iconSize: Theme.space.iconSize
             iconColor: item.selected ? Theme.targetColors.accent : Theme.targetColors.iconSecondary
@@ -42,15 +61,6 @@ GlassPanel {
                 onTapped: root.secondaryActivated(item.modelData.id)
             }
         }
-        // RestoreNone: when the previous destination's binding deactivates it must not restore the value it
-        // had overwritten, or the pill jumps back to it depending on evaluation order.
-        Binding {
-            when: item.selected
-            restoreMode: Binding.RestoreNone
-            target: pill
-            property: "y"
-            value: item.parent.y + item.y + (item.height - pill.height) / 2
-        }
     }
 
     // Active item: lit glass with a light edge and an accent halo (no overshoot when it moves).
@@ -58,9 +68,18 @@ GlassPanel {
         id: pill
         visible: root.current.length > 0
         x: (root.width - width) / 2
+        y: root.pillY
         width: Theme.space.controlHeight + Theme.space.xs
         height: Theme.space.controlHeight + Theme.space.xxs
-        Behavior on y { NumberAnimation { duration: Theme.motion.slow; easing.type: Theme.motion.easingEmphasized } }
+        // Glide only when the selection changes; resizes and startup place it directly.
+        Behavior on y {
+            enabled: root.gliding
+            NumberAnimation {
+                duration: Theme.motion.slow
+                easing.type: Theme.motion.easingEmphasized
+                onRunningChanged: if (!running) root.gliding = false
+            }
+        }
 
         Shadow {
             anchors.fill: parent

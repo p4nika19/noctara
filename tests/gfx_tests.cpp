@@ -3,6 +3,7 @@
 #include "core/FileIo.hpp"
 #include "gfx/CrashSentinel.hpp"
 #include "gfx/FrameMonitor.hpp"
+#include "gfx/GpuProbe.hpp"
 #include "gfx/GraphicsPolicy.hpp"
 #include "gfx/QualityGovernor.hpp"
 
@@ -83,15 +84,33 @@ TEST_SUITE("gfx.policy")
         CHECK(probe.calls.empty());
     }
 
-    TEST_CASE("auto prefers OpenGL and falls back to Vulkan")
+    TEST_CASE("auto prefers Vulkan and falls back to OpenGL")
     {
         MockProbe probe;
         probe.results[Api::Vulkan] = gpu("GeForce");
-        const auto decision = decide({}, probe.function(), {});
+        probe.results[Api::OpenGL] = gpu("GeForce");
+        auto decision = decide({}, probe.function(), {});
         CHECK(decision.hardware);
         CHECK(decision.api == Api::Vulkan);
-        CHECK(probe.calls == std::vector<Api>{Api::OpenGL, Api::Vulkan});
+        CHECK(probe.calls == std::vector<Api>{Api::Vulkan});
         CHECK(decision.reason == Reason::Hardware);
+
+        MockProbe noVulkan;
+        noVulkan.results[Api::OpenGL] = gpu("Intel HD Graphics 4000", DeviceKind::Integrated, 0x8086);
+        decision = decide({}, noVulkan.function(), {});
+        CHECK(decision.api == Api::OpenGL);
+        CHECK(noVulkan.calls == std::vector<Api>{Api::Vulkan, Api::OpenGL});
+        CHECK_FALSE(decision.showNotice);  // Auto: no API was requested, so this is not a fallback
+    }
+
+    TEST_CASE("a CPU-only Vulkan (lavapipe) does not hide a real GPU behind OpenGL")
+    {
+        MockProbe probe;
+        probe.results[Api::Vulkan] = gpu("llvmpipe (LLVM 19.1.0, 256 bits)", DeviceKind::Cpu);
+        probe.results[Api::OpenGL] = gpu("AMD Radeon Graphics", DeviceKind::Integrated, 0x1002);
+        const auto decision = decide({}, probe.function(), {});
+        CHECK(decision.hardware);
+        CHECK(decision.api == Api::OpenGL);
     }
 
     TEST_CASE("an explicit API that fails falls back with a notice")
@@ -100,6 +119,7 @@ TEST_SUITE("gfx.policy")
         probe.results[Api::OpenGL] = gpu("Radeon");
         const auto decision = decide({.api = Api::Vulkan}, probe.function(), {});
         CHECK(decision.api == Api::OpenGL);
+        CHECK(probe.calls == std::vector<Api>{Api::Vulkan, Api::OpenGL});
         CHECK(decision.reason == Reason::ApiFallback);
         CHECK(decision.showNotice);
     }
@@ -354,5 +374,28 @@ TEST_SUITE("gfx.effects")
         const EffectsState state = resolveEffects(inputs);
         CHECK_FALSE(state.governed);
         CHECK(state.quality == 2);
+    }
+}
+
+TEST_SUITE("gfx.device")
+{
+    TEST_CASE("the GPU preference picks the first physical device of the wanted type")
+    {
+        const std::vector<DeviceKind> hybrid{DeviceKind::Cpu, DeviceKind::Integrated, DeviceKind::Discrete};
+        CHECK(preferredDeviceIndex(hybrid, DevicePreference::Auto) == -1);
+        CHECK(preferredDeviceIndex(hybrid, DevicePreference::Integrated) == 1);
+        CHECK(preferredDeviceIndex(hybrid, DevicePreference::Discrete) == 2);
+        CHECK(preferredDeviceIndex({DeviceKind::Discrete}, DevicePreference::Integrated) == -1);
+        CHECK(parseDevicePreference(QStringLiteral("discrete")) == DevicePreference::Discrete);
+        CHECK(parseDevicePreference(QStringLiteral("whatever")) == DevicePreference::Auto);
+    }
+
+    TEST_CASE("the chosen device index survives the probe cache")
+    {
+        ProbeResult result = gpu("GeForce");
+        result.api = Api::Vulkan;
+        result.deviceIndex = 2;
+        CHECK(ProbeResult::fromJson(result.toJson()).deviceIndex == 2);
+        CHECK(ProbeResult::fromJson(QJsonObject{}).deviceIndex == -1);
     }
 }

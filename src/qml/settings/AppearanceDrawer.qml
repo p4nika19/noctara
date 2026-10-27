@@ -23,8 +23,7 @@ FocusScope {
     ]
     readonly property string presetName: {
         const preset = SettingsUi.presets.find(p => p.id === SettingsUi.currentPreset)
-        //: Shown instead of a preset name while the theme follows the desktop colour scheme
-        return preset ? preset.name : qsTr("follows the system")
+        return preset ? preset.name : ""
     }
 
     visible: panel.opacity > 0
@@ -67,7 +66,7 @@ FocusScope {
                 }
                 Text {
                     width: parent.width
-                    //: %1 = preset name, or "custom"
+                    //: %1 = colour preset name (Auto, Midnight or Frost)
                     text: qsTr("Midnight Glass · %1").arg(root.presetName)
                     font: Theme.font.caption
                     color: Theme.colors.textTertiary

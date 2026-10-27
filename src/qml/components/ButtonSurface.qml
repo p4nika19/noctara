@@ -111,14 +111,12 @@ Item {
             GradientStop { position: 1.0; color: "transparent" }
         }
     }
-    // Inner highlight under the top edge (glass materials).
-    Rectangle {
+    // The top of the edge catches the light, following the rounded ends (glass materials).
+    RimLight {
+        anchors.fill: parent
+        radius: root.radius
         visible: root.material === "frosted" || root.material === "liquid" || root.primary
-        x: Math.min(root.radius, root.width / 2) * 0.8
-        y: Theme.space.hairline
-        width: Math.max(0, root.width - x * 2)
-        height: Theme.space.hairline
-        color: root.white(root.primary ? 0.5 : (root.material === "liquid" ? 0.45 : 0.16))
+        color: root.white(root.primary ? 0.45 : (root.material === "liquid" ? (root.dark ? 0.4 : 0.9) : (root.dark ? 0.16 : 0.8)))
     }
     // Liquid glass: the rim darkens toward the lower edge, as light bends through a thick lens.
     Rectangle {

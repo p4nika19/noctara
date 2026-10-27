@@ -5,8 +5,8 @@ import Noctara
 // Floating glass surface. level: 0 base, 1 raised, 2 overlay (drawers, popups).
 //
 // Blur styles sample the window's shared blurred backdrop (BackdropBlur.qml) exactly behind the panel, cut to
-// the rounded rectangle, with a saturation/brightness lift and faint grain; the veil, sheen, light edge and
-// inner highlight are drawn on top. Liquid Glass is opt-in per surface (`liquid`): only a few prominent
+// the rounded rectangle, with a saturation/brightness lift and faint grain; the veil, sheen and the light
+// edge (lit at the top, RimLight.qml) are drawn on top. Liquid Glass is opt-in per surface (`liquid`): only a few prominent
 // surfaces (navigation rail, drawers, popovers, toasts, the player bar) bend light, everything else uses the
 // frosted look over the same blurred texture. Solid style, reduce transparency and the software renderer use
 // opaque surfaces. Shadows exist on the GPU path only.
@@ -86,14 +86,11 @@ Item {
             GradientStop { position: 0.38; color: "transparent" }
         }
     }
-    // Inner highlight along the straight part of the top edge (never into the rounded corners).
-    Rectangle {
-        x: Math.min(root.radius, root.width / 2)
-        y: Theme.space.hairline
-        width: Math.max(0, root.width - x * 2)
-        height: Theme.space.hairline
-        visible: root.translucent && width > 0
-        color: Theme.colors.rimHighlight
+    // The top of the edge catches the light, following the rounded corners (Liquid Glass lights its own rim).
+    RimLight {
+        anchors.fill: parent
+        radius: root.radius
+        visible: root.translucent && !root.liquidActive
     }
     Item {
         id: contentItem

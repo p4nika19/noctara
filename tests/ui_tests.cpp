@@ -110,8 +110,8 @@ TEST_SUITE("ui.presets")
         i18n::LanguageManager languages(store);
         ui::SettingsController controller(store, config, languages);
 
-        CHECK(controller.presets().size() == 2);
-        CHECK(controller.currentPreset().isEmpty());  // the default theme mode follows the system
+        CHECK(controller.presets().size() == 3);
+        CHECK(controller.currentPreset() == QStringLiteral("auto"));  // the default theme mode follows the system
 
         CHECK(controller.setValue(QStringLiteral("appearance.glass.buttons"), QStringLiteral("liquid")).isEmpty());
         controller.applyPreset(QStringLiteral("frost"));
@@ -123,7 +123,7 @@ TEST_SUITE("ui.presets")
         controller.applyPreset(QStringLiteral("midnight"));
         CHECK(controller.currentPreset() == QStringLiteral("midnight"));
         CHECK(controller.setValue(QStringLiteral("appearance.theme.mode"), QStringLiteral("system")).isEmpty());
-        CHECK(controller.currentPreset().isEmpty());
+        CHECK(controller.currentPreset() == QStringLiteral("auto"));
 
         const QStringList drawerKeys{QStringLiteral("appearance.glow.intensity"),
                                      QStringLiteral("appearance.glass.buttons")};

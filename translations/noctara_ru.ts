@@ -88,13 +88,7 @@
 <context>
     <name>AppearanceDrawer</name>
     <message>
-        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+27"/>
-        <source>follows the system</source>
-        <extracomment>Shown instead of a preset name while the theme follows the desktop colour scheme</extracomment>
-        <translation>как в системе</translation>
-    </message>
-    <message>
-        <location line="+19"/>
+        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+45"/>
         <location line="+17"/>
         <source>Appearance</source>
         <translation>Оформление</translation>
@@ -102,7 +96,7 @@
     <message>
         <location line="+8"/>
         <source>Midnight Glass · %1</source>
-        <extracomment>%1 = preset name, or &quot;custom&quot;</extracomment>
+        <extracomment>%1 = colour preset name (Auto, Midnight or Frost)</extracomment>
         <translation>Midnight Glass · %1</translation>
     </message>
     <message>
@@ -130,13 +124,13 @@
     </message>
     <message>
         <location line="+11"/>
-        <source>A preset only changes the colour scheme; materials, shapes and layout stay as they are.</source>
-        <translation>Пресет меняет только цветовую схему: материалы, формы и раскладка остаются прежними.</translation>
+        <source>Auto follows the desktop: Midnight while it is dark, Frost while it is light.</source>
+        <translation>«Авто» следует за рабочим столом: Midnight, когда он тёмный, и Frost, когда светлый.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>The colour scheme follows the system. Pick a preset to fix it.</source>
-        <translation>Цветовая схема следует за системой. Выберите пресет, чтобы закрепить её.</translation>
+        <source>A preset only changes the colour scheme; materials, shapes and layout stay as they are.</source>
+        <translation>Пресет меняет только цветовую схему: материалы, формы и раскладка остаются прежними.</translation>
     </message>
 </context>
 <context>
@@ -195,7 +189,7 @@
         <translation>Автоматически заменено на «%1», чтобы анимация оставалась плавной.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>Reduce transparency is on, so surfaces are opaque.</source>
         <translation>Включено «Уменьшить прозрачность», поэтому поверхности непрозрачные.</translation>
     </message>
@@ -652,7 +646,7 @@
 <context>
     <name>NavRail</name>
     <message>
-        <location filename="../src/qml/components/NavRail.qml" line="+20"/>
+        <location filename="../src/qml/components/NavRail.qml" line="+36"/>
         <source>Navigation</source>
         <translation>Навигация</translation>
     </message>
@@ -830,6 +824,14 @@
         <location line="+4"/>
         <source>Inactive: the power source cannot be detected (UPower is not running). Choose Always to save energy anyway.</source>
         <translation>Сейчас выключено: не удаётся определить источник питания (служба UPower не запущена). Выберите «Всегда», чтобы всё равно экономить энергию.</translation>
+    </message>
+</context>
+<context>
+    <name>Presets</name>
+    <message>
+        <location filename="../src/ui/AppearancePresets.cpp" line="+21"/>
+        <source>Auto</source>
+        <translation>Авто</translation>
     </message>
 </context>
 <context>
@@ -1794,7 +1796,7 @@
         <translation>Результаты поиска</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+16"/>
         <source>Reset page</source>
         <translation>Сбросить страницу</translation>
     </message>
@@ -1809,7 +1811,7 @@
         <translation>Перезапустить</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+44"/>
         <source>No settings match “%1”.</source>
         <translation>Нет настроек, подходящих под «%1».</translation>
     </message>
@@ -1817,7 +1819,7 @@
 <context>
     <name>Skeleton</name>
     <message>
-        <location filename="../src/qml/components/Skeleton.qml" line="+12"/>
+        <location filename="../src/qml/components/Skeleton.qml" line="+16"/>
         <source>Loading</source>
         <translation>Загрузка</translation>
     </message>

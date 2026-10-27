@@ -26,6 +26,9 @@ struct BootstrapOptions {
 [[nodiscard]] GraphicsDecision bootstrapGraphics(const settings::SettingsStore& settings, CrashSentinel& sentinel,
                                                  const BootstrapOptions& options);
 
+// Per-window graphics configuration (persistent pipeline cache). Call before the window is first shown.
+void configureWindow(QQuickWindow& window, const GraphicsDecision& decision, const QString& cacheDir);
+
 // QML-facing description of the active graphics configuration (Settings → Performance, About).
 class GraphicsInfo : public QObject {
     Q_OBJECT

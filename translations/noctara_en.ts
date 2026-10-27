@@ -88,13 +88,7 @@
 <context>
     <name>AppearanceDrawer</name>
     <message>
-        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+27"/>
-        <source>follows the system</source>
-        <extracomment>Shown instead of a preset name while the theme follows the desktop colour scheme</extracomment>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+19"/>
+        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+45"/>
         <location line="+17"/>
         <source>Appearance</source>
         <translation type="unfinished"></translation>
@@ -102,7 +96,7 @@
     <message>
         <location line="+8"/>
         <source>Midnight Glass · %1</source>
-        <extracomment>%1 = preset name, or &quot;custom&quot;</extracomment>
+        <extracomment>%1 = colour preset name (Auto, Midnight or Frost)</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -130,12 +124,12 @@
     </message>
     <message>
         <location line="+11"/>
-        <source>A preset only changes the colour scheme; materials, shapes and layout stay as they are.</source>
+        <source>Auto follows the desktop: Midnight while it is dark, Frost while it is light.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>The colour scheme follows the system. Pick a preset to fix it.</source>
+        <source>A preset only changes the colour scheme; materials, shapes and layout stay as they are.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -195,7 +189,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>Reduce transparency is on, so surfaces are opaque.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -646,7 +640,7 @@
 <context>
     <name>NavRail</name>
     <message>
-        <location filename="../src/qml/components/NavRail.qml" line="+20"/>
+        <location filename="../src/qml/components/NavRail.qml" line="+36"/>
         <source>Navigation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -823,6 +817,14 @@
     <message>
         <location line="+4"/>
         <source>Inactive: the power source cannot be detected (UPower is not running). Choose Always to save energy anyway.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Presets</name>
+    <message>
+        <location filename="../src/ui/AppearancePresets.cpp" line="+21"/>
+        <source>Auto</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1788,7 +1790,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+16"/>
         <source>Reset page</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1803,7 +1805,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+44"/>
         <source>No settings match “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1811,7 +1813,7 @@
 <context>
     <name>Skeleton</name>
     <message>
-        <location filename="../src/qml/components/Skeleton.qml" line="+12"/>
+        <location filename="../src/qml/components/Skeleton.qml" line="+16"/>
         <source>Loading</source>
         <translation type="unfinished"></translation>
     </message>

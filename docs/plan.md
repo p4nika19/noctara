@@ -30,7 +30,9 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 12. **Panels find the blurred texture through the window** (`Window.window.backdropTexture`) and map their own fragments to window UVs from `qt_Matrix` in the vertex shader (`Graphics.ndcYUp` handles the GL/Vulkan NDC difference). This needs no position bindings, so it stays correct during scrolling and animations.
 13. **Software path = Solid** (per the spec). The cover backdrop is pre-blurred on the CPU, so it also works without a GPU.
 14. **Frame cap by render-thread pacing**: Qt Quick has no frame-rate API. Sleeping after presentation on the render thread caps the rate without distorting animation timing. It is never applied on the GUI thread.
-15. **Presets change colours only** (Midnight / Frost, untranslated names), per the user's review of slice (a).
+15. **Presets change colours only** (Auto / Midnight / Frost; Midnight and Frost untranslated), per the user's review of slice (a).
+16. **Vulkan is preferred under Auto** (user request): pipeline cache on disk, GPU timestamps, device selection for *GPU preference*. OpenGL remains the fallback, including when Vulkan is only lavapipe.
+17. **Selection indicators are computed, not bound by `Binding` elements**: the nav-rail and segmented-control pills derive their geometry from the model and the control size, so they follow resizes and never lag or duplicate.
 
 ## Slices
 

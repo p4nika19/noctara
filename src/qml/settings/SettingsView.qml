@@ -248,6 +248,9 @@ Item {
                 ScrollBar.vertical: ScrollBar {}
                 header: Loader {
                     width: list.width - list.rightMargin
+                    // Explicit: an unloaded Loader keeps the size of its last item, which left the Appearance
+                    // header's height as an empty band at the top of the next page.
+                    height: item ? item.implicitHeight : 0
                     active: !root.searching && (root.category === "appearance" || root.category === "performance")
                     sourceComponent: root.category === "appearance" ? appearanceHeader : performanceHeader
                 }

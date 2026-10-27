@@ -17,13 +17,13 @@ Column {
         Accessible.role: Accessible.Heading
     }
     PresetTiles {
-        width: Math.min(root.width, 560 * Theme.scale)
+        width: root.width
     }
     Text {
         width: root.width
-        text: SettingsUi.currentPreset.length > 0
-              ? qsTr("A preset only changes the colour scheme; materials, shapes and layout stay as they are.")
-              : qsTr("The colour scheme follows the system. Pick a preset to fix it.")
+        text: SettingsUi.currentPreset === "auto"
+              ? qsTr("Auto follows the desktop: Midnight while it is dark, Frost while it is light.")
+              : qsTr("A preset only changes the colour scheme; materials, shapes and layout stay as they are.")
         font: Theme.font.caption
         color: Theme.colors.textTertiary
         wrapMode: Text.Wrap

@@ -16,11 +16,19 @@ Ways to set the mode: the config key, `--gpu=…`, `--disable-gpu`, `NOCTARA_PER
 
 | API | Status |
 |---|---|
-| OpenGL (default under Auto) | Qt Quick's best-tested backend on Linux |
-| Vulkan | supported; used if OpenGL fails, or when chosen explicitly |
+| Vulkan (preferred under Auto) | explicit pipeline cache persisted between launches, QRhi GPU timestamps on every driver (the quality governor's best input), physical-device choice for *GPU preference*, lowest CPU overhead per frame |
+| OpenGL | fallback: drivers without Vulkan, or when Vulkan is only a CPU rasterizer (lavapipe) |
 | Software | Qt Quick software adaptation |
 
-If an explicitly chosen API fails, the other one is tried and the user is told (`ApiFallback`).
+If an explicitly chosen API fails, the other one is tried and the user is told (`ApiFallback`). Under Auto, Vulkan is probed first. A Vulkan that turns out to be a CPU rasterizer does not end the search: lavapipe is often the only Vulkan driver installed next to a real GPU's OpenGL, and that GPU wins.
+
+### Vulkan specifics
+
+- **GPU preference.** On systems with several GPUs, the Vulkan probe enumerates the physical devices and selects the first integrated or discrete one for *Integrated* / *Discrete*. Qt's Vulkan backend then uses it through `QT_VK_PHYSICAL_DEVICE_INDEX`, for the probe and the window alike. The chosen index is stored in the probe cache, keyed by the preference. A value the user set themselves always wins. `DRI_PRIME` is still set for Mesa, which also covers OpenGL.
+- **Pipeline cache.** `<cache>/pipelines-vulkan.bin` (and `pipelines-opengl.bin`) is loaded at startup and saved on exit through `QQuickGraphicsConfiguration`. Qt checks the file's header against the device and driver, and ignores a stale or foreign file.
+- **Timestamps.** `VK_QUERY_TYPE_TIMESTAMP` is available on all desktop Vulkan drivers, so the governor works on GPU time. OpenGL ES through EGL often lacks timer queries.
+- **Validation.** `QSG_RHI_DEBUG_LAYER=1` enables the Khronos validation layer when it is installed.
+- **Platforms.** The offscreen and minimal platform plugins cannot host Vulkan, so the probe skips it there instead of logging Qt warnings.
 
 ## Bootstrap sequence (`gfx::bootstrapGraphics`)
 

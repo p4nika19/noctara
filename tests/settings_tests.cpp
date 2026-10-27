@@ -148,7 +148,7 @@ TEST_SUITE("settings.store")
         REQUIRE(store.setUserValue(keys::GlassGrain, 0.9).has_value());
         REQUIRE(store.setUserValue(keys::ThemeMode, QStringLiteral("dark")).has_value());
         store.resetSection("appearance.glass");
-        CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.35));
+        CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.0));
         CHECK(store.stringValue(keys::ThemeMode) == QStringLiteral("dark"));
         store.resetAll();
         CHECK(store.layerSnapshot(Layer::User).empty());
@@ -335,7 +335,7 @@ TEST_SUITE("settings.file")
         const QString exported = dir.filePath(QStringLiteral("profile.toml"));
         REQUIRE(file.exportTo(exported).has_value());
         REQUIRE(file.resetToDefaults().has_value());
-        CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.35));
+        CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.0));
         REQUIRE(file.importFrom(exported).has_value());
         CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.8));
     }

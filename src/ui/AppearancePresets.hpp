@@ -15,9 +15,10 @@ namespace noctara::ui {
 // is detected by comparing values.
 struct AppearancePreset {
     std::string_view id;
-    const char* name;  // product name of the scheme; never translated
+    const char* name;  // product name of the scheme (never translated) or, if `translated`, context "Presets"
     std::vector<std::pair<std::string_view, QVariant>> values;
-    std::vector<const char*> preview;  // three colours for the preview tile: light, accent, base
+    std::vector<const char*> preview;  // three colours for the preview tile, left to right
+    bool translated = false;
 };
 
 [[nodiscard]] std::span<const AppearancePreset> appearancePresets();

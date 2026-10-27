@@ -311,6 +311,7 @@ int main(int argc, char** argv)
     if (auto* window = qobject_cast<QQuickWindow*>(engine.rootObjects().constFirst())) {
         graphics.watch(window);
         // Main.qml starts hidden so GPU timestamps can be enabled before the scene graph initialises.
+        gfx::configureWindow(*window, decision, paths.cacheDir);
         frames.attach(window);
         window->setVisible(true);
         if (!cli.navigate.isEmpty()) {

@@ -11,6 +11,8 @@ T.AbstractButton {
     property real iconSize: Theme.space.iconSize
     property string material: "flat"
     property bool highlighted: false
+    // False: no hover/press surface or halo (the owner draws its own selection, e.g. the navigation pill).
+    property bool surface: true
     property color iconColor: material === "primary" ? Theme.targetColors.onAccent
                             : (checked || highlighted ? Theme.targetColors.accent : Theme.targetColors.iconPrimary)
 
@@ -26,8 +28,8 @@ T.AbstractButton {
     background: ButtonSurface {
         material: control.material
         radius: Math.min(Theme.radius.button, height / 2)
-        hovered: control.hovered && control.enabled
-        pressed: control.down
+        hovered: control.surface && control.hovered && control.enabled
+        pressed: control.surface && control.down
         active: control.checked || control.highlighted
         FocusRing { target: control; targetRadius: parent.radius; visible: control.visualFocus }
     }

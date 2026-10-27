@@ -96,6 +96,7 @@ QJsonObject ProbeResult::toJson() const
                        {QStringLiteral("deviceId"), static_cast<qint64>(deviceId)},
                        {QStringLiteral("kind"), static_cast<int>(kind)},
                        {QStringLiteral("adapters"), adapterCount},
+                       {QStringLiteral("deviceIndex"), deviceIndex},
                        {QStringLiteral("error"), error}};
 }
 
@@ -112,6 +113,7 @@ ProbeResult ProbeResult::fromJson(const QJsonObject& json)
     result.kind =
         kind >= 0 && kind <= static_cast<int>(DeviceKind::Cpu) ? static_cast<DeviceKind>(kind) : DeviceKind::Unknown;
     result.adapterCount = json.value(QStringLiteral("adapters")).toInt();
+    result.deviceIndex = json.value(QStringLiteral("deviceIndex")).toInt(-1);
     result.error = json.value(QStringLiteral("error")).toString();
     return result;
 }
@@ -177,11 +179,12 @@ const BlocklistEntry* matchBlocklist(const Blocklist& list, const ProbeResult& p
 
 std::vector<Api> candidateApis(Api requested)
 {
-    // OpenGL is Qt Quick's default and best-tested backend on Linux; Vulkan is the alternative.
-    if (requested == Api::Vulkan) {
-        return {Api::Vulkan, Api::OpenGL};
+    // Vulkan first: explicit pipeline caching, GPU timestamps on every driver and the lowest CPU overhead.
+    // OpenGL is the fallback (drivers without Vulkan, or a Vulkan that is only a CPU rasterizer).
+    if (requested == Api::OpenGL) {
+        return {Api::OpenGL, Api::Vulkan};
     }
-    return {Api::OpenGL, Api::Vulkan};
+    return {Api::Vulkan, Api::OpenGL};
 }
 
 GraphicsDecision decide(const GraphicsRequest& request, const ProbeFunction& probe, const Blocklist& blocklist)
@@ -226,9 +229,12 @@ GraphicsDecision decide(const GraphicsRequest& request, const ProbeFunction& pro
 
         const bool cpuDevice = result.kind == DeviceKind::Cpu || isSoftwareRasterizer(result.deviceName);
         if (cpuDevice && !forced) {
-            rejected = software(Reason::SoftwareRasterizer, true, result.deviceName);
-            rejected->probe = result;
-            break;
+            // Keep looking: lavapipe is often the only Vulkan driver next to a real GPU's OpenGL.
+            if (!rejected) {
+                rejected = software(Reason::SoftwareRasterizer, true, result.deviceName);
+                rejected->probe = result;
+            }
+            continue;
         }
 
         GraphicsDecision decision;

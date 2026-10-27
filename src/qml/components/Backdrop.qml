@@ -187,15 +187,16 @@ Item {
         }
     }
 
-    // Fine grain breaks up banding in the gradients. It lives in the backdrop, so text and controls stay clean;
-    // glass panels add their own, fainter grain in the glass shader. Static texture: no per-frame cost.
+    // Grain texture over the backdrop only, so text and controls stay clean (glass panels add their own fainter
+    // grain in the glass shader). Even at Grain 0 % a dithering floor remains (one to two 8-bit steps), invisible as
+    // texture, but it removes the banding rings that wide 8-bit radial gradients otherwise show. Static: no
+    // per-frame cost.
     Image {
         anchors.fill: parent
         source: "image://noise/128"
         fillMode: Image.Tile
         smooth: false
-        opacity: Theme.glass.grain * (Theme.dark ? 0.16 : 0.1)
-        visible: opacity > 0.002
+        opacity: Math.max(0.02, Theme.glass.grain * (Theme.dark ? 0.16 : 0.1))
         Accessible.ignored: true
     }
 }

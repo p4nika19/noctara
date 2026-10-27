@@ -1,11 +1,12 @@
 import QtQuick
 import Noctara
 
-// Colour presets (Midnight, Frost) with preview tiles; the tile of the preset the current values match is lit.
+// Colour presets (Auto, Midnight, Frost) with preview tiles sharing the full width; the tile of the preset the
+// current values match is lit.
 Grid {
     id: root
 
-    columns: 2
+    columns: Math.max(1, SettingsUi.presets.length)
     spacing: Theme.space.sm
 
     readonly property real tileWidth: (width - spacing * (columns - 1)) / columns

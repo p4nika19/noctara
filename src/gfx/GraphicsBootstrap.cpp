@@ -7,6 +7,8 @@
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
 
+#include <QFileInfo>
+#include <QQuickGraphicsConfiguration>
 #include <QSGRendererInterface>
 #include <QSurfaceFormat>
 
@@ -35,6 +37,12 @@ void applyToQtQuick(const GraphicsDecision& decision, const settings::SettingsSt
         QQuickWindow::setGraphicsApi(QSGRendererInterface::Software);
         return;
     }
+    // The probe may have chosen a physical device for the GPU preference; on a cached probe nothing set the
+    // variable yet in this process.
+    if (decision.api == Api::Vulkan && decision.probe && decision.probe->deviceIndex >= 0 &&
+        !qEnvironmentVariableIsSet("QT_VK_PHYSICAL_DEVICE_INDEX")) {
+        qputenv("QT_VK_PHYSICAL_DEVICE_INDEX", QByteArray::number(decision.probe->deviceIndex));
+    }
     QQuickWindow::setGraphicsApi(decision.api == Api::Vulkan ? QSGRendererInterface::Vulkan
                                                              : QSGRendererInterface::OpenGL);
     QSurfaceFormat format = QSurfaceFormat::defaultFormat();
@@ -61,12 +69,14 @@ GraphicsDecision bootstrapGraphics(const settings::SettingsStore& settings, Cras
         blocklist = parseBlocklist(*data);
     }
 
-    ProbeCache cache(options.cacheDir + QStringLiteral("/gpu-probe.json"));
-    const auto probe = [&cache](Api api) {
+    const QString preferenceText = settings.stringValue(keys::GpuPreference);
+    const DevicePreference preference = parseDevicePreference(preferenceText);
+    ProbeCache cache(options.cacheDir + QStringLiteral("/gpu-probe.json"), preferenceText);
+    const auto probe = [&cache, preference](Api api) {
         if (auto cached = cache.lookup(api)) {
             return *cached;
         }
-        ProbeResult result = probeRhi(api);
+        ProbeResult result = probeRhi(api, preference);
         cache.store(result);
         return result;
     };
@@ -79,6 +89,24 @@ GraphicsDecision bootstrapGraphics(const settings::SettingsStore& settings, Cras
     qCInfo(lcGfx).noquote() << "rendering:" << (decision.hardware ? apiName(decision.api) : QStringLiteral("software"))
                             << (decision.safeMode ? "(safe mode)" : "") << '-' << decision.detail;
     return decision;
+}
+
+void configureWindow(QQuickWindow& window, const GraphicsDecision& decision, const QString& cacheDir)
+{
+    if (!decision.hardware) {
+        return;
+    }
+    QQuickGraphicsConfiguration config = window.graphicsConfiguration();
+    // Persist the pipeline cache (Vulkan VkPipelineCache, GL program binaries): later launches skip shader
+    // pipeline compilation on drivers without their own disk cache. Qt validates the file's header against
+    // the current device and driver, and ignores a stale or foreign cache.
+    const QString file = cacheDir + QStringLiteral("/pipelines-") + apiName(decision.api) + QStringLiteral(".bin");
+    if (QFileInfo::exists(file)) {
+        config.setPipelineCacheLoadFile(file);
+    }
+    config.setPipelineCacheSaveFile(file);
+    // QSG_RHI_DEBUG_LAYER=1 still enables the Vulkan validation layer for debugging.
+    window.setGraphicsConfiguration(config);
 }
 
 GraphicsInfo::GraphicsInfo(GraphicsDecision decision, QObject* parent)

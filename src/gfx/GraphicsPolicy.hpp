@@ -32,6 +32,9 @@ struct ProbeResult {
     std::uint64_t deviceId = 0;
     DeviceKind kind = DeviceKind::Unknown;
     int adapterCount = 0;
+    // Vulkan: the physical device chosen for the GPU preference (applied via QT_VK_PHYSICAL_DEVICE_INDEX);
+    // -1 leaves the choice to Qt.
+    int deviceIndex = -1;
     QString error;
 
     [[nodiscard]] QJsonObject toJson() const;

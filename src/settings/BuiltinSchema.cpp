@@ -220,7 +220,7 @@ std::vector<Definition> builtinDefinitions()
                     .visibleWhen = Condition{keys::GlassStyle, {"kawase", "gaussian", "liquid"}}});
     defs.push_back({.key = keys::GlassOpacity,
                     .type = Type::Real,
-                    .defaultValue = real(0.5),
+                    .defaultValue = real(0.0),
                     .min = 0.0,
                     .max = 1.0,
                     .step = 0.05,
@@ -229,7 +229,7 @@ std::vector<Definition> builtinDefinitions()
                     .description = QT_TRANSLATE_NOOP("Settings", "Opacity of the tint applied to glass surfaces.")});
     defs.push_back({.key = keys::GlassGrain,
                     .type = Type::Real,
-                    .defaultValue = real(0.35),
+                    .defaultValue = real(0.0),
                     .min = 0.0,
                     .max = 1.0,
                     .step = 0.05,

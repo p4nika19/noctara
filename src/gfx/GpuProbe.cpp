@@ -47,10 +47,16 @@ void fillFromRhi(ProbeResult& result, const QRhi& rhi)
     }
 }
 
-ProbeResult probeVulkan()
+ProbeResult probeVulkan(DevicePreference preference)
 {
     ProbeResult result;
     result.api = Api::Vulkan;
+    // These platform plugins cannot host a Vulkan instance; trying only logs Qt warnings.
+    const QString platform = QGuiApplication::platformName();
+    if (platform == u"offscreen" || platform == u"minimal") {
+        result.error = QStringLiteral("the %1 platform has no Vulkan support").arg(platform);
+        return result;
+    }
     QVulkanInstance instance;
     instance.setExtensions(QRhiVulkanInitParams::preferredInstanceExtensions());
     if (!instance.create()) {
@@ -61,6 +67,27 @@ ProbeResult probeVulkan()
     uint32_t count = 0;
     functions->vkEnumeratePhysicalDevices(instance.vkInstance(), &count, nullptr);
     result.adapterCount = static_cast<int>(count);
+
+    // On hybrid systems pick the physical device by type. Qt's Vulkan backend honours
+    // QT_VK_PHYSICAL_DEVICE_INDEX, both here and for the real window; an explicit user value always wins.
+    if (preference != DevicePreference::Auto && count > 1 &&
+        !qEnvironmentVariableIsSet("QT_VK_PHYSICAL_DEVICE_INDEX")) {
+        std::vector<VkPhysicalDevice> devices(count);
+        functions->vkEnumeratePhysicalDevices(instance.vkInstance(), &count, devices.data());
+        std::vector<DeviceKind> kinds;
+        for (VkPhysicalDevice device : devices) {
+            VkPhysicalDeviceProperties properties{};
+            functions->vkGetPhysicalDeviceProperties(device, &properties);
+            kinds.push_back(properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU ? DeviceKind::Integrated
+                            : properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ? DeviceKind::Discrete
+                            : properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU          ? DeviceKind::Cpu
+                                                                                            : DeviceKind::Unknown);
+        }
+        result.deviceIndex = preferredDeviceIndex(kinds, preference);
+        if (result.deviceIndex >= 0) {
+            qputenv("QT_VK_PHYSICAL_DEVICE_INDEX", QByteArray::number(result.deviceIndex));
+        }
+    }
 
     QRhiVulkanInitParams params;
     params.inst = &instance;
@@ -110,11 +137,34 @@ void hashFileStat(QCryptographicHash& hash, const QFileInfo& info)
 
 }  // namespace
 
-ProbeResult probeRhi(Api api)
+DevicePreference parseDevicePreference(const QString& text) noexcept
+{
+    if (text == u"integrated") {
+        return DevicePreference::Integrated;
+    }
+    return text == u"discrete" ? DevicePreference::Discrete : DevicePreference::Auto;
+}
+
+int preferredDeviceIndex(const std::vector<DeviceKind>& devices, DevicePreference preference) noexcept
+{
+    if (preference == DevicePreference::Auto) {
+        return -1;
+    }
+    const DeviceKind wanted =
+        preference == DevicePreference::Integrated ? DeviceKind::Integrated : DeviceKind::Discrete;
+    for (std::size_t i = 0; i < devices.size(); ++i) {
+        if (devices[i] == wanted) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+ProbeResult probeRhi(Api api, DevicePreference preference)
 {
     QElapsedTimer timer;
     timer.start();
-    ProbeResult result = api == Api::Vulkan ? probeVulkan() : probeOpenGl();
+    ProbeResult result = api == Api::Vulkan ? probeVulkan(preference) : probeOpenGl();
     qCInfo(lcGfx).noquote() << "probed" << apiName(api) << "in" << timer.elapsed()
                             << "ms:" << (result.ok ? result.deviceName : result.error);
     return result;
@@ -154,9 +204,9 @@ QString graphicsStackFingerprint()
     return QString::fromLatin1(hash.result().toHex());
 }
 
-ProbeCache::ProbeCache(QString path)
+ProbeCache::ProbeCache(QString path, const QString& variant)
     : m_path(std::move(path))
-    , m_fingerprint(graphicsStackFingerprint())
+    , m_fingerprint(variant.isEmpty() ? graphicsStackFingerprint() : graphicsStackFingerprint() + u'-' + variant)
 {
     const auto content = readWholeFile(m_path);
     if (!content) {

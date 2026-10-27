@@ -3,7 +3,7 @@
 The visual language follows the "Midnight Glass" reference the user supplied (`~/Downloads/Midnight Glass Home.html`). Its main traits:
 
 - a near-black blue-violet base lit by soft aurora light in the palette colors
-- light, accent-tinted glass with a sheen from the top, a 1px light edge, an inner highlight and soft drop shadows
+- light, accent-tinted glass with a sheen from the top, a 1px edge whose top catches the light, and soft drop shadows
 - pill-shaped controls, gradient primary actions and accent glows
 - mono uppercase group labels, and a compact appearance panel with presets
 
@@ -96,6 +96,8 @@ Backdrop (aurora | cover | dark, grain)
 - **Cost does not grow with panels.** Each panel adds one quad that samples the shared texture. A static backdrop is never re-blurred. The aurora drift updates at 12 Hz, because it moves only a few pixels per second, so even the animated backdrop re-blurs about 12 times a second instead of at the display rate.
 - **Liquid Glass** is an original shader. The rounded-rectangle SDF provides the surface normal. Within `thickness` px of the rim, the sample is pulled inwards by up to `refraction` px (lens profile `rim²`), and R/G/B bend by 1 ± `dispersion`. Light comes from `lightAngle` (top-left): the rim facing the light gets a specular highlight, the whole rim gets a Fresnel lift, and the rim facing away gets the accent-tinted catch light (Midnight) and is darkened. The parameters are per scheme (`glassTokensFor`). Following the spec, Liquid Glass applies only where `GlassPanel.liquid` is set: navigation rail, drawers, popovers (dropdowns), toasts, and later the player bar. Every other panel uses the frosted shader over the same texture.
 - **Solid** (requested, *Reduce transparency*, software renderer, or the governor's last tier) uses the opaque `solid*` surfaces. No shader is loaded.
+- **Lit edge** (`RimLight.qml`). The light from above is drawn **on** the 1 px edge as a gradient stroke (`ShapePath.strokeGradient`, curve renderer, anti-aliased). It follows the rounded corners and fades out down the sides within about 1.6 × the radius. It replaced a straight 1 px inner line, which looked detached for three reasons: it stopped short of the corners, it sat one pixel below the edge (so the top looked doubled while the sides did not), and in Frost it was nearly opaque white. Glass panels and glass buttons use it. Liquid Glass lights its own rim in the shader.
+- **Defaults:** *Glass tint* 0% (the lightest veil the palette allows; contrast is still enforced) and *Grain* 0%. At 0% grain the backdrop keeps a dithering floor of one to two 8-bit steps, which is invisible as texture but removes the banding rings of wide radial gradients.
 - `GlassPanel.cornerInset` = r·(1 − 1/√2) is the smallest margin that keeps a content corner inside a rounded corner. Content near panel edges uses `max(margin, cornerInset)`, so large corner radii never push controls into the curve.
 
 ## AccentEngine (`theme/AccentEngine.cpp`)
@@ -117,7 +119,7 @@ The settings UI is styled after the reference's appearance drawer:
 - **Choices and sliders.** Segmented choices and sliders span the row under a label line that carries the value read-out in `accentText` mono.
 - **Dropdowns.** Long-option dropdowns stay inline.
 - **Categories.** Sidebar categories are lit pill items, the same treatment as the active navigation item.
-- **Appearance page.** Starts with the colour **presets** (Midnight, Frost) and the live palette dots. A preset changes colours only: it sets the theme mode and never touches materials, shapes or layout. The names are product names and stay untranslated. The active preset is detected by value. With the theme mode on *System*, none is lit.
+- **Appearance page.** Starts with the colour **presets**: Auto, Midnight and Frost, three tiles sharing the full width. Auto (the default) follows the desktop colour scheme live: Midnight when it is dark, Frost when it is light. A preset changes colours only: it sets the theme mode and never touches materials, shapes or layout. Midnight and Frost are product names and stay untranslated; "Auto" is translated. The active preset is detected by value.
 - **Performance page.** Starts with a live status block: renderer and device, effective glass style and quality, frame rate, GPU time per frame against the budget, the active frame cap, and why effects are reduced (governor, energy saving, software rendering). When the governor has lowered quality, a **Restore full quality** button appears. The *Glass style* and *Effects quality* rows show the same reasons as status lines.
 - **Quick Appearance panel.** Ctrl+Shift+A, or right-click the settings button. A dark glass drawer that slides in from the right, built from the same generated rows (`SettingsUi.subset(keys)`), with Reset (just those keys) and All settings.
 
