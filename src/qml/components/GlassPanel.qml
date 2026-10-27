@@ -16,8 +16,9 @@ Item {
     property int level: 0
     property real radius: Theme.radius.lg
     property bool shadowed: true
-    // Use the Liquid Glass shader when that style is active (prominent surfaces only).
-    property bool liquid: false
+    // Use the Liquid Glass shader when that style is active. Panels only: list rows and other repeated items
+    // are not GlassPanels, so the lens effect never multiplies across a list.
+    property bool liquid: true
     default property alias content: contentItem.data
     // Smallest margin that keeps a content corner inside the rounded corner: r * (1 - 1/sqrt(2)). Content near
     // the edges uses max(its usual margin, cornerInset), so large corner radii never clip or crowd it.

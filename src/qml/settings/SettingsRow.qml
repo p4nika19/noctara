@@ -33,6 +33,8 @@ Item {
     property bool showCategory: false
     // Drawer mode: tighter spacing, descriptions only for toggles, no per-section reset.
     property bool compact: false
+    // Section whose header is already drawn above the list (the Appearance page shows "Theme" over its tiles).
+    property string headerShownAbove
 
     readonly property bool editable: !overridden && disabledReason.length === 0
     readonly property bool segmented: type === "enum" && options.length <= 4
@@ -68,7 +70,7 @@ Item {
 
         // Group header: mono uppercase title, as in the reference's drawer.
         Item {
-            visible: row.sectionStart
+            visible: row.sectionStart && row.section !== row.headerShownAbove
             width: parent.width
             height: visible ? header.implicitHeight + (row.compact ? Theme.space.lg : Theme.space.xl) : 0
             Column {
@@ -96,25 +98,15 @@ Item {
                     wrapMode: Text.Wrap
                 }
             }
-            Text {
+            Button {
                 id: resetSection
                 visible: !row.compact && !row.showCategory
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: Theme.space.xs
+                small: true
                 text: qsTr("Reset section")
-                font: Theme.font.caption
-                color: resetArea.containsMouse ? Theme.colors.accentText : Theme.colors.textTertiary
-                Accessible.role: Accessible.Button
-                Accessible.name: text
-                MouseArea {
-                    id: resetArea
-                    anchors.fill: parent
-                    anchors.margins: -Theme.space.xs
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: SettingsUi.resetSection(row.section)
-                }
+                onClicked: SettingsUi.resetSection(row.section)
             }
         }
 

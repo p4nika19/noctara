@@ -46,7 +46,7 @@ GlassPanel {
         Button {
             visible: root.actionLabel.length > 0
             anchors.verticalCenter: parent.verticalCenter
-            variant: "ghost"
+            small: true
             text: root.actionLabel
             onClicked: {
                 App.triggerAction(root.actionId)

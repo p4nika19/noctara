@@ -109,6 +109,8 @@ std::vector<Definition> builtinDefinitions()
                     .category = Appearance,
                     .label = QT_TRANSLATE_NOOP("Settings", "Theme"),
                     .description = QT_TRANSLATE_NOOP("Settings", "System follows the desktop color scheme live."),
+                    // Edited by the Auto / Midnight / Frost tiles at the top of the Appearance page.
+                    .flags = flag::ConfigOnly,
                     .cliAlias = "theme"});
     defs.push_back({.key = keys::EnforceContrast,
                     .type = Type::Bool,

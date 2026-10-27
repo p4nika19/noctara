@@ -67,8 +67,8 @@ GlassTokens glassTokensFor(Scheme scheme)
         glass.refraction = 16.0;
         glass.thickness = 18.0;
         glass.dispersion = 0.18;
-        glass.specular = 0.55;
-        glass.fresnel = 0.35;
+        glass.specular = 0.2;
+        glass.fresnel = 0.22;
         glass.rimDarkening = 0.25;
         glass.saturationLift = 0.18;
         glass.brightnessLift = 0.04;
@@ -76,8 +76,8 @@ GlassTokens glassTokensFor(Scheme scheme)
         glass.refraction = 13.0;
         glass.thickness = 16.0;
         glass.dispersion = 0.08;
-        glass.specular = 0.75;
-        glass.fresnel = 0.22;
+        glass.specular = 0.3;
+        glass.fresnel = 0.14;
         glass.rimDarkening = 0.10;
         glass.saturationLift = 0.10;
         glass.brightnessLift = 0.0;

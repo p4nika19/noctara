@@ -1,5 +1,6 @@
 #include "settings/Migrations.hpp"
 
+#include <algorithm>
 #include <optional>
 #include <string>
 #include <utility>
@@ -69,11 +70,30 @@ void absoluteGlassValues(toml::table& root)
     shiftGlassValues(root, 1.0);
 }
 
+// v5 -> v6: the "Glass tint" scale moved by 20 % (the former 0 % is now 20 %, the former 80 % now 100 %),
+// so a stored tint keeps its look.
+void shiftedGlassTint(toml::table& root)
+{
+    toml::table* glass = root.at_path("appearance.glass").as_table();
+    if (glass == nullptr) {
+        return;
+    }
+    if (const auto value = glass->get("opacity") ? glass->get("opacity")->value<double>() : std::nullopt) {
+        glass->insert_or_assign("opacity", std::min(1.0, *value + 0.2));
+    }
+}
+
 // Files without `config_version` are v0 (same format as v1). Append future migrations here.
+// clang-format off
 constexpr Migration kMigrations[] = {
-    {0, [](toml::table&) {}}, {1, energySavingMode},    {2, backdropStyle},
-    {3, relativeGlassValues}, {4, absoluteGlassValues},
+    {0, [](toml::table&) {}},
+    {1, energySavingMode},
+    {2, backdropStyle},
+    {3, relativeGlassValues},
+    {4, absoluteGlassValues},
+    {5, shiftedGlassTint},
 };
+// clang-format on
 
 std::vector<std::string_view> splitPath(std::string_view path)
 {

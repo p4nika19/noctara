@@ -180,7 +180,6 @@ Item {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 visible: !root.searching && root.category !== "about"
-                variant: "ghost"
                 iconName: "rotate-ccw"
                 text: qsTr("Reset page")
                 onClicked: SettingsUi.resetCategory(root.category)
@@ -256,6 +255,7 @@ Item {
                 }
                 delegate: SettingsRow {
                     showCategory: root.searching
+                    headerShownAbove: !root.searching && root.category === "appearance" ? "appearance.theme" : ""
                     width: list.width - list.rightMargin
                 }
                 Text {

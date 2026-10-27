@@ -9,6 +9,7 @@ T.Button {
 
     property string variant: "secondary"
     property string iconName
+    property bool small: false  // compact size for secondary actions inside headers
 
     readonly property color labelColor: variant === "primary" ? Theme.colors.onAccent
                                        : variant === "danger" ? Theme.colors.danger
@@ -16,13 +17,13 @@ T.Button {
                                        : Theme.colors.textPrimary
 
     implicitWidth: Math.max(implicitBackgroundWidth, implicitContentWidth + leftPadding + rightPadding)
-    implicitHeight: Theme.space.controlHeight
-    leftPadding: Theme.space.lg + Theme.space.xxs
-    rightPadding: Theme.space.lg + Theme.space.xxs
+    implicitHeight: small ? Theme.space.controlHeightSmall - Theme.space.xs : Theme.space.controlHeight
+    leftPadding: small ? Theme.space.md : Theme.space.lg + Theme.space.xxs
+    rightPadding: small ? Theme.space.md : Theme.space.lg + Theme.space.xxs
     spacing: Theme.space.sm
     focusPolicy: Qt.StrongFocus
     hoverEnabled: true
-    font: Theme.font.label
+    font: small ? Theme.font.caption : Theme.font.label
     Accessible.name: text
 
     scale: down ? 0.96 : 1

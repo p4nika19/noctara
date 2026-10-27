@@ -50,13 +50,11 @@ FocusScope {
         }
     }
 
-    Rectangle {
+    // The track is a button surface in the "Button material"; the accent pill marks the selection.
+    ButtonSurface {
         id: track
         anchors.fill: parent
         radius: Math.min(Theme.radius.button, height / 2)
-        color: Theme.dark ? Qt.rgba(0, 0, 0, 0.3) : Qt.rgba(0, 0, 0, 0.05)
-        border.width: Theme.space.hairline
-        border.color: Theme.dark ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.08)
     }
     Item {
         id: pill

@@ -180,7 +180,8 @@ Palette generatePalette(const PaletteRequest& request)
     const bool achromatic = seed.C < kAchromaticChroma;
     const double nh = achromatic ? t.neutralHue : blendHue(t.neutralHue, seed.h, t.neutralHueBlend);
     const double nc = t.neutralChroma;
-    const double opacityScale = 0.4 + 1.2 * std::clamp(request.glassOpacity, 0.0, 1.0);
+    // "Glass tint": 0 % is the clearest glass, 100 % the densest; 20 % equals the former 0 % (config v6).
+    const double opacityScale = 0.16 + 1.2 * std::clamp(request.glassOpacity, 0.0, 1.0);
     const auto surfaceAlpha = [&](std::size_t level) {
         return std::min(0.97, t.surfaceAlpha.at(level) * opacityScale);
     };

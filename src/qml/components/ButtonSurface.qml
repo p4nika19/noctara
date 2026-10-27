@@ -100,19 +100,6 @@ Item {
             }
         }
     }
-    // Specular highlight (liquid only): a soft glint near the top-left, where the light comes from.
-    Rectangle {
-        visible: root.material === "liquid"
-        x: root.width * 0.14
-        y: root.height * 0.1
-        width: Math.max(4, root.width * 0.42)
-        height: Math.max(2, root.height * 0.22)
-        radius: height / 2
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: root.white(root.dark ? 0.38 : 0.85) }
-            GradientStop { position: 1.0; color: "transparent" }
-        }
-    }
     // The top of the edge catches the light, following the rounded ends (glass materials).
     RimLight {
         anchors.fill: parent

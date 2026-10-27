@@ -71,7 +71,9 @@ void main()
 
     float facing = dot(n, lightDir);
     float band = pow(rim, 3.0);
-    c += vec3(1.0) * specular * pow(max(facing, 0.0), 6.0) * band;
+    // The highlight is a thin line along the rim, not a patch: on large corner radii the corner faces the
+    // light over a long arc, and a wide band there reads as glare.
+    c += vec3(1.0) * specular * pow(max(facing, 0.0), 8.0) * pow(rim, 8.0);
     c += vec3(1.0) * fresnel * band * 0.5;
     c += rimTint.rgb * pow(max(-facing, 0.0), 2.0) * band;
     c *= 1.0 - rimDarkening * max(-facing, 0.0) * rim;

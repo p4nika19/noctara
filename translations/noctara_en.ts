@@ -88,7 +88,7 @@
 <context>
     <name>AppearanceDrawer</name>
     <message>
-        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+45"/>
+        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+44"/>
         <location line="+17"/>
         <source>Appearance</source>
         <translation type="unfinished"></translation>
@@ -105,7 +105,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+45"/>
         <source>Reset</source>
         <translation type="unfinished"></translation>
     </message>
@@ -118,12 +118,17 @@
 <context>
     <name>AppearanceHeader</name>
     <message>
-        <location filename="../src/qml/settings/AppearanceHeader.qml" line="+14"/>
-        <source>Presets</source>
+        <location filename="../src/qml/settings/AppearanceHeader.qml" line="+23"/>
+        <source>Theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+11"/>
+        <source>Reset section</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Auto follows the desktop: Midnight while it is dark, Frost while it is light.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -874,12 +879,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+92"/>
+        <location line="+94"/>
         <source>Accent color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-91"/>
+        <location line="-93"/>
         <source>The whole palette is generated from a single accent color.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1034,7 +1039,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Enforce readable contrast</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1059,7 +1064,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-90"/>
+        <location line="-92"/>
         <source>The light behind the interface.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1084,7 +1089,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+81"/>
+        <location line="+83"/>
         <source>Vivid</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1741,12 +1746,12 @@
 <context>
     <name>SettingsRow</name>
     <message>
-        <location filename="../src/qml/settings/SettingsRow.qml" line="+105"/>
+        <location filename="../src/qml/settings/SettingsRow.qml" line="+108"/>
         <source>Reset section</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+43"/>
         <source>Restart required</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1790,7 +1795,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+15"/>
         <source>Reset page</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1805,7 +1810,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+45"/>
         <source>No settings match “%1”.</source>
         <translation type="unfinished"></translation>
     </message>

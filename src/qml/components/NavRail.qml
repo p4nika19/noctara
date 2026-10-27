@@ -53,6 +53,7 @@ GlassPanel {
             // The moving pill is the selection; a hover surface on the newly selected item would appear
             // instantly and look like a second highlight while the pill is still on its way.
             surface: !item.selected
+            material: "flat"
             iconName: item.modelData.icon
             iconSize: Theme.space.iconSize
             iconColor: item.selected ? Theme.targetColors.accent : Theme.targetColors.iconSecondary

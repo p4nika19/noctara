@@ -88,7 +88,7 @@
 <context>
     <name>AppearanceDrawer</name>
     <message>
-        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+45"/>
+        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+44"/>
         <location line="+17"/>
         <source>Appearance</source>
         <translation>Оформление</translation>
@@ -105,7 +105,7 @@
         <translation>Закрыть панель</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+45"/>
         <source>Reset</source>
         <translation>Сбросить</translation>
     </message>
@@ -118,12 +118,17 @@
 <context>
     <name>AppearanceHeader</name>
     <message>
-        <location filename="../src/qml/settings/AppearanceHeader.qml" line="+14"/>
-        <source>Presets</source>
-        <translation>Пресеты</translation>
+        <location filename="../src/qml/settings/AppearanceHeader.qml" line="+23"/>
+        <source>Theme</source>
+        <translation>Тема</translation>
     </message>
     <message>
         <location line="+11"/>
+        <source>Reset section</source>
+        <translation>Сбросить раздел</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Auto follows the desktop: Midnight while it is dark, Frost while it is light.</source>
         <translation>«Авто» следует за рабочим столом: Midnight, когда он тёмный, и Frost, когда светлый.</translation>
     </message>
@@ -880,12 +885,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+92"/>
+        <location line="+94"/>
         <source>Accent color</source>
         <translation>Акцентный цвет</translation>
     </message>
     <message>
-        <location line="-91"/>
+        <location line="-93"/>
         <source>The whole palette is generated from a single accent color.</source>
         <translation>Вся палитра строится из одного акцентного цвета.</translation>
     </message>
@@ -1040,7 +1045,7 @@
         <translation>Режим «Как в системе» сразу следует за цветовой схемой рабочего стола.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Enforce readable contrast</source>
         <translation>Гарантировать читаемый контраст</translation>
     </message>
@@ -1065,7 +1070,7 @@
         <translation>Базовый цвет всей палитры, когда подбор по обложке выключен.</translation>
     </message>
     <message>
-        <location line="-90"/>
+        <location line="-92"/>
         <source>The light behind the interface.</source>
         <translation>Свет за интерфейсом.</translation>
     </message>
@@ -1090,7 +1095,7 @@
         <translation>Насколько плотно расположены элементы на страницах.</translation>
     </message>
     <message>
-        <location line="+81"/>
+        <location line="+83"/>
         <source>Vivid</source>
         <translation>Яркие</translation>
     </message>
@@ -1747,12 +1752,12 @@
 <context>
     <name>SettingsRow</name>
     <message>
-        <location filename="../src/qml/settings/SettingsRow.qml" line="+105"/>
+        <location filename="../src/qml/settings/SettingsRow.qml" line="+108"/>
         <source>Reset section</source>
         <translation>Сбросить раздел</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+43"/>
         <source>Restart required</source>
         <translation>Нужен перезапуск</translation>
     </message>
@@ -1796,7 +1801,7 @@
         <translation>Результаты поиска</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+15"/>
         <source>Reset page</source>
         <translation>Сбросить страницу</translation>
     </message>
@@ -1811,7 +1816,7 @@
         <translation>Перезапустить</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+45"/>
         <source>No settings match “%1”.</source>
         <translation>Нет настроек, подходящих под «%1».</translation>
     </message>

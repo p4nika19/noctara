@@ -3,13 +3,14 @@ import QtQuick.Templates as T
 import Noctara
 
 // Round icon-only button. `text` is the accessible name and tooltip (always translated by the caller).
-// material: "flat" (default, toolbar style) or any ButtonSurface material, e.g. "frosted" or "primary".
+// material: the "Button material" setting by default, "flat" for toolbar-style buttons (navigation rail), or
+// any ButtonSurface material such as "primary".
 T.AbstractButton {
     id: control
 
     property string iconName
     property real iconSize: Theme.space.iconSize
-    property string material: "flat"
+    property string material: Theme.glass.buttons
     property bool highlighted: false
     // False: no hover/press surface or halo (the owner draws its own selection, e.g. the navigation pill).
     property bool surface: true

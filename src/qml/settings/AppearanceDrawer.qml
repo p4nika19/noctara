@@ -13,7 +13,6 @@ FocusScope {
     signal allSettingsRequested()
 
     readonly property var keys: [
-        "appearance.theme.mode",
         "appearance.accent.adaptive", "appearance.accent.extraction", "appearance.accent.color",
         "appearance.backdrop.style",
         "appearance.glass.buttons", "appearance.glass.blur_strength", "appearance.glass.opacity", "appearance.glass.grain",
@@ -97,7 +96,10 @@ FocusScope {
             bottomMargin: Theme.space.lg
             model: root.open || panel.opacity > 0 ? SettingsUi.subset(root.keys) : null
             ScrollBar.vertical: ScrollBar {}
-            header: AppearanceHeader { width: list.width - list.rightMargin }
+            header: AppearanceHeader {
+                width: list.width - list.rightMargin
+                showReset: false
+            }
             delegate: SettingsRow {
                 compact: true
                 width: list.width - list.rightMargin
