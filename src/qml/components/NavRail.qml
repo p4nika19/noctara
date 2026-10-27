@@ -12,24 +12,40 @@ GlassPanel {
     signal navigate(string id)
     signal secondaryActivated(string id)
 
-    // Geometry of the destinations, so the pill's position is a plain binding: it follows resizes (the footer
-    // moves with the window height) and never depends on when delegates were created.
+    // The pill's position is a plain binding on the destinations' geometry, so it is always exact: it follows
+    // resizes (the footer moves with the window height) and never depends on when delegates were created. A
+    // selection change animates only a temporary offset from the old position back to zero, so nothing that
+    // happens during the glide (a resize, another click) can leave the pill stranded between items.
     readonly property real itemHeight: Theme.space.controlHeight + Theme.space.md
-    readonly property real pillY: {
-        let index = destinations.findIndex(d => d.id === current)
+    function positionOf(id) {
+        let index = destinations.findIndex(d => d.id === id)
         if (index >= 0)
             return Theme.space.md + index * itemHeight + (itemHeight - pill.height) / 2
-        index = footer.findIndex(d => d.id === current)
+        index = footer.findIndex(d => d.id === id)
         if (index >= 0)
             return height - Theme.space.md - (footer.length - index) * itemHeight + (itemHeight - pill.height) / 2
         return 0
     }
+    readonly property real pillY: positionOf(current)
+    property real glideOffset: 0
+    property string shownCurrent: current
 
-    property bool gliding: false
     onCurrentChanged: {
-        gliding = true
-        // If the move did not start an animation (no change in position), do not leave gliding switched on.
-        Qt.callLater(() => { if (!glide.running) gliding = false })
+        if (shownCurrent.length > 0 && current.length > 0 && Theme.motion.slow > 0) {
+            // Start where the pill is drawn now (even mid-glide). Derived from the previous selection, not
+            // read from pill.y, which may already have been re-evaluated for the new one.
+            glideOffset = positionOf(shownCurrent) + glideOffset - positionOf(current)
+            glide.restart()
+        }
+        shownCurrent = current
+    }
+    NumberAnimation {
+        id: glide
+        target: root
+        property: "glideOffset"
+        to: 0
+        duration: Theme.motion.slow
+        easing.type: Theme.motion.easingEmphasized
     }
 
     level: 0
@@ -73,19 +89,9 @@ GlassPanel {
         id: pill
         visible: root.current.length > 0
         x: (root.width - width) / 2
-        y: root.pillY
+        y: root.pillY + root.glideOffset
         width: Theme.space.controlHeight + Theme.space.xs
         height: Theme.space.controlHeight + Theme.space.xxs
-        // Glide only when the selection changes; resizes and startup place it directly.
-        Behavior on y {
-            enabled: root.gliding
-            NumberAnimation {
-                id: glide
-                duration: Theme.motion.slow
-                easing.type: Theme.motion.easingEmphasized
-                onRunningChanged: if (!running) root.gliding = false
-            }
-        }
 
         Shadow {
             anchors.fill: parent
