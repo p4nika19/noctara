@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "comment": "Data, not code. Fields: id, action (software | avoid-api | no-liquid-glass), optional vendorId (PCI), deviceName/driver (case-insensitive regex), api (opengl | vulkan | omitted = any), reason. CPU rasterizers are also detected independently of this list.",
+  "entries": [
+    {
+      "id": "cpu-rasterizers",
+      "deviceName": "llvmpipe|softpipe|lavapipe|swiftshader|swrast",
+      "action": "software",
+      "reason": "CPU rasterizer: blur and glass shaders would run on the CPU"
+    },
+    {
+      "id": "vm-virtual-gpus",
+      "deviceName": "SVGA3D|VMware|VirtualBox|virgl|Virtio-GPU|Microsoft Basic Render",
+      "action": "no-liquid-glass",
+      "reason": "Paravirtualised GPU: keep the cheaper glass styles"
+    }
+  ]
+}

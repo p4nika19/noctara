@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <format>
 #include <limits>
+#include <print>
 
 namespace noctara::settings {
 
@@ -16,7 +17,7 @@ namespace {
 
 [[noreturn]] void schemaDefect(const std::string& message)
 {
-    std::fprintf(stderr, "settings schema defect: %s\n", message.c_str());
+    std::println(stderr, "settings schema defect: {}", message);
     std::abort();
 }
 
@@ -40,8 +41,7 @@ Result<QVariant> validateNumber(const Definition& def, const QVariant& candidate
     case QMetaType::ULongLong: number = static_cast<double>(candidate.toLongLong()); break;
     case QMetaType::Double:
     case QMetaType::Float: number = candidate.toDouble(); break;
-    default:
-        return fail(ErrorCode::ConfigTypeMismatch, std::format("{}: expected a number", def.key));
+    default: return fail(ErrorCode::ConfigTypeMismatch, std::format("{}: expected a number", def.key));
     }
     if (!std::isfinite(number)) {
         return fail(ErrorCode::ConfigInvalidValue, std::format("{}: value must be finite", def.key));
@@ -98,7 +98,8 @@ Result<QVariant> validateShape(const Definition& def, const QVariant& candidate)
     }
     const QString text = candidate.toString();
     if (def.type == Type::Enum) {
-        const auto it = std::ranges::find_if(def.options, [&](const Option& option) { return latin(option.id) == text; });
+        const auto it =
+            std::ranges::find_if(def.options, [&](const Option& option) { return latin(option.id) == text; });
         if (it == def.options.end()) {
             return fail(ErrorCode::ConfigUnknownEnumValue,
                         std::format("{}: '{}' is not one of the allowed values", def.key, text.toStdString()));
@@ -193,11 +194,11 @@ Schema::Schema(std::vector<Section> sections, std::vector<Definition> definition
         if (def.type == Type::Enum && def.options.empty()) {
             schemaDefect(std::format("enum key '{}' has no options", def.key));
         }
-        if (auto checked = validate(def, def.defaultValue); !checked) {
+        auto checked = validate(def, def.defaultValue);
+        if (!checked) {
             schemaDefect(std::format("default of '{}' is invalid: {}", def.key, checked.error().describe()));
-        } else {
-            m_definitions[i].defaultValue = *checked;
         }
+        m_definitions[i].defaultValue = *checked;
     }
     for (const Definition& def : m_definitions) {
         if (def.visibleWhen && !m_index.contains(def.visibleWhen->key)) {

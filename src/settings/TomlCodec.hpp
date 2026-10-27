@@ -11,10 +11,10 @@
 namespace noctara::settings {
 
 struct ParsedConfig {
-    ValueMap values;            // validated values for known keys
-    ConfigIssues issues;        // syntax errors, invalid values, unknown keys (warnings)
-    std::string unknownToml;    // keys outside the schema, re-emitted verbatim on save
-    std::int64_t version = 0;   // config_version found in the file (0 = absent)
+    ValueMap values;           // validated values for known keys
+    ConfigIssues issues;       // syntax errors, invalid values, unknown keys (warnings)
+    std::string unknownToml;   // keys outside the schema, re-emitted verbatim on save
+    std::int64_t version = 0;  // config_version found in the file (0 = absent)
     bool syntaxOk = true;
 };
 
@@ -23,8 +23,7 @@ struct ParsedConfig {
 
 // Produces a fully documented config file: every schema key appears with its description, keys at their
 // default are commented out, user values are written, unknown keys are preserved.
-[[nodiscard]] QByteArray serializeConfig(const Schema& schema, const ValueMap& userValues,
-                                         std::string_view unknownToml,
+[[nodiscard]] QByteArray serializeConfig(const Schema& schema, const ValueMap& userValues, std::string_view unknownToml,
                                          std::int64_t version = Schema::kConfigVersion);
 
 }  // namespace noctara::settings

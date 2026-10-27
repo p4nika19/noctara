@@ -72,7 +72,7 @@ QVariant SettingsStore::belowUserLocked(std::size_t index) const
     if (const Slot& system = m_layers[layerIndex(Layer::System)][index]; system) {
         return *system;
     }
-    return *m_layers[layerIndex(Layer::Default)][index];
+    return m_layers[layerIndex(Layer::Default)][index].value_or(QVariant());
 }
 
 QVariant SettingsStore::value(std::string_view key) const
@@ -82,13 +82,13 @@ QVariant SettingsStore::value(std::string_view key) const
 
 QVariant SettingsStore::value(std::size_t index) const
 {
-    std::shared_lock lock(m_mutex);
+    const std::shared_lock lock(m_mutex);
     return effectiveLocked(index);
 }
 
 Layer SettingsStore::effectiveLayer(std::size_t index) const
 {
-    std::shared_lock lock(m_mutex);
+    const std::shared_lock lock(m_mutex);
     for (std::size_t layer = kLayerCount; layer-- > 0;) {
         if (m_layers[layer][index]) {
             return static_cast<Layer>(layer);
@@ -99,18 +99,18 @@ Layer SettingsStore::effectiveLayer(std::size_t index) const
 
 std::optional<QVariant> SettingsStore::layerValue(Layer layer, std::size_t index) const
 {
-    std::shared_lock lock(m_mutex);
+    const std::shared_lock lock(m_mutex);
     return m_layers[layerIndex(layer)][index];
 }
 
 ValueMap SettingsStore::layerSnapshot(Layer layer) const
 {
-    std::shared_lock lock(m_mutex);
+    const std::shared_lock lock(m_mutex);
     ValueMap out;
     const auto& slots = m_layers[layerIndex(layer)];
     for (std::size_t i = 0; i < slots.size(); ++i) {
-        if (slots[i]) {
-            out.emplace_back(i, *slots[i]);
+        if (const Slot& slot = slots[i]; slot.has_value()) {
+            out.emplace_back(i, slot.value());
         }
     }
     return out;
@@ -118,7 +118,7 @@ ValueMap SettingsStore::layerSnapshot(Layer layer) const
 
 bool SettingsStore::isOverridden(std::size_t index) const
 {
-    std::shared_lock lock(m_mutex);
+    const std::shared_lock lock(m_mutex);
     return m_layers[layerIndex(Layer::Environment)][index].has_value() ||
            m_layers[layerIndex(Layer::CommandLine)][index].has_value();
 }
@@ -138,7 +138,7 @@ void SettingsStore::replaceLayer(Layer layer, const ValueMap& values)
     Q_ASSERT(layer != Layer::Default);
     std::vector<QVariant> before(m_schema.size());
     {
-        std::unique_lock lock(m_mutex);
+        const std::unique_lock lock(m_mutex);
         for (std::size_t i = 0; i < m_schema.size(); ++i) {
             before[i] = effectiveLocked(i);
         }
@@ -169,7 +169,7 @@ Result<void> SettingsStore::setUserValue(std::string_view key, const QVariant& c
 
     QVariant before;
     {
-        std::unique_lock lock(m_mutex);
+        const std::unique_lock lock(m_mutex);
         before = effectiveLocked(*index);
         // Values equal to what lower layers provide are not stored: the config file stays minimal.
         auto& slot = m_layers[layerIndex(Layer::User)][*index];
@@ -191,7 +191,7 @@ void SettingsStore::eraseUserValues(const std::vector<std::size_t>& indices)
     std::vector<QVariant> before(m_schema.size());
     bool erased = false;
     {
-        std::unique_lock lock(m_mutex);
+        const std::unique_lock lock(m_mutex);
         for (std::size_t i = 0; i < m_schema.size(); ++i) {
             before[i] = effectiveLocked(i);
         }

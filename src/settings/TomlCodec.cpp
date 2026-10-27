@@ -55,8 +55,9 @@ ConfigIssue issueAt(const toml::node& node, const QString& file, ConfigIssue::Se
                     QString key, QString detail)
 {
     const auto& begin = node.source().begin;
-    return ConfigIssue{severity, code, file, static_cast<int>(begin.line), static_cast<int>(begin.column),
-                       std::move(key), std::move(detail)};
+    return ConfigIssue{
+        severity,         code, file, static_cast<int>(begin.line), static_cast<int>(begin.column), std::move(key),
+        std::move(detail)};
 }
 
 // Converts a TOML node into the QVariant shape expected by validate(), or an error message.
@@ -134,8 +135,7 @@ void collectUnknownLeaves(const toml::table& table, const std::string& prefix, c
     }
 }
 
-template <class Node>
-std::string formatToml(const Node& node)
+template <class Node> std::string formatToml(const Node& node)
 {
     std::ostringstream stream;
     stream << toml::toml_formatter(node, toml::toml_formatter::default_flags & ~toml::format_flags::indentation);
@@ -174,11 +174,7 @@ QString describeConstraints(const Definition& def)
 
 QString ConfigIssue::logText() const
 {
-    return QStringLiteral("%1:%2:%3: %4 [%5]")
-        .arg(file)
-        .arg(line)
-        .arg(column)
-        .arg(detail, latin(errorCodeName(code)));
+    return QStringLiteral("%1:%2:%3: %4 [%5]").arg(file).arg(line).arg(column).arg(detail, latin(errorCodeName(code)));
 }
 
 ParsedConfig parseConfig(std::string_view text, const QString& fileName, const Schema& schema)
@@ -189,9 +185,12 @@ ParsedConfig parseConfig(std::string_view text, const QString& fileName, const S
     if (!result) {
         const toml::parse_error& error = result.error();
         parsed.syntaxOk = false;
-        parsed.issues.append(ConfigIssue{ConfigIssue::Severity::Error, ErrorCode::ConfigSyntaxError, fileName,
+        parsed.issues.append(ConfigIssue{ConfigIssue::Severity::Error,
+                                         ErrorCode::ConfigSyntaxError,
+                                         fileName,
                                          static_cast<int>(error.source().begin.line),
-                                         static_cast<int>(error.source().begin.column), {},
+                                         static_cast<int>(error.source().begin.column),
+                                         {},
                                          fromUtf8(error.description())});
         return parsed;
     }
@@ -260,14 +259,15 @@ QByteArray serializeConfig(const Schema& schema, const ValueMap& userValues, std
     }
 
     QString out;
-    out.reserve(32 * 1024);
-    appendComment(out, QStringLiteral(
-        "Noctara configuration.\n"
-        "Every available key is listed below with its description. Lines starting with '#' are defaults;\n"
-        "uncomment and edit to override. Changes are applied live while the app is running.\n"
-        "Precedence: built-in defaults < system config < this file < NOCTARA_* environment < command line.\n"
-        "This file is rewritten when settings change in the app: values and unknown keys are kept,\n"
-        "but your own comments are not. Secrets (tokens, proxy passwords) are never stored here."));
+    out.reserve(qsizetype{32} * 1024);
+    appendComment(
+        out, QStringLiteral(
+                 "Noctara configuration.\n"
+                 "Every available key is listed below with its description. Lines starting with '#' are defaults;\n"
+                 "uncomment and edit to override. Changes are applied live while the app is running.\n"
+                 "Precedence: built-in defaults < system config < this file < NOCTARA_* environment < command line.\n"
+                 "This file is rewritten when settings change in the app: values and unknown keys are kept,\n"
+                 "but your own comments are not. Secrets (tokens, proxy passwords) are never stored here."));
     out += QStringLiteral("\nconfig_version = %1\n").arg(std::max(version, Schema::kConfigVersion));
 
     for (const Section& section : schema.sections()) {
@@ -280,7 +280,8 @@ QByteArray serializeConfig(const Schema& schema, const ValueMap& userValues, std
                 continue;
             }
             out += u'\n';
-            appendComment(out, QString::fromUtf8(def.label) + QStringLiteral(": ") + QString::fromUtf8(def.description));
+            appendComment(out,
+                          QString::fromUtf8(def.label) + QStringLiteral(": ") + QString::fromUtf8(def.description));
             appendComment(out, describeConstraints(def));
             const QString leaf = latin(def.leafName());
             if (user[i] != nullptr) {

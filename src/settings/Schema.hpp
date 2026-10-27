@@ -21,11 +21,11 @@ enum class Type : std::uint8_t {
     Real,
     String,
     Enum,
-    Color,       // "#rrggbb" or "#aarrggbb", normalised to lower case
-    Path,        // empty = platform default
+    Color,  // "#rrggbb" or "#aarrggbb", normalised to lower case
+    Path,   // empty = platform default
     Url,
     StringList,
-    Shortcut,    // QKeySequence portable text, e.g. "Ctrl+K"
+    Shortcut,  // QKeySequence portable text, e.g. "Ctrl+K"
 };
 
 // Settings pages, in display order.
@@ -55,9 +55,9 @@ inline constexpr std::uint8_t ConfigOnly = 1U << 2U;  // no UI row (e.g. data ed
 }  // namespace flag
 
 struct Option {
-    std::string_view id;        // stable config value
-    const char* label;          // UTF-8; translation source in context "Settings" unless !translatable
-    bool translatable = true;   // false for e.g. language endonyms ("Русский")
+    std::string_view id;       // stable config value
+    const char* label;         // UTF-8; translation source in context "Settings" unless !translatable
+    bool translatable = true;  // false for e.g. language endonyms ("Русский")
 };
 
 // Row is shown only while `key` currently holds one of `values` (UI dependency, not a validation rule).

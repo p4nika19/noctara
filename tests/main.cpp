@@ -1,6 +1,8 @@
 #define DOCTEST_CONFIG_IMPLEMENT
 #include "Doctest.hpp"
 
+#include "core/LsanSuppressions.hpp"
+
 #include <QGuiApplication>
 
 #include <cstdlib>

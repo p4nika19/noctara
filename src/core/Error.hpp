@@ -64,8 +64,7 @@ struct Error {
     [[nodiscard]] std::string describe() const;
 };
 
-template <class T>
-using Result = std::expected<T, Error>;
+template <class T> using Result = std::expected<T, Error>;
 
 [[nodiscard]] inline std::unexpected<Error> fail(ErrorCode code, std::string detail = {})
 {

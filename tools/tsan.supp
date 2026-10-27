@@ -1,0 +1,8 @@
+# ThreadSanitizer suppressions. Qt from the distro is not TSan-instrumented, so synchronisation that
+# happens entirely inside Qt (QThreadPool, QWaitCondition, QMutex fast paths) is invisible to TSan
+# and reported as races. Only Qt-internal frames are suppressed; races involving our code still fail.
+called_from_lib:libQt6Core.so.6
+race:QWaitCondition
+race:QThreadPoolPrivate
+race:QThreadPoolThread
+mutex:QWaitCondition

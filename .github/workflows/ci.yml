@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: archlinux:latest  # rolling toolchain: clang 23, mold, Qt 6.12
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [release, debug]
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm --needed git clang lld mold xmake unzip \
+            qt6-base qt6-declarative qt6-svg qt6-shadertools qt6-tools qt6-translations \
+            tomlplusplus vulkan-headers vulkan-icd-loader mesa xorg-server-xvfb fontconfig noto-fonts
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: xmake f -y -m ${{ matrix.mode }} --qt=/usr/lib/qt6 --werror=y --march=x86-64-v2 --root
+      - name: Build
+        run: xmake build -y -a --root
+      - name: Unit tests
+        run: xmake run --root noctara-tests
+      - name: Smoke test (software and llvmpipe GPU, both themes and languages)
+        run: xmake smoke --root
+      - name: Format, i18n and docs sync
+        if: matrix.mode == 'debug'
+        run: |
+          xmake format --check --root
+          xmake i18n-check --root
+          xmake docs-config --check --root
+      - name: clang-tidy
+        if: matrix.mode == 'debug'
+        run: xmake lint --root
+
+  tsan:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - run: pacman -Syu --noconfirm --needed git clang mold xmake qt6-base qt6-declarative qt6-svg qt6-shadertools qt6-tools tomlplusplus vulkan-headers
+      - uses: actions/checkout@v4
+      - run: xmake f -y -m tsan --qt=/usr/lib/qt6 --root && xmake build -y --root noctara-tests
+      - run: xmake test-tsan --root

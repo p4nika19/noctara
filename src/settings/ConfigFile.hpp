@@ -66,7 +66,7 @@ private:
     QTimer m_saveTimer;
     QTimer m_reloadTimer;
     std::unique_ptr<QFileSystemWatcher> m_watcher;
-    QThreadPool m_io;  // single thread: writes are applied in order
+    QThreadPool m_io;          // single thread: writes are applied in order
     QByteArray m_lastContent;  // last content written or read, to ignore our own writes
     std::string m_unknownToml;
     std::int64_t m_fileVersion = 0;

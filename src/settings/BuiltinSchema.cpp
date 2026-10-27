@@ -31,7 +31,8 @@ QVariant real(double value)
 std::vector<Section> builtinSections()
 {
     return {
-        {"general", General, QT_TRANSLATE_NOOP("Settings", "Language"), QT_TRANSLATE_NOOP("Settings", "Interface language.")},
+        {"general", General, QT_TRANSLATE_NOOP("Settings", "Language"),
+         QT_TRANSLATE_NOOP("Settings", "Interface language.")},
         {"general.formatting", General, QT_TRANSLATE_NOOP("Settings", "Formatting"),
          QT_TRANSLATE_NOOP("Settings", "How times and numbers are displayed.")},
 
@@ -112,20 +113,20 @@ std::vector<Definition> builtinDefinitions()
                         "Settings", "Adjust colors that would fall below WCAG AA contrast against glass.")});
 
     // --- Appearance: accent ----------------------------------------------------------------------
-    defs.push_back({.key = keys::AccentAdaptive,
-                    .type = Type::Bool,
-                    .defaultValue = true,
-                    .category = Appearance,
-                    .label = QT_TRANSLATE_NOOP("Settings", "Adapt accent colors to cover art"),
-                    .description = QT_TRANSLATE_NOOP(
-                        "Settings", "Derive the accent palette from the current track's artwork.")});
+    defs.push_back(
+        {.key = keys::AccentAdaptive,
+         .type = Type::Bool,
+         .defaultValue = true,
+         .category = Appearance,
+         .label = QT_TRANSLATE_NOOP("Settings", "Adapt accent colors to cover art"),
+         .description = QT_TRANSLATE_NOOP("Settings", "Derive the accent palette from the current track's artwork.")});
     defs.push_back({.key = keys::AccentColor,
                     .type = Type::Color,
                     .defaultValue = str("#7c6cf0"),
                     .category = Appearance,
                     .label = QT_TRANSLATE_NOOP("Settings", "Accent color"),
-                    .description = QT_TRANSLATE_NOOP(
-                        "Settings", "Seed color for the whole palette when adaptive accents are off."),
+                    .description = QT_TRANSLATE_NOOP("Settings",
+                                                     "Seed color for the whole palette when adaptive accents are off."),
                     .visibleWhen = Condition{keys::AccentAdaptive, {"false"}}});
     defs.push_back({.key = keys::BackdropCoverArt,
                     .type = Type::Bool,
@@ -305,20 +306,20 @@ std::vector<Definition> builtinDefinitions()
                     .description = QT_TRANSLATE_NOOP("Settings", "Stroke thickness of icons.")});
 
     // --- Performance -----------------------------------------------------------------------------
-    defs.push_back({.key = keys::GpuAcceleration,
-                    .type = Type::Enum,
-                    .defaultValue = str("auto"),
-                    .options = {{"auto", QT_TRANSLATE_NOOP("Settings", "Auto")},
-                                {"on", QT_TRANSLATE_NOOP("Settings", "On")},
-                                {"off", QT_TRANSLATE_NOOP("Settings", "Off")}},
-                    .category = Performance,
-                    .label = QT_TRANSLATE_NOOP("Settings", "Hardware acceleration"),
-                    .description = QT_TRANSLATE_NOOP(
-                        "Settings",
-                        "Auto uses the GPU unless it is missing, a software rasterizer or known to be unreliable. "
-                        "Off renders on the CPU and disables blur effects."),
-                    .flags = flag::RequiresRestart,
-                    .cliAlias = "gpu"});
+    defs.push_back(
+        {.key = keys::GpuAcceleration,
+         .type = Type::Enum,
+         .defaultValue = str("auto"),
+         .options = {{"auto", QT_TRANSLATE_NOOP("Settings", "Auto")},
+                     {"on", QT_TRANSLATE_NOOP("Settings", "On")},
+                     {"off", QT_TRANSLATE_NOOP("Settings", "Off")}},
+         .category = Performance,
+         .label = QT_TRANSLATE_NOOP("Settings", "Hardware acceleration"),
+         .description = QT_TRANSLATE_NOOP(
+             "Settings", "Auto uses the GPU unless it is missing, a software rasterizer or known to be unreliable. "
+                         "Off renders on the CPU and disables blur effects."),
+         .flags = flag::RequiresRestart,
+         .cliAlias = "gpu"});
     defs.push_back({.key = keys::GraphicsApi,
                     .type = Type::Enum,
                     .defaultValue = str("auto"),
@@ -342,13 +343,14 @@ std::vector<Definition> builtinDefinitions()
                     .description = QT_TRANSLATE_NOOP("Settings", "Which GPU to use on systems with more than one."),
                     .flags = flag::RequiresRestart | flag::Advanced,
                     .visibleWhen = Condition{keys::GpuAcceleration, {"auto", "on"}}});
-    defs.push_back({.key = keys::VSync,
-                    .type = Type::Bool,
-                    .defaultValue = true,
-                    .category = Performance,
-                    .label = QT_TRANSLATE_NOOP("Settings", "Vertical sync"),
-                    .description = QT_TRANSLATE_NOOP("Settings", "Synchronise frames with the display to avoid tearing."),
-                    .flags = flag::RequiresRestart | flag::Advanced});
+    defs.push_back(
+        {.key = keys::VSync,
+         .type = Type::Bool,
+         .defaultValue = true,
+         .category = Performance,
+         .label = QT_TRANSLATE_NOOP("Settings", "Vertical sync"),
+         .description = QT_TRANSLATE_NOOP("Settings", "Synchronise frames with the display to avoid tearing."),
+         .flags = flag::RequiresRestart | flag::Advanced});
     defs.push_back({.key = keys::FrameRateCap,
                     .type = Type::Enum,
                     .defaultValue = str("auto"),

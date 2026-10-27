@@ -54,9 +54,9 @@ OverrideSet collectCommandLine(const Schema& schema, const QStringList& assignme
         const QString key = assignment.left(eq).trimmed();
         const auto index = eq > 0 ? schema.indexOf(key.toStdString()) : std::nullopt;
         if (!index) {
-            set.issues.append(ConfigIssue{ConfigIssue::Severity::Error, ErrorCode::ConfigUnknownKey,
-                                          QStringLiteral("--set"), 0, 0, key,
-                                          QStringLiteral("expected --set <known.key>=<value>, got '%1'").arg(assignment)});
+            set.issues.append(
+                ConfigIssue{ConfigIssue::Severity::Error, ErrorCode::ConfigUnknownKey, QStringLiteral("--set"), 0, 0,
+                            key, QStringLiteral("expected --set <known.key>=<value>, got '%1'").arg(assignment)});
             continue;
         }
         applyText(set, schema, *index, QStringView(assignment).mid(eq + 1), QStringLiteral("--set"));
@@ -65,9 +65,8 @@ OverrideSet collectCommandLine(const Schema& schema, const QStringList& assignme
         const qsizetype eq = alias.indexOf(u'=');
         const QString name = alias.left(eq);
         const auto defs = schema.definitions();
-        const auto it = std::ranges::find_if(defs, [&](const Definition& def) {
-            return !def.cliAlias.empty() && latin(def.cliAlias) == name;
-        });
+        const auto it = std::ranges::find_if(
+            defs, [&](const Definition& def) { return !def.cliAlias.empty() && latin(def.cliAlias) == name; });
         if (eq <= 0 || it == defs.end()) {
             set.issues.append(ConfigIssue{ConfigIssue::Severity::Error, ErrorCode::ConfigUnknownKey,
                                           QStringLiteral("--") + name, 0, 0, name,

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <unistd.h>
-
 #include <utility>
 
 namespace noctara {
@@ -10,10 +9,16 @@ namespace noctara {
 class UniqueFd {
 public:
     UniqueFd() noexcept = default;
-    explicit UniqueFd(int fd) noexcept : m_fd(fd) {}
+    explicit UniqueFd(int fd) noexcept
+        : m_fd(fd)
+    {
+    }
     ~UniqueFd() { reset(); }
 
-    UniqueFd(UniqueFd&& other) noexcept : m_fd(std::exchange(other.m_fd, -1)) {}
+    UniqueFd(UniqueFd&& other) noexcept
+        : m_fd(std::exchange(other.m_fd, -1))
+    {
+    }
     UniqueFd& operator=(UniqueFd&& other) noexcept
     {
         if (this != &other) {

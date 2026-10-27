@@ -70,8 +70,9 @@ QString schemaMarkdown(const Schema& schema)
                 out += QStringLiteral("\n## %1\n").arg(QString::fromUtf8(categoryLabel(category)));
                 header = true;
             }
-            out += QStringLiteral("\n### `[%1]` %2\n\n%3\n\n")
-                       .arg(latin(section.id), QString::fromUtf8(section.label), QString::fromUtf8(section.description));
+            out +=
+                QStringLiteral("\n### `[%1]` %2\n\n%3\n\n")
+                    .arg(latin(section.id), QString::fromUtf8(section.label), QString::fromUtf8(section.description));
             out += QStringLiteral("| Key | Type | Default | Allowed | Description |\n|---|---|---|---|---|\n");
             for (const Definition& def : schema.definitions()) {
                 if (def.sectionId() != section.id) {
@@ -91,8 +92,8 @@ QString schemaMarkdown(const Schema& schema)
                 out += QStringLiteral("| `%1` | %2 | `%3` | %4 | **%5.** %6 (%7) |\n")
                            .arg(latin(def.leafName()), latin(typeName(def.type)),
                                 escapeCell(formatTomlValue(def, def.defaultValue)), escapeCell(allowedValues(def)),
-                                escapeCell(QString::fromUtf8(def.label)), escapeCell(QString::fromUtf8(def.description)),
-                                notes.join(QStringLiteral(", ")));
+                                escapeCell(QString::fromUtf8(def.label)),
+                                escapeCell(QString::fromUtf8(def.description)), notes.join(QStringLiteral(", ")));
             }
         }
     }

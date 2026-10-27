@@ -21,8 +21,14 @@ namespace noctara::log {
 // Installs the process-wide message handler (timestamp, category, level).
 void install();
 
+// Number of warnings (and worse) logged since install(); used by the smoke test.
+[[nodiscard]] int warningCount() noexcept;
+
 // Placeholder for secret material in logs and diagnostics. Never reveals content or length.
-[[nodiscard]] inline QString redacted() { return QStringLiteral("<redacted>"); }
+[[nodiscard]] inline QString redacted()
+{
+    return QStringLiteral("<redacted>");
+}
 
 // Strips user-info (credentials) from a URL-like string: scheme://user:pass@host -> scheme://<redacted>@host.
 [[nodiscard]] QString redactUrlCredentials(QStringView url);

@@ -25,8 +25,7 @@ inline std::ostream& operator<<(std::ostream& stream, ErrorCode code)
 namespace noctara::test {
 
 // Spins the event loop until `predicate` holds or the timeout elapses.
-template <class Predicate>
-bool waitUntil(Predicate predicate, int timeoutMs = 3000)
+template <class Predicate> bool waitUntil(Predicate predicate, int timeoutMs = 3000)
 {
     QDeadlineTimer deadline(timeoutMs);
     while (!predicate()) {

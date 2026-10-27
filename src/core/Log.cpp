@@ -2,7 +2,9 @@
 
 #include <QDateTime>
 
+#include <atomic>
 #include <cstdio>
+#include <print>
 
 Q_LOGGING_CATEGORY(lcCore, "noctara.core")
 Q_LOGGING_CATEGORY(lcSettings, "noctara.settings")
@@ -20,6 +22,8 @@ namespace noctara::log {
 
 namespace {
 
+std::atomic<int> g_warnings{0};
+
 const char* levelTag(QtMsgType type)
 {
     switch (type) {
@@ -34,11 +38,14 @@ const char* levelTag(QtMsgType type)
 
 void handler(QtMsgType type, const QMessageLogContext& context, const QString& message)
 {
+    if (type != QtDebugMsg && type != QtInfoMsg) {
+        g_warnings.fetch_add(1, std::memory_order_relaxed);
+    }
     const QByteArray time = QDateTime::currentDateTime().toString(QStringLiteral("HH:mm:ss.zzz")).toUtf8();
     const QByteArray text = message.toUtf8();
-    std::fprintf(stderr, "%s %s [%s] %s\n", time.constData(), levelTag(type),
+    std::println(stderr, "{} {} [{}] {}", time.constData(), levelTag(type),
                  context.category != nullptr ? context.category : "default", text.constData());
-    std::fflush(stderr);
+    (void)std::fflush(stderr);
 }
 
 }  // namespace
@@ -46,6 +53,11 @@ void handler(QtMsgType type, const QMessageLogContext& context, const QString& m
 void install()
 {
     qInstallMessageHandler(handler);
+}
+
+int warningCount() noexcept
+{
+    return g_warnings.load(std::memory_order_relaxed);
 }
 
 QString redactUrlCredentials(QStringView url)

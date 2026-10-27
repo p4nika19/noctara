@@ -51,10 +51,14 @@ task("i18n-check")
                 print("out of date: %s (run `xmake i18n-update`)", ts)
                 failed = true
             end
+            local function count(text, needle)
+                local n = 0
+                for _ in text:gmatch(needle) do n = n + 1 end
+                return n
+            end
             if not path.basename(ts):endswith("_en") then
-                local unfinished = select(2, original:gsub("type=\"unfinished\"", ""))
-                local obsolete = select(2, original:gsub("type=\"obsolete\"", "")) +
-                                 select(2, original:gsub("type=\"vanished\"", ""))
+                local unfinished = count(original, "type=\"unfinished\"")
+                local obsolete = count(original, "type=\"obsolete\"") + count(original, "type=\"vanished\"")
                 if unfinished > 0 or obsolete > 0 then
                     print("%s: %d unfinished, %d obsolete/vanished", ts, unfinished, obsolete)
                     failed = true
@@ -147,5 +151,49 @@ task("package")
     set_menu {usage = "xmake package", description = "Build a release tarball with desktop file and icons"}
     on_run(function ()
         os.execv("sh", {path.join(os.projectdir(), "tools", "package.sh")})
+    end)
+task_end()
+
+-- Launches the app offscreen in every renderer/theme/language combination and visits all pages;
+-- fails if any combination logs a warning (QML errors, missing types, binding loops, ...).
+task("smoke")
+    set_category("plugin")
+    set_menu {usage = "xmake smoke", description = "Headless smoke test of all pages (software + GPU, both themes and languages)"}
+    on_run(function ()
+        local binary = path.join(os.projectdir(), "build", "noctara")
+        assert(os.isfile(binary), "build the app first")
+        local scratch = os.tmpfile() .. ".smoke"
+        local failures = 0
+        for _, gpu in ipairs({"off", "auto"}) do
+            for _, theme in ipairs({"dark", "light"}) do
+                for _, lang in ipairs({"en", "ru"}) do
+                    local ok = try { function ()
+                        os.vrunv(binary, {"--smoke-test", "--gpu=" .. gpu, "--theme=" .. theme, "--lang=" .. lang},
+                                 {envs = {QT_QPA_PLATFORM = "offscreen", XDG_CONFIG_HOME = scratch .. "/config",
+                                          XDG_CACHE_HOME = scratch .. "/cache", XDG_STATE_HOME = scratch .. "/state"}})
+                        return true
+                    end }
+                    print("%s gpu=%s theme=%s lang=%s", ok and "ok  " or "FAIL", gpu, theme, lang)
+                    if not ok then failures = failures + 1 end
+                end
+            end
+        end
+        os.tryrm(scratch)
+        if failures > 0 then raise("%d smoke combinations failed", failures) end
+    end)
+task_end()
+
+-- ThreadSanitizer run (configure with `xmake f -m tsan` first). The distro Qt is not TSan-instrumented:
+-- Qt-internal synchronisation is suppressed (tools/tsan.supp), and suites that create QThreadPool
+-- threads are excluded because TSan's thread registry aborts on pthread_t reuse there
+-- (CHECK live_.try_emplace). Full coverage needs a TSan-instrumented Qt build (docs/performance.md).
+task("test-tsan")
+    set_category("plugin")
+    set_menu {usage = "xmake test-tsan", description = "Run unit tests under ThreadSanitizer (tsan mode)"}
+    on_run(function ()
+        local binary = path.join(os.projectdir(), "build", "linux", "x86_64", "tsan", "noctara-tests")
+        assert(os.isfile(binary), "configure with `xmake f -m tsan` and build noctara-tests first")
+        os.execv(binary, {"-tse=settings.file,ui.settings"}, {envs = {
+            TSAN_OPTIONS = "halt_on_error=1 suppressions=" .. path.join(os.projectdir(), "tools", "tsan.supp")}})
     end)
 task_end()

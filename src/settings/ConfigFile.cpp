@@ -28,15 +28,20 @@ LoadedFile loadFile(const QString& path, const Schema& schema)
         if (content.error().code != ErrorCode::NotFound) {
             loaded.exists = true;
             loaded.parsed.syntaxOk = false;
-            loaded.parsed.issues.append(ConfigIssue{ConfigIssue::Severity::Error, content.error().code, path, 0, 0, {},
+            loaded.parsed.issues.append(ConfigIssue{ConfigIssue::Severity::Error,
+                                                    content.error().code,
+                                                    path,
+                                                    0,
+                                                    0,
+                                                    {},
                                                     QString::fromStdString(content.error().detail)});
         }
         return loaded;
     }
     loaded.exists = true;
     loaded.content = std::move(*content);
-    loaded.parsed = parseConfig(std::string_view(loaded.content.constData(), static_cast<std::size_t>(loaded.content.size())),
-                                path, schema);
+    loaded.parsed = parseConfig(
+        std::string_view(loaded.content.constData(), static_cast<std::size_t>(loaded.content.size())), path, schema);
     return loaded;
 }
 
@@ -53,7 +58,8 @@ void logIssues(const ConfigIssues& issues)
 
 bool hasErrors(const ConfigIssues& issues)
 {
-    return std::ranges::any_of(issues, [](const ConfigIssue& issue) { return issue.severity == ConfigIssue::Severity::Error; });
+    return std::ranges::any_of(issues,
+                               [](const ConfigIssue& issue) { return issue.severity == ConfigIssue::Severity::Error; });
 }
 
 }  // namespace
@@ -65,6 +71,7 @@ ConfigFile::ConfigFile(SettingsStore& store, QString userPath, QString systemPat
     , m_systemPath(std::move(systemPath))
 {
     m_io.setMaxThreadCount(1);
+    m_io.setExpiryTimeout(-1);  // one long-lived I/O thread instead of churning threads per save
     m_io.setObjectName(QStringLiteral("config-io"));
     m_saveTimer.setSingleShot(true);
     m_saveTimer.setInterval(kDefaultSaveDelay);
@@ -84,12 +91,12 @@ ConfigIssues ConfigFile::load()
 {
     ConfigIssues issues;
     if (!m_systemPath.isEmpty()) {
-        LoadedFile system = loadFile(m_systemPath, m_store.schema());
+        const LoadedFile system = loadFile(m_systemPath, m_store.schema());
         issues.append(system.parsed.issues);
         m_store.replaceLayer(Layer::System, system.parsed.values);
     }
 
-    LoadedFile user = loadFile(m_userPath, m_store.schema());
+    const LoadedFile user = loadFile(m_userPath, m_store.schema());
     issues.append(user.parsed.issues);
     logIssues(issues);
     if (!user.exists) {
@@ -152,19 +159,20 @@ void ConfigFile::onWatchedPathChanged()
 
 void ConfigFile::reloadFromDisk()
 {
-    QtConcurrent::run(&m_io, [path = m_userPath, schema = &m_store.schema()] { return loadFile(path, *schema); })
-        .then(this, [this](const LoadedFile& loaded) {
-            if (!loaded.exists || loaded.content == m_lastContent) {
-                return;  // deleted (keep state) or our own write
-            }
-            m_lastContent = loaded.content;
-            logIssues(loaded.parsed.issues);
-            if (!loaded.parsed.syntaxOk) {
-                Q_EMIT reloadIssues(loaded.parsed.issues);
-                return;
-            }
-            applyReloaded(loaded.parsed);
-        });
+    QtConcurrent::run(&m_io, [path = m_userPath, schema = &m_store.schema()] {
+        return loadFile(path, *schema);
+    }).then(this, [this](const LoadedFile& loaded) {
+        if (!loaded.exists || loaded.content == m_lastContent) {
+            return;  // deleted (keep state) or our own write
+        }
+        m_lastContent = loaded.content;
+        logIssues(loaded.parsed.issues);
+        if (!loaded.parsed.syntaxOk) {
+            Q_EMIT reloadIssues(loaded.parsed.issues);
+            return;
+        }
+        applyReloaded(loaded.parsed);
+    });
 }
 
 void ConfigFile::applyReloaded(const ParsedConfig& parsed)
@@ -211,7 +219,7 @@ void ConfigFile::saveNow()
     }
     const bool backup = std::exchange(m_fileUnparseable, false);
     m_lastContent = content;
-    QtConcurrent::run(&m_io, [path = m_userPath, content = std::move(content), backup]() -> Result<void> {
+    QtConcurrent::run(&m_io, [path = m_userPath, content = std::move(content), backup] -> Result<void> {
         if (backup) {
             const QString backupPath = path + QStringLiteral(".bak");
             QFile::remove(backupPath);
@@ -220,7 +228,8 @@ void ConfigFile::saveNow()
         return writeFileAtomic(path, content);
     }).then(this, [this](const Result<void>& written) {
         if (!written) {
-            qCWarning(lcSettings).noquote() << "saving config failed:" << QString::fromStdString(written.error().describe());
+            qCWarning(lcSettings).noquote()
+                << "saving config failed:" << QString::fromStdString(written.error().describe());
             Q_EMIT saveFailed(written.error());
         }
     });
@@ -258,8 +267,9 @@ Result<ConfigIssues> ConfigFile::importFrom(const QString& path)
         return fail(ErrorCode::NotFound, path.toStdString());
     }
     if (!loaded.parsed.syntaxOk) {
-        return fail(ErrorCode::ConfigSyntaxError,
-                    loaded.parsed.issues.isEmpty() ? std::string() : loaded.parsed.issues.front().logText().toStdString());
+        return fail(ErrorCode::ConfigSyntaxError, loaded.parsed.issues.isEmpty()
+                                                      ? std::string()
+                                                      : loaded.parsed.issues.front().logText().toStdString());
     }
     m_unknownToml = loaded.parsed.unknownToml;
     m_store.replaceLayer(Layer::User, loaded.parsed.values);

@@ -62,14 +62,16 @@ TEST_SUITE("settings.schema")
         REQUIRE(schema().size() > 10);
         for (const Definition& def : schema().definitions()) {
             CHECK(validate(def, def.defaultValue).has_value());
-            CHECK_FALSE(QString::fromLatin1(def.key.data(), static_cast<qsizetype>(def.key.size())).contains(secretLike));
+            CHECK_FALSE(
+                QString::fromLatin1(def.key.data(), static_cast<qsizetype>(def.key.size())).contains(secretLike));
             CHECK(schema().section(def.sectionId()) != nullptr);
         }
     }
 
     TEST_CASE("environment variable names")
     {
-        CHECK(Schema::environmentVariable(*schema().find(keys::ThemeMode)) == QStringLiteral("NOCTARA_APPEARANCE_THEME_MODE"));
+        CHECK(Schema::environmentVariable(*schema().find(keys::ThemeMode)) ==
+              QStringLiteral("NOCTARA_APPEARANCE_THEME_MODE"));
     }
 
     TEST_CASE("validation rejects wrong types, ranges and enum values")
@@ -132,7 +134,8 @@ TEST_SUITE("settings.store")
         REQUIRE(store.setUserValue(keys::ThemeMode, QStringLiteral("system")).has_value());
         CHECK_FALSE(store.layerValue(Layer::User, idx(keys::ThemeMode)).has_value());
 
-        CHECK(store.setUserValue(keys::ThemeMode, QStringLiteral("nope")).error().code == ErrorCode::ConfigUnknownEnumValue);
+        CHECK(store.setUserValue(keys::ThemeMode, QStringLiteral("nope")).error().code ==
+              ErrorCode::ConfigUnknownEnumValue);
         CHECK(store.setUserValue("no.such.key", true).error().code == ErrorCode::ConfigUnknownKey);
 
         store.replaceLayer(Layer::Environment, {{idx(keys::ThemeMode), QStringLiteral("light")}});
@@ -192,7 +195,8 @@ TEST_SUITE("settings.toml")
         CHECK(rewritten.contains("# blur_strength = 0.6"));
         CHECK(rewritten.contains("mode = \"light\""));
 
-        const auto reparsed = parse(std::string_view(rewritten.constData(), static_cast<std::size_t>(rewritten.size())));
+        const auto reparsed =
+            parse(std::string_view(rewritten.constData(), static_cast<std::size_t>(rewritten.size())));
         REQUIRE(reparsed.syntaxOk);
         CHECK(parsedValue(reparsed, keys::ThemeMode)->toString() == QStringLiteral("light"));
         CHECK(reparsed.unknownToml == parsed.unknownToml);
@@ -218,7 +222,8 @@ TEST_SUITE("settings.toml")
         auto parsed = toml::parse("[old]\nname = 5\n");
         REQUIRE(parsed);
         toml::table root = std::move(parsed).table();
-        const Migration migrations[] = {{1, [](toml::table& table) { moveKey(table, "old.name", "fresh.section.name"); }}};
+        const Migration migrations[] = {
+            {1, [](toml::table& table) { moveKey(table, "old.name", "fresh.section.name"); }}};
         CHECK(migrate(root, 1, 2, migrations) == 2);
         CHECK(root.at_path("fresh.section.name").value<int64_t>() == 5);
         CHECK_FALSE(root.at_path("old.name"));
@@ -236,8 +241,9 @@ TEST_SUITE("settings.overrides")
         CHECK(fromEnv.values.size() == 1);
         CHECK(fromEnv.issues.size() == 1);
 
-        const auto fromCli = collectCommandLine(schema(), {QStringLiteral("appearance.glass.grain=0.1"), QStringLiteral("bogus=1")},
-                                                {QStringLiteral("gpu=off"), QStringLiteral("nope=1")});
+        const auto fromCli =
+            collectCommandLine(schema(), {QStringLiteral("appearance.glass.grain=0.1"), QStringLiteral("bogus=1")},
+                               {QStringLiteral("gpu=off"), QStringLiteral("nope=1")});
         CHECK(fromCli.values.size() == 2);
         CHECK(fromCli.issues.size() == 2);
     }
@@ -257,8 +263,8 @@ TEST_SUITE("settings.file")
         CHECK(file.load().isEmpty());
         file.flush();
         REQUIRE(QFile::exists(path));
-        CHECK(QFileInfo(path).permissions() == (QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ReadUser |
-                                                 QFileDevice::WriteUser));
+        CHECK(QFileInfo(path).permissions() ==
+              (QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ReadUser | QFileDevice::WriteUser));
 
         REQUIRE(store.setUserValue(keys::ThemeMode, QStringLiteral("dark")).has_value());
         REQUIRE(test::waitUntil([&] { return readWholeFile(path)->contains("\nmode = \"dark\""); }));
@@ -328,7 +334,8 @@ TEST_SUITE("settings.report")
     {
         const QString markdown = schemaMarkdown(schema());
         for (const Definition& def : schema().definitions()) {
-            const QString leaf = QString::fromLatin1(def.leafName().data(), static_cast<qsizetype>(def.leafName().size()));
+            const QString leaf =
+                QString::fromLatin1(def.leafName().data(), static_cast<qsizetype>(def.leafName().size()));
             CHECK(markdown.contains(u'`' + leaf + u'`'));
         }
     }

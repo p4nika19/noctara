@@ -8,10 +8,10 @@
 #include <QRandomGenerator>
 
 #include <cerrno>
-#include <cstring>
 #include <fcntl.h>
 #include <format>
 #include <sys/stat.h>
+#include <system_error>
 
 namespace noctara {
 
@@ -19,7 +19,7 @@ namespace {
 
 std::string errnoDetail(std::string_view what, const QString& path, int err)
 {
-    return std::format("{} '{}': {}", what, path.toStdString(), std::strerror(err));
+    return std::format("{} '{}': {}", what, path.toStdString(), std::generic_category().message(err));
 }
 
 Result<void> writeAll(int fd, QByteArrayView data, const QString& path)
@@ -61,8 +61,8 @@ Result<QByteArray> readWholeFile(const QString& path)
 {
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
-        const auto code = file.error() == QFileDevice::OpenError && !file.exists() ? ErrorCode::NotFound
-                                                                                    : ErrorCode::IoError;
+        const auto code =
+            file.error() == QFileDevice::OpenError && !file.exists() ? ErrorCode::NotFound : ErrorCode::IoError;
         return fail(code, std::format("open '{}': {}", path.toStdString(), file.errorString().toStdString()));
     }
     return file.readAll();
@@ -109,7 +109,9 @@ Result<void> writeFileAtomic(const QString& path, QByteArrayView data, mode_t mo
         return fail(errorCodeFromErrno(err), errnoDetail("create", tempPath, err));
     }
 
-    auto cleanup = [&nativeTemp] { ::unlink(nativeTemp.constData()); };
+    const auto cleanup = [&nativeTemp] {
+        ::unlink(nativeTemp.constData());
+    };
 
     if (auto written = writeAll(fd.get(), data, tempPath); !written) {
         cleanup();
@@ -129,7 +131,8 @@ Result<void> writeFileAtomic(const QString& path, QByteArrayView data, mode_t mo
     }
 
     // Persist the rename itself; failure here is not fatal for correctness of the content.
-    if (UniqueFd dirFd(::open(QFile::encodeName(info.absolutePath()).constData(), O_RDONLY | O_DIRECTORY | O_CLOEXEC));
+    if (const UniqueFd dirFd(
+            ::open(QFile::encodeName(info.absolutePath()).constData(), O_RDONLY | O_DIRECTORY | O_CLOEXEC));
         dirFd) {
         ::fsync(dirFd.get());
     }
