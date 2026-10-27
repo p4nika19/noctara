@@ -58,7 +58,8 @@ std::vector<Section> builtinSections()
         {"performance.rendering", Performance, QT_TRANSLATE_NOOP("Settings", "Rendering"),
          QT_TRANSLATE_NOOP("Settings", "Frame pacing.")},
         {"performance.power", Performance, QT_TRANSLATE_NOOP("Settings", "Power"),
-         QT_TRANSLATE_NOOP("Settings", "Energy saving.")},
+         QT_TRANSLATE_NOOP("Settings",
+                           "How Noctara reduces its own energy use. Your system power profile is not changed.")},
     };
 }
 
@@ -122,7 +123,7 @@ std::vector<Definition> builtinDefinitions()
          .description = QT_TRANSLATE_NOOP("Settings", "Derive the accent palette from the current track's artwork.")});
     defs.push_back({.key = keys::AccentColor,
                     .type = Type::Color,
-                    .defaultValue = str("#7c6cf0"),
+                    .defaultValue = str("#4a7dff"),
                     .category = Appearance,
                     .label = QT_TRANSLATE_NOOP("Settings", "Accent color"),
                     .description = QT_TRANSLATE_NOOP("Settings",
@@ -365,13 +366,19 @@ std::vector<Definition> builtinDefinitions()
                     .description = QT_TRANSLATE_NOOP("Settings", "Upper bound for animation frame rate."),
                     .unit = QT_TRANSLATE_NOOP("Settings", "FPS"),
                     .flags = flag::Advanced});
-    defs.push_back({.key = keys::BatterySaver,
-                    .type = Type::Bool,
-                    .defaultValue = true,
+    defs.push_back({.key = keys::EnergySaving,
+                    .type = Type::Enum,
+                    .defaultValue = str("auto"),
+                    .options = {{"auto", QT_TRANSLATE_NOOP("Settings", "Automatic (on battery)")},
+                                {"always", QT_TRANSLATE_NOOP("Settings", "Always")},
+                                {"off", QT_TRANSLATE_NOOP("Settings", "Off")}},
                     .category = Performance,
-                    .label = QT_TRANSLATE_NOOP("Settings", "Reduce GPU usage on battery"),
+                    .label = QT_TRANSLATE_NOOP("Settings", "Energy saving"),
                     .description = QT_TRANSLATE_NOOP(
-                        "Settings", "Pause the animated backdrop and lower effect quality when on battery power.")});
+                        "Settings",
+                        "While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead "
+                        "of Liquid Glass or Gaussian, and limits animations to 30 frames per second. Automatic turns "
+                        "it on only while the computer runs on battery.")});
 
     return defs;
 }

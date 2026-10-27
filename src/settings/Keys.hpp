@@ -38,6 +38,6 @@ inline constexpr std::string_view GraphicsApi = "performance.gpu.api";
 inline constexpr std::string_view GpuPreference = "performance.gpu.preference";
 inline constexpr std::string_view VSync = "performance.rendering.vsync";
 inline constexpr std::string_view FrameRateCap = "performance.rendering.frame_rate_cap";
-inline constexpr std::string_view BatterySaver = "performance.power.battery_saver";
+inline constexpr std::string_view EnergySaving = "performance.power.energy_saving";
 
 }  // namespace noctara::settings::keys

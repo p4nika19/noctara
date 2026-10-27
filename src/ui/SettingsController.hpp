@@ -59,6 +59,7 @@ public:
     Q_INVOKABLE QString importProfile(const QUrl& source);
 
     void setAvailability(Availability availability);
+    void setRowStatus(const QString& key, const QString& status);
 
 Q_SIGNALS:
     void categoriesChanged();

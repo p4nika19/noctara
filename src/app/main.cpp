@@ -3,6 +3,7 @@
 #include "core/Paths.hpp"
 #include "gfx/CrashSentinel.hpp"
 #include "gfx/GraphicsBootstrap.hpp"
+#include "gfx/PowerMonitor.hpp"
 #include "gfx/Relaunch.hpp"
 #include "i18n/Formatter.hpp"
 #include "i18n/LanguageManager.hpp"
@@ -14,6 +15,7 @@
 #include "theme/Theme.hpp"
 #include "ui/AppController.hpp"
 #include "ui/IconProvider.hpp"
+#include "ui/PowerStatus.hpp"
 #include "ui/SettingsController.hpp"
 #include "ui/SettingsModel.hpp"
 
@@ -243,6 +245,8 @@ int main(int argc, char** argv)
 
     ui::SettingsController settingsUi(store, config, languages);
     settingsUi.setAvailability(graphicsAvailability(decision));
+    gfx::PowerMonitor power;
+    const ui::PowerStatusPresenter powerStatus(power, store, languages, settingsUi);
     ui::AppController appController(store, graphics, relaunch, languages);
     QObject::connect(&config, &settings::ConfigFile::reloadIssues, &appController,
                      &ui::AppController::reportConfigIssues);

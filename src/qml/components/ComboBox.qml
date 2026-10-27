@@ -63,30 +63,37 @@ T.ComboBox {
         required property int index
         readonly property bool available: modelData.enabled !== false
         width: ListView.view ? ListView.view.width : implicitWidth
-        implicitHeight: Theme.space.controlHeight
+        implicitHeight: Math.max(Theme.space.controlHeight, labels.implicitHeight + Theme.space.sm * 2)
         leftPadding: Theme.space.md
         rightPadding: Theme.space.md
         enabled: available
         hoverEnabled: true
         highlighted: control.highlightedIndex === index
         Accessible.name: modelData.label
-        contentItem: Column {
-            spacing: 0
-            Text {
-                width: parent.width
-                text: entry.modelData.label
-                font: entry.index === control.currentIndex ? Theme.font.bodyStrong : Theme.font.body
-                color: entry.index === control.currentIndex ? Theme.colors.accent : Theme.colors.textPrimary
-                opacity: entry.available ? 1 : 0.45
-                elide: Text.ElideRight
-            }
-            Text {
-                width: parent.width
-                visible: !entry.available && (entry.modelData.reason || "").length > 0
-                text: entry.modelData.reason || ""
-                font: Theme.font.caption
-                color: Theme.colors.textTertiary
-                elide: Text.ElideRight
+        // The control stretches contentItem to its full height; centre the label block inside it.
+        contentItem: Item {
+            implicitHeight: labels.implicitHeight
+            Column {
+                id: labels
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                Text {
+                    width: parent.width
+                    text: entry.modelData.label
+                    font: entry.index === control.currentIndex ? Theme.font.bodyStrong : Theme.font.body
+                    color: entry.index === control.currentIndex ? Theme.colors.accent : Theme.colors.textPrimary
+                    opacity: entry.available ? 1 : 0.45
+                    elide: Text.ElideRight
+                }
+                Text {
+                    width: parent.width
+                    visible: !entry.available && (entry.modelData.reason || "").length > 0
+                    text: entry.modelData.reason || ""
+                    font: Theme.font.caption
+                    color: Theme.colors.textTertiary
+                    wrapMode: Text.Wrap
+                }
             }
         }
         background: Rectangle {
@@ -96,8 +103,10 @@ T.ComboBox {
     }
 
     popup: T.Popup {
+        // At least as wide as the button, wider for long (translated) entries; right-aligned with it.
         y: control.height + Theme.space.xs
-        width: control.width
+        width: Math.max(control.width, 340 * Theme.scale)
+        x: control.width - width
         implicitHeight: Math.min(contentItem.implicitHeight + topPadding + bottomPadding, 360 * Theme.scale)
         padding: Theme.space.xs
         contentItem: ListView {

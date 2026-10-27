@@ -248,7 +248,17 @@ QString SettingsController::importProfile(const QUrl& source)
 
 void SettingsController::setAvailability(Availability availability)
 {
+    availability.statuses = std::move(m_availability.statuses);  // live status lines are owned separately
     m_availability = std::move(availability);
+    refreshModels();
+}
+
+void SettingsController::setRowStatus(const QString& key, const QString& status)
+{
+    if (m_availability.statuses.value(key) == status) {
+        return;
+    }
+    m_availability.statuses.insert(key, status);
     refreshModels();
 }
 

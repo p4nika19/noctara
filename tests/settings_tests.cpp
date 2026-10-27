@@ -217,6 +217,20 @@ TEST_SUITE("settings.toml")
         CHECK(parsed.values == values);
     }
 
+    TEST_CASE("v1 battery_saver migrates to the three-way energy_saving setting")
+    {
+        for (const char* text : {"config_version = 1\n[performance.power]\nbattery_saver = false\n",
+                                 "[performance.power]\nbattery_saver = false\n"}) {
+            const auto parsed = parse(text);
+            REQUIRE(parsed.syntaxOk);
+            CHECK(parsedValue(parsed, keys::EnergySaving)->toString() == QStringLiteral("off"));
+            CHECK(parsed.issues.empty());
+            CHECK(parsed.unknownToml.empty());
+        }
+        const auto enabled = parse("config_version = 1\n[performance.power]\nbattery_saver = true\n");
+        CHECK(parsedValue(enabled, keys::EnergySaving)->toString() == QStringLiteral("auto"));
+    }
+
     TEST_CASE("migrations move keys between versions")
     {
         auto parsed = toml::parse("[old]\nname = 5\n");

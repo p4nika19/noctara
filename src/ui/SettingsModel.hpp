@@ -18,6 +18,7 @@ namespace noctara::ui {
 struct Availability {
     QHash<QString, const char*> disabledSettings;                 // key -> reason
     QHash<QString, QHash<QString, const char*>> disabledOptions;  // key -> option id -> reason
+    QHash<QString, QString> statuses;                             // key -> live, already translated status line
 };
 
 // Rows of the generated settings UI. One model per page (lazily created) plus one for search results.
@@ -51,6 +52,7 @@ public:
         SectionDescriptionRole,
         CategoryLabelRole,
         SectionStartRole,  // first shown row of its section: the delegate draws the section header
+        StatusRole,        // live state shown under the description (e.g. current power source)
     };
     Q_ENUM(Role)
 

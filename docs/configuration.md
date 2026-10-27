@@ -45,7 +45,7 @@ The whole palette is generated from a single accent color.
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
 | `adaptive` | bool | `true` | — | **Adapt accent colors to cover art.** Derive the accent palette from the current track's artwork. (env `NOCTARA_APPEARANCE_ACCENT_ADAPTIVE`) |
-| `color` | color | `"#7c6cf0"` | — | **Accent color.** Seed color for the whole palette when adaptive accents are off. (env `NOCTARA_APPEARANCE_ACCENT_COLOR`) |
+| `color` | color | `"#4a7dff"` | — | **Accent color.** Seed color for the whole palette when adaptive accents are off. (env `NOCTARA_APPEARANCE_ACCENT_COLOR`) |
 
 ### `[appearance.backdrop]` Backdrop
 
@@ -131,8 +131,8 @@ Frame pacing.
 
 ### `[performance.power]` Power
 
-Energy saving.
+How Noctara reduces its own energy use. Your system power profile is not changed.
 
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
-| `battery_saver` | bool | `true` | — | **Reduce GPU usage on battery.** Pause the animated backdrop and lower effect quality when on battery power. (env `NOCTARA_PERFORMANCE_POWER_BATTERY_SAVER`) |
+| `energy_saving` | enum | `"auto"` | `auto`, `always`, `off` | **Energy saving.** While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead of Liquid Glass or Gaussian, and limits animations to 30 frames per second. Automatic turns it on only while the computer runs on battery. (env `NOCTARA_PERFORMANCE_POWER_ENERGY_SAVING`) |

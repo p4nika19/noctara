@@ -15,50 +15,50 @@ using color::Srgb;
 constexpr double kAchromaticChroma = 0.02;
 constexpr double kToneStep = 0.0025;
 
-// Midnight: blue-violet tinted, never pure black. Glass is dark and moderately opaque.
+// Midnight: deep night-blue neutrals, never pure black. Glass is dark and fairly opaque.
 constexpr SchemeTones kDarkTones{
-    .neutralHue = 285.0,
-    .neutralChroma = 0.028,
-    .neutralHueBlend = 0.35,
-    .backdropL = 0.17,
-    .backdropMinL = 0.10,
-    .backdropMaxL = 0.34,
-    .surfaceL = {0.25, 0.29, 0.33},
-    .surfaceAlpha = {0.50, 0.60, 0.72},
-    .solidL = {0.21, 0.25, 0.29},
-    .textL = {0.96, 0.84, 0.72},
+    .neutralHue = 262.0,
+    .neutralChroma = 0.032,
+    .neutralHueBlend = 0.25,
+    .backdropL = 0.115,
+    .backdropMinL = 0.07,
+    .backdropMaxL = 0.24,
+    .surfaceL = {0.165, 0.19, 0.22},
+    .surfaceAlpha = {0.58, 0.68, 0.80},
+    .solidL = {0.15, 0.175, 0.205},
+    .textL = {0.95, 0.80, 0.68},
     .accentMinL = 0.68,
     .accentMaxL = 0.82,
     .accentMaxC = 0.17,
-    .containerL = 0.34,
+    .containerL = 0.29,
     .containerChromaScale = 0.55,
     .onContainerL = 0.92,
-    .glowAlpha = 0.38,
+    .glowAlpha = 0.22,
     .selectionAlpha = 0.28,
-    .shadowL = 0.06,
+    .shadowL = 0.03,
     .shadowChroma = 0.02,
     .shadowAlpha = 0.45,
-    .rimHighlightAlpha = 0.16,
-    .rimShadowAlpha = 0.30,
+    .rimHighlightAlpha = 0.12,
+    .rimShadowAlpha = 0.35,
     .waveformUnplayedAlpha = 0.30,
     .waveformBufferedAlpha = 0.48,
-    .skeletonL = 0.31,
-    .skeletonHighlightL = 0.39,
+    .skeletonL = 0.22,
+    .skeletonHighlightL = 0.28,
     .hoverAlpha = 0.07,
     .pressedAlpha = 0.13,
-    .scrimAlpha = 0.45,
+    .scrimAlpha = 0.55,
 };
 
-// Frost: milky white glass over a pale, cool, washed backdrop. Softer, accent-tinted shadows.
+// Frost: milky white glass over a pale, cool blue wash. Softer, accent-tinted shadows.
 constexpr SchemeTones kLightTones{
     .neutralHue = 250.0,
-    .neutralChroma = 0.016,
-    .neutralHueBlend = 0.30,
+    .neutralChroma = 0.02,
+    .neutralHueBlend = 0.25,
     .backdropL = 0.94,
     .backdropMinL = 0.86,
     .backdropMaxL = 0.98,
     .surfaceL = {0.985, 0.99, 0.995},
-    .surfaceAlpha = {0.56, 0.68, 0.80},
+    .surfaceAlpha = {0.64, 0.74, 0.86},
     .solidL = {0.965, 0.98, 0.99},
     .textL = {0.22, 0.38, 0.48},
     .accentMinL = 0.42,
@@ -157,7 +157,7 @@ const SchemeTones& defaultTones(Scheme scheme) noexcept
 
 OkLch defaultSeed() noexcept
 {
-    return {0.66, 0.15, 285.0};  // calm violet
+    return {0.62, 0.16, 262.0};  // night blue
 }
 
 Palette mix(const Palette& from, const Palette& to, double t)
@@ -184,7 +184,7 @@ Palette generatePalette(const PaletteRequest& request)
 
     Palette p;
     p.backdrop = rgba({t.backdropL, nc * 1.2, nh});
-    const double backdropDelta = scheme == Scheme::Dark ? 0.06 : 0.03;
+    const double backdropDelta = scheme == Scheme::Dark ? 0.035 : 0.03;
     p.backdropTop =
         rgba({t.backdropL + backdropDelta, achromatic ? nc : std::min(seed.C, 0.06), achromatic ? nh : seed.h});
     p.backdropBottom = rgba({t.backdropL - backdropDelta, nc, nh});

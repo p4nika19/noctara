@@ -119,9 +119,10 @@ TEST_SUITE("theme.palette")
         const Palette dark = generatePalette({.scheme = Scheme::Dark});
         const Palette light = generatePalette({.scheme = Scheme::Light});
         const color::OkLch backdrop = color::toOkLch(dark.backdrop.rgb);
-        CHECK(backdrop.L >= 0.15);                          // deep, but not black
+        CHECK(backdrop.L >= 0.08);                          // never black
+        CHECK(backdrop.L <= 0.14);                          // but genuinely midnight-dark
         CHECK(backdrop.C >= 0.02);                          // visibly tinted
-        CHECK((backdrop.h > 250.0 && backdrop.h < 320.0));  // blue-violet
+        CHECK((backdrop.h > 240.0 && backdrop.h < 285.0));  // blue
         CHECK(light.surfaceBase.alpha > dark.surfaceBase.alpha);
         CHECK(color::relativeLuminance(light.textPrimary.rgb) < color::relativeLuminance(dark.textPrimary.rgb));
     }

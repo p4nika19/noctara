@@ -7,10 +7,25 @@ namespace noctara::settings {
 
 namespace {
 
-// Schema version 1 is the first released format; files without `config_version` are treated as v0
-// and need no transformation. Future renames are appended here.
+// v1 -> v2: the boolean `performance.power.battery_saver` became the three-way
+// `performance.power.energy_saving` (true -> "auto", false -> "off").
+void energySavingMode(toml::table& root)
+{
+    toml::table* power = root.at_path("performance.power").as_table();
+    if (power == nullptr) {
+        return;
+    }
+    if (const auto* old = power->get_as<bool>("battery_saver")) {
+        const bool enabled = old->get();
+        power->erase("battery_saver");
+        power->insert_or_assign("energy_saving", enabled ? "auto" : "off");
+    }
+}
+
+// Files without `config_version` are v0 (same format as v1). Append future migrations here.
 constexpr Migration kMigrations[] = {
     {0, [](toml::table&) {}},
+    {1, energySavingMode},
 };
 
 std::vector<std::string_view> splitPath(std::string_view path)

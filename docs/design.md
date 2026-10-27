@@ -22,19 +22,20 @@ Both themes share the same components, geometry, motion and token structure; onl
 
 The whole palette comes from **one seed color** in OKLCH. The seed is either the adaptive accent from cover art (slice b) or the static accent setting.
 
-- **Neutrals** are tinted. Their hue is the scheme's neutral hue (Midnight 285°, Frost 250°) blended 30–35% toward the seed hue, at low chroma. Midnight is never black: backdrop L = 0.17 in OKLab.
+- **Neutrals** are tinted night blue. Their hue is the scheme's neutral hue (Midnight 262°, Frost 250°) blended 25% toward the seed hue, at low chroma. Midnight is deliberately very dark but never black: backdrop L = 0.115 in OKLab. The default seed and static accent are blue (OKLCH 0.62/0.16/262°, `#4a7dff`).
 - **Accent**: seed hue, lightness clamped to the scheme range (Midnight 0.68–0.82, Frost 0.42–0.56), chroma capped, gamut-mapped by reducing chroma at constant L and h.
-- **Contrast is enforced, not hoped for.** Each foreground role moves in lightness, away from the background, until it meets WCAG AA against the *worst-case* surface. Worst cases are each glass tint composited over both backdrop-lightness bounds (Midnight 0.10–0.34, Frost 0.86–0.98), the solid surfaces, and the bare backdrop bounds. Text needs 4.5:1; icons, focus rings and the waveform need 3:1. On-accent text is checked against the accent and its hover and pressed states.
+- **Contrast is enforced, not hoped for.** Each foreground role moves in lightness, away from the background, until it meets WCAG AA against the *worst-case* surface. Worst cases are each glass tint composited over both backdrop-lightness bounds, the solid surfaces, and the bare backdrop bounds (Midnight 0.07–0.24, Frost 0.86–0.98). Text needs 4.5:1; icons, focus rings and the waveform need 3:1. On-accent text is checked against the accent and its hover and pressed states.
 - Tests run the full matrix: {dark, light} × {default, neon green, red, blue, yellow, magenta, cyan, grayscale, black, white, pastel, dark brown} × glass tint {0, 0.5, 1}.
 
 ### Scheme differences (excerpt)
 
 | Token | Midnight | Frost |
 |---|---|---|
-| surface alpha (base/raised/overlay) | 0.50 / 0.60 / 0.72 | 0.56 / 0.68 / 0.80 (white) |
-| text L (primary/secondary/tertiary) | 0.96 / 0.84 / 0.72 | 0.22 / 0.38 / 0.48 |
+| backdrop L / surface L (base/raised/overlay) | 0.115 / 0.165, 0.19, 0.22 | 0.94 / 0.985, 0.99, 0.995 |
+| surface alpha (base/raised/overlay) | 0.58 / 0.68 / 0.80 | 0.64 / 0.74 / 0.86 (white, always more opaque than Midnight) |
+| text L (primary/secondary/tertiary) | 0.95 / 0.80 / 0.68 | 0.22 / 0.38 / 0.48 |
 | shadow | near-black, α 0.45 | accent-tinted L 0.38, α 0.16 |
-| glow | accent α 0.38 | soft bloom L 0.78, α 0.22 |
+| glow | accent α 0.22 | soft bloom L 0.78, α 0.22 |
 | grain | 1.0 × setting | 0.6 × setting |
 | Liquid Glass: refraction / dispersion / specular / rim darkening | 0.055 / 0.012 / 0.55 / 0.25 | 0.045 / 0.006 / 0.75 / 0.10 |
 

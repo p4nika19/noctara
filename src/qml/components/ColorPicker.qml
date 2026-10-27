@@ -5,10 +5,10 @@ import Noctara
 Column {
     id: root
 
-    property string value: "#7c6cf0"
+    property string value: "#4a7dff"
     signal picked(string hex)
 
-    readonly property var presets: ["#7c6cf0", "#3d8bfd", "#0fa3b1", "#22a55e", "#e0a100", "#f26b1d", "#e5484d", "#d6409f"]
+    readonly property var presets: ["#4a7dff", "#7c6cf0", "#0fa3b1", "#22a55e", "#e0a100", "#f26b1d", "#e5484d", "#d6409f"]
 
     spacing: Theme.space.sm
 

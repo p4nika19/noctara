@@ -28,6 +28,7 @@ Item {
     required property string sectionDescription
     required property string categoryLabel
     required property bool sectionStart
+    required property string status
     property bool showCategory: false
 
     readonly property bool editable: !overridden && disabledReason.length === 0
@@ -132,6 +133,24 @@ Item {
                     font: Theme.font.caption
                     color: Theme.colors.textSecondary
                     wrapMode: Text.Wrap
+                }
+                Row {
+                    width: parent.width
+                    visible: row.status.length > 0
+                    topPadding: Theme.space.xxs
+                    spacing: Theme.space.xs
+                    Icon {
+                        name: "info"
+                        size: Theme.space.iconSizeSmall
+                        color: Theme.targetColors.accent
+                    }
+                    Text {
+                        width: parent.width - Theme.space.iconSizeSmall - parent.spacing
+                        text: row.status
+                        font: Theme.font.caption
+                        color: Theme.colors.textPrimary
+                        wrapMode: Text.Wrap
+                    }
                 }
                 Text {
                     width: parent.width

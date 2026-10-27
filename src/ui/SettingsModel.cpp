@@ -154,6 +154,7 @@ QVariant SettingsModel::data(const QModelIndex& index, int role) const
     case SectionLabelRole: return section != nullptr ? translated(section->label) : QString();
     case SectionDescriptionRole: return section != nullptr ? translated(section->description) : QString();
     case CategoryLabelRole: return translated(settings::categoryLabel(def.category));
+    case StatusRole: return m_availability.statuses.value(latin(def.key));
     case SectionStartRole: {
         if (!isShown(def)) {
             return false;
@@ -199,6 +200,7 @@ QHash<int, QByteArray> SettingsModel::roleNames() const
         {SectionDescriptionRole, "sectionDescription"},
         {CategoryLabelRole, "categoryLabel"},
         {SectionStartRole, "sectionStart"},
+        {StatusRole, "status"},
     };
 }
 

@@ -18,7 +18,7 @@ Item {
     // Soft accent bloom from the upper-left, matching the light direction of the glass rims.
     Shape {
         anchors.fill: parent
-        opacity: Theme.dark ? 0.55 : 0.7
+        opacity: Theme.dark ? 0.4 : 0.6
         ShapePath {
             strokeWidth: -1
             fillGradient: RadialGradient {

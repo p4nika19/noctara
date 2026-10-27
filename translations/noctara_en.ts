@@ -13,48 +13,12 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Version %1</source>
         <extracomment>%1 = version number</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -76,47 +40,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Graphics</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+5"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -138,47 +66,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Software (CPU)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -200,47 +92,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Driver</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+5"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -262,47 +118,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Active for this session</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+3"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -324,47 +144,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Configuration</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+5"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -386,47 +170,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Open config file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -448,46 +196,10 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Hide license</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -513,24 +225,6 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Hex color</source>
         <translation type="unfinished"></translation>
     </message>
@@ -539,12 +233,12 @@
     <name>Errors</name>
     <message>
         <location filename="../src/i18n/ErrorMessages.cpp" line="+11"/>
-        <location line="+36"/>
+        <location line="+56"/>
         <source>Something went wrong.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-35"/>
+        <location line="-55"/>
         <source>The operation was cancelled.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -564,7 +258,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Permission denied. Check that the location is writable.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -579,7 +273,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Stored data was damaged and has been discarded.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -599,22 +293,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>The configuration file contains a syntax error.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>A setting has a value of the wrong type.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>A setting is outside its allowed range.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>A setting has a value that is not one of the allowed options.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -624,22 +318,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>The configuration contains an unknown key.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>This setting is fixed by an environment variable or a command-line flag.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+3"/>
         <source>The configuration was written by a newer version of Noctara.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>The graphics driver could not be initialised.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -649,32 +343,32 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>The server name could not be resolved. Check your DNS settings.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>The DNS-over-HTTPS server is unreachable.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>The DNS-over-HTTPS server returned an invalid answer.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Could not connect to the proxy server.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>The proxy server requires a valid username and password.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>A secure connection could not be established.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -684,7 +378,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>The server refused the connection.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -699,12 +393,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Too many requests. Please wait a moment.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Your session has expired. Please sign in again.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -741,19 +435,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>%1M</source>
         <comment>compact millions, e.g. 3.4M</comment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>%1B</source>
         <comment>compact billions, e.g. 1.1B</comment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>%1 B</source>
         <translation type="unfinished"></translation>
     </message>
@@ -783,7 +477,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="+4"/>
+        <location line="+10"/>
         <source>%n minute(s) ago</source>
         <translation>
             <numerusform>%n minute ago</numerusform>
@@ -823,7 +517,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+28"/>
+        <location line="+29"/>
         <source>%n track(s)</source>
         <translation>
             <numerusform>%n track</numerusform>
@@ -835,24 +529,6 @@
     <name>HomePage</name>
     <message>
         <location filename="../src/qml/pages/HomePage.qml" line="+24"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -874,24 +550,6 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Good morning</source>
         <translation type="unfinished"></translation>
     </message>
@@ -905,46 +563,10 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Good afternoon</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -967,47 +589,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Connect your SoundCloud account to see your feed, likes and playlists.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+8"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1023,25 +609,7 @@
 <context>
     <name>Main</name>
     <message>
-        <location filename="../src/qml/Main.qml" line="+29"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location filename="../src/qml/Main.qml" line="+30"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1054,25 +622,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="-15"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1085,25 +635,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1116,25 +648,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1147,25 +661,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1178,25 +674,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1209,43 +687,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-132"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
+        <location line="+1"/>
         <location line="+133"/>
         <location line="-133"/>
         <location line="+133"/>
@@ -1267,25 +709,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-132"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="-131"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1298,25 +722,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+67"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+68"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1329,25 +735,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+30"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+31"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1360,25 +748,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1391,25 +761,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+7"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1422,25 +774,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1453,25 +787,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+7"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1484,25 +800,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1515,25 +813,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+7"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1546,25 +826,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1577,25 +839,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+8"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1620,100 +864,79 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Navigation</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Power</name>
+    <message>
+        <location filename="../src/ui/PowerStatus.cpp" line="+25"/>
+        <source>Active now: energy saving is always on.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Inactive: energy saving is turned off.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Active now: this computer is running on battery.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Inactive: this computer is plugged in. It turns on by itself when you unplug.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Inactive: no battery was found on this computer. Choose Always to save energy anyway.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Inactive: the power source cannot be detected (UPower is not running). Choose Always to save energy anyway.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+122"/>
-        <location filename="src/app/main.cpp" line="+122"/>
-        <location line="+0"/>
-        <location line="+4"/>
-        <location line="+1"/>
+        <location filename="../src/app/main.cpp" line="+138"/>
+        <location filename="src/app/main.cpp" line="+138"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+3"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+5"/>
         <location line="+0"/>
         <source>Needs hardware acceleration, which is currently off.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+9"/>
-        <location filename="src/app/main.cpp" line="-5"/>
-        <location line="+0"/>
-        <location line="+4"/>
-        <location line="+1"/>
+        <location filename="src/app/main.cpp" line="+9"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+3"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+5"/>
         <location line="+0"/>
         <source>Not available on this graphics device.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/settings/BuiltinSchema.cpp" line="+34"/>
-        <location line="+42"/>
+        <location line="+44"/>
         <source>Language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-43"/>
         <source>Interface language.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1729,23 +952,23 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+65"/>
+        <location line="+66"/>
         <source>Theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-64"/>
+        <location line="-65"/>
         <source>Midnight (dark), Frost (light) or follow the system.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+86"/>
+        <location line="+87"/>
         <source>Accent color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-85"/>
+        <location line="-86"/>
         <source>The whole palette is generated from a single accent color.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1836,11 +1059,11 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Energy saving.</source>
+        <source>How Noctara reduces its own energy use. Your system power profile is not changed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>System default</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1915,7 +1138,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Adapt accent colors to cover art</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1925,7 +1148,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <source>Seed color for the whole palette when adaptive accents are off.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2011,8 +1234,8 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+123"/>
-        <location line="+14"/>
+        <location line="+124"/>
+        <location line="+13"/>
         <location line="+12"/>
         <source>Auto</source>
         <translation type="unfinished"></translation>
@@ -2225,17 +1448,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>On</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
+        <location line="+58"/>
         <source>Off</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-56"/>
         <source>Hardware acceleration</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2245,7 +1469,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+12"/>
         <source>Graphics API</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2275,7 +1499,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Vertical sync</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2310,17 +1534,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Reduce GPU usage on battery</source>
+        <location line="+5"/>
+        <source>Automatic (on battery)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Pause the animated backdrop and lower effect quality when on battery power.</source>
+        <source>Always</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings/Schema.cpp" line="+141"/>
+        <location line="+3"/>
+        <source>Energy saving</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead of Liquid Glass or Gaussian, and limits animations to 30 frames per second. Automatic turns it on only while the computer runs on battery.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings/Schema.cpp" line="+142"/>
         <source>General</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2380,7 +1614,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsModel.cpp" line="+144"/>
+        <location filename="../src/ui/SettingsModel.cpp" line="+145"/>
         <source>Set by a command-line flag for this session.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2394,25 +1628,7 @@
 <context>
     <name>SettingsRow</name>
     <message>
-        <location filename="../src/qml/settings/SettingsRow.qml" line="+86"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location filename="../src/qml/settings/SettingsRow.qml" line="+87"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2434,47 +1650,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Restart required</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+55"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+73"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2496,47 +1676,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Default</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+9"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2552,25 +1696,7 @@
 <context>
     <name>SettingsView</name>
     <message>
-        <location filename="../src/qml/settings/SettingsView.qml" line="+28"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location filename="../src/qml/settings/SettingsView.qml" line="+29"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2583,25 +1709,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+19"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+20"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2614,43 +1722,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+59"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-7"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
+        <location line="+60"/>
         <location line="+8"/>
         <location line="-8"/>
         <location line="+8"/>
@@ -2672,25 +1744,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+28"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+29"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2703,25 +1757,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+12"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+13"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2734,25 +1770,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+23"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+24"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2765,25 +1783,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+11"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2796,25 +1796,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+34"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+35"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2839,24 +1821,6 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Loading</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2865,24 +1829,6 @@
     <name>Toast</name>
     <message>
         <location filename="../src/qml/components/Toast.qml" line="+61"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2923,12 +1869,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>The selected graphics API could not be started; another one is used instead.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+56"/>
         <source>More configuration problems were found. See the log for details.</source>
         <translation type="unfinished"></translation>
     </message>
