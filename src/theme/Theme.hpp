@@ -83,6 +83,7 @@ private:
     void updateGlass();
     void applyProgress(double t);
     [[nodiscard]] color::OkLch currentSeed() const;
+    [[nodiscard]] double glassOpacity() const;  // absolute 0..1 from the relative setting
     [[nodiscard]] int animated(int durationMs) const;
 
     settings::SettingsStore& m_settings;

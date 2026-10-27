@@ -145,7 +145,7 @@ TEST_SUITE("settings.store")
     TEST_CASE("reset section and all")
     {
         SettingsStore store(schema());
-        REQUIRE(store.setUserValue(keys::GlassGrain, 0.9).has_value());
+        REQUIRE(store.setUserValue(keys::GlassGrain, 0.6).has_value());
         REQUIRE(store.setUserValue(keys::ThemeMode, QStringLiteral("dark")).has_value());
         store.resetSection("appearance.glass");
         CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.0));
@@ -242,6 +242,17 @@ TEST_SUITE("settings.toml")
         CHECK(on.unknownToml.empty());
     }
 
+    TEST_CASE("v3 absolute glass tint and grain become relative to the design")
+    {
+        const auto parsed = parse("config_version = 3\n[appearance.glass]\nopacity = 0.8\ngrain = 0.35\n");
+        REQUIRE(parsed.syntaxOk);
+        CHECK(parsed.issues.empty());
+        CHECK(parsedValue(parsed, keys::GlassOpacity)->toDouble() == doctest::Approx(0.3));
+        CHECK(parsedValue(parsed, keys::GlassGrain)->toDouble() == doctest::Approx(0.0));
+        const auto untouched = parse("config_version = 3\n[appearance.glass]\nstyle = \"solid\"\n");
+        CHECK_FALSE(parsedValue(untouched, keys::GlassOpacity).has_value());
+    }
+
     TEST_CASE("migrations move keys between versions")
     {
         auto parsed = toml::parse("[old]\nname = 5\n");
@@ -299,12 +310,14 @@ TEST_SUITE("settings.file")
         QSignalSpy issues(&file, &ConfigFile::reloadIssues);
 
         // A valid external edit is applied live.
-        REQUIRE(writeText(path, "[appearance.theme]\nmode = \"light\"\n[appearance.glass]\ngrain = 0.5\n"));
+        REQUIRE(writeText(
+            path, "config_version = 4\n[appearance.theme]\nmode = \"light\"\n[appearance.glass]\ngrain = 0.5\n"));
         REQUIRE(test::waitUntil([&] { return store.stringValue(keys::ThemeMode) == QStringLiteral("light"); }));
         CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.5));
 
         // An invalid value keeps the last good one and reports the problem.
-        REQUIRE(writeText(path, "[appearance.theme]\nmode = \"light\"\n[appearance.glass]\ngrain = 7\n"));
+        REQUIRE(writeText(path,
+                          "config_version = 4\n[appearance.theme]\nmode = \"light\"\n[appearance.glass]\ngrain = 7\n"));
         REQUIRE(test::waitUntil([&] { return issues.count() > 0; }));
         CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.5));
 
@@ -328,7 +341,7 @@ TEST_SUITE("settings.file")
         REQUIRE(issues.size() == 1);
         CHECK(issues.front().code == ErrorCode::ConfigSyntaxError);
 
-        REQUIRE(store.setUserValue(keys::GlassGrain, 0.8).has_value());
+        REQUIRE(store.setUserValue(keys::GlassGrain, 0.6).has_value());
         file.flush();
         CHECK(readWholeFile(path + QStringLiteral(".bak"))->contains("not toml"));
 
@@ -337,7 +350,7 @@ TEST_SUITE("settings.file")
         REQUIRE(file.resetToDefaults().has_value());
         CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.0));
         REQUIRE(file.importFrom(exported).has_value());
-        CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.8));
+        CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.6));
     }
 }
 

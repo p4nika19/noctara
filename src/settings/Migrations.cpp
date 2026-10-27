@@ -1,6 +1,11 @@
 #include "settings/Migrations.hpp"
 
+#include "settings/Keys.hpp"
+
+#include <algorithm>
+#include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace noctara::settings {
@@ -39,11 +44,27 @@ void backdropStyle(toml::table& root)
     }
 }
 
+// v3 -> v4: "Glass tint" and "Grain" became relative to the designed values (0 = design), on the same scale.
+void relativeGlassValues(toml::table& root)
+{
+    toml::table* glass = root.at_path("appearance.glass").as_table();
+    if (glass == nullptr) {
+        return;
+    }
+    for (const auto& [key, baseline] :
+         {std::pair{"opacity", keys::GlassOpacityBaseline}, std::pair{"grain", keys::GlassGrainBaseline}}) {
+        if (const auto value = glass->get(key) ? glass->get(key)->value<double>() : std::nullopt) {
+            glass->insert_or_assign(key, std::clamp(*value, 0.0, 1.0) - baseline);
+        }
+    }
+}
+
 // Files without `config_version` are v0 (same format as v1). Append future migrations here.
 constexpr Migration kMigrations[] = {
     {0, [](toml::table&) {}},
     {1, energySavingMode},
     {2, backdropStyle},
+    {3, relativeGlassValues},
 };
 
 std::vector<std::string_view> splitPath(std::string_view path)

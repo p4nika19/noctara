@@ -1095,12 +1095,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+185"/>
+        <location line="+191"/>
         <source>Soft</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-183"/>
+        <location line="-189"/>
         <source>Palette extraction</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1225,27 +1225,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
         <source>Glass tint</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Opacity of the tint applied to glass surfaces.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+8"/>
+        <location line="+12"/>
         <source>Grain</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Fine noise that prevents banding in gradients.</source>
+        <location line="-11"/>
+        <source>Opacity of the tint on glass surfaces, relative to the design: 0 % is the designed look, below makes glass clearer, above makes it more opaque.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+12"/>
+        <source>Fine noise that prevents banding in gradients, relative to the design: 0 % is the designed amount, the lowest value removes it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <location line="+169"/>
         <location line="+13"/>
         <location line="+12"/>
@@ -1741,7 +1741,7 @@
 <context>
     <name>SettingsRow</name>
     <message>
-        <location filename="../src/qml/settings/SettingsRow.qml" line="+105"/>
+        <location filename="../src/qml/settings/SettingsRow.qml" line="+110"/>
         <source>Reset section</source>
         <translation type="unfinished"></translation>
     </message>

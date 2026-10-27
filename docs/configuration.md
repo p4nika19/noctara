@@ -76,8 +76,8 @@ How translucent surfaces are rendered.
 |---|---|---|---|---|
 | `style` | enum | `"kawase"` | `kawase`, `gaussian`, `liquid`, `solid` | **Glass style.** Blur styles need hardware acceleration; Solid is the cheapest. (env `NOCTARA_APPEARANCE_GLASS_STYLE`) |
 | `blur_strength` | number | `0.6` | 0 … 1 | **Blur strength.** How strongly the backdrop is blurred. (env `NOCTARA_APPEARANCE_GLASS_BLUR_STRENGTH`) |
-| `opacity` | number | `0.0` | 0 … 1 | **Glass tint.** Opacity of the tint applied to glass surfaces. (env `NOCTARA_APPEARANCE_GLASS_OPACITY`) |
-| `grain` | number | `0.0` | 0 … 1 | **Grain.** Fine noise that prevents banding in gradients. (env `NOCTARA_APPEARANCE_GLASS_GRAIN`) |
+| `opacity` | number | `0.0` | -0.5 … 0.5 | **Glass tint.** Opacity of the tint on glass surfaces, relative to the design: 0 % is the designed look, below makes glass clearer, above makes it more opaque. (env `NOCTARA_APPEARANCE_GLASS_OPACITY`) |
+| `grain` | number | `0.0` | -0.35 … 0.65 | **Grain.** Fine noise that prevents banding in gradients, relative to the design: 0 % is the designed amount, the lowest value removes it. (env `NOCTARA_APPEARANCE_GLASS_GRAIN`) |
 | `quality` | enum | `"auto"` | `auto`, `low`, `medium`, `high` | **Effects quality.** Auto lowers quality when frames take too long and raises it again later. (env `NOCTARA_APPEARANCE_GLASS_QUALITY`) |
 | `buttons` | enum | `"frosted"` | `frosted`, `liquid`, `tinted`, `clear`, `solid` | **Button material.** Frosted: milky blurred glass. Liquid: glossy glass with a bright rim. Tinted: glass coloured by the accent. Clear: outline only. Solid: opaque. (env `NOCTARA_APPEARANCE_GLASS_BUTTONS`) |
 | `reduce_transparency` | bool | `false` | — | **Reduce transparency.** Use opaque surfaces everywhere. (env `NOCTARA_APPEARANCE_GLASS_REDUCE_TRANSPARENCY`) |

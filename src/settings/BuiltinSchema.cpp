@@ -218,24 +218,29 @@ std::vector<Definition> builtinDefinitions()
                     .label = QT_TRANSLATE_NOOP("Settings", "Blur strength"),
                     .description = QT_TRANSLATE_NOOP("Settings", "How strongly the backdrop is blurred."),
                     .visibleWhen = Condition{keys::GlassStyle, {"kawase", "gaussian", "liquid"}}});
-    defs.push_back({.key = keys::GlassOpacity,
-                    .type = Type::Real,
-                    .defaultValue = real(0.0),
-                    .min = 0.0,
-                    .max = 1.0,
-                    .step = 0.05,
-                    .category = Appearance,
-                    .label = QT_TRANSLATE_NOOP("Settings", "Glass tint"),
-                    .description = QT_TRANSLATE_NOOP("Settings", "Opacity of the tint applied to glass surfaces.")});
+    defs.push_back(
+        {.key = keys::GlassOpacity,
+         .type = Type::Real,
+         .defaultValue = real(0.0),
+         .min = -keys::GlassOpacityBaseline,
+         .max = 1.0 - keys::GlassOpacityBaseline,
+         .step = 0.05,
+         .category = Appearance,
+         .label = QT_TRANSLATE_NOOP("Settings", "Glass tint"),
+         .description = QT_TRANSLATE_NOOP(
+             "Settings", "Opacity of the tint on glass surfaces, relative to the design: 0 % is the designed look, "
+                         "below makes glass clearer, above makes it more opaque.")});
     defs.push_back({.key = keys::GlassGrain,
                     .type = Type::Real,
                     .defaultValue = real(0.0),
-                    .min = 0.0,
-                    .max = 1.0,
+                    .min = -keys::GlassGrainBaseline,
+                    .max = 1.0 - keys::GlassGrainBaseline,
                     .step = 0.05,
                     .category = Appearance,
                     .label = QT_TRANSLATE_NOOP("Settings", "Grain"),
-                    .description = QT_TRANSLATE_NOOP("Settings", "Fine noise that prevents banding in gradients.")});
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Fine noise that prevents banding in gradients, relative to the design: "
+                                    "0 % is the designed amount, the lowest value removes it.")});
     defs.push_back({.key = keys::GlassQuality,
                     .type = Type::Enum,
                     .defaultValue = str("auto"),

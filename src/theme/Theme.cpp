@@ -111,6 +111,11 @@ void Theme::onSettingChanged(const QString& key)
     }
 }
 
+double Theme::glassOpacity() const
+{
+    return std::clamp(m_settings.realValue(keys::GlassOpacity) + keys::GlassOpacityBaseline, 0.0, 1.0);
+}
+
 int Theme::animated(int durationMs) const
 {
     return m_motion.enabled && !m_motion.reduced ? durationMs : 0;
@@ -155,7 +160,7 @@ void Theme::updatePalette(int durationMs)
 {
     const PaletteRequest request{.seed = currentSeed(),
                                  .scheme = m_scheme,
-                                 .glassOpacity = m_settings.realValue(keys::GlassOpacity),
+                                 .glassOpacity = glassOpacity(),
                                  .glowIntensity = m_settings.realValue(keys::GlowIntensity)};
     const Palette target = generatePalette(request);
     const auto results = checkContrast(target, m_scheme, defaultTones(m_scheme));
@@ -292,9 +297,10 @@ void Theme::updateGlass()
     glass.requestedStyle = m_settings.stringValue(keys::GlassStyle);
     glass.blurAvailable = m_blurAvailable;
     glass.blurStrength = m_settings.realValue(keys::GlassBlurStrength);
-    glass.tint = m_settings.realValue(keys::GlassOpacity);
+    glass.tint = glassOpacity();
     // Frost uses less grain than Midnight at the same setting.
-    glass.grain = m_settings.realValue(keys::GlassGrain) * (m_scheme == Scheme::Dark ? 1.0 : 0.6);
+    glass.grain = std::clamp(m_settings.realValue(keys::GlassGrain) + keys::GlassGrainBaseline, 0.0, 1.0) *
+                  (m_scheme == Scheme::Dark ? 1.0 : 0.6);
     glass.buttons = m_settings.stringValue(keys::ButtonMaterial);
     glass.backdrop = m_settings.stringValue(keys::BackdropStyle);
     glass.backdropAnimated = m_settings.boolValue(keys::BackdropAnimate) && m_blurAvailable &&

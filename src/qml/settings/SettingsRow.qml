@@ -46,6 +46,11 @@ Item {
             return Math.round(v) + " %"
         if (minimum === 0 && maximum === 1)
             return Math.round(v * 100) + " %"
+        if (minimum < 0 && minimum >= -1 && maximum > 0 && maximum <= 1) {
+            // Relative to a designed value (0 = design): signed percentage.
+            const p = Math.round(v * 100)
+            return (p > 0 ? "+" : p < 0 ? "\u2212" : "") + Math.abs(p) + " %"
+        }
         const text = type === "int" ? Math.round(v).toString() : v.toLocaleString(Qt.locale(Language.localeName), 'f', 2)
         return unit.length > 0 ? text + " " + unit : text
     }
