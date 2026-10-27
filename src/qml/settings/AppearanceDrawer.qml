@@ -88,21 +88,23 @@ FocusScope {
             anchors.bottom: foot.top
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: Theme.space.lg
+            // The clip starts left of the content so the glow of the palette dots is not cut off.
+            anchors.leftMargin: Theme.space.lg - leftMargin
             anchors.rightMargin: Theme.space.sm
             clip: true
             boundsBehavior: Flickable.StopAtBounds
+            leftMargin: Theme.space.md
             rightMargin: Theme.space.md
             bottomMargin: Theme.space.lg
             model: root.open || panel.opacity > 0 ? SettingsUi.subset(root.keys) : null
             ScrollBar.vertical: ScrollBar {}
             header: AppearanceHeader {
-                width: list.width - list.rightMargin
+                width: list.width - list.leftMargin - list.rightMargin
                 showReset: false
             }
             delegate: SettingsRow {
                 compact: true
-                width: list.width - list.rightMargin
+                width: list.width - list.leftMargin - list.rightMargin
             }
         }
 

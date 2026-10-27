@@ -9,8 +9,13 @@
 #include "ui/SettingsModel.hpp"
 
 #include <QColor>
+#include <QJSEngine>
+#include <QQmlComponent>
+#include <QQmlEngine>
+#include <QQuickImageProvider>
 #include <QTemporaryDir>
 
+#include <memory>
 #include <set>
 
 using namespace noctara;
@@ -147,5 +152,100 @@ TEST_SUITE("ui.icons")
         CHECK_FALSE(tinted.contains("currentColor"));
         const QByteArray translucent = ui::IconProvider::tintSvg(svg, QColor(0x33, 0x66, 0x99, 128), 2.0);
         CHECK(translucent.contains("opacity="));
+    }
+}
+
+namespace {
+
+// Solid squares in the requested colour, loaded asynchronously like the real icon provider.
+class SolidIconProvider : public QQuickImageProvider {
+public:
+    SolidIconProvider()
+        : QQuickImageProvider(QQuickImageProvider::Image, QQmlImageProviderBase::ForceAsynchronousImageLoading)
+    {
+    }
+
+    QImage requestImage(const QString& id, QSize* size, const QSize& /*requestedSize*/) override
+    {
+        const QString colour = QUrl::fromPercentEncoding(id.section(u'=', 1, 1).section(u'&', 0, 0).toLatin1());
+        QImage image(4, 4, QImage::Format_ARGB32_Premultiplied);
+        image.fill(QColor::fromString(colour));
+        if (size != nullptr) {
+            *size = image.size();
+        }
+        return image;
+    }
+};
+
+// Icon.qml with a stub Theme singleton (only the tokens it reads).
+struct IconHarness {
+    QQmlEngine engine;
+    std::unique_ptr<QObject> icon;
+
+    IconHarness()
+    {
+        qmlRegisterSingletonType("Noctara", 1, 0, "Theme", [](QQmlEngine*, QJSEngine* js) {
+            return js->evaluate(QStringLiteral("({targetColors: {iconPrimary: '#101010'}, space: {iconSize: 16}, "
+                                               "iconStroke: 1.5, motion: {normal: 0}})"));
+        });
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
+        engine.addImageProvider(QStringLiteral("icon"), new SolidIconProvider);
+        QQmlComponent component(&engine,
+                                QUrl::fromLocalFile(QStringLiteral(NOCTARA_SOURCE_DIR "/src/qml/components/Icon.qml")));
+        icon.reset(component.createWithInitialProperties({{QStringLiteral("name"), QStringLiteral("play")}}));
+        REQUIRE_MESSAGE(icon != nullptr, component.errorString());
+    }
+
+    // The colour of the layer that is currently shown (the other one is faded out).
+    [[nodiscard]] QColor shownColour() const
+    {
+        const int current = icon->property("current").toInt();
+        int index = 0;
+        for (QObject* child : icon->children()) {
+            if (child->inherits("QQuickImage") && index++ == current) {
+                const QString source = child->property("source").toUrl().toString();
+                return QColor::fromString(
+                    QUrl::fromPercentEncoding(source.section(u'=', 1, 1).section(u'&', 0, 0).toLatin1()));
+            }
+        }
+        return {};
+    }
+
+    void setColour(const char* colour) const
+    {
+        icon->setProperty("color", QColor::fromString(QLatin1StringView(colour)));
+    }
+    [[nodiscard]] bool settlesOn(const char* colour) const
+    {
+        return test::waitUntil([&] { return shownColour() == QColor::fromString(QLatin1StringView(colour)); }, 2000);
+    }
+};
+
+}  // namespace
+
+TEST_SUITE("ui.icons")
+{
+    TEST_CASE("an icon always ends up showing its current colour")
+    {
+        IconHarness harness;
+        REQUIRE(harness.settlesOn("#101010"));
+
+        // Cold loads, then returns to colours both layers or the pixmap cache already hold.
+        const std::array colours{"#ff0000", "#00ff00", "#ff0000", "#00ff00", "#0000ff", "#ff0000", "#0000ff"};
+        for (const char* colour : colours) {
+            harness.setColour(colour);
+            CHECK_MESSAGE(harness.settlesOn(colour), colour, " shown: ", harness.shownColour().name());
+        }
+        // Rapid changes (selection moving across items, theme crossfade): only the last colour matters.
+        for (int round = 0; round < 20; ++round) {
+            for (const char* colour : colours) {
+                harness.setColour(colour);
+            }
+            if (round % 3 == 0) {
+                QCoreApplication::processEvents();
+            }
+            harness.setColour(colours.at(static_cast<std::size_t>(round) % colours.size()));
+            CHECK(harness.settlesOn(colours.at(static_cast<std::size_t>(round) % colours.size())));
+        }
     }
 }

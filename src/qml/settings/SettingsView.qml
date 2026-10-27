@@ -10,6 +10,9 @@ Item {
     signal categoryRequested(string id)
     readonly property bool searching: SettingsUi.searchText.trim().length > 0
     readonly property var currentCategory: SettingsUi.categories.find(c => c.id === root.category) || null
+    // Clipped lists start this far left of their content, so glows at the left edge (palette dots,
+    // selected segments, accent buttons) are not cut off by the clip.
+    readonly property real glowGutter: Theme.space.lg
 
     GlassPanel {
         id: sidebar
@@ -227,7 +230,7 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            anchors.leftMargin: Theme.space.xl
+            anchors.leftMargin: Theme.space.xl - root.glowGutter
             anchors.rightMargin: Math.max(Theme.space.lg, content.cornerInset)
             anchors.bottomMargin: content.cornerInset
             sourceComponent: !root.searching && root.category === "about" ? about : rows
@@ -241,12 +244,13 @@ Item {
                 reuseItems: true
                 cacheBuffer: 400
                 boundsBehavior: Flickable.StopAtBounds
+                leftMargin: root.glowGutter
                 rightMargin: Theme.space.md
                 bottomMargin: Theme.space.xl
                 model: root.searching ? SettingsUi.searchResults : SettingsUi.page(root.category)
                 ScrollBar.vertical: ScrollBar {}
                 header: Loader {
-                    width: list.width - list.rightMargin
+                    width: list.width - list.leftMargin - list.rightMargin
                     // Explicit: an unloaded Loader keeps the size of its last item, which left the Appearance
                     // header's height as an empty band at the top of the next page.
                     height: item ? item.implicitHeight : 0
@@ -256,7 +260,7 @@ Item {
                 delegate: SettingsRow {
                     showCategory: root.searching
                     headerShownAbove: !root.searching && root.category === "appearance" ? "appearance.theme" : ""
-                    width: list.width - list.rightMargin
+                    width: list.width - list.leftMargin - list.rightMargin
                 }
                 Text {
                     anchors.centerIn: parent
@@ -269,7 +273,12 @@ Item {
         }
         Component {
             id: about
-            AboutPane {}
+            Item {
+                AboutPane {
+                    anchors.fill: parent
+                    anchors.leftMargin: root.glowGutter
+                }
+            }
         }
         Component {
             id: appearanceHeader

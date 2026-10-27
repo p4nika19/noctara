@@ -19,28 +19,34 @@ Item {
     implicitHeight: size
     Accessible.ignored: true
 
-    onUrlChanged: {
-        const target = current === 0 ? second : first
-        target.source = url
-        // Returning to a colour the hidden layer already holds changes nothing about that layer, so no status
-        // signal follows: switch to it directly, or the icon would keep showing the previous colour.
-        if (target.status === Image.Ready && target.source.toString() === url)
-            current = current === 0 ? 1 : 0
+    // Idempotent: show whichever layer holds the current url once it is loaded, otherwise keep the shown
+    // layer. Toggling instead broke when a cached image became Ready synchronously inside the source
+    // assignment (status handler and caller both switched, leaving the old colour on screen).
+    function sync() {
+        if (first.requested === url && first.status === Image.Ready)
+            current = 0
+        else if (second.requested === url && second.status === Image.Ready)
+            current = 1
     }
-    Component.onCompleted: first.source = url
+    onUrlChanged: {
+        if (first.requested !== url && second.requested !== url)
+            (current === 0 ? second : first).requested = url
+        sync()
+    }
+    Component.onCompleted: first.requested = url
 
     component Layer: Image {
         required property int index
+        // The url as requested; Image.source is a normalised QUrl and must not be compared as text.
+        property string requested
+        source: requested
         anchors.fill: parent
         sourceSize: Qt.size(root.size, root.size)
         fillMode: Image.PreserveAspectFit
         asynchronous: true
         opacity: root.current === index ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: Theme.motion.normal } }
-        onStatusChanged: {
-            if (status === Image.Ready && source.toString() === root.url)
-                root.current = index
-        }
+        onStatusChanged: root.sync()
     }
 
     Layer { id: first; index: 0 }
