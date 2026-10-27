@@ -26,12 +26,22 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Version %1</source>
         <extracomment>%1 = version number</extracomment>
         <translation>Версия %1</translation>
     </message>
     <message>
         <location line="+6"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -79,11 +89,21 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Graphics</source>
         <translation>Графика</translation>
     </message>
     <message>
         <location line="+5"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -131,11 +151,21 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Software (CPU)</source>
         <translation>Программная (ЦП)</translation>
     </message>
     <message>
         <location line="+4"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -183,11 +213,21 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Driver</source>
         <translation>Драйвер</translation>
     </message>
     <message>
         <location line="+5"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -235,11 +275,21 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Active for this session</source>
         <translation>Включён в этом сеансе</translation>
     </message>
     <message>
         <location line="+3"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -287,11 +337,21 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Configuration</source>
         <translation>Конфигурация</translation>
     </message>
     <message>
         <location line="+5"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -339,11 +399,21 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Open config file</source>
         <translation>Открыть файл настроек</translation>
     </message>
     <message>
         <location line="+7"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -391,10 +461,20 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Hide license</source>
         <translation>Скрыть лицензию</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -425,6 +505,11 @@
     <name>ColorPicker</name>
     <message>
         <location filename="../src/qml/components/ColorPicker.qml" line="+63"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -777,11 +862,21 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Good night</source>
         <translation>Доброй ночи</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -829,10 +924,20 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Good afternoon</source>
         <translation>Добрый день</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -881,11 +986,21 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Connect your SoundCloud account to see your feed, likes and playlists.</source>
         <translation>Подключите аккаунт SoundCloud, чтобы видеть ленту, лайки и плейлисты.</translation>
     </message>
     <message>
         <location line="+8"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -936,6 +1051,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Noctara</source>
         <translation>Noctara</translation>
     </message>
@@ -943,6 +1063,11 @@
         <location line="-16"/>
         <location line="+0"/>
         <location line="+1"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -988,6 +1113,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Search</source>
         <translation>Поиск</translation>
     </message>
@@ -995,6 +1125,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+1"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1040,6 +1175,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Likes</source>
         <translation>Лайки</translation>
     </message>
@@ -1047,6 +1187,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+1"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1114,6 +1259,16 @@
         <location line="+133"/>
         <location line="-133"/>
         <location line="+133"/>
+        <location line="-133"/>
+        <location line="+133"/>
+        <location line="-133"/>
+        <location line="+133"/>
+        <location line="-133"/>
+        <location line="+133"/>
+        <location line="-133"/>
+        <location line="+133"/>
+        <location line="-133"/>
+        <location line="+133"/>
         <source>Charts</source>
         <translation>Чарты</translation>
     </message>
@@ -1121,6 +1276,11 @@
         <location line="-132"/>
         <location line="+0"/>
         <location line="+1"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1166,6 +1326,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Got it</source>
         <translation>Понятно</translation>
     </message>
@@ -1173,6 +1338,11 @@
         <location line="+30"/>
         <location line="+0"/>
         <location line="+1"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1218,6 +1388,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Find tracks, playlists and people once your account is connected.</source>
         <translation>Ищите треки, плейлисты и людей после подключения аккаунта.</translation>
     </message>
@@ -1225,6 +1400,11 @@
         <location line="+6"/>
         <location line="+0"/>
         <location line="+1"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1270,6 +1450,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Playlists, albums and followed artists will appear here.</source>
         <translation>Здесь появятся плейлисты, альбомы и исполнители, на которых вы подписаны.</translation>
     </message>
@@ -1277,6 +1462,11 @@
         <location line="+6"/>
         <location line="+0"/>
         <location line="+1"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1322,6 +1512,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Tracks you like on SoundCloud will appear here.</source>
         <translation>Здесь появятся треки, которые вы лайкнули в SoundCloud.</translation>
     </message>
@@ -1329,6 +1524,11 @@
         <location line="+6"/>
         <location line="+0"/>
         <location line="+1"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1374,6 +1574,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Recently played tracks will appear here.</source>
         <translation>Здесь появятся недавно прослушанные треки.</translation>
     </message>
@@ -1381,6 +1586,11 @@
         <location line="+7"/>
         <location line="+0"/>
         <location line="+1"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1408,6 +1618,11 @@
     <name>NavRail</name>
     <message>
         <location filename="../src/qml/components/NavRail.qml" line="+17"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -1458,12 +1673,17 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+5"/>
+        <location line="+0"/>
         <source>Needs hardware acceleration, which is currently off.</source>
         <translation>Нужно аппаратное ускорение, а оно сейчас выключено.</translation>
     </message>
     <message>
         <location line="+9"/>
-        <location filename="src/app/main.cpp" line="+0"/>
+        <location filename="src/app/main.cpp" line="-5"/>
         <location line="+0"/>
         <location line="+4"/>
         <location line="+1"/>
@@ -1483,6 +1703,11 @@
         <location line="+1"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+5"/>
         <location line="+0"/>
         <source>Not available on this graphics device.</source>
         <translation>Недоступно на этом графическом устройстве.</translation>
@@ -2197,11 +2422,21 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Reset section</source>
         <translation>Сбросить раздел</translation>
     </message>
     <message>
         <location line="+36"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2249,6 +2484,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Reset to default</source>
         <translation>Сбросить по умолчанию</translation>
     </message>
@@ -2275,11 +2515,21 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Default</source>
         <translation>По умолчанию</translation>
     </message>
     <message>
         <location line="+9"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2330,6 +2580,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Search settings</source>
         <translation>Поиск настроек</translation>
     </message>
@@ -2338,6 +2593,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+1"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2404,6 +2664,16 @@
         <location line="+8"/>
         <location line="-8"/>
         <location line="+8"/>
+        <location line="-8"/>
+        <location line="+8"/>
+        <location line="-8"/>
+        <location line="+8"/>
+        <location line="-8"/>
+        <location line="+8"/>
+        <location line="-8"/>
+        <location line="+8"/>
+        <location line="-8"/>
+        <location line="+8"/>
         <source>Show advanced settings</source>
         <translation>Показывать расширенные настройки</translation>
     </message>
@@ -2412,6 +2682,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+1"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2456,6 +2731,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Reset page</source>
         <translation>Сбросить страницу</translation>
     </message>
@@ -2464,6 +2744,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+1"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2508,6 +2793,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Restart now</source>
         <translation>Перезапустить</translation>
     </message>
@@ -2516,6 +2806,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+1"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
@@ -2563,6 +2858,11 @@
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <source>Loading</source>
         <translation>Загрузка</translation>
     </message>
@@ -2571,6 +2871,11 @@
     <name>Toast</name>
     <message>
         <location filename="../src/qml/components/Toast.qml" line="+61"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
+        <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>
         <location line="+0"/>

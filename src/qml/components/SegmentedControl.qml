@@ -68,8 +68,21 @@ FocusScope {
                 Accessible.checked: selected
 
                 // The selected segment drives the sliding pill (declarative; updates after layout too).
-                Binding { when: segment.selected; target: pill; property: "x"; value: segment.x + row.x }
-                Binding { when: segment.selected; target: pill; property: "width"; value: segment.width }
+                // RestoreNone: a deselected segment must not restore the pill's previous geometry.
+                Binding {
+                    when: segment.selected
+                    restoreMode: Binding.RestoreNone
+                    target: pill
+                    property: "x"
+                    value: segment.x + row.x
+                }
+                Binding {
+                    when: segment.selected
+                    restoreMode: Binding.RestoreNone
+                    target: pill
+                    property: "width"
+                    value: segment.width
+                }
 
                 Text {
                     id: label

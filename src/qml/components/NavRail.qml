@@ -36,8 +36,11 @@ GlassPanel {
             Accessible.checked: item.selected
             onClicked: root.navigate(item.modelData.id)
         }
+        // RestoreNone: when the previous destination's binding deactivates it must not restore the
+        // value it had overwritten, or the pill jumps back to it depending on evaluation order.
         Binding {
             when: item.selected
+            restoreMode: Binding.RestoreNone
             target: pill
             property: "y"
             value: item.parent.y + item.y + (item.height - pill.height) / 2

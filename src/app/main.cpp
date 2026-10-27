@@ -48,6 +48,7 @@ struct CommandLine {
     bool pgoScenario = false;
     QString screenshot;      // dev/testing: render, save the window image, quit
     QString page;            // dev/testing: initial page id
+    QString navigate;        // dev/testing: page to switch to after startup (exercises transitions)
     bool smokeTest = false;  // visit every page and settings category; fail on any warning
     QStringList assignments;
     QStringList aliases;
@@ -80,7 +81,10 @@ CommandLine parseCommandLine(const QCoreApplication& app, const settings::Schema
     page.setFlags(QCommandLineOption::HiddenFromHelp);
     QCommandLineOption smoke(QStringLiteral("smoke-test"), QStringLiteral("Visit all pages and exit."));
     smoke.setFlags(QCommandLineOption::HiddenFromHelp);
-    parser.addOptions({config, print, reset, safe, disableGpu, set, pgo, screenshot, page, smoke});
+    QCommandLineOption navigate(QStringLiteral("navigate"), QStringLiteral("Switch page after startup."),
+                                QStringLiteral("id"));
+    navigate.setFlags(QCommandLineOption::HiddenFromHelp);
+    parser.addOptions({config, print, reset, safe, disableGpu, set, pgo, screenshot, page, smoke, navigate});
 
     std::vector<QCommandLineOption> aliasOptions;
     for (const settings::Definition& def : schema.definitions()) {
@@ -105,6 +109,7 @@ CommandLine parseCommandLine(const QCoreApplication& app, const settings::Schema
     cli.screenshot = parser.value(screenshot);
     cli.page = parser.value(page);
     cli.smokeTest = parser.isSet(smoke);
+    cli.navigate = parser.value(navigate);
     cli.assignments = parser.values(set);
     for (const QCommandLineOption& option : aliasOptions) {
         if (parser.isSet(option)) {
@@ -258,8 +263,11 @@ int main(int argc, char** argv)
 
     if (!cli.page.isEmpty()) {
         // "settings/appearance" opens a settings category directly.
-        engine.setInitialProperties({{QStringLiteral("page"), cli.page.section(u'/', 0, 0)},
-                                     {QStringLiteral("settingsCategory"), cli.page.section(u'/', 1, 1)}});
+        QVariantMap initial{{QStringLiteral("page"), cli.page.section(u'/', 0, 0)}};
+        if (cli.page.contains(u'/')) {
+            initial.insert(QStringLiteral("settingsCategory"), cli.page.section(u'/', 1, 1));
+        }
+        engine.setInitialProperties(initial);
     }
     engine.load(QUrl(QStringLiteral("qrc:/qml/Main.qml")));
     if (engine.rootObjects().isEmpty()) {
@@ -267,6 +275,14 @@ int main(int argc, char** argv)
     }
     if (auto* window = qobject_cast<QQuickWindow*>(engine.rootObjects().constFirst())) {
         graphics.watch(window);
+        if (!cli.navigate.isEmpty()) {
+            QTimer::singleShot(600, window, [window, target = cli.navigate] {
+                window->setProperty("page", target.section(u'/', 0, 0));
+                if (target.contains(u'/')) {
+                    window->setProperty("settingsCategory", target.section(u'/', 1, 1));
+                }
+            });
+        }
         if (!cli.screenshot.isEmpty()) {
             QTimer::singleShot(1500, window, [window, path = cli.screenshot] {
                 if (!window->grabWindow().save(path)) {
