@@ -1,0 +1,335 @@
+#include "TestUtil.hpp"
+
+#include "core/FileIo.hpp"
+#include "core/Log.hpp"
+#include "settings/ConfigFile.hpp"
+#include "settings/Keys.hpp"
+#include "settings/Migrations.hpp"
+#include "settings/Overrides.hpp"
+#include "settings/SchemaDoc.hpp"
+#include "settings/SettingsStore.hpp"
+#include "settings/TomlCodec.hpp"
+
+#include <QFile>
+#include <QRegularExpression>
+#include <QSignalSpy>
+#include <QTemporaryDir>
+
+using namespace noctara;
+using namespace noctara::settings;
+
+namespace {
+
+const Schema& schema()
+{
+    return Schema::builtin();
+}
+
+std::size_t idx(std::string_view key)
+{
+    const auto index = schema().indexOf(key);
+    REQUIRE(index.has_value());
+    return *index;
+}
+
+ParsedConfig parse(std::string_view text)
+{
+    return parseConfig(text, QStringLiteral("test.toml"), schema());
+}
+
+std::optional<QVariant> parsedValue(const ParsedConfig& parsed, std::string_view key)
+{
+    for (const auto& [index, value] : parsed.values) {
+        if (index == idx(key)) {
+            return value;
+        }
+    }
+    return std::nullopt;
+}
+
+bool writeText(const QString& path, const QByteArray& content)
+{
+    return writeFileAtomic(path, content).has_value();
+}
+
+}  // namespace
+
+TEST_SUITE("settings.schema")
+{
+    TEST_CASE("builtin schema is consistent and secret-free")
+    {
+        static const QRegularExpression secretLike(QStringLiteral("password|passwd|token|secret|cookie|credential"));
+        REQUIRE(schema().size() > 10);
+        for (const Definition& def : schema().definitions()) {
+            CHECK(validate(def, def.defaultValue).has_value());
+            CHECK_FALSE(QString::fromLatin1(def.key.data(), static_cast<qsizetype>(def.key.size())).contains(secretLike));
+            CHECK(schema().section(def.sectionId()) != nullptr);
+        }
+    }
+
+    TEST_CASE("environment variable names")
+    {
+        CHECK(Schema::environmentVariable(*schema().find(keys::ThemeMode)) == QStringLiteral("NOCTARA_APPEARANCE_THEME_MODE"));
+    }
+
+    TEST_CASE("validation rejects wrong types, ranges and enum values")
+    {
+        const Definition& theme = *schema().find(keys::ThemeMode);
+        CHECK(validate(theme, QStringLiteral("dark")).has_value());
+        CHECK(validate(theme, QStringLiteral("purple")).error().code == ErrorCode::ConfigUnknownEnumValue);
+        CHECK(validate(theme, true).error().code == ErrorCode::ConfigTypeMismatch);
+
+        const Definition& zoom = *schema().find(keys::UiScale);
+        CHECK(validate(zoom, QVariant::fromValue(qint64{150})).has_value());
+        CHECK(validate(zoom, QVariant::fromValue(qint64{500})).error().code == ErrorCode::ConfigOutOfRange);
+        CHECK(validate(zoom, QVariant::fromValue(150.5)).error().code == ErrorCode::ConfigTypeMismatch);
+        CHECK(validate(zoom, QVariant::fromValue(150.0))->typeId() == QMetaType::LongLong);
+
+        const Definition& color = *schema().find(keys::AccentColor);
+        CHECK(validate(color, QStringLiteral("#AABBCC"))->toString() == QStringLiteral("#aabbcc"));
+        CHECK_FALSE(validate(color, QStringLiteral("red")).has_value());
+    }
+
+    TEST_CASE("textual values from env/CLI")
+    {
+        const Definition& adaptive = *schema().find(keys::AccentAdaptive);
+        CHECK(parseText(adaptive, u"off")->toBool() == false);
+        CHECK(parseText(adaptive, u" YES ")->toBool() == true);
+        CHECK_FALSE(parseText(adaptive, u"maybe").has_value());
+        CHECK(parseText(*schema().find(keys::AnimationSpeed), u"1.5")->toDouble() == doctest::Approx(1.5));
+    }
+}
+
+TEST_SUITE("settings.store")
+{
+    TEST_CASE("layer precedence: default < system < user < env < cli")
+    {
+        SettingsStore store(schema());
+        const auto mode = idx(keys::ThemeMode);
+        CHECK(store.stringValue(keys::ThemeMode) == QStringLiteral("system"));
+        store.replaceLayer(Layer::System, {{mode, QStringLiteral("light")}});
+        CHECK(store.stringValue(keys::ThemeMode) == QStringLiteral("light"));
+        store.replaceLayer(Layer::User, {{mode, QStringLiteral("dark")}});
+        CHECK(store.stringValue(keys::ThemeMode) == QStringLiteral("dark"));
+        store.replaceLayer(Layer::Environment, {{mode, QStringLiteral("system")}});
+        CHECK(store.effectiveLayer(mode) == Layer::Environment);
+        store.replaceLayer(Layer::CommandLine, {{mode, QStringLiteral("light")}});
+        CHECK(store.stringValue(keys::ThemeMode) == QStringLiteral("light"));
+        CHECK(store.effectiveLayer(mode) == Layer::CommandLine);
+    }
+
+    TEST_CASE("UI edits are validated, refused when overridden, and default-equal values are not stored")
+    {
+        SettingsStore store(schema());
+        QSignalSpy changed(&store, &SettingsStore::valueChanged);
+        QSignalSpy edited(&store, &SettingsStore::userLayerEdited);
+
+        REQUIRE(store.setUserValue(keys::ThemeMode, QStringLiteral("dark")).has_value());
+        CHECK(changed.count() == 1);
+        CHECK(edited.count() == 1);
+        CHECK(store.layerValue(Layer::User, idx(keys::ThemeMode)).has_value());
+
+        REQUIRE(store.setUserValue(keys::ThemeMode, QStringLiteral("system")).has_value());
+        CHECK_FALSE(store.layerValue(Layer::User, idx(keys::ThemeMode)).has_value());
+
+        CHECK(store.setUserValue(keys::ThemeMode, QStringLiteral("nope")).error().code == ErrorCode::ConfigUnknownEnumValue);
+        CHECK(store.setUserValue("no.such.key", true).error().code == ErrorCode::ConfigUnknownKey);
+
+        store.replaceLayer(Layer::Environment, {{idx(keys::ThemeMode), QStringLiteral("light")}});
+        CHECK(store.setUserValue(keys::ThemeMode, QStringLiteral("dark")).error().code == ErrorCode::ConfigOverridden);
+    }
+
+    TEST_CASE("reset section and all")
+    {
+        SettingsStore store(schema());
+        REQUIRE(store.setUserValue(keys::GlassGrain, 0.9).has_value());
+        REQUIRE(store.setUserValue(keys::ThemeMode, QStringLiteral("dark")).has_value());
+        store.resetSection("appearance.glass");
+        CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.35));
+        CHECK(store.stringValue(keys::ThemeMode) == QStringLiteral("dark"));
+        store.resetAll();
+        CHECK(store.layerSnapshot(Layer::User).empty());
+    }
+}
+
+TEST_SUITE("settings.toml")
+{
+    TEST_CASE("parses known keys with validation and source positions")
+    {
+        const auto parsed = parse("config_version = 1\n"
+                                  "[appearance.theme]\nmode = \"dark\"\n"
+                                  "[appearance.text]\nui_scale = 400\n"
+                                  "[appearance.glass]\nblur_strength = 1\n");
+        REQUIRE(parsed.syntaxOk);
+        CHECK(parsedValue(parsed, keys::ThemeMode)->toString() == QStringLiteral("dark"));
+        CHECK(parsedValue(parsed, keys::GlassBlurStrength)->toDouble() == doctest::Approx(1.0));
+        CHECK_FALSE(parsedValue(parsed, keys::UiScale).has_value());
+        REQUIRE(parsed.issues.size() == 1);
+        CHECK(parsed.issues.front().code == ErrorCode::ConfigOutOfRange);
+        CHECK(parsed.issues.front().line == 5);
+        CHECK(parsed.issues.front().key == QStringLiteral("appearance.text.ui_scale"));
+    }
+
+    TEST_CASE("syntax errors yield no values")
+    {
+        const auto parsed = parse("[appearance.theme\nmode = \"dark\"\n");
+        CHECK_FALSE(parsed.syntaxOk);
+        CHECK(parsed.values.empty());
+        REQUIRE(parsed.issues.size() == 1);
+        CHECK(parsed.issues.front().code == ErrorCode::ConfigSyntaxError);
+    }
+
+    TEST_CASE("unknown keys survive a rewrite and documented defaults stay commented")
+    {
+        const auto parsed = parse("[appearance.theme]\nmode = \"light\"\nfuture_option = 3\n"
+                                  "[plugins.extra]\nname = \"кириллица 🎵\"\nlist = [1, 2]\n");
+        REQUIRE(parsed.syntaxOk);
+        CHECK(std::ranges::count_if(parsed.issues, [](const ConfigIssue& issue) {
+                  return issue.code == ErrorCode::ConfigUnknownKey;
+              }) == 3);
+
+        const QByteArray rewritten = serializeConfig(schema(), parsed.values, parsed.unknownToml);
+        CHECK(rewritten.contains("# blur_strength = 0.6"));
+        CHECK(rewritten.contains("mode = \"light\""));
+
+        const auto reparsed = parse(std::string_view(rewritten.constData(), static_cast<std::size_t>(rewritten.size())));
+        REQUIRE(reparsed.syntaxOk);
+        CHECK(parsedValue(reparsed, keys::ThemeMode)->toString() == QStringLiteral("light"));
+        CHECK(reparsed.unknownToml == parsed.unknownToml);
+        CHECK(QString::fromUtf8(rewritten).contains(QStringLiteral("кириллица 🎵")));
+    }
+
+    TEST_CASE("every schema value round-trips through the serializer")
+    {
+        ValueMap values;
+        values.emplace_back(idx(keys::AccentColor), QStringLiteral("#123abc"));
+        values.emplace_back(idx(keys::AnimationSpeed), 0.25);
+        values.emplace_back(idx(keys::UiScale), QVariant::fromValue(qint64{125}));
+        values.emplace_back(idx(keys::HeadingFont), QStringLiteral("Quote \" back\\slash\ttab"));
+        const QByteArray text = serializeConfig(schema(), values, {});
+        const auto parsed = parse(std::string_view(text.constData(), static_cast<std::size_t>(text.size())));
+        REQUIRE(parsed.syntaxOk);
+        CHECK(parsed.issues.empty());
+        CHECK(parsed.values == values);
+    }
+
+    TEST_CASE("migrations move keys between versions")
+    {
+        auto parsed = toml::parse("[old]\nname = 5\n");
+        REQUIRE(parsed);
+        toml::table root = std::move(parsed).table();
+        const Migration migrations[] = {{1, [](toml::table& table) { moveKey(table, "old.name", "fresh.section.name"); }}};
+        CHECK(migrate(root, 1, 2, migrations) == 2);
+        CHECK(root.at_path("fresh.section.name").value<int64_t>() == 5);
+        CHECK_FALSE(root.at_path("old.name"));
+    }
+}
+
+TEST_SUITE("settings.overrides")
+{
+    TEST_CASE("environment and command line")
+    {
+        QProcessEnvironment env;
+        env.insert(QStringLiteral("NOCTARA_APPEARANCE_THEME_MODE"), QStringLiteral("light"));
+        env.insert(QStringLiteral("NOCTARA_APPEARANCE_TEXT_UI_SCALE"), QStringLiteral("9000"));
+        const auto fromEnv = collectEnvironment(schema(), env);
+        CHECK(fromEnv.values.size() == 1);
+        CHECK(fromEnv.issues.size() == 1);
+
+        const auto fromCli = collectCommandLine(schema(), {QStringLiteral("appearance.glass.grain=0.1"), QStringLiteral("bogus=1")},
+                                                {QStringLiteral("gpu=off"), QStringLiteral("nope=1")});
+        CHECK(fromCli.values.size() == 2);
+        CHECK(fromCli.issues.size() == 2);
+    }
+}
+
+TEST_SUITE("settings.file")
+{
+    TEST_CASE("first run writes a template; edits are saved atomically; external edits hot-reload")
+    {
+        QTemporaryDir dir;
+        REQUIRE(dir.isValid());
+        const QString path = dir.filePath(QStringLiteral("config/config.toml"));
+
+        SettingsStore store(schema());
+        ConfigFile file(store, path, {});
+        file.setSaveDelay(std::chrono::milliseconds(1));
+        CHECK(file.load().isEmpty());
+        file.flush();
+        REQUIRE(QFile::exists(path));
+        CHECK(QFileInfo(path).permissions() == (QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ReadUser |
+                                                 QFileDevice::WriteUser));
+
+        REQUIRE(store.setUserValue(keys::ThemeMode, QStringLiteral("dark")).has_value());
+        REQUIRE(test::waitUntil([&] { return readWholeFile(path)->contains("\nmode = \"dark\""); }));
+
+        file.setHotReloadEnabled(true);
+        QSignalSpy reloaded(&file, &ConfigFile::reloaded);
+        QSignalSpy issues(&file, &ConfigFile::reloadIssues);
+
+        // A valid external edit is applied live.
+        REQUIRE(writeText(path, "[appearance.theme]\nmode = \"light\"\n[appearance.glass]\ngrain = 0.5\n"));
+        REQUIRE(test::waitUntil([&] { return store.stringValue(keys::ThemeMode) == QStringLiteral("light"); }));
+        CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.5));
+
+        // An invalid value keeps the last good one and reports the problem.
+        REQUIRE(writeText(path, "[appearance.theme]\nmode = \"light\"\n[appearance.glass]\ngrain = 7\n"));
+        REQUIRE(test::waitUntil([&] { return issues.count() > 0; }));
+        CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.5));
+
+        // A syntax error keeps everything.
+        issues.clear();
+        REQUIRE(writeText(path, "[appearance.theme\n"));
+        REQUIRE(test::waitUntil([&] { return issues.count() > 0; }));
+        CHECK(store.stringValue(keys::ThemeMode) == QStringLiteral("light"));
+    }
+
+    TEST_CASE("a broken file is backed up before being overwritten, and reset/import/export work")
+    {
+        QTemporaryDir dir;
+        const QString path = dir.filePath(QStringLiteral("config.toml"));
+        REQUIRE(writeText(path, "this is = = not toml"));
+
+        SettingsStore store(schema());
+        ConfigFile file(store, path, {});
+        file.setSaveDelay(std::chrono::milliseconds(1));
+        const auto issues = file.load();
+        REQUIRE(issues.size() == 1);
+        CHECK(issues.front().code == ErrorCode::ConfigSyntaxError);
+
+        REQUIRE(store.setUserValue(keys::GlassGrain, 0.8).has_value());
+        file.flush();
+        CHECK(readWholeFile(path + QStringLiteral(".bak"))->contains("not toml"));
+
+        const QString exported = dir.filePath(QStringLiteral("profile.toml"));
+        REQUIRE(file.exportTo(exported).has_value());
+        REQUIRE(file.resetToDefaults().has_value());
+        CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.35));
+        REQUIRE(file.importFrom(exported).has_value());
+        CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.8));
+    }
+}
+
+TEST_SUITE("settings.report")
+{
+    TEST_CASE("print-config shows sources and redacts URL credentials")
+    {
+        CHECK(log::redactUrlCredentials(u"https://user:pa55@dns.example/dns-query") ==
+              QStringLiteral("https://<redacted>@dns.example/dns-query"));
+        CHECK(log::redactUrlCredentials(u"https://dns.example/q@x") == QStringLiteral("https://dns.example/q@x"));
+
+        SettingsStore store(schema());
+        store.replaceLayer(Layer::CommandLine, {{idx(keys::ThemeMode), QStringLiteral("dark")}});
+        const QString report = effectiveConfigReport(store);
+        CHECK(report.contains(QStringLiteral("mode = \"dark\"  # command line")));
+    }
+
+    TEST_CASE("generated docs mention every key")
+    {
+        const QString markdown = schemaMarkdown(schema());
+        for (const Definition& def : schema().definitions()) {
+            const QString leaf = QString::fromLatin1(def.leafName().data(), static_cast<qsizetype>(def.leafName().size()));
+            CHECK(markdown.contains(u'`' + leaf + u'`'));
+        }
+    }
+}

@@ -1,0 +1,41 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+Standard: Latest
+ColumnLimit: 120
+IndentWidth: 4
+AccessModifierOffset: -4
+NamespaceIndentation: None
+FixNamespaceComments: true
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+  AfterClass: false
+  AfterStruct: false
+  AfterEnum: false
+  AfterNamespace: false
+  AfterControlStatement: Never
+  BeforeElse: false
+  BeforeCatch: false
+  SplitEmptyFunction: true
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortLambdasOnASingleLine: Inline
+BreakConstructorInitializers: BeforeComma
+PackConstructorInitializers: Never
+PointerAlignment: Left
+SpacesBeforeTrailingComments: 2
+InsertBraces: true
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^"(core|settings|theme|gfx|i18n|ui|net|cache|auth|media|drm|models)/'
+    Priority: 2
+  - Regex: '^<Q'
+    Priority: 3
+  - Regex: '^<'
+    Priority: 4
+  - Regex: '.*'
+    Priority: 1
