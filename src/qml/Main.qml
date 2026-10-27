@@ -77,7 +77,7 @@ Window {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.margins: Theme.space.lg
-        anchors.leftMargin: Theme.space.xl
+        anchors.leftMargin: Theme.space.lg
         height: visible ? Math.max(noticeText.implicitHeight, dismiss.implicitHeight) + Theme.space.md * 2 : 0
         Accessible.role: Accessible.AlertMessage
         Accessible.name: App.graphicsNotice
@@ -119,7 +119,7 @@ Window {
         anchors.top: notice.visible ? notice.bottom : parent.top
         anchors.bottom: parent.bottom
         anchors.margins: Theme.space.lg
-        anchors.leftMargin: Theme.space.xl
+        anchors.leftMargin: Theme.space.lg
 
         // Pages are created on first visit and kept alive afterwards.
         component Page: Loader {

@@ -48,7 +48,8 @@ Item {
         }
     }
 
-    // Accent halo: always under primary actions, on hover/active for others (if enabled).
+    // Accent halo: always under primary actions; on hover or when active for glass materials; only when
+    // active for flat buttons (a hover halo there looks exactly like a selection).
     Shadow {
         anchors.fill: parent
         z: -1
@@ -57,7 +58,8 @@ Item {
         spread: -4 * Theme.scale
         offsetY: root.primary ? 8 * Theme.scale : 0
         color: root.alpha(root.accent, !Theme.glass.glowControls ? 0
-                                       : Theme.glass.glow * (root.primary ? 0.9 : (root.hovered || root.active ? 0.7 : 0)))
+                                       : Theme.glass.glow * (root.primary ? 0.9
+                                                                     : root.active || (root.hovered && root.material !== "flat") ? 0.7 : 0))
         Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
     }
 

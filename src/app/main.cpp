@@ -57,7 +57,7 @@ struct CommandLine {
     bool pgoScenario = false;
     QString screenshot;      // dev/testing: render, save the window image, quit
     QString page;            // dev/testing: initial page id
-    QString navigate;        // dev/testing: page to switch to after startup (exercises transitions)
+    QString navigate;        // dev/testing: pages to switch to after startup, comma-separated
     QString artwork;         // dev/testing: image file used as the current track's artwork
     bool smokeTest = false;  // visit every page and settings category; fail on any warning
     QStringList assignments;
@@ -314,8 +314,10 @@ int main(int argc, char** argv)
         gfx::configureWindow(*window, decision, paths.cacheDir);
         frames.attach(window);
         window->setVisible(true);
-        if (!cli.navigate.isEmpty()) {
-            QTimer::singleShot(600, window, [window, target = cli.navigate] {
+        // --navigate a,b,c switches every 500 ms (exercises transitions and returning to earlier pages).
+        const QStringList steps = cli.navigate.split(u',', Qt::SkipEmptyParts);
+        for (qsizetype i = 0; i < steps.size(); ++i) {
+            QTimer::singleShot(600 + static_cast<int>(i) * 500, window, [window, target = steps.at(i)] {
                 if (target == u"appearance-panel") {
                     window->setProperty("appearancePanel", true);
                     return;
@@ -327,7 +329,8 @@ int main(int argc, char** argv)
             });
         }
         if (!cli.screenshot.isEmpty()) {
-            QTimer::singleShot(1500, window, [window, path = cli.screenshot] {
+            const int delay = steps.isEmpty() ? 1500 : 600 + static_cast<int>(steps.size() - 1) * 500 + 900;
+            QTimer::singleShot(delay, window, [window, path = cli.screenshot] {
                 if (!window->grabWindow().save(path)) {
                     qCWarning(lcUi) << "could not save screenshot to" << path;
                 }

@@ -26,7 +26,11 @@ GlassPanel {
     }
 
     property bool gliding: false
-    onCurrentChanged: gliding = true
+    onCurrentChanged: {
+        gliding = true
+        // If the move did not start an animation (no change in position), do not leave gliding switched on.
+        Qt.callLater(() => { if (!glide.running) gliding = false })
+    }
 
     level: 0
     liquid: true
@@ -75,6 +79,7 @@ GlassPanel {
         Behavior on y {
             enabled: root.gliding
             NumberAnimation {
+                id: glide
                 duration: Theme.motion.slow
                 easing.type: Theme.motion.easingEmphasized
                 onRunningChanged: if (!running) root.gliding = false

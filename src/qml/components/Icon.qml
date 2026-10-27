@@ -20,10 +20,12 @@ Item {
     Accessible.ignored: true
 
     onUrlChanged: {
-        if (current === 0)
-            second.source = url
-        else
-            first.source = url
+        const target = current === 0 ? second : first
+        target.source = url
+        // Returning to a colour the hidden layer already holds changes nothing about that layer, so no status
+        // signal follows: switch to it directly, or the icon would keep showing the previous colour.
+        if (target.status === Image.Ready && target.source.toString() === url)
+            current = current === 0 ? 1 : 0
     }
     Component.onCompleted: first.source = url
 
