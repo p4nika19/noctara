@@ -2,10 +2,13 @@
 
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
+#include "theme/AccentEngine.hpp"
 #include "theme/ColorScience.hpp"
 #include "theme/Palette.hpp"
 #include "theme/Theme.hpp"
 
+#include <QImage>
+#include <QPainter>
 #include <QSignalSpy>
 
 #include <cmath>
@@ -146,11 +149,28 @@ TEST_SUITE("theme.object")
         CHECK(theme.colors().textPrimary.lightnessF() < 0.5F);
 
         CHECK(theme.glass().style == QStringLiteral("kawase"));
+        CHECK(theme.glass().blurred);
         theme.setBlurAvailable(false);
         CHECK(theme.glass().style == QStringLiteral("solid"));
         CHECK_FALSE(theme.glass().translucent);
+        CHECK_FALSE(theme.glass().blurred);
+        CHECK(theme.glass().blurIterations == 0);
+        CHECK_FALSE(theme.glass().backdropAnimated);
         theme.setBlurAvailable(true);
-        theme.setGovernorStyleCap(QStringLiteral("solid"));
+        theme.setGlassLimits(2, QStringLiteral("solid"), true);
+        CHECK(theme.glass().style == QStringLiteral("solid"));
+        CHECK_FALSE(theme.glass().translucent);
+
+        REQUIRE(store.setUserValue(keys::GlassStyle, QStringLiteral("liquid")).has_value());
+        theme.setGlassLimits(1, QStringLiteral("kawase"), false);
+        CHECK(theme.glass().style == QStringLiteral("kawase"));
+        CHECK(theme.glass().requestedStyle == QStringLiteral("liquid"));
+        CHECK(theme.glass().quality == 1);
+        CHECK_FALSE(theme.glass().backdropAnimated);
+        theme.setGlassLimits(2, QString(), true);
+        CHECK(theme.glass().style == QStringLiteral("liquid"));
+        CHECK(theme.glass().backdropAnimated);
+        REQUIRE(store.setUserValue(keys::ReduceTransparency, true).has_value());
         CHECK(theme.glass().style == QStringLiteral("solid"));
     }
 
@@ -169,5 +189,165 @@ TEST_SUITE("theme.object")
         REQUIRE(store.setUserValue(keys::AnimationSpeed, 0.0).has_value());
         CHECK_FALSE(theme.motion().enabled);
         CHECK(theme.motion().normal == 0);
+    }
+
+    TEST_CASE("Blur plan: strength widens the blur, quality changes the cost but not the radius")
+    {
+        for (const char16_t* style : {u"kawase", u"gaussian", u"liquid"}) {
+            CAPTURE(QString::fromUtf16(style));
+            double previous = 0.0;
+            for (double strength = 0.0; strength <= 1.0001; strength += 0.25) {
+                const BlurPlan plan = blurPlan(QStringView(style), strength, 2);
+                CHECK(plan.radius() >= previous);
+                previous = plan.radius();
+            }
+            for (double strength : {0.2, 0.6, 1.0}) {
+                const BlurPlan high = blurPlan(QStringView(style), strength, 2);
+                const BlurPlan low = blurPlan(QStringView(style), strength, 0);
+                CHECK(low.downsample >= high.downsample);
+                CHECK(low.iterations <= high.iterations);
+                CHECK(low.radius() == doctest::Approx(high.radius()).epsilon(0.35));
+                CHECK(high.downsample >= 2.0);
+            }
+        }
+        CHECK(blurPlan(u"kawase", 0.6, 2).iterations >= 2);
+        CHECK(blurPlan(u"kawase", 1.0, 2).iterations <= 5);
+        CHECK(blurPlan(u"liquid", 1.0, 2).radius() < blurPlan(u"kawase", 1.0, 2).radius());
+        CHECK(blurPlan(u"gaussian", 1.0, 2).sigma <= 8.0);
+        CHECK(blurPlan(u"solid", 1.0, 2).iterations == 0);
+    }
+}
+
+namespace {
+
+QImage filled(QColor colour, int size = 96)
+{
+    QImage image(size, size, QImage::Format_ARGB32);
+    image.fill(colour);
+    return image;
+}
+
+// A large dull area with a smaller vivid patch.
+QImage dullWithAccent(QColor dull, QColor vivid, double vividShare)
+{
+    QImage image = filled(dull, 100);
+    QPainter painter(&image);
+    painter.fillRect(QRectF(0, 0, 100, 100.0 * vividShare), vivid);
+    return image;
+}
+
+double hueDistance(double a, double b)
+{
+    const double d = std::fmod(std::abs(a - b), 360.0);
+    return std::min(d, 360.0 - d);
+}
+
+}  // namespace
+
+TEST_SUITE("theme.accent")
+{
+    TEST_CASE("the seed takes the hue of the dominant colourful area")
+    {
+        const QColor red(220, 30, 40);
+        const auto analysis = analyseArtwork(filled(red), Extraction::Balanced);
+        REQUIRE(analysis.seed.has_value());
+        CHECK(hueDistance(analysis.seed->h, color::toOkLch(color::Srgb{220 / 255.0, 30 / 255.0, 40 / 255.0}).h) < 5.0);
+
+        // A vivid minority beats a large grey area.
+        const auto mixed =
+            analyseArtwork(dullWithAccent(QColor(120, 120, 125), QColor(20, 120, 255), 0.25), Extraction::Balanced);
+        REQUIRE(mixed.seed.has_value());
+        CHECK(hueDistance(mixed.seed->h, color::toOkLch(color::Srgb{20 / 255.0, 120 / 255.0, 1.0}).h) < 10.0);
+        CHECK_FALSE(mixed.swatches.empty());
+    }
+
+    TEST_CASE("pathological artwork: white, black, grayscale give no seed; pastel and neon stay usable")
+    {
+        CHECK_FALSE(analyseArtwork(filled(Qt::white), Extraction::Vivid).seed.has_value());
+        CHECK_FALSE(analyseArtwork(filled(Qt::black), Extraction::Vivid).seed.has_value());
+        QImage gradient(64, 64, QImage::Format_RGB32);
+        for (int y = 0; y < 64; ++y) {
+            for (int x = 0; x < 64; ++x) {
+                gradient.setPixel(x, y, qRgb(x * 4, x * 4, x * 4));
+            }
+        }
+        CHECK_FALSE(analyseArtwork(gradient, Extraction::Vivid).seed.has_value());
+        CHECK_FALSE(analyseArtwork(QImage(), Extraction::Vivid).seed.has_value());
+
+        for (const QColor colour : {QColor(255, 200, 220), QColor(57, 255, 20), QColor(255, 0, 255)}) {
+            CAPTURE(colour.name().toStdString());
+            const auto analysis = analyseArtwork(filled(colour), Extraction::Vivid);
+            REQUIRE(analysis.seed.has_value());
+            CHECK(analysis.seed->L >= 0.5);
+            CHECK(analysis.seed->L <= 0.78);
+            // Whatever the art, the generated palette meets AA in both schemes.
+            for (const Scheme scheme : {Scheme::Dark, Scheme::Light}) {
+                const Palette palette = generatePalette({.seed = *analysis.seed, .scheme = scheme});
+                for (const auto& result : checkContrast(palette, scheme, defaultTones(scheme))) {
+                    CHECK(result.passes());
+                }
+            }
+        }
+    }
+
+    TEST_CASE("extraction modes order the chroma; results are deterministic")
+    {
+        const QImage art = dullWithAccent(QColor(40, 30, 60), QColor(255, 90, 20), 0.5);
+        const auto vivid = analyseArtwork(art, Extraction::Vivid);
+        const auto balanced = analyseArtwork(art, Extraction::Balanced);
+        const auto soft = analyseArtwork(art, Extraction::Soft);
+        REQUIRE(vivid.seed.has_value());
+        REQUIRE(balanced.seed.has_value());
+        REQUIRE(soft.seed.has_value());
+        CHECK(vivid.seed->C >= balanced.seed->C);
+        CHECK(balanced.seed->C >= soft.seed->C);
+        const auto again = analyseArtwork(art, Extraction::Vivid);
+        CHECK(again.seed->h == vivid.seed->h);
+        CHECK(again.seed->C == vivid.seed->C);
+        CHECK(parseExtraction(QStringLiteral("soft")) == Extraction::Soft);
+        CHECK(parseExtraction(QStringLiteral("bogus")) == Extraction::Vivid);
+    }
+
+    TEST_CASE("the cover backdrop stays inside each scheme's legible lightness range")
+    {
+        const QImage art = dullWithAccent(Qt::white, Qt::black, 0.5);
+        for (const Scheme scheme : {Scheme::Dark, Scheme::Light}) {
+            const QImage backdrop = blurredBackdrop(art, scheme, 64);
+            REQUIRE(backdrop.size() == QSize(64, 64));
+            const SchemeTones& tones = defaultTones(scheme);
+            for (const QPoint p : {QPoint(0, 0), QPoint(32, 32), QPoint(63, 63)}) {
+                const QColor c = backdrop.pixelColor(p);
+                const double lightness =
+                    color::toOkLab(color::Srgb{static_cast<double>(c.redF()), static_cast<double>(c.greenF()),
+                                               static_cast<double>(c.blueF())})
+                        .L;
+                CHECK(lightness >= tones.backdropMinL - 0.02);
+                CHECK(lightness <= tones.backdropMaxL + 0.02);
+            }
+        }
+    }
+
+    TEST_CASE("AccentEngine delivers seeds asynchronously, caches per artwork and clears")
+    {
+        settings::SettingsStore store(settings::Schema::builtin());
+        AccentEngine engine(store);
+        QSignalSpy seeds(&engine, &AccentEngine::seedChanged);
+        engine.setArtwork(QStringLiteral("a"), filled(QColor(30, 200, 90)));
+        REQUIRE(test::waitUntil([&] { return seeds.count() == 1; }));
+        CHECK(engine.hasArtwork());
+        CHECK_FALSE(engine.backdrop(Scheme::Dark).isNull());
+
+        engine.setArtwork(QStringLiteral("b"), filled(QColor(200, 40, 200)));
+        REQUIRE(test::waitUntil([&] { return seeds.count() == 2; }));
+        engine.setArtwork(QStringLiteral("a"), filled(QColor(30, 200, 90)));
+        CHECK(seeds.count() == 3);  // cache hit: delivered without a worker round trip
+
+        REQUIRE(store.setUserValue(keys::AccentExtraction, QStringLiteral("soft")).has_value());
+        REQUIRE(test::waitUntil([&] { return seeds.count() == 4; }));
+
+        engine.clearArtwork();
+        CHECK(seeds.count() == 5);
+        CHECK_FALSE(seeds.last().first().value<std::optional<color::OkLch>>().has_value());
+        CHECK_FALSE(engine.hasArtwork());
     }
 }

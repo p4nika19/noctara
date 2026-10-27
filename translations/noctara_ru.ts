@@ -88,12 +88,13 @@
 <context>
     <name>AppearanceDrawer</name>
     <message>
-        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+26"/>
-        <source>custom</source>
-        <translation>своя настройка</translation>
+        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+27"/>
+        <source>follows the system</source>
+        <extracomment>Shown instead of a preset name while the theme follows the desktop colour scheme</extracomment>
+        <translation>как в системе</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+19"/>
         <location line="+17"/>
         <source>Appearance</source>
         <translation>Оформление</translation>
@@ -129,13 +130,13 @@
     </message>
     <message>
         <location line="+11"/>
-        <source>A preset only sets the options below; you can change any of them afterwards.</source>
-        <translation>Пресет лишь выставляет параметры ниже — любой из них можно потом изменить.</translation>
+        <source>A preset only changes the colour scheme; materials, shapes and layout stay as they are.</source>
+        <translation>Пресет меняет только цветовую схему: материалы, формы и раскладка остаются прежними.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Custom: your settings differ from every preset.</source>
-        <translation>Своя настройка: параметры отличаются от всех пресетов.</translation>
+        <source>The colour scheme follows the system. Pick a preset to fix it.</source>
+        <translation>Цветовая схема следует за системой. Выберите пресет, чтобы закрепить её.</translation>
     </message>
 </context>
 <context>
@@ -144,6 +145,69 @@
         <location filename="../src/qml/components/ColorPicker.qml" line="+79"/>
         <source>Hex color</source>
         <translation>Цвет в HEX</translation>
+    </message>
+</context>
+<context>
+    <name>Effects</name>
+    <message>
+        <location filename="../src/ui/EffectsController.cpp" line="+29"/>
+        <source>Dual Kawase blur</source>
+        <translation>Размытие Dual Kawase</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Gaussian blur</source>
+        <translation>Размытие по Гауссу</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Liquid Glass</source>
+        <translation>Жидкое стекло</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Solid</source>
+        <translation>Сплошной</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Low</source>
+        <translation>низкое</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Medium</source>
+        <translation>среднее</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>High</source>
+        <translation>высокое</translation>
+    </message>
+    <message>
+        <location line="+88"/>
+        <source>Energy saving is active: %1 is used for now.</source>
+        <translation>Включено энергосбережение: пока используется «%1».</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Lowered automatically to %1 to keep animations smooth.</source>
+        <translation>Автоматически заменено на «%1», чтобы анимация оставалась плавной.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Reduce transparency is on, so surfaces are opaque.</source>
+        <translation>Включено «Уменьшить прозрачность», поэтому поверхности непрозрачные.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Energy saving is active: effects run at %1 quality.</source>
+        <translation>Включено энергосбережение: качество эффектов — %1.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Lowered automatically to %1 because frames took too long. It is raised again when there is headroom.</source>
+        <translation>Автоматически снижено (%1): кадры отрисовывались слишком долго. Качество снова повысится, когда появится запас.</translation>
     </message>
 </context>
 <context>
@@ -494,7 +558,7 @@
 <context>
     <name>Main</name>
     <message>
-        <location filename="../src/qml/Main.qml" line="+31"/>
+        <location filename="../src/qml/Main.qml" line="+33"/>
         <source>Noctara</source>
         <translation>Noctara</translation>
     </message>
@@ -525,17 +589,17 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+141"/>
+        <location line="+150"/>
         <source>Charts</source>
         <translation>Чарты</translation>
     </message>
     <message>
-        <location line="-139"/>
+        <location line="-148"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+85"/>
         <source>Got it</source>
         <translation>Понятно</translation>
     </message>
@@ -588,7 +652,7 @@
 <context>
     <name>NavRail</name>
     <message>
-        <location filename="../src/qml/components/NavRail.qml" line="+19"/>
+        <location filename="../src/qml/components/NavRail.qml" line="+20"/>
         <source>Navigation</source>
         <translation>Навигация</translation>
     </message>
@@ -617,6 +681,122 @@
         <source>Shadow</source>
         <comment>palette colour: the deep shade of the accent</comment>
         <translation>Тень</translation>
+    </message>
+</context>
+<context>
+    <name>PerformanceHeader</name>
+    <message>
+        <location filename="../src/qml/settings/PerformanceHeader.qml" line="+17"/>
+        <source>Dual Kawase blur</source>
+        <translation>Размытие Dual Kawase</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Gaussian blur</source>
+        <translation>Размытие по Гауссу</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Liquid Glass</source>
+        <translation>Жидкое стекло</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Solid (no blur)</source>
+        <translation>Сплошной (без размытия)</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>low quality</source>
+        <translation>низкое качество</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>medium quality</source>
+        <translation>среднее качество</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>high quality</source>
+        <translation>высокое качество</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Right now</source>
+        <translation>Сейчас</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Renderer</source>
+        <translation>Отрисовка</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Software (CPU)</source>
+        <translation>Программная (ЦП)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Glass</source>
+        <translation>Стекло</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Frame rate</source>
+        <translation>Частота кадров</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <location line="+14"/>
+        <source>%1 fps</source>
+        <extracomment>%1 = frames per second</extracomment>
+        <translation>%1 кадр/с</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>Idle: nothing is being redrawn</source>
+        <translation>Простой: ничего не перерисовывается</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>GPU time per frame</source>
+        <translation>Время ГП на кадр</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 ms of %2 ms</source>
+        <extracomment>%1 = measured GPU time, %2 = time available per frame, both in milliseconds</extracomment>
+        <translation>%1 мс из %2 мс</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Not reported yet</source>
+        <translation>Пока нет данных</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Frame rate limit</source>
+        <translation>Ограничение частоты кадров</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Hardware acceleration is off, so glass is drawn as solid surfaces and the backdrop does not move.</source>
+        <translation>Аппаратное ускорение выключено, поэтому стекло рисуется сплошными поверхностями, а фон неподвижен.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Energy saving is active: the backdrop is still, blur is limited to Dual Kawase at medium quality and animations run at up to 30 fps.</source>
+        <translation>Включено энергосбережение: фон неподвижен, размытие ограничено Dual Kawase в среднем качестве, анимация — не более 30 кадров/с.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Effects were lowered automatically because frames took too long. Quality is raised again step by step when there is headroom.</source>
+        <translation>Эффекты автоматически упрощены: кадры отрисовывались слишком долго. Качество будет постепенно повышено, когда появится запас.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Restore full quality</source>
+        <translation>Вернуть полное качество</translation>
     </message>
 </context>
 <context>
@@ -653,32 +833,14 @@
     </message>
 </context>
 <context>
-    <name>Presets</name>
-    <message>
-        <location filename="../src/ui/AppearancePresets.cpp" line="+20"/>
-        <source>Midnight</source>
-        <translation>Midnight</translation>
-    </message>
-    <message>
-        <location line="+17"/>
-        <source>Glacier</source>
-        <translation>Ледник</translation>
-    </message>
-    <message>
-        <location line="+17"/>
-        <source>Neon</source>
-        <translation>Неон</translation>
-    </message>
-</context>
-<context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+139"/>
+        <location filename="../src/app/main.cpp" line="+150"/>
         <source>Needs hardware acceleration, which is currently off.</source>
         <translation>Нужно аппаратное ускорение, а оно сейчас выключено.</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
         <source>Not available on this graphics device.</source>
         <translation>Недоступно на этом графическом устройстве.</translation>
     </message>
@@ -937,12 +1099,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+181"/>
+        <location line="+185"/>
         <source>Soft</source>
         <translation>Мягкие</translation>
     </message>
     <message>
-        <location line="-179"/>
+        <location line="-183"/>
         <source>Palette extraction</source>
         <translation>Извлечение палитры</translation>
     </message>
@@ -952,7 +1114,7 @@
         <translation>Насколько насыщенны цвета, взятые из обложки. Пересчитываются для каждого трека.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Aurora</source>
         <translation>Аврора</translation>
     </message>
@@ -1007,7 +1169,7 @@
         <translation>Тень цвета обложки под обложками.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Button and selection glow</source>
         <translation>Свечение кнопок и выделения</translation>
     </message>
@@ -1017,7 +1179,7 @@
         <translation>Мягкий ореол вокруг акцентных кнопок и активных пунктов.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Progress glow</source>
         <translation>Свечение прогресса</translation>
     </message>
@@ -1088,14 +1250,14 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+168"/>
+        <location line="+169"/>
         <location line="+13"/>
         <location line="+12"/>
         <source>Auto</source>
         <translation>Авто</translation>
     </message>
     <message>
-        <location line="-192"/>
+        <location line="-193"/>
         <source>Low</source>
         <translation>Низкое</translation>
     </message>
@@ -1120,7 +1282,7 @@
         <translation>В режиме «Авто» качество снижается, если кадры рисуются слишком долго, и потом снова повышается.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Frosted glass</source>
         <translation>Матовое стекло</translation>
     </message>
@@ -1155,7 +1317,7 @@
         <translation>Матовое — молочное размытое стекло. Жидкое — глянцевое стекло с яркой кромкой. Тонированное — стекло в цвете акцента. Прозрачные — только контур. Сплошные — непрозрачные.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>Reduce transparency</source>
         <translation>Уменьшить прозрачность</translation>
     </message>
@@ -1186,7 +1348,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+32"/>
+        <location line="+33"/>
         <source>×</source>
         <translation>×</translation>
     </message>
@@ -1647,7 +1809,7 @@
         <translation>Перезапустить</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+41"/>
         <source>No settings match “%1”.</source>
         <translation>Нет настроек, подходящих под «%1».</translation>
     </message>
@@ -1663,7 +1825,7 @@
 <context>
     <name>Toast</name>
     <message>
-        <location filename="../src/qml/components/Toast.qml" line="+61"/>
+        <location filename="../src/qml/components/Toast.qml" line="+62"/>
         <source>Dismiss</source>
         <translation>Закрыть</translation>
     </message>

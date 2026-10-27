@@ -26,6 +26,11 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 8. **Native playback (tentative)**: FFmpeg demux/decode reading through a custom `AVIOContext` from `StreamSource`, with `libswresample` and output to `QAudioSink`. `QMediaPlayer` cannot guarantee that every byte goes through our transport and cache, and its seek and buffering control is coarse.
 9. **Tests**: doctest. Qt-dependent tests create a `QCoreApplication` or `QGuiApplication` (offscreen) in a custom `main`.
 10. **UI scale**: applied live through Theme token multipliers rather than `QT_SCALE_FACTOR`, which would need a restart.
+11. **Glass pipeline in QML**: a `ShaderEffectSource` chain (capture, Kawase levels / Gaussian passes) rather than a `QQuickRhiItem`. Each pass renders only when its input changes, so a static scene costs nothing, and all GPU APIs are covered without per-API code. Texture providers stay visible at zero size, because invisible `ShaderEffectSource`s are never updated.
+12. **Panels find the blurred texture through the window** (`Window.window.backdropTexture`) and map their own fragments to window UVs from `qt_Matrix` in the vertex shader (`Graphics.ndcYUp` handles the GL/Vulkan NDC difference). This needs no position bindings, so it stays correct during scrolling and animations.
+13. **Software path = Solid** (per the spec). The cover backdrop is pre-blurred on the CPU, so it also works without a GPU.
+14. **Frame cap by render-thread pacing**: Qt Quick has no frame-rate API. Sleeping after presentation on the render thread caps the rate without distorting animation timing. It is never applied on the GUI thread.
+15. **Presets change colours only** (Midnight / Frost, untranslated names), per the user's review of slice (a).
 
 ## Slices
 
@@ -39,6 +44,8 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 (h) pages, Layout and Keyboard customization, user themes
 (i) DRM helper
 (j) polish and performance measurements
+
+Done: (a), (b).
 
 ## Open items flagged for verification
 - castlabs Electron version and the `configureHostResolver` secure-DNS support (slice i).

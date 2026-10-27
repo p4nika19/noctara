@@ -24,7 +24,7 @@ Item {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.margins: Theme.space.md
+            anchors.margins: Math.max(Theme.space.md, sidebar.cornerInset)
             iconName: "search"
             placeholderText: qsTr("Search settings")
             text: SettingsUi.searchText
@@ -124,7 +124,7 @@ Item {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.margins: Theme.space.md
+            anchors.margins: Math.max(Theme.space.md, sidebar.cornerInset)
             spacing: Theme.space.sm
             Text {
                 anchors.verticalCenter: parent.verticalCenter
@@ -158,7 +158,7 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.margins: Theme.space.xl
+            anchors.margins: Math.max(Theme.space.xl, content.cornerInset)
             height: Math.max(title.implicitHeight, resetPage.implicitHeight)
 
             Text {
@@ -169,6 +169,9 @@ Item {
                 text: root.searching ? qsTr("Search results") : (root.currentCategory ? root.currentCategory.label : "")
                 font: Theme.font.headline
                 color: Theme.colors.textPrimary
+                // Long titles (Russian) shrink to fit before they are elided, never break mid-word.
+                fontSizeMode: Text.HorizontalFit
+                minimumPixelSize: Theme.font.title.pixelSize
                 elide: Text.ElideRight
                 Accessible.role: Accessible.Heading
             }
@@ -226,7 +229,8 @@ Item {
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             anchors.leftMargin: Theme.space.xl
-            anchors.rightMargin: Theme.space.lg
+            anchors.rightMargin: Math.max(Theme.space.lg, content.cornerInset)
+            anchors.bottomMargin: content.cornerInset
             sourceComponent: !root.searching && root.category === "about" ? about : rows
         }
 
@@ -244,8 +248,8 @@ Item {
                 ScrollBar.vertical: ScrollBar {}
                 header: Loader {
                     width: list.width - list.rightMargin
-                    active: !root.searching && root.category === "appearance"
-                    sourceComponent: AppearanceHeader {}
+                    active: !root.searching && (root.category === "appearance" || root.category === "performance")
+                    sourceComponent: root.category === "appearance" ? appearanceHeader : performanceHeader
                 }
                 delegate: SettingsRow {
                     showCategory: root.searching
@@ -263,6 +267,14 @@ Item {
         Component {
             id: about
             AboutPane {}
+        }
+        Component {
+            id: appearanceHeader
+            AppearanceHeader {}
+        }
+        Component {
+            id: performanceHeader
+            PerformanceHeader {}
         }
     }
 }

@@ -184,7 +184,7 @@ QVariantList SettingsController::presets() const
             preview.append(QString::fromLatin1(colour));
         }
         list.append(QVariantMap{{QStringLiteral("id"), latin(preset.id)},
-                                {QStringLiteral("name"), QCoreApplication::translate("Presets", preset.name)},
+                                {QStringLiteral("name"), QString::fromLatin1(preset.name)},
                                 {QStringLiteral("preview"), preview}});
     }
     return list;

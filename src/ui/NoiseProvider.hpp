@@ -4,8 +4,9 @@
 
 namespace noctara::ui {
 
-// image://noise/<size> — a deterministic, tileable greyscale grain texture (generated once, then cached
-// by Qt's pixmap cache). Tiled across the window at low opacity to break up gradient banding.
+// image://noise/<size> — a deterministic, tileable grain texture (generated once, then cached by Qt's
+// pixmap cache). Each texel is either a faint white or a faint black speck, so the grain averages out to no
+// change in brightness. Tiled over the backdrop only (never over text) to break up gradient banding.
 class NoiseProvider : public QQuickImageProvider {
 public:
     NoiseProvider();

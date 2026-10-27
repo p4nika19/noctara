@@ -2,6 +2,7 @@
 #include "core/LsanSuppressions.hpp"
 #include "core/Paths.hpp"
 #include "gfx/CrashSentinel.hpp"
+#include "gfx/FrameMonitor.hpp"
 #include "gfx/GraphicsBootstrap.hpp"
 #include "gfx/PowerMonitor.hpp"
 #include "gfx/Relaunch.hpp"
@@ -11,9 +12,12 @@
 #include "settings/Overrides.hpp"
 #include "settings/SchemaDoc.hpp"
 #include "settings/SettingsStore.hpp"
+#include "theme/AccentEngine.hpp"
 #include "theme/FontLoader.hpp"
 #include "theme/Theme.hpp"
 #include "ui/AppController.hpp"
+#include "ui/ArtworkProvider.hpp"
+#include "ui/EffectsController.hpp"
 #include "ui/IconProvider.hpp"
 #include "ui/NoiseProvider.hpp"
 #include "ui/PowerStatus.hpp"
@@ -22,9 +26,11 @@
 
 #include <QCommandLineParser>
 #include <QGuiApplication>
+#include <QImage>
 #include <QProcessEnvironment>
 #include <QQmlApplicationEngine>
 #include <QQuickWindow>
+#include <QStandardPaths>
 #include <QTimer>
 
 #include <cstdio>
@@ -52,6 +58,7 @@ struct CommandLine {
     QString screenshot;      // dev/testing: render, save the window image, quit
     QString page;            // dev/testing: initial page id
     QString navigate;        // dev/testing: page to switch to after startup (exercises transitions)
+    QString artwork;         // dev/testing: image file used as the current track's artwork
     bool smokeTest = false;  // visit every page and settings category; fail on any warning
     QStringList assignments;
     QStringList aliases;
@@ -87,7 +94,10 @@ CommandLine parseCommandLine(const QCoreApplication& app, const settings::Schema
     QCommandLineOption navigate(QStringLiteral("navigate"), QStringLiteral("Switch page after startup."),
                                 QStringLiteral("id"));
     navigate.setFlags(QCommandLineOption::HiddenFromHelp);
-    parser.addOptions({config, print, reset, safe, disableGpu, set, pgo, screenshot, page, smoke, navigate});
+    QCommandLineOption artwork(QStringLiteral("artwork"), QStringLiteral("Use an image file as the artwork."),
+                               QStringLiteral("file"));
+    artwork.setFlags(QCommandLineOption::HiddenFromHelp);
+    parser.addOptions({config, print, reset, safe, disableGpu, set, pgo, screenshot, page, smoke, navigate, artwork});
 
     std::vector<QCommandLineOption> aliasOptions;
     for (const settings::Definition& def : schema.definitions()) {
@@ -113,6 +123,7 @@ CommandLine parseCommandLine(const QCoreApplication& app, const settings::Schema
     cli.page = parser.value(page);
     cli.smokeTest = parser.isSet(smoke);
     cli.navigate = parser.value(navigate);
+    cli.artwork = parser.value(artwork);
     cli.assignments = parser.values(set);
     for (const QCommandLineOption& option : aliasOptions) {
         if (parser.isSet(option)) {
@@ -143,6 +154,7 @@ ui::Availability graphicsAvailability(const gfx::GraphicsDecision& decision)
         glass.insert(QStringLiteral("liquid"), reason);
         availability.disabledSettings.insert(QStringLiteral("appearance.glass.blur_strength"), reason);
         availability.disabledSettings.insert(QStringLiteral("appearance.backdrop.animate"), reason);
+        availability.disabledSettings.insert(QStringLiteral("appearance.glass.quality"), reason);
     } else if (!decision.liquidGlassAllowed) {
         availability.disabledOptions[QStringLiteral("appearance.glass.style")].insert(
             QStringLiteral("liquid"), QT_TRANSLATE_NOOP("Settings", "Not available on this graphics device."));
@@ -192,7 +204,12 @@ int main(int argc, char** argv)
     log::install();
     QCoreApplication::setApplicationName(QString::fromLatin1(kAppId));
     QCoreApplication::setApplicationVersion(QStringLiteral(NOCTARA_VERSION));
-    QGuiApplication::setDesktopFileName(QString::fromLatin1(kAppId));
+    // The desktop file name makes Qt register the app id with the desktop portal, which fails (and logs a
+    // warning) unless noctara.desktop is installed, e.g. when running from the build tree.
+    if (!QStandardPaths::locate(QStandardPaths::ApplicationsLocation, QString::fromLatin1(kAppId) + u".desktop")
+             .isEmpty()) {
+        QGuiApplication::setDesktopFileName(QString::fromLatin1(kAppId));
+    }
 
     const std::span<char*> rawArgs(argv, static_cast<std::size_t>(argc));
     const bool headless = hasFlag(rawArgs, "--print-config") || hasFlag(rawArgs, "--reset-config") ||
@@ -244,10 +261,17 @@ int main(int argc, char** argv)
     theme.setBlurAvailable(decision.hardware);
     QGuiApplication::setFont(theme.font().body);
 
+    theme::AccentEngine accent(store);
+    QObject::connect(&accent, &theme::AccentEngine::seedChanged, &theme,
+                     [&theme](std::optional<color::OkLch> seed) { theme.setArtworkSeed(seed); });
+
     ui::SettingsController settingsUi(store, config, languages);
     settingsUi.setAvailability(graphicsAvailability(decision));
     gfx::PowerMonitor power;
     const ui::PowerStatusPresenter powerStatus(power, store, languages, settingsUi);
+    // Declared before the QML engine: the window's render thread reports to it until the window is gone.
+    gfx::FrameMonitor frames;
+    ui::EffectsController effects(store, theme, power, frames, graphics, languages, settingsUi);
     ui::AppController appController(store, graphics, relaunch, languages);
     QObject::connect(&config, &settings::ConfigFile::reloadIssues, &appController,
                      &ui::AppController::reportConfigIssues);
@@ -258,12 +282,16 @@ int main(int argc, char** argv)
     engine.addImageProvider(QStringLiteral("icon"), new ui::IconProvider);
     // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
     engine.addImageProvider(QStringLiteral("noise"), new ui::NoiseProvider);
+    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
+    engine.addImageProvider(QStringLiteral("artwork"), new ui::ArtworkProvider(accent));
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Theme", &theme);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Format", &formatter);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "SettingsUi", &settingsUi);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "App", &appController);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Graphics", &graphics);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Language", &languages);
+    qmlRegisterSingletonInstance("Noctara", 1, 0, "Performance", &effects);
+    qmlRegisterSingletonInstance("Noctara", 1, 0, "Artwork", &accent);
     qmlRegisterUncreatableType<ui::SettingsModel>("Noctara", 1, 0, "SettingsModel",
                                                   QStringLiteral("Provided by SettingsUi"));
     QObject::connect(&languages, &i18n::LanguageManager::languageChanged, &engine, &QQmlEngine::retranslate);
@@ -282,6 +310,9 @@ int main(int argc, char** argv)
     }
     if (auto* window = qobject_cast<QQuickWindow*>(engine.rootObjects().constFirst())) {
         graphics.watch(window);
+        // Main.qml starts hidden so GPU timestamps can be enabled before the scene graph initialises.
+        frames.attach(window);
+        window->setVisible(true);
         if (!cli.navigate.isEmpty()) {
             QTimer::singleShot(600, window, [window, target = cli.navigate] {
                 if (target == u"appearance-panel") {
@@ -308,6 +339,13 @@ int main(int argc, char** argv)
             static_cast<Qt::ConnectionType>(Qt::QueuedConnection | Qt::SingleShotConnection));
     }
     QTimer::singleShot(0, &appController, [&appController, issues] { appController.reportConfigIssues(issues); });
+    if (!cli.artwork.isEmpty()) {
+        const QImage image(cli.artwork);
+        if (image.isNull()) {
+            qCWarning(lcUi) << "could not load artwork" << cli.artwork;
+        }
+        accent.setArtwork(cli.artwork, image);
+    }
     if (cli.smokeTest) {
         runSmokeTest(engine, settingsUi);
     }

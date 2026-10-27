@@ -20,6 +20,6 @@ int main(int argc, char** argv)
     } else {
         output = noctara::settings::schemaMarkdown(schema).toUtf8();
     }
-    std::fwrite(output.constData(), 1, static_cast<std::size_t>(output.size()), stdout);
-    return 0;
+    const auto size = static_cast<std::size_t>(output.size());
+    return std::fwrite(output.constData(), 1, size, stdout) == size ? 0 : 1;
 }

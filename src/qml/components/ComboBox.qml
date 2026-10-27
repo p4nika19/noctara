@@ -113,7 +113,7 @@ T.ComboBox {
             currentIndex: control.highlightedIndex
             boundsBehavior: Flickable.StopAtBounds
         }
-        background: GlassPanel { level: 2; radius: Theme.radius.md }
+        background: GlassPanel { level: 2; liquid: true; radius: Theme.radius.md }
         enter: Transition {
             NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.fast }
             NumberAnimation { property: "scale"; from: 0.96; to: 1; duration: Theme.motion.normal; easing.type: Theme.motion.easingStandard }

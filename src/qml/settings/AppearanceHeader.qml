@@ -22,8 +22,8 @@ Column {
     Text {
         width: root.width
         text: SettingsUi.currentPreset.length > 0
-              ? qsTr("A preset only sets the options below; you can change any of them afterwards.")
-              : qsTr("Custom: your settings differ from every preset.")
+              ? qsTr("A preset only changes the colour scheme; materials, shapes and layout stay as they are.")
+              : qsTr("The colour scheme follows the system. Pick a preset to fix it.")
         font: Theme.font.caption
         color: Theme.colors.textTertiary
         wrapMode: Text.Wrap

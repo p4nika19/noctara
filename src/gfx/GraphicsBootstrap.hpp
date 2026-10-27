@@ -37,6 +37,9 @@ class GraphicsInfo : public QObject {
     Q_PROPERTY(QString driver READ driver CONSTANT)
     Q_PROPERTY(int reason READ reason CONSTANT)
     Q_PROPERTY(bool liquidGlassAllowed READ liquidGlassAllowed CONSTANT)
+    // Whether normalized device coordinates have Y pointing up (OpenGL) rather than down (Vulkan). Shaders that
+    // map vertex positions back to window coordinates need it.
+    Q_PROPERTY(bool ndcYUp READ ndcYUp CONSTANT)
     Q_PROPERTY(int adapterCount READ adapterCount CONSTANT)
     Q_PROPERTY(bool noticePending READ noticePending NOTIFY noticePendingChanged)
     Q_PROPERTY(bool deviceFailed READ deviceFailed NOTIFY deviceFailedChanged)
@@ -53,6 +56,7 @@ public:
     [[nodiscard]] QString driver() const;
     [[nodiscard]] int reason() const noexcept { return static_cast<int>(m_decision.reason); }
     [[nodiscard]] bool liquidGlassAllowed() const noexcept { return m_decision.liquidGlassAllowed; }
+    [[nodiscard]] bool ndcYUp() const noexcept { return m_decision.hardware && m_decision.api != Api::Vulkan; }
     [[nodiscard]] int adapterCount() const;
     [[nodiscard]] bool noticePending() const noexcept { return m_noticePending; }
     [[nodiscard]] bool deviceFailed() const noexcept { return m_deviceFailed; }

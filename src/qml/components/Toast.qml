@@ -12,6 +12,7 @@ GlassPanel {
     signal dismissed()
 
     level: 2
+    liquid: true
     radius: Theme.radius.md
     implicitWidth: Math.min(480 * Theme.scale, layout.implicitWidth + Theme.space.lg * 2)
     implicitHeight: layout.implicitHeight + Theme.space.md * 2

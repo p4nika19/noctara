@@ -1,6 +1,6 @@
 # Architecture
 
-This document grows with each slice. It currently covers slice (a).
+This document grows with each slice. It currently covers slices (a) and (b).
 
 ```
             ┌──────────────── app/main.cpp (composition root) ────────────────┐
@@ -50,8 +50,33 @@ Settings, `QStyleHints::colorScheme` and the artwork seed feed `generatePalette(
 - `noctara.moc` replaces xmake's stock moc handling for our headers. The stock rule only tracked the moc'd header, so changing a header it *includes* left stale meta-object code behind. That caused a real crash during development, when a gadget gained members. Our rule adds the header's transitive project includes as dependencies.
 - `.ts` files and moc'd headers use `override = true` rules, so the stock `qt.ts` and `qt.moc` rules don't process them a second time. A build with no changes compiles nothing.
 
+## Glass and effects flow
+
+```
+Settings (glass style, strength, quality, energy saving, frame cap) ──┐
+PowerMonitor (UPower: on battery?) ───────────────────────────────────┤
+FrameMonitor (render thread: QRhi GPU timestamps, frame intervals;    │
+              GUI thread: one summary per second of rendering) ──► QualityGovernor (pure)
+                                                                      │
+                                         gfx::resolveEffects (pure) ◄─┘
+                                                   │  quality, style cap, backdrop animation, frame cap
+                     ┌─────────────────────────────┴─────────────────────┐
+                     ▼                                                   ▼
+        Theme.glass (style after fallbacks, blurPlan)          FrameMonitor pacing (render thread)
+                     │
+       Main.qml: Backdrop ──► BackdropBlur (one capture + Kawase/Gaussian chain) ──► GlassPanel shaders
+
+Artwork ──► AccentEngine (thread pool: k-means seed + tone-mapped blurred backdrops, LRU)
+              ├─ seedChanged ──► Theme (palette crossfade)
+              └─ image://artwork/<scheme>/<rev> ──► Backdrop (cover style)
+```
+
+`ui::EffectsController` (QML `Performance`) owns the governor, wires the inputs, applies the result, and writes the translated status lines of the *Glass style* and *Effects quality* rows.
+
 ## Ownership and threading
 
 - Every object is owned by RAII or a QObject parent. Objects handed to QML from invokables are explicitly set to `CppOwnership`; ASan caught the case where they weren't.
 - Config I/O runs on a dedicated single-thread pool, so writes stay in order. Settings reads are thread-safe (`shared_mutex`). Mutations happen on the GUI thread.
 - Icons are rasterized on Qt Quick's async image threads.
+- `FrameMonitor` is declared before the QML engine in `main()`, so it outlives the window's render thread, which calls into it directly. Shared samples are guarded by a mutex, and the frame cap is an atomic.
+- `AccentEngine` workers capture only copies of their inputs. Results carry a generation number, and stale ones are dropped. The backdrop images it hands to the image provider (loader threads) are guarded by a mutex.

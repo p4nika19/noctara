@@ -60,8 +60,9 @@ public:
     void setArtworkSeed(std::optional<color::OkLch> seed);
     // False in the software renderer: blur styles fall back to Solid.
     void setBlurAvailable(bool available);
-    // Effective style cap imposed by the performance governor ("" = no cap).
-    void setGovernorStyleCap(const QString& style);
+    // Limits from the quality governor and energy saving: effects quality (0 low, 1 medium, 2 high), the most
+    // expensive glass style allowed ("" = no cap) and whether the backdrop may animate.
+    void setGlassLimits(int quality, const QString& styleCap, bool backdropAnimation);
 
 Q_SIGNALS:
     void schemeChanged();
@@ -107,7 +108,9 @@ private:
     qreal m_iconStroke = 1.5;
     QString m_coverShape = QStringLiteral("rounded");
     bool m_blurAvailable = true;
-    QString m_governorCap;
+    int m_quality = 2;
+    QString m_styleCap;
+    bool m_backdropAnimationAllowed = true;
 };
 
 }  // namespace noctara::theme

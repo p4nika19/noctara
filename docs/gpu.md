@@ -54,7 +54,8 @@ Safe Mode means software rendering, Solid glass and no shader features. It start
 ## Limitations of the software path
 
 - `ShaderEffect`, custom materials and `QQuickRhiItem` don't work. Every GPU-only component has a CPU-safe fallback: Solid glass now, and the cached-image waveform and pre-blurred static backdrop in later slices.
-- Blur styles are greyed out in Settings with a translated reason.
+- Blur styles and *Effects quality* are greyed out in Settings with a translated reason. Glass is Solid, and the quality governor does nothing.
+- The cover-art backdrop works, because it is pre-blurred on the CPU (AccentEngine) and drawn as a plain image.
 - Animations stay declarative. The drifting backdrop is disabled.
 
 ## Debugging rendering
@@ -63,4 +64,17 @@ Safe Mode means software rendering, Solid glass and no shader features. It start
 - `QSG_VISUALIZE=overdraw|batches|clip` shows scene-graph cost.
 - `noctara --print-config` shows the effective acceleration settings and where each value came from.
 - Delete `~/.cache/noctara/gpu-probe.json` to force a new probe.
-- `xmake smoke` runs every page with `--gpu=off` and `--gpu=auto`.
+- `xmake smoke` runs every page with `--gpu=off` and `--gpu=auto`, and every blur style on the GPU path. **The offscreen QPA does not draw `ShaderEffect`s**, even with a GPU backend, so offscreen screenshots and smoke runs do not exercise shader rendering. Use a real display: `NOCTARA_SMOKE_PLATFORM=wayland xmake smoke`, or `--screenshot` without `QT_QPA_PLATFORM=offscreen`.
+- `QT_LOGGING_RULES="noctara.gfx.debug=true"` prints the per-second frame statistics: frames, fps, GPU time p90 (QRhi timestamps), frame interval p90, effective style and quality.
+
+## Quality governor and energy saving
+
+`gfx::QualityGovernor` is pure and unit-tested. Once per second of rendering, `FrameMonitor` reports the GPU time per frame (QRhi timestamps enabled through `QQuickGraphicsConfiguration`; the window is shown only after that) and the frame intervals. With *Effects quality* = Auto:
+
+- GPU timestamps are not available everywhere: OpenGL ES through EGL (Wayland on NVIDIA, for example) reports none. The governor then judges the frame intervals, and the Performance page shows "Not reported yet" for the GPU time.
+- **Down:** two consecutive overloaded windows (GPU p90 > 85% of the frame budget, or without timestamps a frame-interval p90 > 1.5 budgets) step down one tier: High → Medium (capture 1/3) → Low (1/4, one level fewer) → Dual Kawase (style cap) → Solid.
+- **Up:** five consecutive healthy windows (GPU < 45% of the budget) after a cooldown of 20 s step up one tier. A step down within 30 s of a step up doubles the cooldown (up to 10 min).
+- Idle windows (fewer than 30 frames) are not judged, so a static scene never moves the governor.
+- A manual quality disables the governor. So does software rendering. Changing the setting resets it.
+
+Energy saving (always, or automatically on battery through UPower) stops the backdrop drift, caps the style at Dual Kawase and the quality at Medium, and limits rendering to 30 fps. `gfx::resolveEffects()` combines all of this. The frame cap (setting or energy saving) works by sleeping on the render thread after a frame is presented. Qt's animation driver uses wall time, so animations keep their duration (verified: a 4 s animation takes the same time capped and uncapped). It is never applied on the GUI thread, where the software renderer draws.

@@ -297,8 +297,8 @@ void Theme::updateGlass()
     glass.grain = m_settings.realValue(keys::GlassGrain) * (m_scheme == Scheme::Dark ? 1.0 : 0.6);
     glass.buttons = m_settings.stringValue(keys::ButtonMaterial);
     glass.backdrop = m_settings.stringValue(keys::BackdropStyle);
-    glass.backdropAnimated =
-        m_settings.boolValue(keys::BackdropAnimate) && m_blurAvailable && !m_settings.boolValue(keys::ReduceMotion);
+    glass.backdropAnimated = m_settings.boolValue(keys::BackdropAnimate) && m_blurAvailable &&
+                             !m_settings.boolValue(keys::ReduceMotion) && m_backdropAnimationAllowed;
     glass.glow = m_settings.realValue(keys::GlowIntensity);
     glass.glowCover = m_settings.boolValue(keys::GlowCover);
     glass.glowControls = m_settings.boolValue(keys::GlowControls);
@@ -310,11 +310,18 @@ void Theme::updateGlass()
     QString style = glass.requestedStyle;
     if (!m_blurAvailable || m_settings.boolValue(keys::ReduceTransparency)) {
         style = QStringLiteral("solid");
-    } else if (!m_governorCap.isEmpty() && styleCost(m_governorCap) < styleCost(style)) {
-        style = m_governorCap;
+    } else if (!m_styleCap.isEmpty() && styleCost(m_styleCap) < styleCost(style)) {
+        style = m_styleCap;
     }
     glass.style = style;
     glass.translucent = style != u"solid";
+    glass.blurred = styleCost(style) > 0;
+    glass.quality = m_quality;
+    const BlurPlan plan = blurPlan(style, glass.blurStrength, m_quality);
+    glass.blurDownsample = plan.downsample;
+    glass.blurIterations = plan.iterations;
+    glass.blurOffset = plan.offset;
+    glass.blurSigma = plan.sigma;
     if (glass == m_glass) {
         return;
     }
@@ -342,9 +349,11 @@ void Theme::setBlurAvailable(bool available)
     updateGlass();
 }
 
-void Theme::setGovernorStyleCap(const QString& style)
+void Theme::setGlassLimits(int quality, const QString& styleCap, bool backdropAnimation)
 {
-    m_governorCap = style;
+    m_quality = std::clamp(quality, 0, 2);
+    m_styleCap = styleCap;
+    m_backdropAnimationAllowed = backdropAnimation;
     updateGlass();
 }
 

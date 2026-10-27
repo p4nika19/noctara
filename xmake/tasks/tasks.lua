@@ -154,29 +154,42 @@ task("package")
     end)
 task_end()
 
--- Launches the app offscreen in every renderer/theme/language combination and visits all pages;
--- fails if any combination logs a warning (QML errors, missing types, binding loops, ...).
+-- Launches the app offscreen in every renderer/theme/language combination, plus every blur style on the GPU
+-- path, and visits all pages; fails if any combination logs a warning (QML errors, missing types, binding
+-- loops, shader errors, ...). The offscreen platform does not draw shader effects, so shader *rendering* is only
+-- exercised with a real display: NOCTARA_SMOKE_PLATFORM=wayland (or xcb) xmake smoke.
 task("smoke")
     set_category("plugin")
-    set_menu {usage = "xmake smoke", description = "Headless smoke test of all pages (software + GPU, both themes and languages)"}
+    set_menu {usage = "xmake smoke", description = "Headless smoke test of all pages (software + GPU, both themes and languages, all glass styles)"}
     on_run(function ()
         local binary = path.join(os.projectdir(), "build", "noctara")
         assert(os.isfile(binary), "build the app first")
         local scratch = os.tmpfile() .. ".smoke"
-        local failures = 0
+        local platform = os.getenv("NOCTARA_SMOKE_PLATFORM") or "offscreen"
+        local runs = {}
         for _, gpu in ipairs({"off", "auto"}) do
             for _, theme in ipairs({"dark", "light"}) do
                 for _, lang in ipairs({"en", "ru"}) do
-                    local ok = try { function ()
-                        os.vrunv(binary, {"--smoke-test", "--gpu=" .. gpu, "--theme=" .. theme, "--lang=" .. lang},
-                                 {envs = {QT_QPA_PLATFORM = "offscreen", XDG_CONFIG_HOME = scratch .. "/config",
-                                          XDG_CACHE_HOME = scratch .. "/cache", XDG_STATE_HOME = scratch .. "/state"}})
-                        return true
-                    end }
-                    print("%s gpu=%s theme=%s lang=%s", ok and "ok  " or "FAIL", gpu, theme, lang)
-                    if not ok then failures = failures + 1 end
+                    table.insert(runs, {gpu = gpu, theme = theme, lang = lang, style = "kawase"})
                 end
             end
+        end
+        for _, style in ipairs({"gaussian", "liquid"}) do
+            for _, theme in ipairs({"dark", "light"}) do
+                table.insert(runs, {gpu = "auto", theme = theme, lang = "en", style = style})
+            end
+        end
+        local failures = 0
+        for _, run in ipairs(runs) do
+            local ok = try { function ()
+                os.vrunv(binary, {"--smoke-test", "--gpu=" .. run.gpu, "--theme=" .. run.theme, "--lang=" .. run.lang,
+                                  "--set", "appearance.glass.style=" .. run.style},
+                         {envs = {QT_QPA_PLATFORM = platform, XDG_CONFIG_HOME = scratch .. "/config",
+                                  XDG_CACHE_HOME = scratch .. "/cache", XDG_STATE_HOME = scratch .. "/state"}})
+                return true
+            end }
+            print("%s gpu=%s theme=%s lang=%s glass=%s", ok and "ok  " or "FAIL", run.gpu, run.theme, run.lang, run.style)
+            if not ok then failures = failures + 1 end
         end
         os.tryrm(scratch)
         if failures > 0 then raise("%d smoke combinations failed", failures) end

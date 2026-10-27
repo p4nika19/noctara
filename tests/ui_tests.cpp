@@ -110,16 +110,20 @@ TEST_SUITE("ui.presets")
         i18n::LanguageManager languages(store);
         ui::SettingsController controller(store, config, languages);
 
-        CHECK(controller.presets().size() == 3);
-        CHECK(controller.currentPreset() == QStringLiteral("midnight"));  // defaults are the Midnight preset
+        CHECK(controller.presets().size() == 2);
+        CHECK(controller.currentPreset().isEmpty());  // the default theme mode follows the system
 
-        controller.applyPreset(QStringLiteral("neon"));
-        CHECK(controller.currentPreset() == QStringLiteral("neon"));
-        CHECK(store.stringValue(settings::keys::ButtonMaterial) == QStringLiteral("tinted"));
-        CHECK(store.realValue(settings::keys::GlowIntensity) == doctest::Approx(0.85));
+        CHECK(controller.setValue(QStringLiteral("appearance.glass.buttons"), QStringLiteral("liquid")).isEmpty());
+        controller.applyPreset(QStringLiteral("frost"));
+        CHECK(controller.currentPreset() == QStringLiteral("frost"));
+        CHECK(store.stringValue(settings::keys::ThemeMode) == QStringLiteral("light"));
+        // Presets change colours only: other appearance settings are left alone.
+        CHECK(store.stringValue(settings::keys::ButtonMaterial) == QStringLiteral("liquid"));
 
-        CHECK(controller.setValue(QStringLiteral("appearance.glow.intensity"), 0.5).isEmpty());
-        CHECK(controller.currentPreset().isEmpty());  // custom
+        controller.applyPreset(QStringLiteral("midnight"));
+        CHECK(controller.currentPreset() == QStringLiteral("midnight"));
+        CHECK(controller.setValue(QStringLiteral("appearance.theme.mode"), QStringLiteral("system")).isEmpty());
+        CHECK(controller.currentPreset().isEmpty());
 
         const QStringList drawerKeys{QStringLiteral("appearance.glow.intensity"),
                                      QStringLiteral("appearance.glass.buttons")};

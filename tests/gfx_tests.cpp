@@ -2,7 +2,9 @@
 
 #include "core/FileIo.hpp"
 #include "gfx/CrashSentinel.hpp"
+#include "gfx/FrameMonitor.hpp"
 #include "gfx/GraphicsPolicy.hpp"
+#include "gfx/QualityGovernor.hpp"
 
 #include <QFile>
 #include <QTemporaryDir>
@@ -197,5 +199,160 @@ TEST_SUITE("gfx.sentinel")
         CHECK_FALSE(QFile::exists(path));
         CrashSentinel third(path);
         CHECK_FALSE(third.previousLaunchCrashed());
+    }
+}
+
+namespace {
+
+FrameWindowStats gpuWindow(double gpuMs, int frames = 60)
+{
+    FrameWindowStats stats;
+    stats.frames = frames;
+    stats.budgetMs = 1000.0 / 60.0;
+    stats.gpuP90Ms = gpuMs;
+    stats.intervalP90Ms = stats.budgetMs;
+    return stats;
+}
+
+}  // namespace
+
+TEST_SUITE("gfx.governor")
+{
+    TEST_CASE("steps down one tier per sustained overload, in the documented order")
+    {
+        QualityGovernor governor;
+        double now = 0.0;
+        const auto overloaded = gpuWindow(15.0);                       // 90% of a 16.7 ms budget
+        CHECK_FALSE(governor.feed(overloaded, now += 1).has_value());  // one bad second is not enough
+        CHECK(governor.feed(overloaded, now += 1) == Tier::Medium);
+        CHECK_FALSE(governor.feed(overloaded, now += 1).has_value());
+        CHECK(governor.feed(overloaded, now += 1) == Tier::Low);
+        governor.feed(overloaded, now += 1);
+        CHECK(governor.feed(overloaded, now += 1) == Tier::Kawase);
+        governor.feed(overloaded, now += 1);
+        CHECK(governor.feed(overloaded, now += 1) == Tier::Solid);
+        for (int i = 0; i < 6; ++i) {
+            CHECK_FALSE(governor.feed(overloaded, now += 1).has_value());  // floor
+        }
+        CHECK(governor.tier() == Tier::Solid);
+    }
+
+    TEST_CASE("idle windows are not judged; a single fluctuation resets the streak")
+    {
+        QualityGovernor governor;
+        double now = 0.0;
+        CHECK_FALSE(governor.feed(gpuWindow(30.0, 5), now += 1).has_value());  // too few frames
+        CHECK_FALSE(governor.feed(gpuWindow(15.0), now += 1).has_value());
+        CHECK_FALSE(governor.feed(gpuWindow(10.0), now += 1).has_value());  // neutral: streak broken
+        CHECK_FALSE(governor.feed(gpuWindow(15.0), now += 1).has_value());
+        CHECK(governor.tier() == Tier::High);
+    }
+
+    TEST_CASE("steps up conservatively, and backs off when it oscillates")
+    {
+        GovernorConfig config;
+        QualityGovernor governor(config);
+        double now = 0.0;
+        governor.feed(gpuWindow(15.0), now += 1);
+        REQUIRE(governor.feed(gpuWindow(15.0), now += 1) == Tier::Medium);
+
+        // Healthy windows only count after the cooldown since the last change.
+        std::optional<Tier> raised;
+        const double changedAt = now;
+        while (!raised && now < 100) {
+            raised = governor.feed(gpuWindow(2.0), now += 1);
+        }
+        REQUIRE(raised == Tier::High);
+        CHECK(now - changedAt >= config.upCooldownS);
+
+        // Trouble right after stepping up doubles the cooldown.
+        governor.feed(gpuWindow(15.0), now += 1);
+        CHECK(governor.feed(gpuWindow(15.0), now += 1) == Tier::Medium);
+        CHECK(governor.cooldownSeconds() == doctest::Approx(config.upCooldownS * 2));
+
+        governor.reset();
+        CHECK(governor.tier() == Tier::High);
+        CHECK(governor.cooldownSeconds() == doctest::Approx(config.upCooldownS));
+    }
+
+    TEST_CASE("without GPU timestamps the frame intervals decide")
+    {
+        QualityGovernor governor;
+        FrameWindowStats stats;
+        stats.frames = 40;
+        stats.budgetMs = 1000.0 / 144.0;
+        stats.intervalP90Ms = stats.budgetMs * 2.0;  // every other frame missed
+        governor.feed(stats, 1);
+        CHECK(governor.feed(stats, 2) == Tier::Medium);
+    }
+
+    TEST_CASE("percentile90 of frame samples")
+    {
+        CHECK(percentile90({}) == 0.0);
+        std::vector<double> samples;
+        for (int i = 1; i <= 100; ++i) {
+            samples.push_back(i);
+        }
+        CHECK(percentile90(samples) == doctest::Approx(90.0));
+    }
+}
+
+TEST_SUITE("gfx.effects")
+{
+    TEST_CASE("auto quality follows the governor tier")
+    {
+        EffectsInputs inputs;
+        CHECK(resolveEffects(inputs).quality == 2);
+        CHECK_FALSE(resolveEffects(inputs).governed);
+        inputs.governorTier = Tier::Medium;
+        CHECK(resolveEffects(inputs).quality == 1);
+        CHECK(resolveEffects(inputs).governed);
+        inputs.governorTier = Tier::Kawase;
+        CHECK(resolveEffects(inputs).styleCap == QStringLiteral("kawase"));
+        inputs.governorTier = Tier::Solid;
+        CHECK(resolveEffects(inputs).styleCap == QStringLiteral("solid"));
+    }
+
+    TEST_CASE("a manual quality ignores the governor")
+    {
+        EffectsInputs inputs;
+        inputs.quality = QualitySetting::Medium;
+        inputs.governorTier = Tier::Solid;
+        const EffectsState state = resolveEffects(inputs);
+        CHECK(state.quality == 1);
+        CHECK(state.styleCap.isEmpty());
+        CHECK_FALSE(state.governed);
+    }
+
+    TEST_CASE("energy saving: still backdrop, Dual Kawase at most, 30 fps")
+    {
+        EffectsInputs inputs;
+        inputs.energySaving = true;
+        EffectsState state = resolveEffects(inputs);
+        CHECK(state.energySaving);
+        CHECK_FALSE(state.backdropAnimation);
+        CHECK(state.styleCap == QStringLiteral("kawase"));
+        CHECK(state.quality == 1);
+        CHECK(state.frameCapFps == 30);
+
+        inputs.frameRateCap = QStringLiteral("60");
+        CHECK(resolveEffects(inputs).frameCapFps == 30);
+        inputs.governorTier = Tier::Solid;
+        CHECK(resolveEffects(inputs).styleCap == QStringLiteral("solid"));  // the stricter cap wins
+        inputs.energySaving = false;
+        inputs.governorTier = Tier::High;
+        CHECK(resolveEffects(inputs).frameCapFps == 60);
+        inputs.frameRateCap = QStringLiteral("unlimited");
+        CHECK(resolveEffects(inputs).frameCapFps == 0);
+    }
+
+    TEST_CASE("the governor does not act in the software renderer")
+    {
+        EffectsInputs inputs;
+        inputs.hardware = false;
+        inputs.governorTier = Tier::Low;
+        const EffectsState state = resolveEffects(inputs);
+        CHECK_FALSE(state.governed);
+        CHECK(state.quality == 2);
     }
 }

@@ -3,6 +3,7 @@
 #include <QRandomGenerator>
 
 #include <algorithm>
+#include <cstdlib>
 
 namespace noctara::ui {
 
@@ -21,8 +22,12 @@ QImage NoiseProvider::requestImage(const QString& id, QSize* size, const QSize& 
     for (int y = 0; y < side; ++y) {
         auto* line = reinterpret_cast<QRgb*>(image.scanLine(y));  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
         for (int x = 0; x < side; ++x) {
-            const auto value = static_cast<int>(rng.bounded(256U));
-            line[x] = qRgba(value, value, value, 255);  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            // Triangular distribution in [-255, 255]: most specks are faint, few are strong.
+            const int signedValue = static_cast<int>(rng.bounded(256U)) - static_cast<int>(rng.bounded(256U));
+            const int alpha = std::abs(signedValue);
+            const int premultiplied = signedValue > 0 ? alpha : 0;
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            line[x] = qRgba(premultiplied, premultiplied, premultiplied, alpha);
         }
     }
     if (size != nullptr) {

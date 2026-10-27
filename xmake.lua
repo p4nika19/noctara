@@ -104,7 +104,7 @@ end
 noctara_module("core", {qt = {"QtCore"}})
 noctara_module("settings", {qt = {"QtCore", "QtConcurrent"}, deps = {"noctara_core"}})
 noctara_module("i18n", {qt = {"QtCore"}, deps = {"noctara_core", "noctara_settings"}})
-noctara_module("theme", {qt = {"QtCore", "QtGui"}, deps = {"noctara_core", "noctara_settings"}})
+noctara_module("theme", {qt = {"QtCore", "QtGui", "QtConcurrent"}, deps = {"noctara_core", "noctara_settings"}})
 noctara_module("gfx", {qt = {"QtCore", "QtGui", "QtQuick", "QtDBus"}, deps = {"noctara_core", "noctara_settings"}})
 noctara_module("ui", {qt = {"QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus"},
     deps = {"noctara_core", "noctara_settings", "noctara_i18n", "noctara_theme", "noctara_gfx"}})

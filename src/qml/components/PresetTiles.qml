@@ -1,11 +1,11 @@
 import QtQuick
 import Noctara
 
-// Built-in appearance presets with preview tiles; the tile of the preset the current values match is lit.
+// Colour presets (Midnight, Frost) with preview tiles; the tile of the preset the current values match is lit.
 Grid {
     id: root
 
-    columns: 3
+    columns: 2
     spacing: Theme.space.sm
 
     readonly property real tileWidth: (width - spacing * (columns - 1)) / columns

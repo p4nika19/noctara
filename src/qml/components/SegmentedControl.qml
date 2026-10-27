@@ -3,6 +3,10 @@ import Noctara
 
 // Mutually exclusive options. model: [{id, label, enabled, reason}]. When given more width than it needs
 // (e.g. full-width in settings), segments share it equally.
+//
+// Segment geometry is computed from the labels' font metrics and the control's width, not read back from the
+// delegates: the pill then follows resizes exactly, and a model refresh (which recreates the delegates) with
+// the same labels changes nothing, so the pill never jumps.
 FocusScope {
     id: root
 
@@ -16,13 +20,21 @@ FocusScope {
         return -1
     }
     readonly property real inset: 3 * Theme.scale
-    readonly property real naturalSegment: {
-        let widest = 0
-        for (let i = 0; i < repeater.count; ++i) {
-            const item = repeater.itemAt(i)
-            if (item) widest = Math.max(widest, item.naturalWidth)
-        }
-        return widest
+    readonly property var naturalWidths: model.map(m => Math.ceil(metrics.advanceWidth(m.label)) + Theme.space.lg * 2)
+    readonly property real naturalSegment: naturalWidths.reduce((a, b) => Math.max(a, b), 0)
+    readonly property var segmentWidths: {
+        const share = (width - inset * 2) / Math.max(1, model.length)
+        return naturalWidths.map(w => Math.max(w, share))
+    }
+    readonly property real pillX: {
+        let x = inset
+        for (let i = 0; i < currentIndex; ++i) x += segmentWidths[i]
+        return x
+    }
+
+    FontMetrics {
+        id: metrics
+        font: Theme.font.label
     }
 
     implicitWidth: naturalSegment * model.length + inset * 2
@@ -49,8 +61,9 @@ FocusScope {
     Item {
         id: pill
         visible: root.currentIndex >= 0 && width > 0
+        x: root.pillX
         y: root.inset
-        width: 0
+        width: root.currentIndex >= 0 ? root.segmentWidths[root.currentIndex] : 0
         height: root.height - root.inset * 2
         Behavior on x { NumberAnimation { duration: Theme.motion.normal; easing.type: Theme.motion.easingStandard } }
         Behavior on width { NumberAnimation { duration: Theme.motion.normal; easing.type: Theme.motion.easingStandard } }
@@ -87,29 +100,11 @@ FocusScope {
                 required property int index
                 readonly property bool selected: index === root.currentIndex
                 readonly property bool available: modelData.enabled !== false
-                readonly property real naturalWidth: label.implicitWidth + Theme.space.lg * 2
-                width: Math.max(naturalWidth, (root.width - root.inset * 2) / Math.max(1, root.model.length))
+                width: root.segmentWidths[index] || 0
                 height: root.height - root.inset * 2
                 Accessible.role: Accessible.PageTab
                 Accessible.name: modelData.label
                 Accessible.checked: selected
-
-                // The selected segment drives the pill. RestoreNone: a deselected segment must not restore
-                // the pill's previous geometry.
-                Binding {
-                    when: segment.selected
-                    restoreMode: Binding.RestoreNone
-                    target: pill
-                    property: "x"
-                    value: segment.x + root.inset
-                }
-                Binding {
-                    when: segment.selected
-                    restoreMode: Binding.RestoreNone
-                    target: pill
-                    property: "width"
-                    value: segment.width
-                }
 
                 Text {
                     id: label

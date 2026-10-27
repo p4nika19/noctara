@@ -1,6 +1,7 @@
 #include "core/Log.hpp"
 
 #include <QDateTime>
+#include <QLoggingCategory>
 
 #include <atomic>
 #include <cstdio>
@@ -53,6 +54,9 @@ void handler(QtMsgType type, const QMessageLogContext& context, const QString& m
 void install()
 {
     qInstallMessageHandler(handler);
+    // Known Qt Wayland bug: text-input-v3 logs "Trying to disable ... but 0x0 is focused" whenever focus leaves
+    // a text field. Harmless and not actionable; QT_LOGGING_RULES can still turn it back on.
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.qpa.wayland.textinput.warning=false"));
 }
 
 int warningCount() noexcept

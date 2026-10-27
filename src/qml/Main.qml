@@ -11,6 +11,8 @@ Window {
     property string page: "home"
     property string settingsCategory: "general"
     property bool appearancePanel: false
+    // The shared blurred backdrop sampled by every GlassPanel (null when no blur style is in use).
+    readonly property Item backdropTexture: blur.item ? blur.item.output : null
 
     readonly property var destinations: [
         { id: "home", icon: "house", label: qsTr("Home") },
@@ -26,7 +28,7 @@ Window {
     height: 820
     minimumWidth: 880
     minimumHeight: 600
-    visible: true
+    visible: false  // shown from C++ once the graphics configuration (GPU timestamps) is set
     color: Theme.colors.backdrop
     title: qsTr("Noctara")
 
@@ -39,7 +41,16 @@ Window {
         onActivated: window.appearancePanel = !window.appearancePanel
     }
 
-    Backdrop { anchors.fill: parent }
+    Backdrop {
+        id: backdrop
+        anchors.fill: parent
+    }
+    Loader {
+        id: blur
+        anchors.fill: parent
+        active: Theme.glass.blurred && Graphics.hardware
+        sourceComponent: BackdropBlur { source: backdrop }
+    }
 
     NavRail {
         id: rail
@@ -188,16 +199,4 @@ Window {
     }
 
     ToastHost { anchors.fill: parent }
-
-    // Fine grain over everything breaks up banding in the gradients (static texture, no per-frame cost).
-    Image {
-        anchors.fill: parent
-        source: "image://noise/128"
-        fillMode: Image.Tile
-        smooth: false
-        opacity: Theme.glass.grain * 0.08
-        visible: opacity > 0.002
-        enabled: false
-        Accessible.ignored: true
-    }
 }

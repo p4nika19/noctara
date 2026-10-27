@@ -88,12 +88,13 @@
 <context>
     <name>AppearanceDrawer</name>
     <message>
-        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+26"/>
-        <source>custom</source>
+        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+27"/>
+        <source>follows the system</source>
+        <extracomment>Shown instead of a preset name while the theme follows the desktop colour scheme</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+19"/>
         <location line="+17"/>
         <source>Appearance</source>
         <translation type="unfinished"></translation>
@@ -129,12 +130,12 @@
     </message>
     <message>
         <location line="+11"/>
-        <source>A preset only sets the options below; you can change any of them afterwards.</source>
+        <source>A preset only changes the colour scheme; materials, shapes and layout stay as they are.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Custom: your settings differ from every preset.</source>
+        <source>The colour scheme follows the system. Pick a preset to fix it.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -143,6 +144,69 @@
     <message>
         <location filename="../src/qml/components/ColorPicker.qml" line="+79"/>
         <source>Hex color</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Effects</name>
+    <message>
+        <location filename="../src/ui/EffectsController.cpp" line="+29"/>
+        <source>Dual Kawase blur</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Gaussian blur</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Liquid Glass</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Solid</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Low</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Medium</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>High</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+88"/>
+        <source>Energy saving is active: %1 is used for now.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Lowered automatically to %1 to keep animations smooth.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Reduce transparency is on, so surfaces are opaque.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Energy saving is active: effects run at %1 quality.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Lowered automatically to %1 because frames took too long. It is raised again when there is headroom.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -488,7 +552,7 @@
 <context>
     <name>Main</name>
     <message>
-        <location filename="../src/qml/Main.qml" line="+31"/>
+        <location filename="../src/qml/Main.qml" line="+33"/>
         <source>Noctara</source>
         <translation type="unfinished"></translation>
     </message>
@@ -519,17 +583,17 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+141"/>
+        <location line="+150"/>
         <source>Charts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-139"/>
+        <location line="-148"/>
         <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+85"/>
         <source>Got it</source>
         <translation type="unfinished"></translation>
     </message>
@@ -582,7 +646,7 @@
 <context>
     <name>NavRail</name>
     <message>
-        <location filename="../src/qml/components/NavRail.qml" line="+19"/>
+        <location filename="../src/qml/components/NavRail.qml" line="+20"/>
         <source>Navigation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -610,6 +674,122 @@
         <location line="+1"/>
         <source>Shadow</source>
         <comment>palette colour: the deep shade of the accent</comment>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>PerformanceHeader</name>
+    <message>
+        <location filename="../src/qml/settings/PerformanceHeader.qml" line="+17"/>
+        <source>Dual Kawase blur</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Gaussian blur</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Liquid Glass</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Solid (no blur)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>low quality</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>medium quality</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>high quality</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Right now</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Renderer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Software (CPU)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Glass</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Frame rate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <location line="+14"/>
+        <source>%1 fps</source>
+        <extracomment>%1 = frames per second</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>Idle: nothing is being redrawn</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>GPU time per frame</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 ms of %2 ms</source>
+        <extracomment>%1 = measured GPU time, %2 = time available per frame, both in milliseconds</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Not reported yet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Frame rate limit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Hardware acceleration is off, so glass is drawn as solid surfaces and the backdrop does not move.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Energy saving is active: the backdrop is still, blur is limited to Dual Kawase at medium quality and animations run at up to 30 fps.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Effects were lowered automatically because frames took too long. Quality is raised again step by step when there is headroom.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Restore full quality</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -647,32 +827,14 @@
     </message>
 </context>
 <context>
-    <name>Presets</name>
-    <message>
-        <location filename="../src/ui/AppearancePresets.cpp" line="+20"/>
-        <source>Midnight</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+17"/>
-        <source>Glacier</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+17"/>
-        <source>Neon</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+139"/>
+        <location filename="../src/app/main.cpp" line="+150"/>
         <source>Needs hardware acceleration, which is currently off.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
         <source>Not available on this graphics device.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -931,12 +1093,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+181"/>
+        <location line="+185"/>
         <source>Soft</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-179"/>
+        <location line="-183"/>
         <source>Palette extraction</source>
         <translation type="unfinished"></translation>
     </message>
@@ -946,7 +1108,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Aurora</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1001,7 +1163,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Button and selection glow</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1011,7 +1173,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Progress glow</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1082,14 +1244,14 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+168"/>
+        <location line="+169"/>
         <location line="+13"/>
         <location line="+12"/>
         <source>Auto</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-192"/>
+        <location line="-193"/>
         <source>Low</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1114,7 +1276,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Frosted glass</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1149,7 +1311,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>Reduce transparency</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1180,7 +1342,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+32"/>
+        <location line="+33"/>
         <source>×</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1641,7 +1803,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+41"/>
         <source>No settings match “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1657,7 +1819,7 @@
 <context>
     <name>Toast</name>
     <message>
-        <location filename="../src/qml/components/Toast.qml" line="+61"/>
+        <location filename="../src/qml/components/Toast.qml" line="+62"/>
         <source>Dismiss</source>
         <translation type="unfinished"></translation>
     </message>

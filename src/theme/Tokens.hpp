@@ -232,8 +232,15 @@ public:
 
 class GlassTokens {
     Q_GADGET
-    Q_PROPERTY(QString style MEMBER style CONSTANT)  // effective style (after fallbacks)
+    // Effective style after fallbacks: kawase | gaussian | liquid | solid.
+    Q_PROPERTY(QString style MEMBER style CONSTANT)
     Q_PROPERTY(QString requestedStyle MEMBER requestedStyle CONSTANT)
+    Q_PROPERTY(bool blurred MEMBER blurred CONSTANT)  // the shared backdrop blur pipeline is in use
+    Q_PROPERTY(int quality MEMBER quality CONSTANT)   // 0 low, 1 medium, 2 high (after the governor)
+    Q_PROPERTY(qreal blurDownsample MEMBER blurDownsample CONSTANT)
+    Q_PROPERTY(int blurIterations MEMBER blurIterations CONSTANT)
+    Q_PROPERTY(qreal blurOffset MEMBER blurOffset CONSTANT)
+    Q_PROPERTY(qreal blurSigma MEMBER blurSigma CONSTANT)
     Q_PROPERTY(bool blurAvailable MEMBER blurAvailable CONSTANT)
     Q_PROPERTY(bool translucent MEMBER translucent CONSTANT)  // false in Solid / reduce transparency
     Q_PROPERTY(qreal blurStrength MEMBER blurStrength CONSTANT)
@@ -260,16 +267,23 @@ class GlassTokens {
 public:
     QString style = QStringLiteral("kawase");
     QString requestedStyle = QStringLiteral("kawase");
+    bool blurred = true;
+    int quality = 2;
+    // Shared blur pipeline parameters, see blurPlan().
+    qreal blurDownsample = 2.0;
+    int blurIterations = 3;
+    qreal blurOffset = 1.6;
+    qreal blurSigma = 0.0;
     bool blurAvailable = true;
     bool translucent = true;
     qreal blurStrength = 0.6;
     qreal tint = 0.5;
     qreal grain = 0.35;
     qreal rimWidth = 1.0;
-    // Liquid Glass parameters (scheme-specific values, see glassTokensFor()).
-    qreal refraction = 0.0;
-    qreal thickness = 0.0;
-    qreal dispersion = 0.0;
+    // Liquid Glass parameters (scheme-specific values, see glassTokensFor()). Lengths are in pixels at 100% zoom.
+    qreal refraction = 0.0;  // how far the rim bends the background
+    qreal thickness = 0.0;   // width of the bending rim
+    qreal dispersion = 0.0;  // relative colour separation of the bend
     qreal specular = 0.0;
     qreal fresnel = 0.0;
     qreal rimDarkening = 0.0;
@@ -288,5 +302,21 @@ public:
 
 // Scheme-specific Liquid Glass / grain defaults (Frost needs cleaner refraction and less grain).
 [[nodiscard]] GlassTokens glassTokensFor(Scheme scheme);
+
+// Parameters of the shared backdrop blur for an effective style, "Blur strength" (0..1) and quality
+// (0 low, 1 medium, 2 high). The backdrop is captured at 1/downsample of the window size, then:
+//   kawase, liquid  `iterations` Dual Kawase down/up passes with taps `offset` texels apart
+//   gaussian        one horizontal and one vertical pass with `sigma` (in captured texels)
+// Lower quality captures at a lower resolution and runs fewer passes but keeps roughly the same blur
+// radius, so the governor changes the cost, not the look. Styles without blur get iterations == 0.
+struct BlurPlan {
+    double downsample = 1.0;
+    int iterations = 0;
+    double offset = 0.0;
+    double sigma = 0.0;
+    // Approximate blur radius in window pixels (used by tests and the Performance page).
+    [[nodiscard]] double radius() const noexcept;
+};
+[[nodiscard]] BlurPlan blurPlan(QStringView style, double strength, int quality);
 
 }  // namespace noctara::theme

@@ -10,6 +10,27 @@ Measurements are collected as slices land. Dev machine: 4 cores, 15 GB RAM, NVID
 | GPU probe (cached) | ~0 ms | file read + stat calls only |
 | Palette generation | < 1 ms | pure C++ with contrast enforcement; also covered by the 3.4k-assertion test matrix |
 
+## Slice (b)
+
+GPU times come from QRhi timestamps (`QT_LOGGING_RULES="noctara.gfx.debug=true"`). The setup is Vulkan, a ~950×1020 window on a 175 Hz display, Midnight, the aurora drifting, quality High, and a release build.
+
+| Glass style | GPU time per frame (p90) | Glass cost vs Solid |
+|---|---|---|
+| Solid | 0.18 ms | — |
+| Gaussian | 0.25 ms | +0.07 ms |
+| Liquid Glass | 0.29 ms | +0.11 ms |
+| Dual Kawase | 0.30 ms | +0.12 ms |
+
+| Metric | Value | Notes |
+|---|---|---|
+| Idle CPU, static scene | 0.2% | release; nothing is redrawn (0 frames per second) |
+| Idle CPU, aurora drifting | 3.1% | 12 Hz drift clock, about 24 frames/s (each drift step also refreshes the blur layer chain). Before: about 13% at the 175 Hz display rate with declarative animations |
+| Home page with placeholders | static | skeleton shimmer now runs only while something loads; it used to redraw at 175 fps forever |
+| AccentEngine (600 px artwork) | ~3.9 ms | worker thread; k-means plus two tone-mapped backdrops |
+| RSS after startup | ~180 MB | release, Vulkan, NVIDIA (mostly driver allocations) |
+
+Frost costs the same as Midnight: the pipeline and shaders are identical, and only uniform values differ. The ≤ 1 ms budget for blur plus glass on a mainstream iGPU at 1440p is still **unverified**, because it needs other hardware. On the GTX 1070, glass costs about 0.1 ms at roughly 1 MP.
+
 Not yet measured (scheduled for slice j): cold start to first frame, idle RSS, idle CPU, glass GPU cost per mode and theme, software-mode CPU.
 
 ## Design choices that affect cost

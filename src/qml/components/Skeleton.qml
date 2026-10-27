@@ -1,21 +1,25 @@
 import QtQuick
 import Noctara
 
-// Loading placeholder with a single shimmering highlight band (no spinners). Static under reduce motion.
+// Placeholder with a single shimmering highlight band (no spinners). The band only moves while `loading` is
+// set: a placeholder for content that is not on its way (no account yet) stays still and costs no frames.
+// Static under reduce motion.
 Rectangle {
     id: root
+
+    property bool loading: false
 
     radius: Theme.radius.sm
     color: Theme.colors.skeletonBase
     clip: true
-    Accessible.role: Accessible.Animation
-    Accessible.name: qsTr("Loading")
+    Accessible.role: loading ? Accessible.Animation : Accessible.Graphic
+    Accessible.name: loading ? qsTr("Loading") : ""
 
     Rectangle {
         id: band
         width: root.width * 0.6
         height: root.height
-        visible: Theme.motion.shimmer > 0
+        visible: root.loading && Theme.motion.shimmer > 0
         gradient: Gradient {
             orientation: Gradient.Horizontal
             GradientStop { position: 0.0; color: "transparent" }

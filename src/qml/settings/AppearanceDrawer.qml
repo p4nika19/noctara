@@ -23,7 +23,8 @@ FocusScope {
     ]
     readonly property string presetName: {
         const preset = SettingsUi.presets.find(p => p.id === SettingsUi.currentPreset)
-        return preset ? preset.name : qsTr("custom")
+        //: Shown instead of a preset name while the theme follows the desktop colour scheme
+        return preset ? preset.name : qsTr("follows the system")
     }
 
     visible: panel.opacity > 0
@@ -33,6 +34,7 @@ FocusScope {
     GlassPanel {
         id: panel
         level: 2
+        liquid: true
         radius: Theme.radius.lg
         width: Math.min(400 * Theme.scale, root.width)
         height: root.height
@@ -48,7 +50,7 @@ FocusScope {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.margins: Theme.space.lg
+            anchors.margins: Math.max(Theme.space.lg, panel.cornerInset)
             height: Math.max(titles.implicitHeight, close.implicitHeight)
             Column {
                 id: titles
@@ -115,7 +117,7 @@ FocusScope {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            anchors.margins: Theme.space.lg
+            anchors.margins: Math.max(Theme.space.lg, panel.cornerInset)
             spacing: Theme.space.sm
             Button {
                 width: (parent.width - parent.spacing) / 2

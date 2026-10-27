@@ -13,6 +13,7 @@ GlassPanel {
     signal secondaryActivated(string id)
 
     level: 0
+    liquid: true
     radius: Theme.radius.lg
     implicitWidth: Theme.space.navRailWidth
     Accessible.role: Accessible.PageTabList
