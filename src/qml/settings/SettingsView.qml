@@ -53,16 +53,39 @@ Item {
                 required property var modelData
                 readonly property bool selected: !root.searching && root.category === modelData.id
                 width: ListView.view.width
-                height: Theme.space.controlHeight
+                height: Theme.space.controlHeight + Theme.space.xxs
                 Accessible.role: Accessible.ListItem
                 Accessible.name: modelData.label
                 Accessible.selected: selected
 
-                Rectangle {
+                // Same lit-glass treatment as the active navigation item.
+                Shadow {
                     anchors.fill: parent
-                    radius: Theme.radius.sm
-                    color: entry.selected ? Theme.colors.accentContainer : "transparent"
-                    StateLayer { radius: parent.radius; hovered: area.containsMouse; pressed: area.pressed }
+                    z: -1
+                    radius: highlight.radius
+                    blur: 30 * Theme.scale
+                    spread: -10 * Theme.scale
+                    offsetY: 8 * Theme.scale
+                    color: Qt.rgba(Theme.colors.accent.r, Theme.colors.accent.g, Theme.colors.accent.b,
+                                   entry.selected && Theme.glass.glowControls ? Theme.glass.glow * 0.9 : 0)
+                }
+                Rectangle {
+                    id: highlight
+                    anchors.fill: parent
+                    radius: Math.min(Theme.radius.button, height / 2)
+                    visible: entry.selected
+                    border.width: Theme.space.hairline
+                    border.color: Theme.dark ? Qt.rgba(1, 1, 1, 0.15)
+                                             : Qt.rgba(Theme.colors.accent.r, Theme.colors.accent.g, Theme.colors.accent.b, 0.3)
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: Theme.dark ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.95) }
+                        GradientStop { position: 1.0; color: Theme.dark ? Qt.rgba(1, 1, 1, 0.04) : Qt.rgba(1, 1, 1, 0.6) }
+                    }
+                }
+                StateLayer {
+                    radius: Math.min(Theme.radius.button, height / 2)
+                    hovered: area.containsMouse && !entry.selected
+                    pressed: area.pressed
                 }
                 Row {
                     anchors.verticalCenter: parent.verticalCenter
@@ -72,14 +95,14 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         name: entry.modelData.icon
                         size: Theme.space.iconSizeSmall
-                        color: entry.selected ? Theme.targetColors.onAccentContainer : Theme.targetColors.iconSecondary
+                        color: entry.selected ? Theme.targetColors.accent : Theme.targetColors.iconSecondary
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         width: entry.width - Theme.space.iconSizeSmall - Theme.space.md * 3
                         text: entry.modelData.label
-                        font: entry.selected ? Theme.font.bodyStrong : Theme.font.body
-                        color: entry.selected ? Theme.colors.onAccentContainer : Theme.colors.textPrimary
+                        font: Theme.font.bodyStrong
+                        color: entry.selected ? Theme.colors.textPrimary : Theme.colors.textSecondary
                         elide: Text.ElideRight
                     }
                 }
@@ -219,6 +242,11 @@ Item {
                 bottomMargin: Theme.space.xl
                 model: root.searching ? SettingsUi.searchResults : SettingsUi.page(root.category)
                 ScrollBar.vertical: ScrollBar {}
+                header: Loader {
+                    width: list.width - list.rightMargin
+                    active: !root.searching && root.category === "appearance"
+                    sourceComponent: AppearanceHeader {}
+                }
                 delegate: SettingsRow {
                     showCategory: root.searching
                     width: list.width - list.rightMargin

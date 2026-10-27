@@ -22,10 +22,28 @@ void energySavingMode(toml::table& root)
     }
 }
 
+// v2 -> v3: the boolean `appearance.backdrop.cover_art` became `appearance.backdrop.style`
+// (aurora | cover | dark). Turning the cover backdrop off meant a plain backdrop, i.e. "dark".
+void backdropStyle(toml::table& root)
+{
+    toml::table* backdrop = root.at_path("appearance.backdrop").as_table();
+    if (backdrop == nullptr) {
+        return;
+    }
+    if (const auto* old = backdrop->get_as<bool>("cover_art")) {
+        const bool enabled = old->get();
+        backdrop->erase("cover_art");
+        if (!enabled) {
+            backdrop->insert_or_assign("style", "dark");
+        }
+    }
+}
+
 // Files without `config_version` are v0 (same format as v1). Append future migrations here.
 constexpr Migration kMigrations[] = {
     {0, [](toml::table&) {}},
     {1, energySavingMode},
+    {2, backdropStyle},
 };
 
 std::vector<std::string_view> splitPath(std::string_view path)

@@ -37,6 +37,11 @@ class ThemeColors {
     Q_PROPERTY(QColor stateHover MEMBER stateHover CONSTANT)
     Q_PROPERTY(QColor statePressed MEMBER statePressed CONSTANT)
     Q_PROPERTY(QColor accent MEMBER accent CONSTANT)
+    Q_PROPERTY(QColor accentText MEMBER accentText CONSTANT)  // accent for small text (4.5:1)
+    Q_PROPERTY(QColor accentLight MEMBER accentLight CONSTANT)
+    Q_PROPERTY(QColor accentDeep MEMBER accentDeep CONSTANT)
+    Q_PROPERTY(QColor edge MEMBER edge CONSTANT)
+    Q_PROPERTY(QColor sheen MEMBER sheen CONSTANT)
     Q_PROPERTY(QColor accentHover MEMBER accentHover CONSTANT)
     Q_PROPERTY(QColor accentPressed MEMBER accentPressed CONSTANT)
     Q_PROPERTY(QColor onAccent MEMBER onAccent CONSTANT)
@@ -122,6 +127,7 @@ class RadiusTokens {
     Q_PROPERTY(qreal md MEMBER md CONSTANT)
     Q_PROPERTY(qreal lg MEMBER lg CONSTANT)
     Q_PROPERTY(qreal pill MEMBER pill CONSTANT)
+    Q_PROPERTY(qreal button MEMBER button CONSTANT)  // buttons and segmented controls ("Button shape")
 
 public:
     qreal xs = 6;
@@ -129,6 +135,7 @@ public:
     qreal md = 20;
     qreal lg = 28;
     qreal pill = 9999;
+    qreal button = 9999;
 
     [[nodiscard]] RadiusTokens scaled(double factor) const;
     friend bool operator==(const RadiusTokens&, const RadiusTokens&) = default;
@@ -145,6 +152,8 @@ class TypographyTokens {
     Q_PROPERTY(QFont label MEMBER label CONSTANT)
     Q_PROPERTY(QFont caption MEMBER caption CONSTANT)
     Q_PROPERTY(QFont overline MEMBER overline CONSTANT)
+    Q_PROPERTY(QFont eyebrow MEMBER eyebrow CONSTANT)        // small uppercase kicker above headings
+    Q_PROPERTY(QFont groupTitle MEMBER groupTitle CONSTANT)  // mono uppercase group labels
     Q_PROPERTY(QFont mono MEMBER mono CONSTANT)
     Q_PROPERTY(QFont monoSmall MEMBER monoSmall CONSTANT)
     Q_PROPERTY(QFont numeric MEMBER numeric CONSTANT)
@@ -159,6 +168,8 @@ public:
     QFont label;
     QFont caption;
     QFont overline;
+    QFont eyebrow;
+    QFont groupTitle;
     QFont mono;  // timings, bitrate, counters, hex input (tabular)
     QFont monoSmall;
     QFont numeric;  // body face with tabular numerals, for counts inside prose layouts
@@ -238,6 +249,13 @@ class GlassTokens {
     Q_PROPERTY(qreal saturationLift MEMBER saturationLift CONSTANT)
     Q_PROPERTY(qreal brightnessLift MEMBER brightnessLift CONSTANT)
     Q_PROPERTY(qreal lightAngle MEMBER lightAngle CONSTANT)
+    Q_PROPERTY(QString buttons MEMBER buttons CONSTANT)    // frosted | liquid | tinted | clear | solid
+    Q_PROPERTY(QString backdrop MEMBER backdrop CONSTANT)  // aurora | cover | dark
+    Q_PROPERTY(bool backdropAnimated MEMBER backdropAnimated CONSTANT)
+    Q_PROPERTY(qreal glow MEMBER glow CONSTANT)  // glow intensity 0..1
+    Q_PROPERTY(bool glowCover MEMBER glowCover CONSTANT)
+    Q_PROPERTY(bool glowControls MEMBER glowControls CONSTANT)
+    Q_PROPERTY(bool glowProgress MEMBER glowProgress CONSTANT)
 
 public:
     QString style = QStringLiteral("kawase");
@@ -258,6 +276,13 @@ public:
     qreal saturationLift = 0.0;
     qreal brightnessLift = 0.0;
     qreal lightAngle = 135.0;  // degrees; light from the top-left
+    QString buttons = QStringLiteral("frosted");
+    QString backdrop = QStringLiteral("aurora");
+    bool backdropAnimated = true;
+    qreal glow = 0.3;
+    bool glowCover = true;
+    bool glowControls = true;
+    bool glowProgress = true;
     friend bool operator==(const GlassTokens&, const GlassTokens&) = default;
 };
 

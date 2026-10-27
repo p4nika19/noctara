@@ -100,6 +100,38 @@ TEST_SUITE("ui.settings")
     }
 }
 
+TEST_SUITE("ui.presets")
+{
+    TEST_CASE("presets apply ordinary settings and are detected from the current values")
+    {
+        QTemporaryDir dir;
+        settings::SettingsStore store(settings::Schema::builtin());
+        settings::ConfigFile config(store, dir.filePath(QStringLiteral("config.toml")), {});
+        i18n::LanguageManager languages(store);
+        ui::SettingsController controller(store, config, languages);
+
+        CHECK(controller.presets().size() == 3);
+        CHECK(controller.currentPreset() == QStringLiteral("midnight"));  // defaults are the Midnight preset
+
+        controller.applyPreset(QStringLiteral("neon"));
+        CHECK(controller.currentPreset() == QStringLiteral("neon"));
+        CHECK(store.stringValue(settings::keys::ButtonMaterial) == QStringLiteral("tinted"));
+        CHECK(store.realValue(settings::keys::GlowIntensity) == doctest::Approx(0.85));
+
+        CHECK(controller.setValue(QStringLiteral("appearance.glow.intensity"), 0.5).isEmpty());
+        CHECK(controller.currentPreset().isEmpty());  // custom
+
+        const QStringList drawerKeys{QStringLiteral("appearance.glow.intensity"),
+                                     QStringLiteral("appearance.glass.buttons")};
+        ui::SettingsModel* subset = controller.subset(drawerKeys);
+        REQUIRE(subset != nullptr);
+        CHECK(subset->rowCount() == 2);
+        CHECK(subset == controller.subset(drawerKeys));
+        controller.resetKeys(drawerKeys);
+        CHECK(store.stringValue(settings::keys::ButtonMaterial) == QStringLiteral("frosted"));
+    }
+}
+
 TEST_SUITE("ui.icons")
 {
     TEST_CASE("SVG tinting replaces currentColor and stroke width")

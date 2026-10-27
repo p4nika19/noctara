@@ -45,16 +45,28 @@ The whole palette is generated from a single accent color.
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
 | `adaptive` | bool | `true` | — | **Adapt accent colors to cover art.** Derive the accent palette from the current track's artwork. (env `NOCTARA_APPEARANCE_ACCENT_ADAPTIVE`) |
-| `color` | color | `"#4a7dff"` | — | **Accent color.** Seed color for the whole palette when adaptive accents are off. (env `NOCTARA_APPEARANCE_ACCENT_COLOR`) |
+| `color` | color | `"#6774f9"` | — | **Accent color.** Seed color for the whole palette when adaptive accents are off. (env `NOCTARA_APPEARANCE_ACCENT_COLOR`) |
+| `extraction` | enum | `"vivid"` | `vivid`, `balanced`, `soft` | **Palette extraction.** How saturated the colours taken from the artwork are. Recomputed on every track. (env `NOCTARA_APPEARANCE_ACCENT_EXTRACTION`) |
 
 ### `[appearance.backdrop]` Backdrop
 
-The blurred cover art behind the interface.
+The light behind the interface.
 
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
-| `cover_art` | bool | `true` | — | **Use cover art as backdrop.** Show a blurred version of the current artwork behind the interface. (env `NOCTARA_APPEARANCE_BACKDROP_COVER_ART`) |
+| `style` | enum | `"aurora"` | `aurora`, `cover`, `dark` | **Backdrop style.** Aurora: soft light in the palette colours. Cover art: the blurred artwork. Dark: nearly plain. (env `NOCTARA_APPEARANCE_BACKDROP_STYLE`) |
 | `animate` | bool | `true` | — | **Animate backdrop.** Slow drifting motion. Paused automatically when the window is hidden. (env `NOCTARA_APPEARANCE_BACKDROP_ANIMATE`) |
+
+### `[appearance.glow]` Glow
+
+Soft accent-coloured light around artwork, controls and progress.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `intensity` | number | `0.3` | 0 … 1 | **Glow intensity.** Strength of the glow and of the backdrop light. (env `NOCTARA_APPEARANCE_GLOW_INTENSITY`) |
+| `cover` | bool | `true` | — | **Artwork glow.** A shadow in the artwork's colour under covers. (env `NOCTARA_APPEARANCE_GLOW_COVER`) |
+| `controls` | bool | `true` | — | **Button and selection glow.** A soft halo around accented buttons and active items. (env `NOCTARA_APPEARANCE_GLOW_CONTROLS`) |
+| `progress` | bool | `true` | — | **Progress glow.** Lights up the played part of the progress bar and waveform. (env `NOCTARA_APPEARANCE_GLOW_PROGRESS`) |
 
 ### `[appearance.glass]` Glass
 
@@ -67,6 +79,7 @@ How translucent surfaces are rendered.
 | `opacity` | number | `0.5` | 0 … 1 | **Glass tint.** Opacity of the tint applied to glass surfaces. (env `NOCTARA_APPEARANCE_GLASS_OPACITY`) |
 | `grain` | number | `0.35` | 0 … 1 | **Grain.** Fine noise that prevents banding in gradients. (env `NOCTARA_APPEARANCE_GLASS_GRAIN`) |
 | `quality` | enum | `"auto"` | `auto`, `low`, `medium`, `high` | **Effects quality.** Auto lowers quality when frames take too long and raises it again later. (env `NOCTARA_APPEARANCE_GLASS_QUALITY`) |
+| `buttons` | enum | `"frosted"` | `frosted`, `liquid`, `tinted`, `clear`, `solid` | **Button material.** Frosted: milky blurred glass. Liquid: glossy glass with a bright rim. Tinted: glass coloured by the accent. Clear: outline only. Solid: opaque. (env `NOCTARA_APPEARANCE_GLASS_BUTTONS`) |
 | `reduce_transparency` | bool | `false` | — | **Reduce transparency.** Use opaque surfaces everywhere. (env `NOCTARA_APPEARANCE_GLASS_REDUCE_TRANSPARENCY`) |
 
 ### `[appearance.motion]` Motion
@@ -77,6 +90,7 @@ Animations and transitions.
 |---|---|---|---|---|
 | `reduce` | bool | `false` | — | **Reduce motion.** Replace movement with simple fades and stop the drifting backdrop. (env `NOCTARA_APPEARANCE_MOTION_REDUCE`) |
 | `speed` | number | `1.0` | 0 … 3 | **Animation speed.** Duration multiplier. 0 turns animations off. (env `NOCTARA_APPEARANCE_MOTION_SPEED`) |
+| `color_transition` | enum | `"smooth"` | `fast`, `smooth`, `slow` | **Colour transitions.** How quickly colours blend into the new palette when the track or theme changes. (env `NOCTARA_APPEARANCE_MOTION_COLOR_TRANSITION`) |
 
 ### `[appearance.shape]` Shape
 
@@ -86,6 +100,7 @@ Corner rounding of surfaces and artwork.
 |---|---|---|---|---|
 | `corner_radius` | enum | `"default"` | `sharp`, `default`, `round`, `custom` | **Corner radius.** Rounding of panels, cards and buttons. (env `NOCTARA_APPEARANCE_SHAPE_CORNER_RADIUS`) |
 | `corner_radius_multiplier` | number | `1.0` | 0 … 2 | **Corner radius multiplier.** Scales every corner radius. (env `NOCTARA_APPEARANCE_SHAPE_CORNER_RADIUS_MULTIPLIER`) |
+| `buttons` | enum | `"pill"` | `pill`, `soft`, `sharp` | **Button shape.** Corner style of buttons and segmented controls. (env `NOCTARA_APPEARANCE_SHAPE_BUTTONS`) |
 | `cover_art` | enum | `"rounded"` | `rounded`, `square`, `circle` | **Cover art shape.** Shape of artwork in lists and the player. (env `NOCTARA_APPEARANCE_SHAPE_COVER_ART`) |
 
 ### `[appearance.text]` Text and scale
@@ -107,6 +122,16 @@ Icon appearance.
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
 | `weight` | enum | `"regular"` | `light`, `regular`, `bold` | **Icon weight.** Stroke thickness of icons. (env `NOCTARA_APPEARANCE_ICONS_WEIGHT`) |
+
+## Layout
+
+### `[layout.content]` Content
+
+How densely pages are laid out.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `density` | enum | `"cozy"` | `compact`, `cozy`, `airy` | **Density.** Spacing between sections, cards and rows. (env `NOCTARA_LAYOUT_CONTENT_DENSITY`) |
 
 ## Performance
 

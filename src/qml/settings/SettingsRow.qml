@@ -2,8 +2,9 @@ import QtQuick
 import Noctara
 import "../components"
 
-// One generated settings row (delegate of SettingsModel). The control is chosen from the schema type;
-// long labels wrap, and wide controls move below the text so translations never overflow.
+// One generated settings row (delegate of SettingsModel), styled after the appearance drawer of the design
+// reference: toggles sit inline; segmented choices, sliders and pickers span the row under a label line
+// that carries the current value. Long labels wrap, so translations never overflow.
 Item {
     id: row
 
@@ -30,9 +31,24 @@ Item {
     required property bool sectionStart
     required property string status
     property bool showCategory: false
+    // Drawer mode: tighter spacing, descriptions only for toggles, no per-section reset.
+    property bool compact: false
 
     readonly property bool editable: !overridden && disabledReason.length === 0
-    readonly property bool stacked: type === "color" || control.implicitWidth > width * 0.45
+    readonly property bool segmented: type === "enum" && options.length <= 4
+                                      && options.reduce((n, o) => n + o.label.length, 0) <= (compact ? 30 : 46)
+    readonly property bool inline: type === "bool" || (type === "enum" && !segmented)
+    readonly property string valueText: {
+        if (type !== "int" && type !== "real")
+            return ""
+        const v = Number(value)
+        if (unit === "%")
+            return Math.round(v) + " %"
+        if (minimum === 0 && maximum === 1)
+            return Math.round(v * 100) + " %"
+        const text = type === "int" ? Math.round(v).toString() : v.toLocaleString(Qt.locale(Language.localeName), 'f', 2)
+        return unit.length > 0 ? text + " " + unit : text
+    }
 
     width: ListView.view ? ListView.view.width : implicitWidth
     height: shown ? layout.height : 0
@@ -50,88 +66,128 @@ Item {
         id: layout
         width: parent.width
 
+        // Group header: mono uppercase title, as in the reference's drawer.
         Item {
             visible: row.sectionStart
             width: parent.width
-            height: visible ? header.implicitHeight + Theme.space.xl : 0
+            height: visible ? header.implicitHeight + (row.compact ? Theme.space.lg : Theme.space.xl) : 0
             Column {
                 id: header
                 anchors.left: parent.left
-                anchors.right: resetSection.left
+                anchors.right: resetSection.visible ? resetSection.left : parent.right
                 anchors.rightMargin: Theme.space.md
                 anchors.bottom: parent.bottom
-                anchors.bottomMargin: Theme.space.sm
+                anchors.bottomMargin: Theme.space.xs
                 spacing: Theme.space.xxs
                 Text {
                     width: parent.width
-                    text: row.showCategory ? row.categoryLabel + " › " + row.sectionLabel : row.sectionLabel
-                    font: Theme.font.subtitle
-                    color: Theme.colors.textPrimary
+                    text: row.showCategory ? row.categoryLabel + " · " + row.sectionLabel : row.sectionLabel
+                    font: Theme.font.groupTitle
+                    color: Theme.colors.textTertiary
                     wrapMode: Text.Wrap
                     Accessible.role: Accessible.Heading
                 }
                 Text {
                     width: parent.width
+                    visible: !row.compact && text.length > 0
                     text: row.sectionDescription
                     font: Theme.font.caption
-                    color: Theme.colors.textSecondary
+                    color: Theme.colors.textTertiary
                     wrapMode: Text.Wrap
                 }
             }
-            Button {
+            Text {
                 id: resetSection
+                visible: !row.compact && !row.showCategory
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: Theme.space.xs
-                variant: "ghost"
                 text: qsTr("Reset section")
-                onClicked: SettingsUi.resetSection(row.section)
+                font: Theme.font.caption
+                color: resetArea.containsMouse ? Theme.colors.accentText : Theme.colors.textTertiary
+                Accessible.role: Accessible.Button
+                Accessible.name: text
+                MouseArea {
+                    id: resetArea
+                    anchors.fill: parent
+                    anchors.margins: -Theme.space.xs
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: SettingsUi.resetSection(row.section)
+                }
             }
         }
 
         Item {
             id: body
+            readonly property real padding: row.compact ? Theme.space.sm : Theme.space.md
             width: parent.width
-            height: (row.stacked ? texts.height + Theme.space.sm + controlArea.height
-                                 : Math.max(texts.height, controlArea.height)) + Theme.space.md * 2
+            height: (row.inline ? Math.max(texts.height, control.height)
+                                : texts.height + Theme.space.sm + control.height) + padding * 2
 
             Column {
                 id: texts
-                y: row.stacked ? Theme.space.md : (body.height - height) / 2
-                width: row.stacked ? body.width : body.width - controlArea.width - Theme.space.xl
+                y: row.inline ? (body.height - height) / 2 : body.padding
+                width: row.inline ? body.width - control.width - Theme.space.xl : body.width
                 spacing: Theme.space.xxs
 
-                Flow {
+                Item {
                     width: parent.width
-                    spacing: Theme.space.sm
-                    Text {
-                        width: Math.min(implicitWidth, parent.width)
-                        text: row.label
-                        font: Theme.font.bodyStrong
-                        color: Theme.colors.textPrimary
-                        wrapMode: Text.Wrap
-                    }
-                    Rectangle {
-                        visible: row.requiresRestart
-                        width: restartText.implicitWidth + Theme.space.md
-                        height: restartText.implicitHeight + Theme.space.xxs * 2
-                        radius: height / 2
-                        color: Theme.colors.accentContainer
+                    height: Math.max(labelFlow.height, valueLabel.implicitHeight)
+                    Flow {
+                        id: labelFlow
+                        width: parent.width - (valueLabel.visible ? valueLabel.implicitWidth + Theme.space.md : 0)
+                        spacing: Theme.space.sm
                         Text {
-                            id: restartText
-                            anchors.centerIn: parent
-                            text: qsTr("Restart required")
-                            font: Theme.font.caption
-                            color: Theme.colors.onAccentContainer
+                            width: Math.min(implicitWidth, parent.width)
+                            text: row.label
+                            font: Theme.font.bodyStrong
+                            color: Theme.colors.textPrimary
+                            wrapMode: Text.Wrap
                         }
+                        Rectangle {
+                            visible: row.requiresRestart
+                            width: restartText.implicitWidth + Theme.space.md
+                            height: restartText.implicitHeight + Theme.space.xxs * 2
+                            radius: height / 2
+                            color: Qt.rgba(Theme.colors.accent.r, Theme.colors.accent.g, Theme.colors.accent.b, 0.14)
+                            border.width: Theme.space.hairline
+                            border.color: Qt.rgba(Theme.colors.accent.r, Theme.colors.accent.g, Theme.colors.accent.b, 0.42)
+                            Text {
+                                id: restartText
+                                anchors.centerIn: parent
+                                text: qsTr("Restart required")
+                                font: Theme.font.caption
+                                color: Theme.colors.accentText
+                            }
+                        }
+                        IconButton {
+                            visible: !row.isDefault && !row.overridden
+                            iconName: "rotate-ccw"
+                            iconSize: Theme.space.iconSizeSmall - 2
+                            implicitWidth: Theme.space.iconSizeSmall + Theme.space.sm
+                            implicitHeight: Theme.space.iconSizeSmall + Theme.space.sm
+                            iconColor: Theme.targetColors.iconSecondary
+                            text: qsTr("Reset to default")
+                            onClicked: SettingsUi.reset(row.key)
+                        }
+                    }
+                    Text {
+                        id: valueLabel
+                        visible: row.valueText.length > 0
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        text: row.valueText
+                        font: Theme.font.mono
+                        color: Theme.colors.accentText
                     }
                 }
                 Text {
                     width: parent.width
-                    visible: text.length > 0
+                    visible: text.length > 0 && (!row.compact || row.type === "bool")
                     text: row.description
                     font: Theme.font.caption
-                    color: Theme.colors.textSecondary
+                    color: Theme.colors.textTertiary
                     wrapMode: Text.Wrap
                 }
                 Row {
@@ -162,47 +218,24 @@ Item {
                 }
             }
 
-            Row {
-                id: controlArea
-                x: row.stacked ? 0 : body.width - width
-                y: row.stacked ? texts.y + texts.height + Theme.space.sm : (body.height - height) / 2
-                spacing: Theme.space.sm
-                layoutDirection: row.stacked ? Qt.LeftToRight : Qt.RightToLeft
-
-                Loader {
-                    id: control
-                    enabled: row.editable
-                    opacity: row.editable ? 1 : 0.5
-                    sourceComponent: {
-                        switch (row.type) {
-                        case "bool": return boolControl
-                        case "enum": return row.options.reduce((n, o) => n + o.label.length, 0) <= 34 && row.options.length <= 4
-                                            ? segmentedControl : comboControl
-                        case "int":
-                        case "real": return numberControl
-                        case "color": return colorControl
-                        case "list": return listControl
-                        default: return textControl
-                        }
+            Loader {
+                id: control
+                x: row.inline ? body.width - width : 0
+                y: row.inline ? (body.height - height) / 2 : texts.y + texts.height + Theme.space.sm
+                width: row.inline ? implicitWidth : body.width
+                enabled: row.editable
+                opacity: row.editable ? 1 : 0.5
+                sourceComponent: {
+                    switch (row.type) {
+                    case "bool": return boolControl
+                    case "enum": return row.segmented ? segmentedControl : comboControl
+                    case "int":
+                    case "real": return numberControl
+                    case "color": return colorControl
+                    case "list": return listControl
+                    default: return textControl
                     }
                 }
-                IconButton {
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: !row.isDefault && !row.overridden
-                    iconName: "rotate-ccw"
-                    iconSize: Theme.space.iconSizeSmall
-                    implicitWidth: Theme.space.controlHeightSmall
-                    implicitHeight: Theme.space.controlHeightSmall
-                    text: qsTr("Reset to default")
-                    onClicked: SettingsUi.reset(row.key)
-                }
-            }
-
-            Rectangle {
-                anchors.bottom: parent.bottom
-                width: parent.width
-                height: Theme.space.hairline
-                color: Theme.colors.divider
             }
         }
     }
@@ -235,36 +268,14 @@ Item {
     }
     Component {
         id: numberControl
-        Row {
-            spacing: Theme.space.md
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 64 * Theme.scale
-                horizontalAlignment: Text.AlignRight
-                font: Theme.font.mono
-                color: Theme.colors.textSecondary
-                text: {
-                    const v = slider.value
-                    if (row.unit === "%")
-                        return Math.round(v) + " %"
-                    if (row.minimum === 0 && row.maximum === 1)
-                        return Math.round(v * 100) + " %"
-                    const text = row.type === "int" ? Math.round(v).toString()
-                                                    : Number(v).toLocaleString(Qt.locale(Language.localeName), 'f', 2)
-                    return row.unit.length > 0 ? text + " " + row.unit : text
-                }
-            }
-            Slider {
-                id: slider
-                anchors.verticalCenter: parent.verticalCenter
-                from: row.minimum
-                to: row.maximum
-                stepSize: row.step
-                snapMode: Slider.SnapAlways
-                value: row.value
-                Accessible.name: row.label
-                onMoved: row.commit(value)
-            }
+        Slider {
+            from: row.minimum
+            to: row.maximum
+            stepSize: row.step
+            snapMode: Slider.SnapAlways
+            value: row.value
+            Accessible.name: row.label
+            onMoved: row.commit(value)
         }
     }
     Component {

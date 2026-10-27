@@ -15,67 +15,70 @@ using color::Srgb;
 constexpr double kAchromaticChroma = 0.02;
 constexpr double kToneStep = 0.0025;
 
-// Midnight: deep night-blue neutrals, never pure black. Glass is dark and fairly opaque.
+// Midnight: near-black blue-violet base lit by soft aurora light. Base/raised glass is a light,
+// accent-tinted veil at low opacity (it lifts what is behind it); overlays (drawers, popups) are dark glass.
 constexpr SchemeTones kDarkTones{
-    .neutralHue = 262.0,
-    .neutralChroma = 0.032,
-    .neutralHueBlend = 0.25,
-    .backdropL = 0.115,
+    .neutralHue = 272.0,
+    .neutralChroma = 0.022,
+    .neutralHueBlend = 0.2,
+    .backdropL = 0.11,
     .backdropMinL = 0.07,
-    .backdropMaxL = 0.24,
-    .surfaceL = {0.165, 0.19, 0.22},
-    .surfaceAlpha = {0.58, 0.68, 0.80},
-    .solidL = {0.15, 0.175, 0.205},
-    .textL = {0.95, 0.80, 0.68},
-    .accentMinL = 0.68,
-    .accentMaxL = 0.82,
+    .backdropMaxL = 0.32,
+    .surfaceL = {0.90, 0.90, 0.19},
+    .surfaceAlpha = {0.10, 0.17, 0.86},
+    .solidL = {0.17, 0.20, 0.215},
+    .textL = {0.955, 0.80, 0.66},
+    .accentMinL = 0.64,
+    .accentMaxL = 0.80,
     .accentMaxC = 0.17,
-    .containerL = 0.29,
+    .containerL = 0.30,
     .containerChromaScale = 0.55,
-    .onContainerL = 0.92,
-    .glowAlpha = 0.22,
+    .onContainerL = 0.94,
+    .glowAlpha = 0.85,
+    .tintAccentChroma = 0.045,
     .selectionAlpha = 0.28,
-    .shadowL = 0.03,
-    .shadowChroma = 0.02,
-    .shadowAlpha = 0.45,
-    .rimHighlightAlpha = 0.12,
+    .shadowL = 0.02,
+    .shadowChroma = 0.01,
+    .shadowAlpha = 0.65,
+    .rimHighlightAlpha = 0.18,
     .rimShadowAlpha = 0.35,
-    .waveformUnplayedAlpha = 0.30,
-    .waveformBufferedAlpha = 0.48,
-    .skeletonL = 0.22,
-    .skeletonHighlightL = 0.28,
+    .waveformUnplayedAlpha = 0.20,
+    .waveformBufferedAlpha = 0.36,
+    .skeletonL = 0.23,
+    .skeletonHighlightL = 0.30,
     .hoverAlpha = 0.07,
-    .pressedAlpha = 0.13,
-    .scrimAlpha = 0.55,
+    .pressedAlpha = 0.12,
+    .scrimAlpha = 0.5,
 };
 
-// Frost: milky white glass over a pale, cool blue wash. Softer, accent-tinted shadows.
+// Frost: pale cool base with washed pastel aurora; milky white glass, dark ink, accent-tinted shadows.
 constexpr SchemeTones kLightTones{
-    .neutralHue = 250.0,
-    .neutralChroma = 0.02,
-    .neutralHueBlend = 0.25,
-    .backdropL = 0.94,
-    .backdropMinL = 0.86,
+    .neutralHue = 268.0,
+    .neutralChroma = 0.018,
+    .neutralHueBlend = 0.2,
+    .backdropL = 0.95,
+    .backdropMinL = 0.84,
     .backdropMaxL = 0.98,
-    .surfaceL = {0.985, 0.99, 0.995},
-    .surfaceAlpha = {0.64, 0.74, 0.86},
+    .surfaceL = {0.995, 0.995, 0.985},
+    .surfaceAlpha = {0.52, 0.66, 0.86},
     .solidL = {0.965, 0.98, 0.99},
-    .textL = {0.22, 0.38, 0.48},
-    .accentMinL = 0.42,
+    .textL = {0.24, 0.40, 0.50},
+    .accentMinL = 0.44,
     .accentMaxL = 0.56,
     .accentMaxC = 0.19,
     .containerL = 0.90,
     .containerChromaScale = 0.35,
     .onContainerL = 0.30,
-    .glowAlpha = 0.22,
+    .glowAlpha = 0.5,
+    .tintAccentChroma = 0.02,
     .selectionAlpha = 0.20,
     .shadowL = 0.38,
     .shadowChroma = 0.06,
-    .shadowAlpha = 0.16,
-    .rimHighlightAlpha = 0.80,
-    .rimShadowAlpha = 0.16,
-    .waveformUnplayedAlpha = 0.24,
-    .waveformBufferedAlpha = 0.40,
+    .shadowAlpha = 0.18,
+    .rimHighlightAlpha = 0.85,
+    .rimShadowAlpha = 0.18,
+    .waveformUnplayedAlpha = 0.20,
+    .waveformBufferedAlpha = 0.34,
     .skeletonL = 0.90,
     .skeletonHighlightL = 0.96,
     .hoverAlpha = 0.05,
@@ -157,7 +160,7 @@ const SchemeTones& defaultTones(Scheme scheme) noexcept
 
 OkLch defaultSeed() noexcept
 {
-    return {0.62, 0.16, 262.0};  // night blue
+    return {0.62, 0.17, 275.0};  // indigo, between violet and blue
 }
 
 Palette mix(const Palette& from, const Palette& to, double t)
@@ -190,15 +193,19 @@ Palette generatePalette(const PaletteRequest& request)
     p.backdropBottom = rgba({t.backdropL - backdropDelta, nc, nh});
     p.scrim = scheme == Scheme::Dark ? rgba({0.08, nc, nh}, t.scrimAlpha) : rgba({0.99, nc * 0.5, nh}, t.scrimAlpha);
 
-    p.surfaceBase = rgba({t.surfaceL[0], nc, nh}, surfaceAlpha(0));
-    p.surfaceRaised = rgba({t.surfaceL[1], nc, nh}, surfaceAlpha(1));
+    // The glass veil is tinted toward the accent (the artifact's "white 64% + accent").
+    const double tintChroma = achromatic ? nc : std::min(seed.C * 0.4, t.tintAccentChroma);
+    const double tintHue = achromatic ? nh : seed.h;
+    p.surfaceBase = rgba({t.surfaceL[0], tintChroma, tintHue}, surfaceAlpha(0));
+    p.surfaceRaised = rgba({t.surfaceL[1], tintChroma, tintHue}, surfaceAlpha(1));
     p.surfaceOverlay = rgba({t.surfaceL[2], nc, nh}, surfaceAlpha(2));
-    p.glassTint = rgba({t.surfaceL[0], achromatic ? nc : std::min(seed.C * 0.35, 0.05), achromatic ? nh : seed.h},
-                       surfaceAlpha(0));
+    p.glassTint = p.surfaceBase;
     p.solidBase = rgba({t.solidL[0], nc, nh});
     p.solidRaised = rgba({t.solidL[1], nc, nh});
     p.solidOverlay = rgba({t.solidL[2], nc, nh});
 
+    p.edge = scheme == Scheme::Dark ? rgba({1.0, 0.0, 0.0}, 0.16) : rgba({1.0, 0.0, 0.0}, 0.75);
+    p.sheen = scheme == Scheme::Dark ? rgba({1.0, 0.0, 0.0}, 0.07) : rgba({1.0, 0.0, 0.0}, 0.45);
     if (scheme == Scheme::Dark) {
         p.rimHighlight = rgba({1.0, 0.0, 0.0}, t.rimHighlightAlpha);
         p.rimShadow = rgba({0.05, nc, nh}, t.rimShadowAlpha);
@@ -225,13 +232,19 @@ Palette generatePalette(const PaletteRequest& request)
     p.stateHover = rgba(textPrimary, t.hoverAlpha);
     p.statePressed = rgba(textPrimary, t.pressedAlpha);
 
-    // Accent: seed hue, tone clamped to the scheme's range, chroma capped, then contrast-enforced.
+    // Accent: seed hue, tone clamped to the scheme's range, chroma capped, then contrast-enforced. The accent
+    // itself is used for fills, icons and selection (graphical, 3:1) so it can stay saturated; small accent
+    // text uses accentText, which meets 4.5:1.
     OkLch accent{std::clamp(seed.L, t.accentMinL, t.accentMaxL), std::min(seed.C, t.accentMaxC), seed.h};
     std::vector<Srgb> accentBackgrounds = backgrounds;
     if (scheme == Scheme::Light) {
         accentBackgrounds.push_back(gray(1.0));  // onAccent is white in Frost
     }
-    accent = enforce(accent, accentBackgrounds, kContrastText, scheme);
+    accent = enforce(accent, backgrounds, kContrastGraphic, scheme);
+    if (scheme == Scheme::Light) {
+        accent = enforce(accent, accentBackgrounds, kContrastText, scheme);  // white on-accent text
+    }
+    p.accentText = rgba(enforce(accent, backgrounds, kContrastText, scheme));
     const double stateDelta = scheme == Scheme::Dark ? 0.04 : -0.04;
     const OkLch accentHover{std::clamp(accent.L + stateDelta, 0.0, 1.0), accent.C, accent.h};
     const OkLch accentPressed{std::clamp(accent.L - stateDelta, 0.0, 1.0), accent.C, accent.h};
@@ -249,7 +262,15 @@ Palette generatePalette(const PaletteRequest& request)
     const Srgb containerBg[] = {p.accentContainer.rgb};
     p.onAccentContainer = rgba(enforce({t.onContainerL, accent.C * 0.4, accent.h}, containerBg, kContrastText, scheme));
 
-    p.glow = scheme == Scheme::Dark ? rgba(accent, t.glowAlpha) : rgba({0.78, accent.C * 0.8, accent.h}, t.glowAlpha);
+    // Companion colours from the artifact: a lighter partner hue (gradients, aurora) and a deep shade.
+    const OkLch accentLight{std::clamp(accent.L - (scheme == Scheme::Dark ? 0.08 : -0.06), 0.0, 1.0),
+                            std::min(accent.C * 0.95, t.accentMaxC), std::fmod(accent.h + 40.0, 360.0)};
+    p.accentLight = rgba(accentLight);
+    p.accentDeep = scheme == Scheme::Dark
+                       ? rgba({0.2, std::min(accent.C * 0.5, 0.08), std::fmod(accent.h + 352.0, 360.0)})
+                       : rgba({0.86, std::min(accent.C * 0.35, 0.06), accent.h});
+    const double glowAlpha = t.glowAlpha * std::clamp(request.glowIntensity, 0.0, 1.0);
+    p.glow = scheme == Scheme::Dark ? rgba(accent, glowAlpha) : rgba({0.72, accent.C, accent.h}, glowAlpha);
     p.selection = rgba(accent, t.selectionAlpha);
     p.focusRing = rgba(enforce({accent.L, accent.C, accent.h}, backgrounds, kContrastGraphic, scheme));
 
@@ -280,7 +301,8 @@ std::vector<ContrastResult> checkContrast(const Palette& p, Scheme /*scheme*/, c
     against("textTertiary", p.textTertiary, kContrastText);
     against("iconPrimary", p.iconPrimary, kContrastGraphic);
     against("iconSecondary", p.iconSecondary, kContrastGraphic);
-    against("accent", p.accent, kContrastText);
+    against("accent", p.accent, kContrastGraphic);
+    against("accentText", p.accentText, kContrastText);
     against("focusRing", p.focusRing, kContrastGraphic);
     against("waveformPlayed", p.waveformPlayed, kContrastGraphic);
     against("danger", p.danger, kContrastText);

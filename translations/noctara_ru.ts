@@ -5,226 +5,143 @@
     <name>AboutPane</name>
     <message>
         <location filename="../src/qml/settings/AboutPane.qml" line="+46"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Version %1</source>
         <extracomment>%1 = version number</extracomment>
         <translation>Версия %1</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>A fast, native SoundCloud client. Not affiliated with SoundCloud.</source>
         <translation>Быстрый нативный клиент SoundCloud. Не связан с компанией SoundCloud.</translation>
     </message>
     <message>
         <location line="+8"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Graphics</source>
         <translation>Графика</translation>
     </message>
     <message>
         <location line="+5"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Renderer</source>
         <translation>Отрисовка</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Software (CPU)</source>
         <translation>Программная (ЦП)</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Device</source>
         <translation>Устройство</translation>
     </message>
     <message>
         <location line="+5"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Driver</source>
         <translation>Драйвер</translation>
     </message>
     <message>
         <location line="+5"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Safe Mode</source>
         <translation>Безопасный режим</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Active for this session</source>
         <translation>Включён в этом сеансе</translation>
     </message>
     <message>
         <location line="+3"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Glass style</source>
         <translation>Стиль стекла</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Configuration</source>
         <translation>Конфигурация</translation>
     </message>
     <message>
         <location line="+5"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Config file</source>
         <translation>Файл настроек</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Open config file</source>
         <translation>Открыть файл настроек</translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Open-source licenses</source>
         <translation>Лицензии открытого ПО</translation>
     </message>
     <message>
         <location line="+24"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Hide license</source>
         <translation>Скрыть лицензию</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <source>Show license</source>
         <translation>Показать лицензию</translation>
     </message>
 </context>
 <context>
+    <name>AppearanceDrawer</name>
+    <message>
+        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+26"/>
+        <source>custom</source>
+        <translation>своя настройка</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <location line="+17"/>
+        <source>Appearance</source>
+        <translation>Оформление</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Midnight Glass · %1</source>
+        <extracomment>%1 = preset name, or &quot;custom&quot;</extracomment>
+        <translation>Midnight Glass · %1</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Close panel</source>
+        <translation>Закрыть панель</translation>
+    </message>
+    <message>
+        <location line="+42"/>
+        <source>Reset</source>
+        <translation>Сбросить</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>All settings</source>
+        <translation>Все настройки</translation>
+    </message>
+</context>
+<context>
+    <name>AppearanceHeader</name>
+    <message>
+        <location filename="../src/qml/settings/AppearanceHeader.qml" line="+14"/>
+        <source>Presets</source>
+        <translation>Пресеты</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>A preset only sets the options below; you can change any of them afterwards.</source>
+        <translation>Пресет лишь выставляет параметры ниже — любой из них можно потом изменить.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Custom: your settings differ from every preset.</source>
+        <translation>Своя настройка: параметры отличаются от всех пресетов.</translation>
+    </message>
+</context>
+<context>
     <name>ColorPicker</name>
     <message>
-        <location filename="../src/qml/components/ColorPicker.qml" line="+63"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location filename="../src/qml/components/ColorPicker.qml" line="+79"/>
         <source>Hex color</source>
         <translation>Цвет в HEX</translation>
     </message>
@@ -534,326 +451,136 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="../src/qml/pages/HomePage.qml" line="+24"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location filename="../src/qml/pages/HomePage.qml" line="+31"/>
         <source>Good night</source>
         <translation>Доброй ночи</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Good morning</source>
         <translation>Доброе утро</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Good afternoon</source>
         <translation>Добрый день</translation>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Good evening</source>
         <translation>Добрый вечер</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+56"/>
         <source>Connect your SoundCloud account to see your feed, likes and playlists.</source>
         <translation>Подключите аккаунт SoundCloud, чтобы видеть ленту, лайки и плейлисты.</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+13"/>
         <source>Recently played</source>
         <translation>Недавно прослушанное</translation>
+    </message>
+    <message>
+        <location line="-26"/>
+        <source>Now playing</source>
+        <translation>Сейчас играет</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Nothing is playing yet</source>
+        <translation>Пока ничего не играет</translation>
     </message>
 </context>
 <context>
     <name>Main</name>
     <message>
-        <location filename="../src/qml/Main.qml" line="+30"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location filename="../src/qml/Main.qml" line="+31"/>
         <source>Noctara</source>
         <translation>Noctara</translation>
     </message>
     <message>
         <location line="-15"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Home</source>
         <translation>Главная</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Search</source>
         <translation>Поиск</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Library</source>
         <translation>Медиатека</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Likes</source>
         <translation>Лайки</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>History</source>
         <translation>История</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
+        <location line="+141"/>
         <source>Charts</source>
         <translation>Чарты</translation>
     </message>
     <message>
-        <location line="-131"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="-139"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
-        <location line="+68"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+76"/>
         <source>Got it</source>
         <translation>Понятно</translation>
     </message>
     <message>
         <location line="+31"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Search SoundCloud</source>
         <translation>Поиск в SoundCloud</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Find tracks, playlists and people once your account is connected.</source>
         <translation>Ищите треки, плейлисты и людей после подключения аккаунта.</translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Your library</source>
         <translation>Ваша медиатека</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Playlists, albums and followed artists will appear here.</source>
         <translation>Здесь появятся плейлисты, альбомы и исполнители, на которых вы подписаны.</translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Liked tracks</source>
         <translation>Понравившиеся треки</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Tracks you like on SoundCloud will appear here.</source>
         <translation>Здесь появятся треки, которые вы лайкнули в SoundCloud.</translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Listening history</source>
         <translation>История прослушивания</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Recently played tracks will appear here.</source>
         <translation>Здесь появятся недавно прослушанные треки.</translation>
     </message>
     <message>
         <location line="+8"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Top and trending tracks by genre will appear here.</source>
         <translation>Здесь появятся популярные и набирающие популярность треки по жанрам.</translation>
     </message>
@@ -861,17 +588,35 @@
 <context>
     <name>NavRail</name>
     <message>
-        <location filename="../src/qml/components/NavRail.qml" line="+17"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location filename="../src/qml/components/NavRail.qml" line="+19"/>
         <source>Navigation</source>
         <translation>Навигация</translation>
+    </message>
+</context>
+<context>
+    <name>PaletteDots</name>
+    <message>
+        <location filename="../src/qml/components/PaletteDots.qml" line="+12"/>
+        <source>Current palette</source>
+        <translation>Текущая палитра</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Accent</source>
+        <comment>palette colour</comment>
+        <translation>Акцент</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Light</source>
+        <comment>palette colour: the lighter companion of the accent</comment>
+        <translation>Свет</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Shadow</source>
+        <comment>palette colour: the deep shade of the accent</comment>
+        <translation>Тень</translation>
     </message>
 </context>
 <context>
@@ -908,41 +653,43 @@
     </message>
 </context>
 <context>
+    <name>Presets</name>
+    <message>
+        <location filename="../src/ui/AppearancePresets.cpp" line="+20"/>
+        <source>Midnight</source>
+        <translation>Midnight</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Glacier</source>
+        <translation>Ледник</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Neon</source>
+        <translation>Неон</translation>
+    </message>
+</context>
+<context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+138"/>
-        <location filename="src/app/main.cpp" line="+138"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location filename="../src/app/main.cpp" line="+139"/>
         <source>Needs hardware acceleration, which is currently off.</source>
         <translation>Нужно аппаратное ускорение, а оно сейчас выключено.</translation>
     </message>
     <message>
         <location line="+9"/>
-        <location filename="src/app/main.cpp" line="+9"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Not available on this graphics device.</source>
         <translation>Недоступно на этом графическом устройстве.</translation>
     </message>
     <message>
         <location filename="../src/settings/BuiltinSchema.cpp" line="+34"/>
-        <location line="+44"/>
+        <location line="+49"/>
         <source>Language</source>
         <translation>Язык</translation>
     </message>
     <message>
-        <location line="-43"/>
+        <location line="-48"/>
         <source>Interface language.</source>
         <translation>Язык интерфейса.</translation>
     </message>
@@ -958,23 +705,23 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+66"/>
+        <location line="+71"/>
         <source>Theme</source>
         <translation>Тема</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-70"/>
         <source>Midnight (dark), Frost (light) or follow the system.</source>
         <translation>Midnight (тёмная), Frost (светлая) или как в системе.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+87"/>
+        <location line="+92"/>
         <source>Accent color</source>
         <translation>Акцентный цвет</translation>
     </message>
     <message>
-        <location line="-86"/>
+        <location line="-91"/>
         <source>The whole palette is generated from a single accent color.</source>
         <translation>Вся палитра строится из одного акцентного цвета.</translation>
     </message>
@@ -984,12 +731,7 @@
         <translation>Фон</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>The blurred cover art behind the interface.</source>
-        <translation>Размытая обложка за интерфейсом.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+4"/>
         <source>Glass</source>
         <translation>Стекло</translation>
     </message>
@@ -1039,7 +781,7 @@
         <translation>Внешний вид значков.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+5"/>
         <source>Graphics</source>
         <translation>Графика</translation>
     </message>
@@ -1159,17 +901,83 @@
         <translation>Базовый цвет всей палитры, когда подбор по обложке выключен.</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Use cover art as backdrop</source>
-        <translation>Обложка в качестве фона</translation>
+        <location line="-90"/>
+        <source>The light behind the interface.</source>
+        <translation>Свет за интерфейсом.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Show a blurred version of the current artwork behind the interface.</source>
-        <translation>Показывать размытую обложку текущего трека за интерфейсом.</translation>
+        <source>Glow</source>
+        <translation>Свечение</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Soft accent-coloured light around artwork, controls and progress.</source>
+        <translation>Мягкий свет цвета акцента вокруг обложек, элементов управления и прогресса.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Content</source>
+        <translation>Содержимое</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How densely pages are laid out.</source>
+        <translation>Насколько плотно расположены элементы на страницах.</translation>
+    </message>
+    <message>
+        <location line="+81"/>
+        <source>Vivid</source>
+        <translation>Яркие</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Balanced</source>
+        <translation>Умеренные</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+181"/>
+        <source>Soft</source>
+        <translation>Мягкие</translation>
+    </message>
+    <message>
+        <location line="-179"/>
+        <source>Palette extraction</source>
+        <translation>Извлечение палитры</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How saturated the colours taken from the artwork are. Recomputed on every track.</source>
+        <translation>Насколько насыщенны цвета, взятые из обложки. Пересчитываются для каждого трека.</translation>
     </message>
     <message>
         <location line="+6"/>
+        <source>Aurora</source>
+        <translation>Аврора</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cover art</source>
+        <translation>Обложка</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Dark</source>
+        <translation>Тьма</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Backdrop style</source>
+        <translation>Стиль фона</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Aurora: soft light in the palette colours. Cover art: the blurred artwork. Dark: nearly plain.</source>
+        <translation>Аврора — мягкий свет в цветах палитры. Обложка — размытая обложка трека. Тьма — почти однотонный фон.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Animate backdrop</source>
         <translation>Анимировать фон</translation>
     </message>
@@ -1179,7 +987,47 @@
         <translation>Медленное плавное движение. Автоматически останавливается, когда окно скрыто.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+11"/>
+        <source>Glow intensity</source>
+        <translation>Интенсивность свечения</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Strength of the glow and of the backdrop light.</source>
+        <translation>Сила свечения и света на фоне.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Artwork glow</source>
+        <translation>Свечение обложки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>A shadow in the artwork&apos;s colour under covers.</source>
+        <translation>Тень цвета обложки под обложками.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Button and selection glow</source>
+        <translation>Свечение кнопок и выделения</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>A soft halo around accented buttons and active items.</source>
+        <translation>Мягкий ореол вокруг акцентных кнопок и активных пунктов.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Progress glow</source>
+        <translation>Свечение прогресса</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lights up the played part of the progress bar and waveform.</source>
+        <translation>Подсвечивает проигранную часть полосы прогресса и волны.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Dual Kawase blur</source>
         <translation>Размытие Dual Kawase</translation>
     </message>
@@ -1240,14 +1088,14 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+124"/>
+        <location line="+168"/>
         <location line="+13"/>
         <location line="+12"/>
         <source>Auto</source>
         <translation>Авто</translation>
     </message>
     <message>
-        <location line="-148"/>
+        <location line="-192"/>
         <source>Low</source>
         <translation>Низкое</translation>
     </message>
@@ -1272,7 +1120,42 @@
         <translation>В режиме «Авто» качество снижается, если кадры рисуются слишком долго, и потом снова повышается.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
+        <source>Frosted glass</source>
+        <translation>Матовое стекло</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Liquid glass</source>
+        <translation>Жидкое стекло</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tinted glass</source>
+        <translation>Тонированное стекло</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Clear</source>
+        <translation>Прозрачные</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Solid</source>
+        <translation>Сплошные</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Button material</source>
+        <translation>Материал кнопок</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Frosted: milky blurred glass. Liquid: glossy glass with a bright rim. Tinted: glass coloured by the accent. Clear: outline only. Solid: opaque.</source>
+        <translation>Матовое — молочное размытое стекло. Жидкое — глянцевое стекло с яркой кромкой. Тонированное — стекло в цвете акцента. Прозрачные — только контур. Сплошные — непрозрачные.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Reduce transparency</source>
         <translation>Уменьшить прозрачность</translation>
     </message>
@@ -1303,17 +1186,43 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+22"/>
+        <location line="+32"/>
         <source>×</source>
         <translation>×</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-26"/>
+        <source>Fast</source>
+        <translation>Быстро</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Smooth</source>
+        <translation>Плавно</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Slow</source>
+        <translation>Медленно</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Colour transitions</source>
+        <translation>Смена цветов</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How quickly colours blend into the new palette when the track or theme changes.</source>
+        <translation>Как быстро цвета перетекают в новую палитру при смене трека или темы.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+23"/>
         <source>Sharp</source>
         <translation>Острые</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-22"/>
         <source>Default</source>
         <translation>Обычные</translation>
     </message>
@@ -1349,6 +1258,21 @@
     </message>
     <message>
         <location line="+6"/>
+        <source>Pill</source>
+        <translation>Овал</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Button shape</source>
+        <translation>Форма кнопок</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Corner style of buttons and segmented controls.</source>
+        <translation>Форма углов кнопок и переключателей.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Rounded</source>
         <translation>Скруглённая</translation>
     </message>
@@ -1452,6 +1376,31 @@
         <location line="+1"/>
         <source>Stroke thickness of icons.</source>
         <translation>Толщина линий значков.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Compact</source>
+        <translation>Плотно</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Comfortable</source>
+        <translation>Обычно</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Spacious</source>
+        <translation>Свободно</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Density</source>
+        <translation>Плотность</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Spacing between sections, cards and rows.</source>
+        <translation>Расстояние между разделами, карточками и строками.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -1634,67 +1583,27 @@
 <context>
     <name>SettingsRow</name>
     <message>
-        <location filename="../src/qml/settings/SettingsRow.qml" line="+87"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location filename="../src/qml/settings/SettingsRow.qml" line="+105"/>
         <source>Reset section</source>
         <translation>Сбросить раздел</translation>
     </message>
     <message>
-        <location line="+36"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+54"/>
         <source>Restart required</source>
         <translation>Нужен перезапуск</translation>
     </message>
     <message>
-        <location line="+73"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+12"/>
         <source>Reset to default</source>
         <translation>Сбросить по умолчанию</translation>
     </message>
     <message>
-        <location line="+85"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+121"/>
         <source>Default</source>
         <translation>По умолчанию</translation>
     </message>
     <message>
         <location line="+9"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Comma-separated values</source>
         <translation>Значения через запятую</translation>
     </message>
@@ -1703,114 +1612,42 @@
     <name>SettingsView</name>
     <message>
         <location filename="../src/qml/settings/SettingsView.qml" line="+29"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Search settings</source>
         <translation>Поиск настроек</translation>
     </message>
     <message>
         <location line="+20"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Settings categories</source>
         <translation>Разделы настроек</translation>
     </message>
     <message>
-        <location line="+60"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
+        <location line="+83"/>
         <location line="+8"/>
         <source>Show advanced settings</source>
         <translation>Показывать расширенные настройки</translation>
     </message>
     <message>
         <location line="+29"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Search results</source>
         <translation>Результаты поиска</translation>
     </message>
     <message>
         <location line="+13"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Reset page</source>
         <translation>Сбросить страницу</translation>
     </message>
     <message>
         <location line="+24"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Some changes take effect after Noctara restarts.</source>
         <translation>Некоторые изменения вступят в силу после перезапуска Noctara.</translation>
     </message>
     <message>
         <location line="+11"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Restart now</source>
         <translation>Перезапустить</translation>
     </message>
     <message>
-        <location line="+35"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+40"/>
         <source>No settings match “%1”.</source>
         <translation>Нет настроек, подходящих под «%1».</translation>
     </message>
@@ -1819,14 +1656,6 @@
     <name>Skeleton</name>
     <message>
         <location filename="../src/qml/components/Skeleton.qml" line="+12"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Loading</source>
         <translation>Загрузка</translation>
     </message>
@@ -1835,14 +1664,6 @@
     <name>Toast</name>
     <message>
         <location filename="../src/qml/components/Toast.qml" line="+61"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Dismiss</source>
         <translation>Закрыть</translation>
     </message>

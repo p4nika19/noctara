@@ -5,226 +5,143 @@
     <name>AboutPane</name>
     <message>
         <location filename="../src/qml/settings/AboutPane.qml" line="+46"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Version %1</source>
         <extracomment>%1 = version number</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>A fast, native SoundCloud client. Not affiliated with SoundCloud.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+8"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Graphics</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+5"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Renderer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Software (CPU)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+5"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Driver</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+5"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Safe Mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Active for this session</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+3"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Glass style</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Configuration</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+5"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Config file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Open config file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Open-source licenses</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+24"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Hide license</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <location line="+0"/>
         <source>Show license</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
+    <name>AppearanceDrawer</name>
+    <message>
+        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+26"/>
+        <source>custom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <location line="+17"/>
+        <source>Appearance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Midnight Glass · %1</source>
+        <extracomment>%1 = preset name, or &quot;custom&quot;</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Close panel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+42"/>
+        <source>Reset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>All settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>AppearanceHeader</name>
+    <message>
+        <location filename="../src/qml/settings/AppearanceHeader.qml" line="+14"/>
+        <source>Presets</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>A preset only sets the options below; you can change any of them afterwards.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Custom: your settings differ from every preset.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ColorPicker</name>
     <message>
-        <location filename="../src/qml/components/ColorPicker.qml" line="+63"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location filename="../src/qml/components/ColorPicker.qml" line="+79"/>
         <source>Hex color</source>
         <translation type="unfinished"></translation>
     </message>
@@ -528,326 +445,136 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="../src/qml/pages/HomePage.qml" line="+24"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location filename="../src/qml/pages/HomePage.qml" line="+31"/>
         <source>Good night</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Good morning</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Good afternoon</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Good evening</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+56"/>
         <source>Connect your SoundCloud account to see your feed, likes and playlists.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+13"/>
         <source>Recently played</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-26"/>
+        <source>Now playing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Nothing is playing yet</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>Main</name>
     <message>
-        <location filename="../src/qml/Main.qml" line="+30"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location filename="../src/qml/Main.qml" line="+31"/>
         <source>Noctara</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="-15"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Home</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Search</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Library</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Likes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>History</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
-        <location line="-133"/>
-        <location line="+133"/>
+        <location line="+141"/>
         <source>Charts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-131"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="-139"/>
         <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+68"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+76"/>
         <source>Got it</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+31"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Search SoundCloud</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Find tracks, playlists and people once your account is connected.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Your library</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Playlists, albums and followed artists will appear here.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Liked tracks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Tracks you like on SoundCloud will appear here.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Listening history</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Recently played tracks will appear here.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+8"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Top and trending tracks by genre will appear here.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -855,16 +582,34 @@
 <context>
     <name>NavRail</name>
     <message>
-        <location filename="../src/qml/components/NavRail.qml" line="+17"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location filename="../src/qml/components/NavRail.qml" line="+19"/>
         <source>Navigation</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>PaletteDots</name>
+    <message>
+        <location filename="../src/qml/components/PaletteDots.qml" line="+12"/>
+        <source>Current palette</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Accent</source>
+        <comment>palette colour</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Light</source>
+        <comment>palette colour: the lighter companion of the accent</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Shadow</source>
+        <comment>palette colour: the deep shade of the accent</comment>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -902,41 +647,43 @@
     </message>
 </context>
 <context>
+    <name>Presets</name>
+    <message>
+        <location filename="../src/ui/AppearancePresets.cpp" line="+20"/>
+        <source>Midnight</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Glacier</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Neon</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+138"/>
-        <location filename="src/app/main.cpp" line="+138"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location filename="../src/app/main.cpp" line="+139"/>
         <source>Needs hardware acceleration, which is currently off.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+9"/>
-        <location filename="src/app/main.cpp" line="+9"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Not available on this graphics device.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/settings/BuiltinSchema.cpp" line="+34"/>
-        <location line="+44"/>
+        <location line="+49"/>
         <source>Language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-43"/>
+        <location line="-48"/>
         <source>Interface language.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -952,23 +699,23 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+66"/>
+        <location line="+71"/>
         <source>Theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-70"/>
         <source>Midnight (dark), Frost (light) or follow the system.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+87"/>
+        <location line="+92"/>
         <source>Accent color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-86"/>
+        <location line="-91"/>
         <source>The whole palette is generated from a single accent color.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -978,12 +725,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>The blurred cover art behind the interface.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+4"/>
         <source>Glass</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1033,7 +775,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+5"/>
         <source>Graphics</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1153,17 +895,83 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Use cover art as backdrop</source>
+        <location line="-90"/>
+        <source>The light behind the interface.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Show a blurred version of the current artwork behind the interface.</source>
+        <source>Glow</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Soft accent-coloured light around artwork, controls and progress.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Content</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How densely pages are laid out.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+81"/>
+        <source>Vivid</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Balanced</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+181"/>
+        <source>Soft</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-179"/>
+        <source>Palette extraction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How saturated the colours taken from the artwork are. Recomputed on every track.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+6"/>
+        <source>Aurora</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cover art</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Dark</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Backdrop style</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Aurora: soft light in the palette colours. Cover art: the blurred artwork. Dark: nearly plain.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Animate backdrop</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1173,7 +981,47 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+11"/>
+        <source>Glow intensity</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Strength of the glow and of the backdrop light.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Artwork glow</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>A shadow in the artwork&apos;s colour under covers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Button and selection glow</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>A soft halo around accented buttons and active items.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Progress glow</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lights up the played part of the progress bar and waveform.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Dual Kawase blur</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1234,14 +1082,14 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+124"/>
+        <location line="+168"/>
         <location line="+13"/>
         <location line="+12"/>
         <source>Auto</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-148"/>
+        <location line="-192"/>
         <source>Low</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1266,7 +1114,42 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
+        <source>Frosted glass</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Liquid glass</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tinted glass</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Clear</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Solid</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Button material</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Frosted: milky blurred glass. Liquid: glossy glass with a bright rim. Tinted: glass coloured by the accent. Clear: outline only. Solid: opaque.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Reduce transparency</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1297,17 +1180,43 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+22"/>
+        <location line="+32"/>
         <source>×</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-16"/>
-        <source>Sharp</source>
+        <location line="-26"/>
+        <source>Fast</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
+        <source>Smooth</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Slow</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Colour transitions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How quickly colours blend into the new palette when the track or theme changes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+23"/>
+        <source>Sharp</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-22"/>
         <source>Default</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1343,6 +1252,21 @@
     </message>
     <message>
         <location line="+6"/>
+        <source>Pill</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Button shape</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Corner style of buttons and segmented controls.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Rounded</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1445,6 +1369,31 @@
     <message>
         <location line="+1"/>
         <source>Stroke thickness of icons.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Compact</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Comfortable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Spacious</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Density</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Spacing between sections, cards and rows.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1628,67 +1577,27 @@
 <context>
     <name>SettingsRow</name>
     <message>
-        <location filename="../src/qml/settings/SettingsRow.qml" line="+87"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location filename="../src/qml/settings/SettingsRow.qml" line="+105"/>
         <source>Reset section</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+36"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+54"/>
         <source>Restart required</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+73"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+12"/>
         <source>Reset to default</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+85"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+121"/>
         <source>Default</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+9"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Comma-separated values</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1697,114 +1606,42 @@
     <name>SettingsView</name>
     <message>
         <location filename="../src/qml/settings/SettingsView.qml" line="+29"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Search settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+20"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Settings categories</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+60"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
-        <location line="+8"/>
-        <location line="-8"/>
+        <location line="+83"/>
         <location line="+8"/>
         <source>Show advanced settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+29"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Search results</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+13"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Reset page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+24"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Some changes take effect after Noctara restarts.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+11"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Restart now</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+35"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
+        <location line="+40"/>
         <source>No settings match “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1813,14 +1650,6 @@
     <name>Skeleton</name>
     <message>
         <location filename="../src/qml/components/Skeleton.qml" line="+12"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Loading</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1829,14 +1658,6 @@
     <name>Toast</name>
     <message>
         <location filename="../src/qml/components/Toast.qml" line="+61"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
-        <location line="+0"/>
         <source>Dismiss</source>
         <translation type="unfinished"></translation>
     </message>

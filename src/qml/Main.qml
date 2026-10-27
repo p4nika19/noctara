@@ -10,6 +10,7 @@ Window {
 
     property string page: "home"
     property string settingsCategory: "general"
+    property bool appearancePanel: false
 
     readonly property var destinations: [
         { id: "home", icon: "house", label: qsTr("Home") },
@@ -33,6 +34,10 @@ Window {
         sequences: [StandardKey.Preferences, "Ctrl+,"]
         onActivated: window.page = "settings"
     }
+    Shortcut {
+        sequence: "Ctrl+Shift+A"
+        onActivated: window.appearancePanel = !window.appearancePanel
+    }
 
     Backdrop { anchors.fill: parent }
 
@@ -46,6 +51,10 @@ Window {
         footer: window.footer
         current: window.page
         onNavigate: id => window.page = id
+        onSecondaryActivated: id => {
+            if (id === "settings")
+                window.appearancePanel = true
+        }
     }
 
     GlassPanel {
@@ -163,5 +172,32 @@ Window {
         }
     }
 
+    AppearanceDrawer {
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.margins: Theme.space.lg
+        width: parent.width - rail.width - Theme.space.lg * 3
+        open: window.appearancePanel
+        onCloseRequested: window.appearancePanel = false
+        onAllSettingsRequested: {
+            window.appearancePanel = false
+            window.settingsCategory = "appearance"
+            window.page = "settings"
+        }
+    }
+
     ToastHost { anchors.fill: parent }
+
+    // Fine grain over everything breaks up banding in the gradients (static texture, no per-frame cost).
+    Image {
+        anchors.fill: parent
+        source: "image://noise/128"
+        fillMode: Image.Tile
+        smooth: false
+        opacity: Theme.glass.grain * 0.08
+        visible: opacity > 0.002
+        enabled: false
+        Accessible.ignored: true
+    }
 }

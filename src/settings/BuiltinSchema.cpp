@@ -41,7 +41,9 @@ std::vector<Section> builtinSections()
         {"appearance.accent", Appearance, QT_TRANSLATE_NOOP("Settings", "Accent color"),
          QT_TRANSLATE_NOOP("Settings", "The whole palette is generated from a single accent color.")},
         {"appearance.backdrop", Appearance, QT_TRANSLATE_NOOP("Settings", "Backdrop"),
-         QT_TRANSLATE_NOOP("Settings", "The blurred cover art behind the interface.")},
+         QT_TRANSLATE_NOOP("Settings", "The light behind the interface.")},
+        {"appearance.glow", Appearance, QT_TRANSLATE_NOOP("Settings", "Glow"),
+         QT_TRANSLATE_NOOP("Settings", "Soft accent-coloured light around artwork, controls and progress.")},
         {"appearance.glass", Appearance, QT_TRANSLATE_NOOP("Settings", "Glass"),
          QT_TRANSLATE_NOOP("Settings", "How translucent surfaces are rendered.")},
         {"appearance.motion", Appearance, QT_TRANSLATE_NOOP("Settings", "Motion"),
@@ -52,6 +54,9 @@ std::vector<Section> builtinSections()
          QT_TRANSLATE_NOOP("Settings", "Interface zoom and fonts. Missing fonts fall back to the bundled ones.")},
         {"appearance.icons", Appearance, QT_TRANSLATE_NOOP("Settings", "Icons"),
          QT_TRANSLATE_NOOP("Settings", "Icon appearance.")},
+
+        {"layout.content", Layout, QT_TRANSLATE_NOOP("Settings", "Content"),
+         QT_TRANSLATE_NOOP("Settings", "How densely pages are laid out.")},
 
         {"performance.gpu", Performance, QT_TRANSLATE_NOOP("Settings", "Graphics"),
          QT_TRANSLATE_NOOP("Settings", "GPU acceleration. Changes take effect after a restart.")},
@@ -123,19 +128,35 @@ std::vector<Definition> builtinDefinitions()
          .description = QT_TRANSLATE_NOOP("Settings", "Derive the accent palette from the current track's artwork.")});
     defs.push_back({.key = keys::AccentColor,
                     .type = Type::Color,
-                    .defaultValue = str("#4a7dff"),
+                    .defaultValue = str("#6774f9"),
                     .category = Appearance,
                     .label = QT_TRANSLATE_NOOP("Settings", "Accent color"),
                     .description = QT_TRANSLATE_NOOP("Settings",
                                                      "Seed color for the whole palette when adaptive accents are off."),
                     .visibleWhen = Condition{keys::AccentAdaptive, {"false"}}});
-    defs.push_back({.key = keys::BackdropCoverArt,
-                    .type = Type::Bool,
-                    .defaultValue = true,
+    defs.push_back({.key = keys::AccentExtraction,
+                    .type = Type::Enum,
+                    .defaultValue = str("vivid"),
+                    .options = {{"vivid", QT_TRANSLATE_NOOP("Settings", "Vivid")},
+                                {"balanced", QT_TRANSLATE_NOOP("Settings", "Balanced")},
+                                {"soft", QT_TRANSLATE_NOOP("Settings", "Soft")}},
                     .category = Appearance,
-                    .label = QT_TRANSLATE_NOOP("Settings", "Use cover art as backdrop"),
+                    .label = QT_TRANSLATE_NOOP("Settings", "Palette extraction"),
                     .description = QT_TRANSLATE_NOOP(
-                        "Settings", "Show a blurred version of the current artwork behind the interface.")});
+                        "Settings", "How saturated the colours taken from the artwork are. Recomputed on every track."),
+                    .visibleWhen = Condition{keys::AccentAdaptive, {"true"}}});
+    defs.push_back(
+        {.key = keys::BackdropStyle,
+         .type = Type::Enum,
+         .defaultValue = str("aurora"),
+         .options = {{"aurora", QT_TRANSLATE_NOOP("Settings", "Aurora")},
+                     {"cover", QT_TRANSLATE_NOOP("Settings", "Cover art")},
+                     {"dark", QT_TRANSLATE_NOOP("Settings", "Dark")}},
+         .category = Appearance,
+         .label = QT_TRANSLATE_NOOP("Settings", "Backdrop style"),
+         .description = QT_TRANSLATE_NOOP(
+             "Settings",
+             "Aurora: soft light in the palette colours. Cover art: the blurred artwork. Dark: nearly plain.")});
     defs.push_back({.key = keys::BackdropAnimate,
                     .type = Type::Bool,
                     .defaultValue = true,
@@ -143,6 +164,37 @@ std::vector<Definition> builtinDefinitions()
                     .label = QT_TRANSLATE_NOOP("Settings", "Animate backdrop"),
                     .description = QT_TRANSLATE_NOOP(
                         "Settings", "Slow drifting motion. Paused automatically when the window is hidden.")});
+
+    // --- Appearance: glow ------------------------------------------------------------------------
+    defs.push_back({.key = keys::GlowIntensity,
+                    .type = Type::Real,
+                    .defaultValue = real(0.3),
+                    .min = 0.0,
+                    .max = 1.0,
+                    .step = 0.05,
+                    .category = Appearance,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Glow intensity"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Strength of the glow and of the backdrop light.")});
+    defs.push_back({.key = keys::GlowCover,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Appearance,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Artwork glow"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "A shadow in the artwork's colour under covers.")});
+    defs.push_back(
+        {.key = keys::GlowControls,
+         .type = Type::Bool,
+         .defaultValue = true,
+         .category = Appearance,
+         .label = QT_TRANSLATE_NOOP("Settings", "Button and selection glow"),
+         .description = QT_TRANSLATE_NOOP("Settings", "A soft halo around accented buttons and active items.")});
+    defs.push_back(
+        {.key = keys::GlowProgress,
+         .type = Type::Bool,
+         .defaultValue = true,
+         .category = Appearance,
+         .label = QT_TRANSLATE_NOOP("Settings", "Progress glow"),
+         .description = QT_TRANSLATE_NOOP("Settings", "Lights up the played part of the progress bar and waveform.")});
 
     // --- Appearance: glass -----------------------------------------------------------------------
     defs.push_back({.key = keys::GlassStyle,
@@ -195,6 +247,20 @@ std::vector<Definition> builtinDefinitions()
                     .label = QT_TRANSLATE_NOOP("Settings", "Effects quality"),
                     .description = QT_TRANSLATE_NOOP(
                         "Settings", "Auto lowers quality when frames take too long and raises it again later.")});
+    defs.push_back(
+        {.key = keys::ButtonMaterial,
+         .type = Type::Enum,
+         .defaultValue = str("frosted"),
+         .options = {{"frosted", QT_TRANSLATE_NOOP("Settings", "Frosted glass")},
+                     {"liquid", QT_TRANSLATE_NOOP("Settings", "Liquid glass")},
+                     {"tinted", QT_TRANSLATE_NOOP("Settings", "Tinted glass")},
+                     {"clear", QT_TRANSLATE_NOOP("Settings", "Clear")},
+                     {"solid", QT_TRANSLATE_NOOP("Settings", "Solid")}},
+         .category = Appearance,
+         .label = QT_TRANSLATE_NOOP("Settings", "Button material"),
+         .description = QT_TRANSLATE_NOOP(
+             "Settings", "Frosted: milky blurred glass. Liquid: glossy glass with a bright rim. Tinted: glass coloured "
+                         "by the accent. Clear: outline only. Solid: opaque.")});
     defs.push_back({.key = keys::ReduceTransparency,
                     .type = Type::Bool,
                     .defaultValue = false,
@@ -222,6 +288,17 @@ std::vector<Definition> builtinDefinitions()
                     .unit = QT_TRANSLATE_NOOP("Settings", "×")});
 
     // --- Appearance: shape -----------------------------------------------------------------------
+    defs.push_back(
+        {.key = keys::ColorTransition,
+         .type = Type::Enum,
+         .defaultValue = str("smooth"),
+         .options = {{"fast", QT_TRANSLATE_NOOP("Settings", "Fast")},
+                     {"smooth", QT_TRANSLATE_NOOP("Settings", "Smooth")},
+                     {"slow", QT_TRANSLATE_NOOP("Settings", "Slow")}},
+         .category = Appearance,
+         .label = QT_TRANSLATE_NOOP("Settings", "Colour transitions"),
+         .description = QT_TRANSLATE_NOOP(
+             "Settings", "How quickly colours blend into the new palette when the track or theme changes.")});
     defs.push_back({.key = keys::CornerRadius,
                     .type = Type::Enum,
                     .defaultValue = str("default"),
@@ -243,6 +320,15 @@ std::vector<Definition> builtinDefinitions()
                     .description = QT_TRANSLATE_NOOP("Settings", "Scales every corner radius."),
                     .unit = QT_TRANSLATE_NOOP("Settings", "×"),
                     .visibleWhen = Condition{keys::CornerRadius, {"custom"}}});
+    defs.push_back({.key = keys::ButtonShape,
+                    .type = Type::Enum,
+                    .defaultValue = str("pill"),
+                    .options = {{"pill", QT_TRANSLATE_NOOP("Settings", "Pill")},
+                                {"soft", QT_TRANSLATE_NOOP("Settings", "Soft")},
+                                {"sharp", QT_TRANSLATE_NOOP("Settings", "Sharp")}},
+                    .category = Appearance,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Button shape"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Corner style of buttons and segmented controls.")});
     defs.push_back({.key = keys::CoverArtShape,
                     .type = Type::Enum,
                     .defaultValue = str("rounded"),
@@ -305,6 +391,17 @@ std::vector<Definition> builtinDefinitions()
                     .category = Appearance,
                     .label = QT_TRANSLATE_NOOP("Settings", "Icon weight"),
                     .description = QT_TRANSLATE_NOOP("Settings", "Stroke thickness of icons.")});
+
+    // --- Layout ----------------------------------------------------------------------------------
+    defs.push_back({.key = keys::Density,
+                    .type = Type::Enum,
+                    .defaultValue = str("cozy"),
+                    .options = {{"compact", QT_TRANSLATE_NOOP("Settings", "Compact")},
+                                {"cozy", QT_TRANSLATE_NOOP("Settings", "Comfortable")},
+                                {"airy", QT_TRANSLATE_NOOP("Settings", "Spacious")}},
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Density"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Spacing between sections, cards and rows.")});
 
     // --- Performance -----------------------------------------------------------------------------
     defs.push_back(

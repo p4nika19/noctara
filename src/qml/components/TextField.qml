@@ -10,7 +10,7 @@ T.TextField {
 
     implicitWidth: Math.max(220 * Theme.scale, implicitBackgroundWidth)
     implicitHeight: Theme.space.controlHeight
-    leftPadding: iconName.length > 0 ? Theme.space.xl + Theme.space.lg : Theme.space.md
+    leftPadding: iconName.length > 0 ? Theme.space.xl + Theme.space.lg : Theme.space.lg
     rightPadding: Theme.space.md
     verticalAlignment: TextInput.AlignVCenter
     font: monospace ? Theme.font.mono : Theme.font.body
@@ -34,15 +34,24 @@ T.TextField {
     }
 
     background: Rectangle {
-        radius: Theme.radius.sm
-        color: Theme.colors.surfaceRaised
-        border.width: control.activeFocus ? Theme.space.focusRingWidth : Theme.space.hairline
-        border.color: control.activeFocus ? Theme.colors.focusRing : Theme.colors.outline
-        StateLayer { radius: parent.radius; hovered: control.hovered && !control.activeFocus }
+        radius: Math.min(Theme.radius.button, height / 2)
+        color: control.hovered || control.activeFocus ? Theme.colors.surfaceRaised : Theme.colors.surfaceBase
+        border.width: Theme.space.hairline
+        border.color: control.activeFocus ? Theme.colors.focusRing : Theme.colors.edge
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: Theme.space.hairline
+            radius: parent.radius
+            visible: Theme.glass.translucent
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Theme.colors.sheen }
+                GradientStop { position: 0.45; color: "transparent" }
+            }
+        }
         Icon {
             visible: control.iconName.length > 0
             anchors.left: parent.left
-            anchors.leftMargin: Theme.space.md
+            anchors.leftMargin: Theme.space.md + Theme.space.xxs
             anchors.verticalCenter: parent.verticalCenter
             name: control.iconName
             size: Theme.space.iconSizeSmall

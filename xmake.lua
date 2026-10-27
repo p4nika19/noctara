@@ -84,7 +84,7 @@ end
 function noctara_module(name, opts)
     target("noctara_" .. name)
         set_kind("static")
-        add_rules("qt.static", "noctara.qtfix")
+        add_rules("qt.static", "noctara.qtfix", "noctara.moc")
         add_frameworks(table.unpack(opts.qt or {"QtCore"}))
         add_deps(table.unpack(opts.deps or {}))
         add_packages(table.unpack(opts.packages or {}))
@@ -93,7 +93,7 @@ function noctara_module(name, opts)
             for _, header in ipairs(os.files(path.join(os.projectdir(), "src", name, "**.hpp"))) do
                 local content = io.readfile(header)
                 if content:find("Q_OBJECT") or content:find("Q_GADGET") or content:find("Q_NAMESPACE") then
-                    target:add("files", header)
+                    target:add("files", header, {rules = {"noctara.moc", override = true}})
                 end
             end
         end)
@@ -116,7 +116,7 @@ target("noctara")
     add_deps("noctara_ui")
     add_files("src/app/*.cpp", {cxxflags = STRICT_WARNINGS})
     add_files("resources/shaders/*.vert", "resources/shaders/*.frag")
-    add_files("translations/*.ts")
+    add_files("translations/*.ts", {rules = {"noctara.lrelease", override = true}})
     set_values("noctara.qrc", {
         {name = "qml",   prefix = "/qml",   root = "src/qml",          patterns = {"**.qml", "**.js"}},
         {name = "fonts", prefix = "/fonts", root = "resources/fonts",  patterns = {"*.ttf", "licenses/*.txt"}},
@@ -146,5 +146,5 @@ target("noctara-tests")
     add_packages("doctest")
     add_files("tests/**.cpp", {cxxflags = STRICT_WARNINGS})
     add_defines("NOCTARA_SOURCE_DIR=\"$(projectdir)\"")
-    add_files("translations/*.ts")
+    add_files("translations/*.ts", {rules = {"noctara.lrelease", override = true}})
     add_tests("all", {runargs = {}})

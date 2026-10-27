@@ -42,3 +42,22 @@ function embed_generated(target, batchcmds, generated, prefix, alias)
     batchcmds:compile(cppfile, objectfile)
     return objectfile
 end
+
+-- Project headers (quoted includes resolvable under `root`) reachable from `file`, transitively.
+function project_includes(file, root, seen, out)
+    seen = seen or {}
+    out = out or {}
+    local content = io.readfile(file) or ""
+    for include in content:gmatch('#%s*include%s+"([^"]+)"') do
+        local candidate = path.join(root, include)
+        if not os.isfile(candidate) then
+            candidate = path.join(path.directory(file), include)
+        end
+        if os.isfile(candidate) and not seen[candidate] then
+            seen[candidate] = true
+            table.insert(out, candidate)
+            project_includes(candidate, root, seen, out)
+        end
+    end
+    return out
+end

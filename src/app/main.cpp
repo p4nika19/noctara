@@ -15,6 +15,7 @@
 #include "theme/Theme.hpp"
 #include "ui/AppController.hpp"
 #include "ui/IconProvider.hpp"
+#include "ui/NoiseProvider.hpp"
 #include "ui/PowerStatus.hpp"
 #include "ui/SettingsController.hpp"
 #include "ui/SettingsModel.hpp"
@@ -255,6 +256,8 @@ int main(int argc, char** argv)
     QQmlApplicationEngine engine;
     // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
     engine.addImageProvider(QStringLiteral("icon"), new ui::IconProvider);
+    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
+    engine.addImageProvider(QStringLiteral("noise"), new ui::NoiseProvider);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Theme", &theme);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Format", &formatter);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "SettingsUi", &settingsUi);
@@ -281,6 +284,10 @@ int main(int argc, char** argv)
         graphics.watch(window);
         if (!cli.navigate.isEmpty()) {
             QTimer::singleShot(600, window, [window, target = cli.navigate] {
+                if (target == u"appearance-panel") {
+                    window->setProperty("appearancePanel", true);
+                    return;
+                }
                 window->setProperty("page", target.section(u'/', 0, 0));
                 if (target.contains(u'/')) {
                     window->setProperty("settingsCategory", target.section(u'/', 1, 1));

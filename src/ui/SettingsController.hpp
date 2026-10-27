@@ -30,6 +30,9 @@ class SettingsController : public QObject {
     Q_PROPERTY(QString configPath READ configPath CONSTANT)
     Q_PROPERTY(noctara::ui::SettingsModel* searchResults READ searchResults CONSTANT)
     Q_PROPERTY(QString searchText READ searchText WRITE setSearchText NOTIFY searchTextChanged)
+    // [{id, name, preview: [3 colours]}] and the id of the preset the current values match ("" = custom).
+    Q_PROPERTY(QVariantList presets READ presets NOTIFY presetsChanged)
+    Q_PROPERTY(QString currentPreset READ currentPreset NOTIFY currentPresetChanged)
 
 public:
     SettingsController(settings::SettingsStore& store, settings::ConfigFile& config, i18n::LanguageManager& languages,
@@ -37,6 +40,8 @@ public:
     ~SettingsController() override;
 
     [[nodiscard]] QVariantList categories() const;
+    [[nodiscard]] QVariantList presets() const;
+    [[nodiscard]] const QString& currentPreset() const noexcept { return m_currentPreset; }
     [[nodiscard]] bool showAdvanced() const noexcept { return m_showAdvanced; }
     void setShowAdvanced(bool show);
     [[nodiscard]] bool restartPending() const noexcept { return m_restartPending; }
@@ -47,6 +52,10 @@ public:
 
     // Lazily creates the page model for a category id ("appearance", "performance", ...).
     Q_INVOKABLE noctara::ui::SettingsModel* page(const QString& categoryId);
+    // Rows for an explicit list of keys (e.g. the quick Appearance drawer), in the given order.
+    Q_INVOKABLE noctara::ui::SettingsModel* subset(const QStringList& keys);
+    Q_INVOKABLE void resetKeys(const QStringList& keys);
+    Q_INVOKABLE void applyPreset(const QString& id);
 
     // Returns an empty string on success, otherwise a translated error message.
     Q_INVOKABLE QString setValue(const QString& key, const QVariant& value);
@@ -66,16 +75,21 @@ Q_SIGNALS:
     void showAdvancedChanged();
     void restartPendingChanged();
     void searchTextChanged();
+    void presetsChanged();
+    void currentPresetChanged();
 
 private:
     void refreshModels();
     void updateRestartPending();
     void rebuildSearch();
+    void updateCurrentPreset();
 
     settings::SettingsStore& m_store;
     settings::ConfigFile& m_config;
     Availability m_availability;
     std::map<QString, std::unique_ptr<SettingsModel>> m_pages;
+    std::map<QString, std::unique_ptr<SettingsModel>> m_subsets;
+    QString m_currentPreset;
     std::unique_ptr<SettingsModel> m_search;
     QString m_searchText;
     bool m_showAdvanced = false;

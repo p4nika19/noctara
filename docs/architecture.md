@@ -45,6 +45,11 @@ The setting change goes to `LanguageManager`, which swaps translators and sets `
 
 Settings, `QStyleHints::colorScheme` and the artwork seed feed `generatePalette()`, which is pure and enforces contrast. `Theme` then crossfades in OKLab and emits `Theme.colors` (one gadget). The glass style is resolved from the requested style, GPU availability, Reduce transparency and the governor cap.
 
+## Build notes
+
+- `noctara.moc` replaces xmake's stock moc handling for our headers. The stock rule only tracked the moc'd header, so changing a header it *includes* left stale meta-object code behind. That caused a real crash during development, when a gadget gained members. Our rule adds the header's transitive project includes as dependencies.
+- `.ts` files and moc'd headers use `override = true` rules, so the stock `qt.ts` and `qt.moc` rules don't process them a second time. A build with no changes compiles nothing.
+
 ## Ownership and threading
 
 - Every object is owned by RAII or a QObject parent. Objects handed to QML from invokables are explicitly set to `CppOwnership`; ASan caught the case where they weren't.

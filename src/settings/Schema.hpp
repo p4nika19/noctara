@@ -103,7 +103,7 @@ struct Section {
 
 class Schema {
 public:
-    static constexpr std::int64_t kConfigVersion = 2;
+    static constexpr std::int64_t kConfigVersion = 3;
 
     // Validates the schema itself (unique keys, sections declared, defaults valid); aborts on
     // programmer error since a broken schema is a build defect, not a runtime condition.

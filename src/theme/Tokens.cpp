@@ -36,6 +36,9 @@ SpacingTokens SpacingTokens::scaled(double factor) const
 RadiusTokens RadiusTokens::scaled(double factor) const
 {
     RadiusTokens out = *this;
+    if (out.button < out.pill) {
+        out.button *= factor;
+    }
     out.xs *= factor;
     out.sm *= factor;
     out.md *= factor;

@@ -16,7 +16,7 @@ T.ComboBox {
     currentIndex: count > 0 ? indexOfValue(currentId) : -1
     implicitWidth: Math.max(200 * Theme.scale, implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Theme.space.controlHeight
-    leftPadding: Theme.space.md
+    leftPadding: Theme.space.lg
     rightPadding: Theme.space.xl + Theme.space.sm
     font: Theme.font.body
     focusPolicy: Qt.StrongFocus
@@ -47,13 +47,10 @@ T.ComboBox {
         rotation: control.popup.visible ? 180 : 0
         Behavior on rotation { NumberAnimation { duration: Theme.motion.normal; easing.type: Theme.motion.easingStandard } }
     }
-    background: Rectangle {
-        radius: Theme.radius.sm
-        color: Theme.colors.surfaceRaised
-        border.width: Theme.space.hairline
-        border.color: Theme.colors.outline
+    background: ButtonSurface {
+        hovered: control.hovered && control.enabled
+        pressed: control.pressed
         opacity: control.enabled ? 1 : 0.45
-        StateLayer { radius: parent.radius; hovered: control.hovered; pressed: control.pressed }
         FocusRing { target: control; targetRadius: parent.radius; visible: control.visualFocus }
     }
 
@@ -82,7 +79,7 @@ T.ComboBox {
                     width: parent.width
                     text: entry.modelData.label
                     font: entry.index === control.currentIndex ? Theme.font.bodyStrong : Theme.font.body
-                    color: entry.index === control.currentIndex ? Theme.colors.accent : Theme.colors.textPrimary
+                    color: entry.index === control.currentIndex ? Theme.colors.accentText : Theme.colors.textPrimary
                     opacity: entry.available ? 1 : 0.45
                     elide: Text.ElideRight
                 }
@@ -97,7 +94,7 @@ T.ComboBox {
             }
         }
         background: Rectangle {
-            radius: Theme.radius.xs
+            radius: Math.min(Theme.radius.button, height / 2)
             color: entry.highlighted ? Theme.colors.stateHover : "transparent"
         }
     }
@@ -116,7 +113,7 @@ T.ComboBox {
             currentIndex: control.highlightedIndex
             boundsBehavior: Flickable.StopAtBounds
         }
-        background: GlassPanel { level: 2; radius: Theme.radius.sm }
+        background: GlassPanel { level: 2; radius: Theme.radius.md }
         enter: Transition {
             NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.fast }
             NumberAnimation { property: "scale"; from: 0.96; to: 1; duration: Theme.motion.normal; easing.type: Theme.motion.easingStandard }

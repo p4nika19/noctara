@@ -1,10 +1,12 @@
 #include "ui/SettingsController.hpp"
 
+#include "core/Log.hpp"
 #include "i18n/ErrorMessages.hpp"
 #include "i18n/LanguageManager.hpp"
 #include "settings/ConfigFile.hpp"
 #include "settings/Schema.hpp"
 #include "settings/SettingsStore.hpp"
+#include "ui/AppearancePresets.hpp"
 
 #include <QCoreApplication>
 #include <QDesktopServices>
@@ -68,10 +70,13 @@ SettingsController::SettingsController(settings::SettingsStore& store, settings:
         }
     }
     connect(&m_store, &settings::SettingsStore::valueChanged, this, &SettingsController::updateRestartPending);
+    connect(&m_store, &settings::SettingsStore::valueChanged, this, &SettingsController::updateCurrentPreset);
+    updateCurrentPreset();
     connect(&languages, &i18n::LanguageManager::languageChanged, this, [this] {
         refreshModels();
         rebuildSearch();
         Q_EMIT categoriesChanged();
+        Q_EMIT presetsChanged();
     });
 }
 
@@ -140,6 +145,90 @@ SettingsModel* SettingsController::page(const QString& categoryId)
     SettingsModel* raw = model.get();
     m_pages.emplace(categoryId, std::move(model));
     return raw;
+}
+
+SettingsModel* SettingsController::subset(const QStringList& keys)
+{
+    const QString id = keys.join(u',');
+    if (const auto it = m_subsets.find(id); it != m_subsets.end()) {
+        return it->second.get();
+    }
+    std::vector<std::size_t> rows;
+    for (const QString& key : keys) {
+        if (const auto index = m_store.schema().indexOf(key.toStdString())) {
+            rows.push_back(*index);
+        }
+    }
+    auto model = std::make_unique<SettingsModel>(m_store, m_availability);
+    QQmlEngine::setObjectOwnership(model.get(), QQmlEngine::CppOwnership);
+    model->setShowAdvanced(true);  // an explicit list shows exactly what it names
+    model->setRows(std::move(rows));
+    SettingsModel* raw = model.get();
+    m_subsets.emplace(id, std::move(model));
+    return raw;
+}
+
+void SettingsController::resetKeys(const QStringList& keys)
+{
+    for (const QString& key : keys) {
+        reset(key);
+    }
+}
+
+QVariantList SettingsController::presets() const
+{
+    QVariantList list;
+    for (const AppearancePreset& preset : appearancePresets()) {
+        QStringList preview;
+        for (const char* colour : preset.preview) {
+            preview.append(QString::fromLatin1(colour));
+        }
+        list.append(QVariantMap{{QStringLiteral("id"), latin(preset.id)},
+                                {QStringLiteral("name"), QCoreApplication::translate("Presets", preset.name)},
+                                {QStringLiteral("preview"), preview}});
+    }
+    return list;
+}
+
+void SettingsController::applyPreset(const QString& id)
+{
+    for (const AppearancePreset& preset : appearancePresets()) {
+        if (latin(preset.id) != id) {
+            continue;
+        }
+        for (const auto& [key, value] : preset.values) {
+            const auto index = m_store.schema().indexOf(key);
+            if (!index || m_store.isOverridden(*index)) {
+                continue;  // env/CLI-pinned settings keep their value
+            }
+            if (auto applied = m_store.setUserValue(key, value); !applied) {
+                qCWarning(lcUi).noquote()
+                    << "preset" << id << "could not set" << QString::fromStdString(applied.error().describe());
+            }
+        }
+        return;
+    }
+}
+
+void SettingsController::updateCurrentPreset()
+{
+    QString current;
+    for (const AppearancePreset& preset : appearancePresets()) {
+        const bool matches = std::ranges::all_of(preset.values, [this](const auto& entry) {
+            const auto& [key, value] = entry;
+            const auto index = m_store.schema().indexOf(key);
+            return index &&
+                   settings::validate(m_store.schema().at(*index), value).value_or(QVariant()) == m_store.value(*index);
+        });
+        if (matches) {
+            current = latin(preset.id);
+            break;
+        }
+    }
+    if (current != m_currentPreset) {
+        m_currentPreset = std::move(current);
+        Q_EMIT currentPresetChanged();
+    }
 }
 
 void SettingsController::setSearchText(const QString& text)
@@ -265,6 +354,9 @@ void SettingsController::setRowStatus(const QString& key, const QString& status)
 void SettingsController::refreshModels()
 {
     for (auto& [id, model] : m_pages) {
+        model->refreshAll();
+    }
+    for (auto& [id, model] : m_subsets) {
         model->refreshAll();
     }
     m_search->refreshAll();

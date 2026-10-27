@@ -87,9 +87,13 @@ void Theme::onSettingChanged(const QString& key)
         updateScheme(true);
     } else if (is(keys::AccentAdaptive) || is(keys::AccentColor) || is(keys::EnforceContrast)) {
         updatePalette(m_motion.accent);
-    } else if (is(keys::GlassOpacity)) {
+    } else if (is(keys::GlowIntensity) || is(keys::GlassOpacity)) {
         updatePalette(0);
         updateGlass();
+    } else if (is(keys::ButtonShape) || is(keys::Density)) {
+        updateMetrics();
+    } else if (is(keys::ColorTransition)) {
+        updateMotion();
     } else if (is(keys::UiScale) || is(keys::CornerRadius) || is(keys::CornerRadiusMultiplier) ||
                is(keys::IconWeight) || is(keys::CoverArtShape)) {
         updateMetrics();
@@ -98,8 +102,11 @@ void Theme::onSettingChanged(const QString& key)
         updateFonts();
     } else if (is(keys::ReduceMotion) || is(keys::AnimationSpeed)) {
         updateMotion();
+        updateGlass();
     } else if (is(keys::GlassStyle) || is(keys::GlassBlurStrength) || is(keys::GlassGrain) ||
-               is(keys::ReduceTransparency)) {
+               is(keys::ReduceTransparency) || is(keys::GlowCover) || is(keys::GlowControls) ||
+               is(keys::GlowProgress) || is(keys::ButtonMaterial) || is(keys::BackdropStyle) ||
+               is(keys::BackdropAnimate)) {
         updateGlass();
     }
 }
@@ -146,8 +153,10 @@ void Theme::updateScheme(bool animate)
 
 void Theme::updatePalette(int durationMs)
 {
-    const PaletteRequest request{
-        .seed = currentSeed(), .scheme = m_scheme, .glassOpacity = m_settings.realValue(keys::GlassOpacity)};
+    const PaletteRequest request{.seed = currentSeed(),
+                                 .scheme = m_scheme,
+                                 .glassOpacity = m_settings.realValue(keys::GlassOpacity),
+                                 .glowIntensity = m_settings.realValue(keys::GlowIntensity)};
     const Palette target = generatePalette(request);
     const auto results = checkContrast(target, m_scheme, defaultTones(m_scheme));
     m_contrastOk = std::ranges::all_of(results, [](const ContrastResult& r) { return r.passes(); });
@@ -191,7 +200,14 @@ void Theme::applyProgress(double t)
 void Theme::updateMetrics()
 {
     m_scale = static_cast<qreal>(m_settings.intValue(keys::UiScale)) / 100.0;
-    m_space = SpacingTokens{}.scaled(m_scale);
+    // Density scales the gaps between things, not the size of controls.
+    const QString density = m_settings.stringValue(keys::Density);
+    const double densityFactor = density == u"compact" ? 0.82 : (density == u"airy" ? 1.18 : 1.0);
+    SpacingTokens space = SpacingTokens{}.scaled(m_scale);
+    for (qreal* gap : {&space.sm, &space.md, &space.lg, &space.xl, &space.xxl, &space.xxxl, &space.pageMargin}) {
+        *gap *= densityFactor;
+    }
+    m_space = space;
     m_elevation = ElevationTokens{}.scaled(m_scale);
 
     const QString cornerMode = m_settings.stringValue(keys::CornerRadius);
@@ -203,7 +219,10 @@ void Theme::updateMetrics()
     } else if (cornerMode == u"custom") {
         radiusFactor = m_settings.realValue(keys::CornerRadiusMultiplier);
     }
-    m_radius = RadiusTokens{}.scaled(m_scale * radiusFactor);
+    RadiusTokens radius;
+    const QString buttonShape = m_settings.stringValue(keys::ButtonShape);
+    radius.button = buttonShape == u"soft" ? 14.0 : (buttonShape == u"sharp" ? 6.0 : radius.pill);
+    m_radius = radius.scaled(m_scale * radiusFactor);
 
     const QString weight = m_settings.stringValue(keys::IconWeight);
     m_iconStroke = weight == u"light" ? 1.25 : (weight == u"bold" ? 2.0 : 1.5);
@@ -221,15 +240,19 @@ void Theme::updateFonts()
     const QStringList bodyChain = FontLoader::fallbackChain(body, m_bundledFonts.body);
     const QStringList monoChain = FontLoader::fallbackChain(mono, m_bundledFonts.mono);
 
-    m_font.display = makeFont(headingChain, 40 * factor, 800, false, -0.6 * factor);
-    m_font.headline = makeFont(headingChain, 28 * factor, 750, false, -0.3 * factor);
-    m_font.title = makeFont(headingChain, 20 * factor, 700);
-    m_font.subtitle = makeFont(headingChain, 16 * factor, 650);
+    m_font.display = makeFont(headingChain, 38 * factor, 800, false, -0.5 * factor);
+    m_font.headline = makeFont(headingChain, 30 * factor, 800, false, -0.3 * factor);
+    m_font.title = makeFont(headingChain, 21 * factor, 700);
+    m_font.subtitle = makeFont(headingChain, 17 * factor, 700);
     m_font.body = makeFont(bodyChain, 14 * factor, 400);
-    m_font.bodyStrong = makeFont(bodyChain, 14 * factor, 600);
-    m_font.label = makeFont(bodyChain, 13 * factor, 500);
-    m_font.caption = makeFont(bodyChain, 12 * factor, 400);
+    m_font.bodyStrong = makeFont(bodyChain, 14 * factor, 650);
+    m_font.label = makeFont(bodyChain, 13 * factor, 600);
+    m_font.caption = makeFont(bodyChain, 12 * factor, 450);
     m_font.overline = makeFont(bodyChain, 11 * factor, 650, false, 0.8 * factor);
+    m_font.eyebrow = makeFont(bodyChain, 11 * factor, 800, false, 1.7 * factor);
+    m_font.eyebrow.setCapitalization(QFont::AllUppercase);
+    m_font.groupTitle = makeFont(monoChain, 11 * factor, 500, false, 1.5 * factor);
+    m_font.groupTitle.setCapitalization(QFont::AllUppercase);
     m_font.mono = makeFont(monoChain, 12.5 * factor, 450, true);
     m_font.monoSmall = makeFont(monoChain, 11 * factor, 450, true);
     m_font.numeric = makeFont(bodyChain, 14 * factor, 450, true);
@@ -248,14 +271,17 @@ void Theme::updateMotion()
     motion.fast = scaled(motion.fast);
     motion.normal = scaled(motion.normal);
     motion.slow = scaled(motion.slow);
-    motion.accent = scaled(motion.accent);
+    // Accent/palette crossfade speed ("Colour transitions").
+    const QString transition = m_settings.stringValue(keys::ColorTransition);
+    motion.accent = scaled(transition == u"fast" ? 350 : (transition == u"slow" ? 2600 : 1200));
     motion.theme = scaled(motion.theme);
     motion.backdrop = scaled(motion.backdrop);
     motion.shimmer = motion.reduced ? 0 : scaled(motion.shimmer);
     motion.easingStandard = QEasingCurve::OutExpo;
-    motion.easingEmphasized = motion.reduced ? QEasingCurve::OutCubic : QEasingCurve::OutBack;
+    // Decelerating curves only: nothing travels past its target and springs back.
+    motion.easingEmphasized = QEasingCurve::OutQuint;
     motion.easingExit = QEasingCurve::InCubic;
-    motion.overshoot = motion.reduced ? 0.0 : 1.2;
+    motion.overshoot = 0.0;
     m_motion = motion;
     Q_EMIT motionChanged();
 }
@@ -269,6 +295,17 @@ void Theme::updateGlass()
     glass.tint = m_settings.realValue(keys::GlassOpacity);
     // Frost uses less grain than Midnight at the same setting.
     glass.grain = m_settings.realValue(keys::GlassGrain) * (m_scheme == Scheme::Dark ? 1.0 : 0.6);
+    glass.buttons = m_settings.stringValue(keys::ButtonMaterial);
+    glass.backdrop = m_settings.stringValue(keys::BackdropStyle);
+    glass.backdropAnimated =
+        m_settings.boolValue(keys::BackdropAnimate) && m_blurAvailable && !m_settings.boolValue(keys::ReduceMotion);
+    glass.glow = m_settings.realValue(keys::GlowIntensity);
+    glass.glowCover = m_settings.boolValue(keys::GlowCover);
+    glass.glowControls = m_settings.boolValue(keys::GlowControls);
+    glass.glowProgress = m_settings.boolValue(keys::GlowProgress);
+    if (m_settings.boolValue(keys::ReduceTransparency) && (glass.buttons != u"clear")) {
+        glass.buttons = QStringLiteral("solid");
+    }
 
     QString style = glass.requestedStyle;
     if (!m_blurAvailable || m_settings.boolValue(keys::ReduceTransparency)) {

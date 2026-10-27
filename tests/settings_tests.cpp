@@ -231,6 +231,17 @@ TEST_SUITE("settings.toml")
         CHECK(parsedValue(enabled, keys::EnergySaving)->toString() == QStringLiteral("auto"));
     }
 
+    TEST_CASE("v2 cover_art backdrop flag migrates to the backdrop style")
+    {
+        const auto off = parse("config_version = 2\n[appearance.backdrop]\ncover_art = false\n");
+        REQUIRE(off.syntaxOk);
+        CHECK(parsedValue(off, keys::BackdropStyle)->toString() == QStringLiteral("dark"));
+        CHECK(off.issues.empty());
+        const auto on = parse("config_version = 2\n[appearance.backdrop]\ncover_art = true\n");
+        CHECK_FALSE(parsedValue(on, keys::BackdropStyle).has_value());  // default (aurora)
+        CHECK(on.unknownToml.empty());
+    }
+
     TEST_CASE("migrations move keys between versions")
     {
         auto parsed = toml::parse("[old]\nname = 5\n");

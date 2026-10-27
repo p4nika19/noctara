@@ -23,10 +23,10 @@ T.ToolTip {
         wrapMode: Text.Wrap
     }
     background: Rectangle {
-        radius: Theme.radius.xs
+        radius: Theme.radius.sm
         color: Theme.colors.solidOverlay
         border.width: Theme.space.hairline
-        border.color: Theme.colors.outline
+        border.color: Theme.colors.edge
     }
     enter: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.fast } }
     exit: Transition { NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Theme.motion.fast } }

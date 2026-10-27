@@ -38,6 +38,11 @@ enum class Scheme : std::uint8_t { Dark, Light };
     X(stateHover)                                                                                                      \
     X(statePressed)                                                                                                    \
     X(accent)                                                                                                          \
+    X(accentText)                                                                                                      \
+    X(accentLight)                                                                                                     \
+    X(accentDeep)                                                                                                      \
+    X(edge)                                                                                                            \
+    X(sheen)                                                                                                           \
     X(accentHover)                                                                                                     \
     X(accentPressed)                                                                                                   \
     X(onAccent)                                                                                                        \
@@ -82,7 +87,8 @@ struct SchemeTones {
     double containerL;
     double containerChromaScale;
     double onContainerL;
-    double glowAlpha;
+    double glowAlpha;         // glow opacity at full glow intensity
+    double tintAccentChroma;  // chroma of the accent-tinted glass veil
     double selectionAlpha;
     double shadowL;
     double shadowChroma;
@@ -107,6 +113,7 @@ struct PaletteRequest {
     color::OkLch seed = defaultSeed();
     Scheme scheme = Scheme::Dark;
     double glassOpacity = 0.5;           // "Glass tint" setting, 0..1; 0.5 = token defaults
+    double glowIntensity = 0.3;          // "Glow intensity" setting, 0..1
     const SchemeTones* tones = nullptr;  // defaults when null
 };
 
