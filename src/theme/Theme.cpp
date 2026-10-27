@@ -113,7 +113,7 @@ void Theme::onSettingChanged(const QString& key)
 
 double Theme::glassOpacity() const
 {
-    return std::clamp(m_settings.realValue(keys::GlassOpacity) + keys::GlassOpacityBaseline, 0.0, 1.0);
+    return m_settings.realValue(keys::GlassOpacity);
 }
 
 int Theme::animated(int durationMs) const
@@ -299,8 +299,7 @@ void Theme::updateGlass()
     glass.blurStrength = m_settings.realValue(keys::GlassBlurStrength);
     glass.tint = glassOpacity();
     // Frost uses less grain than Midnight at the same setting.
-    glass.grain = std::clamp(m_settings.realValue(keys::GlassGrain) + keys::GlassGrainBaseline, 0.0, 1.0) *
-                  (m_scheme == Scheme::Dark ? 1.0 : 0.6);
+    glass.grain = m_settings.realValue(keys::GlassGrain) * (m_scheme == Scheme::Dark ? 1.0 : 0.6);
     glass.buttons = m_settings.stringValue(keys::ButtonMaterial);
     glass.backdrop = m_settings.stringValue(keys::BackdropStyle);
     glass.backdropAnimated = m_settings.boolValue(keys::BackdropAnimate) && m_blurAvailable &&

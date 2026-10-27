@@ -646,7 +646,7 @@
 <context>
     <name>NavRail</name>
     <message>
-        <location filename="../src/qml/components/NavRail.qml" line="+36"/>
+        <location filename="../src/qml/components/NavRail.qml" line="+40"/>
         <source>Navigation</source>
         <translation>Навигация</translation>
     </message>
@@ -1101,12 +1101,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+191"/>
+        <location line="+185"/>
         <source>Soft</source>
         <translation>Мягкие</translation>
     </message>
     <message>
-        <location line="-189"/>
+        <location line="-183"/>
         <source>Palette extraction</source>
         <translation>Извлечение палитры</translation>
     </message>
@@ -1231,27 +1231,27 @@
         <translation>Насколько сильно размывается фон.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+9"/>
         <source>Glass tint</source>
         <translation>Тонировка стекла</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+1"/>
+        <source>Opacity of the tint applied to glass surfaces.</source>
+        <translation>Непрозрачность тонировки стеклянных поверхностей.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Grain</source>
         <translation>Зернистость</translation>
     </message>
     <message>
-        <location line="-11"/>
-        <source>Opacity of the tint on glass surfaces, relative to the design: 0 % is the designed look, below makes glass clearer, above makes it more opaque.</source>
-        <translation>Непрозрачность тонировки стеклянных поверхностей относительно дизайна: 0 % — задуманный вид, ниже — стекло прозрачнее, выше — плотнее.</translation>
+        <location line="+1"/>
+        <source>Fine noise that prevents banding in gradients.</source>
+        <translation>Мелкий шум, убирающий полосы в градиентах.</translation>
     </message>
     <message>
-        <location line="+12"/>
-        <source>Fine noise that prevents banding in gradients, relative to the design: 0 % is the designed amount, the lowest value removes it.</source>
-        <translation>Мелкий шум, убирающий ступеньки в градиентах, относительно дизайна: 0 % — задуманное количество, минимальное значение убирает его.</translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+4"/>
         <location line="+169"/>
         <location line="+13"/>
         <location line="+12"/>
@@ -1747,7 +1747,7 @@
 <context>
     <name>SettingsRow</name>
     <message>
-        <location filename="../src/qml/settings/SettingsRow.qml" line="+110"/>
+        <location filename="../src/qml/settings/SettingsRow.qml" line="+105"/>
         <source>Reset section</source>
         <translation>Сбросить раздел</translation>
     </message>

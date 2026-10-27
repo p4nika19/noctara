@@ -242,15 +242,16 @@ TEST_SUITE("settings.toml")
         CHECK(on.unknownToml.empty());
     }
 
-    TEST_CASE("v3 absolute glass tint and grain become relative to the design")
+    TEST_CASE("glass tint and grain: v4 relative values become absolute again, v3 values pass unchanged")
     {
-        const auto parsed = parse("config_version = 3\n[appearance.glass]\nopacity = 0.8\ngrain = 0.35\n");
-        REQUIRE(parsed.syntaxOk);
-        CHECK(parsed.issues.empty());
-        CHECK(parsedValue(parsed, keys::GlassOpacity)->toDouble() == doctest::Approx(0.3));
-        CHECK(parsedValue(parsed, keys::GlassGrain)->toDouble() == doctest::Approx(0.0));
-        const auto untouched = parse("config_version = 3\n[appearance.glass]\nstyle = \"solid\"\n");
-        CHECK_FALSE(parsedValue(untouched, keys::GlassOpacity).has_value());
+        const auto v4 = parse("config_version = 4\n[appearance.glass]\nopacity = 0.3\ngrain = -0.35\n");
+        REQUIRE(v4.syntaxOk);
+        CHECK(v4.issues.empty());
+        CHECK(parsedValue(v4, keys::GlassOpacity)->toDouble() == doctest::Approx(0.8));
+        CHECK(parsedValue(v4, keys::GlassGrain)->toDouble() == doctest::Approx(0.0));
+        const auto v3 = parse("config_version = 3\n[appearance.glass]\nopacity = 0.8\ngrain = 0.2\n");
+        CHECK(parsedValue(v3, keys::GlassOpacity)->toDouble() == doctest::Approx(0.8));
+        CHECK(parsedValue(v3, keys::GlassGrain)->toDouble() == doctest::Approx(0.2));
     }
 
     TEST_CASE("migrations move keys between versions")
@@ -311,13 +312,13 @@ TEST_SUITE("settings.file")
 
         // A valid external edit is applied live.
         REQUIRE(writeText(
-            path, "config_version = 4\n[appearance.theme]\nmode = \"light\"\n[appearance.glass]\ngrain = 0.5\n"));
+            path, "config_version = 5\n[appearance.theme]\nmode = \"light\"\n[appearance.glass]\ngrain = 0.5\n"));
         REQUIRE(test::waitUntil([&] { return store.stringValue(keys::ThemeMode) == QStringLiteral("light"); }));
         CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.5));
 
         // An invalid value keeps the last good one and reports the problem.
         REQUIRE(writeText(path,
-                          "config_version = 4\n[appearance.theme]\nmode = \"light\"\n[appearance.glass]\ngrain = 7\n"));
+                          "config_version = 5\n[appearance.theme]\nmode = \"light\"\n[appearance.glass]\ngrain = 7\n"));
         REQUIRE(test::waitUntil([&] { return issues.count() > 0; }));
         CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.5));
 

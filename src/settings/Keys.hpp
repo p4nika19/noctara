@@ -28,10 +28,6 @@ inline constexpr std::string_view GlassStyle = "appearance.glass.style";
 inline constexpr std::string_view GlassBlurStrength = "appearance.glass.blur_strength";
 inline constexpr std::string_view GlassOpacity = "appearance.glass.opacity";
 inline constexpr std::string_view GlassGrain = "appearance.glass.grain";
-// "Glass tint" and "Grain" are stored relative to the designed values: 0 is the design, the scale is the same as
-// the absolute 0..1 one it replaced (config v4). Effective value = setting + baseline.
-inline constexpr double GlassOpacityBaseline = 0.5;
-inline constexpr double GlassGrainBaseline = 0.35;
 inline constexpr std::string_view GlassQuality = "appearance.glass.quality";
 inline constexpr std::string_view ReduceTransparency = "appearance.glass.reduce_transparency";
 inline constexpr std::string_view ReduceMotion = "appearance.motion.reduce";
