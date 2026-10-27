@@ -1,6 +1,6 @@
 # Architecture
 
-This document grows with each slice. It currently covers slices (a) and (b).
+This document grows with each slice. It currently covers slices (a) to (c).
 
 ```
             ┌──────────────── app/main.cpp (composition root) ────────────────┐
@@ -14,6 +14,9 @@ This document grows with each slice. It currently covers slices (a) and (b).
   file I/O) ConfigFile,  Error-     FontLoader)    Relaunch)      IconProvider)
             overrides)   Messages)
 ```
+
+Slice (c) adds two modules: `net` (depends on `core` and `settings`: transport, DNS, proxy, diagnostics) and `auth`
+(depends on `core`: the secret store for now). `ui` depends on both and `app` wires them up.
 
 Static libraries per module (`noctara_<module>`); the executable only wires them together. Dependencies point downward only: `ui` may use everything, and `core` uses nothing but Qt Core.
 
@@ -73,10 +76,32 @@ Artwork ──► AccentEngine (thread pool: k-means seed + tone-mapped blurred 
 
 `ui::EffectsController` (QML `Performance`) owns the governor, wires the inputs, applies the result, and writes the translated status lines of the *Glass style* and *Effects quality* rows.
 
+## Network flow
+
+```
+settings (network.*) ──► NetworkService (GUI thread) ── config snapshot + proxy credentials (from auth::ISecretStore)
+                                 │ posts to
+                                 ▼
+          network thread: NetworkCore
+            ProxyRouter ── decides direct / which proxy (manual, env vars, libproxy)
+            DnsResolver ── overrides → cache → system | custom servers (UDP/TCP) | DoH ─┐
+            CurlTransport ◄── every host pinned via CURLOPT_RESOLVE; resolver guard     │
+                 ▲   └──── DoH POSTs (direct, pinned to bootstrap addresses) ◄─────────┘
+                 │
+any module ── INetworkTransport::send(request, context, callbacks) ── results on context's thread
+```
+
+Later slices plug in here: the API client (e) and the caches (d) call `send()`, and `StreamSource` → audio cache →
+transport feeds the decoder (g). See [network.md](network.md) for details.
+
 ## Ownership and threading
 
 - Every object is owned by RAII or a QObject parent. Objects handed to QML from invokables are explicitly set to `CppOwnership`; ASan caught the case where they weren't.
 - Config I/O runs on a dedicated single-thread pool, so writes stay in order. Settings reads are thread-safe (`shared_mutex`). Mutations happen on the GUI thread.
 - Icons are rasterized on Qt Quick's async image threads.
 - `FrameMonitor` is declared before the QML engine in `main()`, so it outlives the window's render thread, which calls into it directly. Shared samples are guarded by a mutex, and the frame cap is an atomic.
+- The network stack lives on its own thread and is created and destroyed there (`NetworkService` blocks briefly on
+  both), so its timers and socket notifiers belong to that thread. Callbacks reach callers through
+  `CallbackChannel` (a queued signal), which Qt drops when the receiver is gone. Asynchronous continuations inside
+  the thread look objects up by id or `QPointer` instead of keeping raw pointers.
 - `AccentEngine` workers capture only copies of their inputs. Results carry a generation number, and stale ones are dropped. The backdrop images it hands to the image provider (loader threads) are guarded by a mutex.

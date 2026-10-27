@@ -206,7 +206,7 @@ task("test-tsan")
     on_run(function ()
         local binary = path.join(os.projectdir(), "build", "linux", "x86_64", "tsan", "noctara-tests")
         assert(os.isfile(binary), "configure with `xmake f -m tsan` and build noctara-tests first")
-        os.execv(binary, {"-tse=settings.file,ui.settings"}, {envs = {
+        os.execv(binary, {"-tse=settings.file,ui.settings,ui.icons"}, {envs = {
             TSAN_OPTIONS = "halt_on_error=1 suppressions=" .. path.join(os.projectdir(), "tools", "tsan.supp")}})
     end)
 task_end()

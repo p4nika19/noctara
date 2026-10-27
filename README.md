@@ -2,7 +2,7 @@
 
 Noctara is a native SoundCloud desktop client written in C++23 and Qt 6 Quick. It uses glass surfaces over a backdrop taken from the cover art, comes with two themes (Midnight and Frost), and runs with GPU acceleration or a full software fallback. The UI is localized in English and Russian.
 
-> Status: slice (a) of the plan is done (foundations: build, settings, graphics bootstrap, theme, i18n, generated settings UI). See [docs/plan.md](docs/plan.md).
+> Status: slices (a)–(c) of the plan are done (foundations, glass pipeline, network stack: DNS/DoH, proxies, transport). See [docs/plan.md](docs/plan.md).
 
 ## Dependencies
 
@@ -11,9 +11,15 @@ Noctara is a native SoundCloud desktop client written in C++23 and Qt 6 Quick. I
 | clang, mold, xmake | 23.1, 3.0, 3.1 | system |
 | Qt 6 (Core, Gui, Qml, Quick, Svg, Concurrent, Test, ShaderTools, Linguist tools) | 6.12 | system |
 | toml++ (header-only use) | 3.4 | system headers |
+| libcurl (with TLS, HTTP/2, IPv6; HTTP/3 optional) | 8.23 | system, pkg-config |
+| libproxy | 0.5 | system, pkg-config |
+| libsecret | 0.21 | system, pkg-config |
+| OpenSSL (tests only: mock TLS server) | 3.6 | system, pkg-config |
 | doctest | 2.4.12 | xrepo (fetched automatically) |
 
-Later slices add libcurl, FFmpeg, TagLib, libsecret, sqlite and simdjson.
+Arch: `pacman -S curl libproxy libsecret openssl`; Debian/Ubuntu: `libcurl4-openssl-dev libproxy-dev libsecret-1-dev
+libssl-dev`. The build fails early if libcurl lacks SSL, HTTP2 or IPv6. Later slices add FFmpeg, TagLib, sqlite and
+simdjson.
 
 ## Build and run
 

@@ -33,6 +33,21 @@ Frost costs the same as Midnight: the pipeline and shaders are identical, and on
 
 Not yet measured (scheduled for slice j): cold start to first frame, idle RSS, idle CPU, glass GPU cost per mode and theme, software-mode CPU.
 
+## Slice (c): network
+
+Release build, loopback mock servers (transport overhead only; real latency is the network's). Reproduce with
+`noctara-tests --no-skip -tc="transport spike*"`.
+
+| Measurement | Result |
+|---|---|
+| Sequential keep-alive GET, 1 KiB body | ≈ 0.30 ms per request |
+| 200 concurrent GETs | 47 ms in total |
+| Cached DNS lookup | 2.4 µs |
+| Uncached DoH lookup, A + AAAA in parallel | 0.47 ms |
+
+Idle cost: none. The network thread sleeps in its event loop; curl's timer runs only while transfers exist, the
+speed-limit refill timer only while a transfer is paused, and NetworkManager state arrives as D-Bus signals.
+
 ## Design choices that affect cost
 
 - Colors cross-fade by updating one gadget per frame for 400–500 ms. Icons do not re-rasterize per frame: they bind to `targetColors` and crossfade two cached images.
@@ -42,5 +57,5 @@ Not yet measured (scheduled for slice j): cold start to first frame, idle RSS, i
 ## Sanitizers and the regression checklist
 
 - Debug builds run ASan + UBSan. LSan suppressions (`src/core/LsanSuppressions.hpp`) cover third-party GPU-driver allocations only; our code is never suppressed.
-- TSan (`xmake test-tsan`): the distro Qt isn't instrumented, so Qt-internal synchronization is suppressed (`tools/tsan.supp`). Suites that create `QThreadPool` threads (`settings.file`, `ui.settings`) are excluded because TSan's thread registry aborts (`CHECK live_.try_emplace`) on thread-ID reuse there. **Known gap:** full TSan coverage needs a TSan-instrumented Qt build.
+- TSan (`xmake test-tsan`): the distro Qt isn't instrumented, so Qt-internal synchronization is suppressed (`tools/tsan.supp`). Suites that create `QThreadPool` or QML loader threads (`settings.file`, `ui.settings`, `ui.icons`) are excluded because TSan's thread registry aborts (`CHECK live_.try_emplace`) on thread-ID reuse there. Cross-thread hand-overs in `net` go through `core/Handoff.hpp`, which in TSan builds makes Qt's event-queue ordering visible with one extra mutex, so the network suites run without suppressions for our own code. **Known gap:** full TSan coverage needs a TSan-instrumented Qt build.
 - Before each commit: `xmake format --check`, a debug build with `--werror=y`, unit tests, `xmake smoke`, `xmake i18n-check`, `xmake docs-config --check`.

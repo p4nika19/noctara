@@ -72,6 +72,7 @@ Q_SIGNALS:
 
 private:
     [[nodiscard]] bool isShown(const settings::Definition& def) const;
+    [[nodiscard]] bool conditionsHold(const settings::Definition& def) const;
     [[nodiscard]] QVariantList options(const settings::Definition& def) const;
     void onValueChanged(const QString& key);
 

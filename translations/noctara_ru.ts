@@ -105,7 +105,7 @@
         <translation>Закрыть панель</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+47"/>
         <source>Reset</source>
         <translation>Сбросить</translation>
     </message>
@@ -144,6 +144,37 @@
         <location filename="../src/qml/components/ColorPicker.qml" line="+79"/>
         <source>Hex color</source>
         <translation>Цвет в HEX</translation>
+    </message>
+</context>
+<context>
+    <name>ConnectionTools</name>
+    <message>
+        <location filename="../src/qml/settings/network/ConnectionTools.qml" line="+12"/>
+        <source>Testing…</source>
+        <translation>Проверка…</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Test connection</source>
+        <translation>Проверить соединение</translation>
+    </message>
+</context>
+<context>
+    <name>DnsTools</name>
+    <message>
+        <location filename="../src/qml/settings/network/DnsTools.qml" line="+15"/>
+        <source>Testing…</source>
+        <translation>Проверка…</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Test DNS</source>
+        <translation>Проверить DNS</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Flush DNS cache</source>
+        <translation>Очистить кэш DNS</translation>
     </message>
 </context>
 <context>
@@ -213,12 +244,12 @@
     <name>Errors</name>
     <message>
         <location filename="../src/i18n/ErrorMessages.cpp" line="+11"/>
-        <location line="+56"/>
+        <location line="+70"/>
         <source>Something went wrong.</source>
         <translation>Что-то пошло не так.</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-69"/>
         <source>The operation was cancelled.</source>
         <translation>Операция отменена.</translation>
     </message>
@@ -329,6 +360,11 @@
     </message>
     <message>
         <location line="+2"/>
+        <source>None of the configured DNS servers answered.</source>
+        <translation>Ни один из заданных DNS-серверов не ответил.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>The DNS-over-HTTPS server is unreachable.</source>
         <translation>Сервер DNS-over-HTTPS недоступен.</translation>
     </message>
@@ -336,6 +372,16 @@
         <location line="+2"/>
         <source>The DNS-over-HTTPS server returned an invalid answer.</source>
         <translation>Сервер DNS-over-HTTPS вернул некорректный ответ.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The DNS-over-HTTPS address must start with https://. Plain http:// is allowed only for servers on this computer or the local network, with “Allow insecure DoH” turned on.</source>
+        <translation>Адрес DNS over HTTPS должен начинаться с https://. Обычный http:// допустим только для серверов на этом компьютере или в локальной сети и только при включённом параметре «Разрешить незащищённый DoH».</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>A manual proxy is selected, but no proxy host is set.</source>
+        <translation>Выбран ручной прокси, но адрес прокси-сервера не указан.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -353,7 +399,12 @@
         <translation>Не удалось установить защищённое соединение.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
+        <source>The server&apos;s certificate could not be verified. If your network inspects secure traffic, set its CA bundle under Network → Security.</source>
+        <translation>Не удалось проверить сертификат сервера. Если ваша сеть проверяет защищённый трафик, укажите её набор сертификатов в разделе «Сеть → Безопасность».</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Could not connect to the server.</source>
         <translation>Не удалось подключиться к серверу.</translation>
     </message>
@@ -371,6 +422,11 @@
         <location line="+1"/>
         <source>You are offline.</source>
         <translation>Нет подключения к сети.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Skipped to save data on a metered connection.</source>
+        <translation>Пропущено ради экономии трафика на лимитном подключении.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -651,9 +707,96 @@
 <context>
     <name>NavRail</name>
     <message>
-        <location filename="../src/qml/components/NavRail.qml" line="+40"/>
+        <location filename="../src/qml/components/NavRail.qml" line="+56"/>
         <source>Navigation</source>
         <translation>Навигация</translation>
+    </message>
+</context>
+<context>
+    <name>NetworkDiagnostics</name>
+    <message>
+        <location filename="../src/qml/settings/NetworkDiagnostics.qml" line="+23"/>
+        <source>Diagnostics</source>
+        <translation>Диагностика</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Recent requests. Query values are hidden; passwords and tokens are never recorded.</source>
+        <translation>Последние запросы. Значения параметров скрыты, пароли и токены никогда не записываются.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Copy report</source>
+        <translation>Скопировать отчёт</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>No requests yet.</source>
+        <translation>Запросов пока не было.</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>%1 · %2 · %3</source>
+        <extracomment>%1 = status or error, %2 = duration, %3 = &quot;direct&quot; or the proxy</extracomment>
+        <translation>%1 · %2 · %3</translation>
+    </message>
+</context>
+<context>
+    <name>NetworkHeader</name>
+    <message>
+        <location filename="../src/qml/settings/NetworkHeader.qml" line="+15"/>
+        <source>Online</source>
+        <translation>В сети</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Limited: the internet may not be reachable</source>
+        <translation>Ограничено: интернет может быть недоступен</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The network asks you to sign in first</source>
+        <translation>Сеть требует сначала войти</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No network connection</source>
+        <translation>Нет подключения к сети</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unknown</source>
+        <translation>Неизвестно</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Right now</source>
+        <translation>Сейчас</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Connection</source>
+        <translation>Подключение</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offline mode: Noctara makes no connections</source>
+        <translation>Автономный режим: Noctara не устанавливает соединений</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>metered</source>
+        <translation>лимитное</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>DNS</source>
+        <translation>DNS</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Proxy</source>
+        <translation>Прокси</translation>
     </message>
 </context>
 <context>
@@ -840,9 +983,57 @@
     </message>
 </context>
 <context>
+    <name>ProxyCredentials</name>
+    <message>
+        <location filename="../src/qml/settings/network/ProxyCredentials.qml" line="+13"/>
+        <source>Username and password</source>
+        <translation>Имя пользователя и пароль</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Optional. Saved in the system keyring, never in the configuration file.</source>
+        <translation>Необязательно. Хранятся в системной связке ключей, никогда — в файле настроек.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No keyring is available, so saved credentials are kept only until Noctara quits.</source>
+        <translation>Связка ключей недоступна, поэтому учётные данные хранятся только до выхода из Noctara.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Username</source>
+        <translation>Имя пользователя</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Saved – type to replace</source>
+        <translation>Сохранён — введите новый, чтобы заменить</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Password</source>
+        <translation>Пароль</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Save credentials</source>
+        <translation>Сохранить</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Forget credentials</source>
+        <translation>Забыть учётные данные</translation>
+    </message>
+</context>
+<context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+150"/>
+        <location filename="../src/app/main.cpp" line="+157"/>
+        <source>The installed libcurl was built without HTTP/3.</source>
+        <translation>Установленная libcurl собрана без поддержки HTTP/3.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Needs hardware acceleration, which is currently off.</source>
         <translation>Нужно аппаратное ускорение, а оно сейчас выключено.</translation>
     </message>
@@ -852,13 +1043,13 @@
         <translation>Недоступно на этом графическом устройстве.</translation>
     </message>
     <message>
-        <location filename="../src/settings/BuiltinSchema.cpp" line="+34"/>
-        <location line="+49"/>
+        <location filename="../src/settings/BuiltinSchema.cpp" line="+120"/>
+        <location line="+64"/>
         <source>Language</source>
         <translation>Язык</translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="-63"/>
         <source>Interface language.</source>
         <translation>Язык интерфейса.</translation>
     </message>
@@ -874,23 +1065,23 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+71"/>
+        <location line="+86"/>
         <source>Theme</source>
         <translation>Тема</translation>
     </message>
     <message>
-        <location line="-70"/>
+        <location line="-85"/>
         <source>Midnight (dark), Frost (light) or follow the system.</source>
         <translation>Midnight (тёмная), Frost (светлая) или как в системе.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+94"/>
+        <location line="+109"/>
         <source>Accent color</source>
         <translation>Акцентный цвет</translation>
     </message>
     <message>
-        <location line="-93"/>
+        <location line="-108"/>
         <source>The whole palette is generated from a single accent color.</source>
         <translation>Вся палитра строится из одного акцентного цвета.</translation>
     </message>
@@ -980,7 +1171,7 @@
         <translation>Как Noctara снижает собственное энергопотребление. Системный профиль питания не меняется.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+28"/>
         <source>System default</source>
         <translation>Как в системе</translation>
     </message>
@@ -1026,11 +1217,12 @@
     </message>
     <message>
         <location line="+6"/>
+        <location line="+560"/>
         <source>System</source>
         <translation>Как в системе</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-559"/>
         <source>Midnight (dark)</source>
         <translation>Midnight (тёмная)</translation>
     </message>
@@ -1070,7 +1262,7 @@
         <translation>Базовый цвет всей палитры, когда подбор по обложке выключен.</translation>
     </message>
     <message>
-        <location line="-92"/>
+        <location line="-107"/>
         <source>The light behind the interface.</source>
         <translation>Свет за интерфейсом.</translation>
     </message>
@@ -1095,7 +1287,67 @@
         <translation>Насколько плотно расположены элементы на страницах.</translation>
     </message>
     <message>
-        <location line="+83"/>
+        <location line="+10"/>
+        <source>Data usage</source>
+        <translation>Трафик</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>When and how much Noctara downloads.</source>
+        <translation>Когда и сколько Noctara загружает.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>DNS</source>
+        <translation>DNS</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How server names are turned into addresses. Applies to all of Noctara&apos;s connections without a restart.</source>
+        <translation>Как имена серверов превращаются в адреса. Действует на все соединения Noctara без перезапуска.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>DNS cache</source>
+        <translation>Кэш DNS</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How long answers are remembered. Lifetimes from the DNS server are kept within these bounds.</source>
+        <translation>Как долго помнить ответы. Время жизни от DNS-сервера ограничивается этими пределами.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Proxy</source>
+        <translation>Прокси</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Route Noctara&apos;s traffic through a proxy server.</source>
+        <translation>Направлять трафик Noctara через прокси-сервер.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Connections</source>
+        <translation>Соединения</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Protocol, time limits and retries.</source>
+        <translation>Протокол, тайм-ауты и повторы.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Security</source>
+        <translation>Безопасность</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Encrypted connections. Certificates are always verified.</source>
+        <translation>Зашифрованные соединения. Сертификаты проверяются всегда.</translation>
+    </message>
+    <message>
+        <location line="+75"/>
         <source>Vivid</source>
         <translation>Яркие</translation>
     </message>
@@ -1260,11 +1512,14 @@
         <location line="+169"/>
         <location line="+13"/>
         <location line="+12"/>
+        <location line="+57"/>
+        <location line="+111"/>
+        <location line="+125"/>
         <source>Auto</source>
         <translation>Авто</translation>
     </message>
     <message>
-        <location line="-193"/>
+        <location line="-486"/>
         <source>Low</source>
         <translation>Низкое</translation>
     </message>
@@ -1402,11 +1657,13 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+226"/>
+        <location line="+23"/>
         <source>Custom</source>
         <translation>Свои</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-247"/>
         <source>Corner radius</source>
         <translation>Скругление углов</translation>
     </message>
@@ -1664,11 +1921,12 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+24"/>
         <source>Always</source>
         <translation>Всегда</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-21"/>
         <source>Energy saving</source>
         <translation>Энергосбережение</translation>
     </message>
@@ -1676,6 +1934,390 @@
         <location line="+1"/>
         <source>While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead of Liquid Glass or Gaussian, and limits animations to 30 frames per second. Automatic turns it on only while the computer runs on battery.</source>
         <translation>Пока режим включён, Noctara останавливает анимацию фона, использует более лёгкое размытие Dual Kawase вместо «Жидкого стекла» или размытия по Гауссу и ограничивает анимации 30 кадрами в секунду. В режиме «Авто» он включается, только когда компьютер работает от батареи.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Offline mode</source>
+        <translation>Автономный режим</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Make no network connections at all. Only content that is already cached is available.</source>
+        <translation>Не устанавливать никаких сетевых соединений. Доступно только то, что уже есть в кэше.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Never</source>
+        <translation>Никогда</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Metered connection</source>
+        <translation>Лимитное подключение</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>On a metered connection Noctara skips prefetching and other background downloads. Auto follows the system&apos;s setting for the current network.</source>
+        <translation>На лимитном подключении Noctara не загружает заранее и не выполняет фоновые загрузки. «Авто» следует системной настройке текущей сети.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Download speed limit</source>
+        <translation>Ограничение скорости загрузки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Upper bound for all downloads together. 0 means no limit.</source>
+        <translation>Верхний предел для всех загрузок вместе. 0 — без ограничения.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mbit/s</source>
+        <translation>Мбит/с</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>System resolver</source>
+        <translation>Системный</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Custom DNS servers</source>
+        <translation>Свои DNS-серверы</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>DNS over HTTPS</source>
+        <translation>DNS over HTTPS</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>DNS mode</source>
+        <translation>Режим DNS</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>System uses your computer&apos;s settings. DNS over HTTPS encrypts lookups so the network cannot see or change them.</source>
+        <translation>«Системный» использует настройки компьютера. DNS over HTTPS шифрует запросы, так что сеть не может их увидеть или подменить.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>DNS servers</source>
+        <translation>DNS-серверы</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Asked in order; the next one is tried when a server does not answer.</source>
+        <translation>Опрашиваются по порядку; если сервер не отвечает, используется следующий.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Server addresses</source>
+        <translation>Адреса серверов</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>IPv4 or IPv6 addresses, optionally with a port: 192.0.2.1, [2001:db8::1]:5353.</source>
+        <translation>Адреса IPv4 или IPv6, при необходимости с портом: 192.0.2.1, [2001:db8::1]:5353.</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>DNS-over-HTTPS provider</source>
+        <translation>Поставщик DNS over HTTPS</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Custom accepts any RFC 8484 server, for example a personal NextDNS address.</source>
+        <translation>«Свой» принимает любой сервер RFC 8484, например личный адрес NextDNS.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>DoH address</source>
+        <translation>Адрес DoH</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>For example https://dns.example/dns-query.</source>
+        <translation>Например, https://dns.example/dns-query.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Bootstrap addresses</source>
+        <translation>Начальные адреса</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>IP addresses of the DoH server, so its own name never has to be looked up elsewhere. Required when fallback to the system resolver is off.</source>
+        <translation>IP-адреса сервера DoH, чтобы его имя не приходилось искать где-то ещё. Обязательны, если резервный системный DNS выключен.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Allow insecure DoH</source>
+        <translation>Разрешить незащищённый DoH</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Accept a plain http:// address, but only for a server on this computer or the local network.</source>
+        <translation>Принимать обычный адрес http://, но только для сервера на этом компьютере или в локальной сети.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Fall back to the system resolver</source>
+        <translation>Резервный системный DNS</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Keeps Noctara working when the chosen servers are unreachable, but those lookups are then visible to your network. Off is strict mode: lookups fail instead.</source>
+        <translation>Noctara продолжит работать, если выбранные серверы недоступны, но такие запросы будут видны вашей сети. Выключено — строгий режим: запросы просто завершаются ошибкой.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Prefer IPv4</source>
+        <translation>Предпочитать IPv4</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Prefer IPv6</source>
+        <translation>Предпочитать IPv6</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>IPv4 only</source>
+        <translation>Только IPv4</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>IPv6 only</source>
+        <translation>Только IPv6</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>IP version</source>
+        <translation>Версия IP</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Auto tries IPv6 and IPv4 in parallel and keeps whichever connects first.</source>
+        <translation>«Авто» пробует IPv6 и IPv4 одновременно и использует то, что подключится первым.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Host overrides</source>
+        <translation>Свои адреса хостов</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Fixed addresses that skip DNS, as host=address. Repeat a host to give it several addresses.</source>
+        <translation>Постоянные адреса в обход DNS в виде хост=адрес. Повторите хост, чтобы задать несколько адресов.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Minimum lifetime</source>
+        <translation>Минимальное время жизни</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Answers are kept at least this long.</source>
+        <translation>Ответы хранятся не меньше этого времени.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+11"/>
+        <location line="+12"/>
+        <location line="+94"/>
+        <location line="+11"/>
+        <source>s</source>
+        <translation>с</translation>
+    </message>
+    <message>
+        <location line="-119"/>
+        <source>Maximum lifetime</source>
+        <translation>Максимальное время жизни</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Answers are looked up again after this long.</source>
+        <translation>По истечении этого времени ответы запрашиваются заново.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Failed lookups</source>
+        <translation>Ненайденные имена</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How long a name that does not exist is remembered as missing.</source>
+        <translation>Как долго помнить, что имя не существует.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>No proxy</source>
+        <translation>Без прокси</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Manual</source>
+        <translation>Вручную</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Proxy mode</source>
+        <translation>Режим прокси</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>System uses the proxy variables of the environment (http_proxy, no_proxy …) or, if none are set, your desktop&apos;s proxy settings.</source>
+        <translation>«Системный» берёт переменные окружения (http_proxy, no_proxy …), а если они не заданы — настройки прокси рабочего стола.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>SOCKS5 with remote DNS</source>
+        <translation>SOCKS5 с удалённым DNS</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Proxy type</source>
+        <translation>Тип прокси</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>HTTPS encrypts the connection to the proxy itself. With SOCKS4 and SOCKS5 Noctara looks up server names itself; the others let the proxy do it.</source>
+        <translation>HTTPS шифрует соединение с самим прокси. С SOCKS4 и SOCKS5 Noctara сама определяет адреса серверов, остальные типы поручают это прокси.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Proxy host</source>
+        <translation>Адрес прокси</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Host name or IP address of the proxy server.</source>
+        <translation>Имя хоста или IP-адрес прокси-сервера.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Proxy port</source>
+        <translation>Порт прокси</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Username and password, if the proxy needs them, are kept in the system keyring, never in the configuration file.</source>
+        <translation>Имя пользователя и пароль, если они нужны прокси, хранятся в системной связке ключей, никогда — в файле настроек.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Connect directly to</source>
+        <translation>Подключаться напрямую к</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hosts that bypass the proxy: example.com (with its subdomains), *.example.com, IP addresses or ranges such as 10.0.0.0/8.</source>
+        <translation>Хосты в обход прокси: example.com (вместе с поддоменами), *.example.com, IP-адреса или диапазоны вроде 10.0.0.0/8.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Bypass for local addresses</source>
+        <translation>Напрямую к локальным адресам</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Connect directly to localhost, private networks and names without a dot.</source>
+        <translation>Подключаться напрямую к localhost, частным сетям и именам без точки.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>HTTP version</source>
+        <translation>Версия HTTP</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Auto uses HTTP/2 where the server supports it. HTTP/3 falls back to older versions when it is blocked.</source>
+        <translation>«Авто» использует HTTP/2, если сервер его поддерживает. HTTP/3 при блокировке переключается на старые версии.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Connection timeout</source>
+        <translation>Тайм-аут подключения</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How long to wait for a server, including the proxy and the encrypted handshake.</source>
+        <translation>Сколько ждать сервер, включая прокси и установку шифрования.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Stall timeout</source>
+        <translation>Тайм-аут простоя</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>A download is aborted (and retried) when no data arrives for this long.</source>
+        <translation>Загрузка прерывается (и повторяется), если данные не приходят дольше этого времени.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Retries</source>
+        <translation>Повторы</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How often a failed request is repeated. Only requests that are safe to repeat are retried.</source>
+        <translation>Сколько раз повторять неудачный запрос. Повторяются только запросы, которые безопасно повторить.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Retry delay</source>
+        <translation>Задержка повтора</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Wait before the first retry; it doubles with every further attempt.</source>
+        <translation>Пауза перед первым повтором; с каждой следующей попыткой она удваивается.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>ms</source>
+        <translation>мс</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Maximum connections</source>
+        <translation>Максимум соединений</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Open connections in total.</source>
+        <translation>Всего открытых соединений.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Connections per server</source>
+        <translation>Соединений на сервер</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Open connections to one server. HTTP/2 carries many requests over one.</source>
+        <translation>Открытых соединений с одним сервером. HTTP/2 передаёт много запросов по одному.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Minimum TLS version</source>
+        <translation>Минимальная версия TLS</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Older protocol versions are never used.</source>
+        <translation>Более старые версии протокола не используются.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>CA bundle</source>
+        <translation>Набор сертификатов CA</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>PEM file with the certificate authorities to trust instead of the system&apos;s, for networks that inspect encrypted traffic. Empty uses the system store.</source>
+        <translation>PEM-файл с центрами сертификации, которым доверять вместо системных, — для сетей, проверяющих зашифрованный трафик. Пусто — системное хранилище.</translation>
     </message>
     <message>
         <location filename="../src/settings/Schema.cpp" line="+142"/>
@@ -1738,7 +2380,7 @@
         <translation>О программе</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsModel.cpp" line="+145"/>
+        <location filename="../src/ui/SettingsModel.cpp" line="+154"/>
         <source>Set by a command-line flag for this session.</source>
         <translation>Задано флагом командной строки на этот сеанс.</translation>
     </message>
@@ -1752,7 +2394,7 @@
 <context>
     <name>SettingsRow</name>
     <message>
-        <location filename="../src/qml/settings/SettingsRow.qml" line="+108"/>
+        <location filename="../src/qml/settings/SettingsRow.qml" line="+112"/>
         <source>Reset section</source>
         <translation>Сбросить раздел</translation>
     </message>
@@ -1767,7 +2409,7 @@
         <translation>Сбросить по умолчанию</translation>
     </message>
     <message>
-        <location line="+121"/>
+        <location line="+141"/>
         <source>Default</source>
         <translation>По умолчанию</translation>
     </message>
@@ -1780,7 +2422,7 @@
 <context>
     <name>SettingsView</name>
     <message>
-        <location filename="../src/qml/settings/SettingsView.qml" line="+29"/>
+        <location filename="../src/qml/settings/SettingsView.qml" line="+39"/>
         <source>Search settings</source>
         <translation>Поиск настроек</translation>
     </message>
@@ -1816,7 +2458,7 @@
         <translation>Перезапустить</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+55"/>
         <source>No settings match “%1”.</source>
         <translation>Нет настроек, подходящих под «%1».</translation>
     </message>
@@ -1827,6 +2469,15 @@
         <location filename="../src/qml/components/Skeleton.qml" line="+16"/>
         <source>Loading</source>
         <translation>Загрузка</translation>
+    </message>
+</context>
+<context>
+    <name>TestResults</name>
+    <message>
+        <location filename="../src/qml/settings/network/TestResults.qml" line="+47"/>
+        <source>via %1 · %2</source>
+        <extracomment>%1 = how the answer was obtained (server, cache …), %2 = duration</extracomment>
+        <translation>через %1 · %2</translation>
     </message>
 </context>
 <context>
@@ -1883,6 +2534,251 @@
         <location line="+2"/>
         <source>Restart now</source>
         <translation>Перезапустить</translation>
+    </message>
+</context>
+<context>
+    <name>noctara::ui::NetworkController</name>
+    <message>
+        <location filename="../src/ui/NetworkController.cpp" line="+34"/>
+        <source>%1 ms</source>
+        <extracomment>Duration in milliseconds, e.g. &quot;42 ms&quot;</extracomment>
+        <translation>%1 мс</translation>
+    </message>
+    <message>
+        <location line="+79"/>
+        <source>System resolver</source>
+        <translation>Системный DNS</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Custom DNS servers: %1</source>
+        <extracomment>%1 = provider name or list of server addresses</extracomment>
+        <translation>Свои DNS-серверы: %1</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>DNS over HTTPS: %1</source>
+        <extracomment>%1 = provider name or server host name</extracomment>
+        <translation>DNS over HTTPS: %1</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>%1 · strict</source>
+        <extracomment>Appended to the DNS mode when the system resolver is never used</extracomment>
+        <translation>%1 · строгий режим</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>No proxy</source>
+        <translation>Без прокси</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Manual proxy without a host</source>
+        <translation>Ручной прокси без адреса</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>System: %1</source>
+        <extracomment>%1 = proxy address, or &quot;direct&quot;</extracomment>
+        <translation>Системный: %1</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <location line="+207"/>
+        <location line="+27"/>
+        <source>direct</source>
+        <translation>напрямую</translation>
+    </message>
+    <message>
+        <location line="-218"/>
+        <source>With SOCKS4 and SOCKS5 Noctara looks up server names itself, using the DNS settings above, and sends only addresses to the proxy. Choose SOCKS5 with remote DNS to let the proxy look them up.</source>
+        <translation>С SOCKS4 и SOCKS5 Noctara сама определяет адреса серверов по настройкам DNS выше и передаёт прокси только адреса. Выберите «SOCKS5 с удалённым DNS», чтобы это делал прокси.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The proxy looks up server names itself, so the DNS settings above apply only to direct connections and to finding the proxy server.</source>
+        <translation>Прокси сам определяет адреса серверов, поэтому настройки DNS выше действуют только на прямые соединения и на поиск самого прокси-сервера.</translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>Taken from the proxy environment variables (http_proxy, https_proxy, all_proxy).</source>
+        <translation>Взято из переменных окружения прокси (http_proxy, https_proxy, all_proxy).</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Taken from your desktop&apos;s proxy settings.</source>
+        <translation>Взято из настроек прокси рабочего стола.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Your desktop has no proxy set, so Noctara connects directly.</source>
+        <translation>В настройках рабочего стола прокси не задан, поэтому Noctara подключается напрямую.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>No system proxy is configured; connecting directly.</source>
+        <translation>Системный прокси не настроен; подключение напрямую.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>The current connection is metered.</source>
+        <translation>Текущее подключение лимитное.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The current connection is not metered.</source>
+        <translation>Текущее подключение не лимитное.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Strict mode: when these servers fail, lookups fail. The system resolver is never asked.</source>
+        <translation>Строгий режим: если эти серверы не отвечают, запрос завершается ошибкой. Системный DNS не используется никогда.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>This file does not exist, so secure connections will fail.</source>
+        <translation>Этот файл не существует, поэтому защищённые соединения не будут работать.</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Noctara proxy credentials</source>
+        <translation>Учётные данные прокси Noctara</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>No keyring is available, so the proxy credentials are kept only until Noctara quits.</source>
+        <translation>Связка ключей недоступна, поэтому учётные данные прокси хранятся только до выхода из Noctara.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Proxy credentials saved to the keyring.</source>
+        <translation>Учётные данные прокси сохранены в связке ключей.</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>DNS cache cleared.</source>
+        <translation>Кэш DNS очищен.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>IP address</source>
+        <translation>IP-адрес</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>host override</source>
+        <translation>свой адрес хоста</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>cache</source>
+        <translation>кэш</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>system resolver</source>
+        <translation>системный DNS</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>system resolver (fallback)</source>
+        <translation>системный DNS (резервный)</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>DNS over HTTPS (%1)</source>
+        <extracomment>%1 = DoH server host name</extracomment>
+        <translation>DNS over HTTPS (%1)</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>Reachable (HTTP %1, %2)</source>
+        <extracomment>%1 = HTTP status code, %2 = protocol such as HTTP/2</extracomment>
+        <translation>Доступен (HTTP %1, %2)</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Noctara network report (%1, %2)</source>
+        <extracomment>Title of the copied network report; %1 = app version, %2 = date and time</extracomment>
+        <translation>Сетевой отчёт Noctara (%1, %2)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Connectivity: %1</source>
+        <translation>Подключение: %1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offline mode: %1</source>
+        <translation>Автономный режим: %1</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>on</source>
+        <translation>вкл.</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>off</source>
+        <translation>выкл.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Metered: %1</source>
+        <translation>Лимитное: %1</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <location line="+5"/>
+        <source>yes</source>
+        <translation>да</translation>
+    </message>
+    <message>
+        <location line="-5"/>
+        <location line="+5"/>
+        <source>no</source>
+        <translation>нет</translation>
+    </message>
+    <message>
+        <location line="-4"/>
+        <source>DNS: %1</source>
+        <translation>DNS: %1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Proxy: %1</source>
+        <translation>Прокси: %1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Minimum TLS version: %1</source>
+        <translation>Минимальная версия TLS: %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Custom CA bundle: %1</source>
+        <translation>Свой набор сертификатов: %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>DNS test:</source>
+        <translation>Проверка DNS:</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Connection test:</source>
+        <translation>Проверка соединения:</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Recent requests:</source>
+        <translation>Последние запросы:</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Network report copied. Passwords and tokens are not included.</source>
+        <translation>Сетевой отчёт скопирован. Пароли и токены в него не входят.</translation>
     </message>
 </context>
 </TS>

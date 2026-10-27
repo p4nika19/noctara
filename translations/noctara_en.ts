@@ -105,7 +105,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+47"/>
         <source>Reset</source>
         <translation type="unfinished"></translation>
     </message>
@@ -143,6 +143,37 @@
     <message>
         <location filename="../src/qml/components/ColorPicker.qml" line="+79"/>
         <source>Hex color</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ConnectionTools</name>
+    <message>
+        <location filename="../src/qml/settings/network/ConnectionTools.qml" line="+12"/>
+        <source>Testing…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Test connection</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>DnsTools</name>
+    <message>
+        <location filename="../src/qml/settings/network/DnsTools.qml" line="+15"/>
+        <source>Testing…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Test DNS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Flush DNS cache</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -213,12 +244,12 @@
     <name>Errors</name>
     <message>
         <location filename="../src/i18n/ErrorMessages.cpp" line="+11"/>
-        <location line="+56"/>
+        <location line="+70"/>
         <source>Something went wrong.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-69"/>
         <source>The operation was cancelled.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -329,12 +360,27 @@
     </message>
     <message>
         <location line="+2"/>
+        <source>None of the configured DNS servers answered.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>The DNS-over-HTTPS server is unreachable.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+2"/>
         <source>The DNS-over-HTTPS server returned an invalid answer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The DNS-over-HTTPS address must start with https://. Plain http:// is allowed only for servers on this computer or the local network, with “Allow insecure DoH” turned on.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>A manual proxy is selected, but no proxy host is set.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -353,7 +399,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
+        <source>The server&apos;s certificate could not be verified. If your network inspects secure traffic, set its CA bundle under Network → Security.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Could not connect to the server.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -370,6 +421,11 @@
     <message>
         <location line="+1"/>
         <source>You are offline.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Skipped to save data on a metered connection.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -645,8 +701,95 @@
 <context>
     <name>NavRail</name>
     <message>
-        <location filename="../src/qml/components/NavRail.qml" line="+40"/>
+        <location filename="../src/qml/components/NavRail.qml" line="+56"/>
         <source>Navigation</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>NetworkDiagnostics</name>
+    <message>
+        <location filename="../src/qml/settings/NetworkDiagnostics.qml" line="+23"/>
+        <source>Diagnostics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Recent requests. Query values are hidden; passwords and tokens are never recorded.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Copy report</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>No requests yet.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>%1 · %2 · %3</source>
+        <extracomment>%1 = status or error, %2 = duration, %3 = &quot;direct&quot; or the proxy</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>NetworkHeader</name>
+    <message>
+        <location filename="../src/qml/settings/NetworkHeader.qml" line="+15"/>
+        <source>Online</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Limited: the internet may not be reachable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The network asks you to sign in first</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No network connection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unknown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Right now</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Connection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offline mode: Noctara makes no connections</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>metered</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>DNS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Proxy</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -834,9 +977,57 @@
     </message>
 </context>
 <context>
+    <name>ProxyCredentials</name>
+    <message>
+        <location filename="../src/qml/settings/network/ProxyCredentials.qml" line="+13"/>
+        <source>Username and password</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Optional. Saved in the system keyring, never in the configuration file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No keyring is available, so saved credentials are kept only until Noctara quits.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Username</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Saved – type to replace</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Password</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Save credentials</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Forget credentials</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+150"/>
+        <location filename="../src/app/main.cpp" line="+157"/>
+        <source>The installed libcurl was built without HTTP/3.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Needs hardware acceleration, which is currently off.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -846,13 +1037,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings/BuiltinSchema.cpp" line="+34"/>
-        <location line="+49"/>
+        <location filename="../src/settings/BuiltinSchema.cpp" line="+120"/>
+        <location line="+64"/>
         <source>Language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="-63"/>
         <source>Interface language.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -868,23 +1059,23 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+71"/>
+        <location line="+86"/>
         <source>Theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-70"/>
+        <location line="-85"/>
         <source>Midnight (dark), Frost (light) or follow the system.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+94"/>
+        <location line="+109"/>
         <source>Accent color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-93"/>
+        <location line="-108"/>
         <source>The whole palette is generated from a single accent color.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -974,7 +1165,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+28"/>
         <source>System default</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1020,11 +1211,12 @@
     </message>
     <message>
         <location line="+6"/>
+        <location line="+560"/>
         <source>System</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-559"/>
         <source>Midnight (dark)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1064,7 +1256,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-92"/>
+        <location line="-107"/>
         <source>The light behind the interface.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1089,7 +1281,67 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+83"/>
+        <location line="+10"/>
+        <source>Data usage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>When and how much Noctara downloads.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>DNS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How server names are turned into addresses. Applies to all of Noctara&apos;s connections without a restart.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>DNS cache</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How long answers are remembered. Lifetimes from the DNS server are kept within these bounds.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Proxy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Route Noctara&apos;s traffic through a proxy server.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Connections</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Protocol, time limits and retries.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Security</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Encrypted connections. Certificates are always verified.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+75"/>
         <source>Vivid</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1254,11 +1506,14 @@
         <location line="+169"/>
         <location line="+13"/>
         <location line="+12"/>
+        <location line="+57"/>
+        <location line="+111"/>
+        <location line="+125"/>
         <source>Auto</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-193"/>
+        <location line="-486"/>
         <source>Low</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1396,11 +1651,13 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+226"/>
+        <location line="+23"/>
         <source>Custom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-247"/>
         <source>Corner radius</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1658,17 +1915,402 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+24"/>
         <source>Always</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-21"/>
         <source>Energy saving</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead of Liquid Glass or Gaussian, and limits animations to 30 frames per second. Automatic turns it on only while the computer runs on battery.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Offline mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Make no network connections at all. Only content that is already cached is available.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Never</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Metered connection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>On a metered connection Noctara skips prefetching and other background downloads. Auto follows the system&apos;s setting for the current network.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Download speed limit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Upper bound for all downloads together. 0 means no limit.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mbit/s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>System resolver</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Custom DNS servers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>DNS over HTTPS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>DNS mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>System uses your computer&apos;s settings. DNS over HTTPS encrypts lookups so the network cannot see or change them.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>DNS servers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Asked in order; the next one is tried when a server does not answer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Server addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>IPv4 or IPv6 addresses, optionally with a port: 192.0.2.1, [2001:db8::1]:5353.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>DNS-over-HTTPS provider</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Custom accepts any RFC 8484 server, for example a personal NextDNS address.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>DoH address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>For example https://dns.example/dns-query.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Bootstrap addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>IP addresses of the DoH server, so its own name never has to be looked up elsewhere. Required when fallback to the system resolver is off.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Allow insecure DoH</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Accept a plain http:// address, but only for a server on this computer or the local network.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Fall back to the system resolver</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Keeps Noctara working when the chosen servers are unreachable, but those lookups are then visible to your network. Off is strict mode: lookups fail instead.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Prefer IPv4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Prefer IPv6</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>IPv4 only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>IPv6 only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>IP version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Auto tries IPv6 and IPv4 in parallel and keeps whichever connects first.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Host overrides</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Fixed addresses that skip DNS, as host=address. Repeat a host to give it several addresses.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Minimum lifetime</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Answers are kept at least this long.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+11"/>
+        <location line="+12"/>
+        <location line="+94"/>
+        <location line="+11"/>
+        <source>s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-119"/>
+        <source>Maximum lifetime</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Answers are looked up again after this long.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Failed lookups</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How long a name that does not exist is remembered as missing.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>No proxy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Manual</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Proxy mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>System uses the proxy variables of the environment (http_proxy, no_proxy …) or, if none are set, your desktop&apos;s proxy settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>SOCKS5 with remote DNS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Proxy type</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>HTTPS encrypts the connection to the proxy itself. With SOCKS4 and SOCKS5 Noctara looks up server names itself; the others let the proxy do it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Proxy host</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Host name or IP address of the proxy server.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Proxy port</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Username and password, if the proxy needs them, are kept in the system keyring, never in the configuration file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Connect directly to</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hosts that bypass the proxy: example.com (with its subdomains), *.example.com, IP addresses or ranges such as 10.0.0.0/8.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Bypass for local addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Connect directly to localhost, private networks and names without a dot.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>HTTP version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Auto uses HTTP/2 where the server supports it. HTTP/3 falls back to older versions when it is blocked.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Connection timeout</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How long to wait for a server, including the proxy and the encrypted handshake.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Stall timeout</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>A download is aborted (and retried) when no data arrives for this long.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Retries</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How often a failed request is repeated. Only requests that are safe to repeat are retried.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Retry delay</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Wait before the first retry; it doubles with every further attempt.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>ms</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Maximum connections</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Open connections in total.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Connections per server</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Open connections to one server. HTTP/2 carries many requests over one.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Minimum TLS version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Older protocol versions are never used.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>CA bundle</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>PEM file with the certificate authorities to trust instead of the system&apos;s, for networks that inspect encrypted traffic. Empty uses the system store.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1732,7 +2374,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsModel.cpp" line="+145"/>
+        <location filename="../src/ui/SettingsModel.cpp" line="+154"/>
         <source>Set by a command-line flag for this session.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1746,7 +2388,7 @@
 <context>
     <name>SettingsRow</name>
     <message>
-        <location filename="../src/qml/settings/SettingsRow.qml" line="+108"/>
+        <location filename="../src/qml/settings/SettingsRow.qml" line="+112"/>
         <source>Reset section</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1761,7 +2403,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+121"/>
+        <location line="+141"/>
         <source>Default</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1774,7 +2416,7 @@
 <context>
     <name>SettingsView</name>
     <message>
-        <location filename="../src/qml/settings/SettingsView.qml" line="+29"/>
+        <location filename="../src/qml/settings/SettingsView.qml" line="+39"/>
         <source>Search settings</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1810,7 +2452,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+55"/>
         <source>No settings match “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1820,6 +2462,15 @@
     <message>
         <location filename="../src/qml/components/Skeleton.qml" line="+16"/>
         <source>Loading</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TestResults</name>
+    <message>
+        <location filename="../src/qml/settings/network/TestResults.qml" line="+47"/>
+        <source>via %1 · %2</source>
+        <extracomment>%1 = how the answer was obtained (server, cache …), %2 = duration</extracomment>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1876,6 +2527,251 @@
     <message>
         <location line="+2"/>
         <source>Restart now</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>noctara::ui::NetworkController</name>
+    <message>
+        <location filename="../src/ui/NetworkController.cpp" line="+34"/>
+        <source>%1 ms</source>
+        <extracomment>Duration in milliseconds, e.g. &quot;42 ms&quot;</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+79"/>
+        <source>System resolver</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Custom DNS servers: %1</source>
+        <extracomment>%1 = provider name or list of server addresses</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>DNS over HTTPS: %1</source>
+        <extracomment>%1 = provider name or server host name</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>%1 · strict</source>
+        <extracomment>Appended to the DNS mode when the system resolver is never used</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>No proxy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Manual proxy without a host</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>System: %1</source>
+        <extracomment>%1 = proxy address, or &quot;direct&quot;</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <location line="+207"/>
+        <location line="+27"/>
+        <source>direct</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-218"/>
+        <source>With SOCKS4 and SOCKS5 Noctara looks up server names itself, using the DNS settings above, and sends only addresses to the proxy. Choose SOCKS5 with remote DNS to let the proxy look them up.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The proxy looks up server names itself, so the DNS settings above apply only to direct connections and to finding the proxy server.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>Taken from the proxy environment variables (http_proxy, https_proxy, all_proxy).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Taken from your desktop&apos;s proxy settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Your desktop has no proxy set, so Noctara connects directly.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>No system proxy is configured; connecting directly.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>The current connection is metered.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The current connection is not metered.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Strict mode: when these servers fail, lookups fail. The system resolver is never asked.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>This file does not exist, so secure connections will fail.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Noctara proxy credentials</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>No keyring is available, so the proxy credentials are kept only until Noctara quits.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Proxy credentials saved to the keyring.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>DNS cache cleared.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>IP address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>host override</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>cache</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>system resolver</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>system resolver (fallback)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>DNS over HTTPS (%1)</source>
+        <extracomment>%1 = DoH server host name</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>Reachable (HTTP %1, %2)</source>
+        <extracomment>%1 = HTTP status code, %2 = protocol such as HTTP/2</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Noctara network report (%1, %2)</source>
+        <extracomment>Title of the copied network report; %1 = app version, %2 = date and time</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Connectivity: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offline mode: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>on</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>off</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Metered: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <location line="+5"/>
+        <source>yes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-5"/>
+        <location line="+5"/>
+        <source>no</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-4"/>
+        <source>DNS: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Proxy: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Minimum TLS version: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Custom CA bundle: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>DNS test:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Connection test:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Recent requests:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Network report copied. Passwords and tokens are not included.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -1,7 +1,12 @@
 // The application's settings schema: the single source of truth for the settings UI, config file,
 // CLI/env overrides and docs/configuration.md. Adding a setting = adding one entry here.
+#include "core/NetAddress.hpp"
 #include "settings/Keys.hpp"
 #include "settings/Schema.hpp"
+
+#include <QUrl>
+
+#include <format>
 
 // Entries rely on designated initializers leaving defaulted fields out; that is the intended idiom here.
 #pragma clang diagnostic ignored "-Wmissing-designated-field-initializers"
@@ -26,6 +31,87 @@ QVariant integer(qint64 value)
 QVariant real(double value)
 {
     return QVariant::fromValue(value);
+}
+
+Result<void> invalid(const QString& item, const char* expected)
+{
+    return fail(ErrorCode::ConfigInvalidValue, std::format("'{}' is not {}", item.toStdString(), expected));
+}
+
+Result<void> validateHost(const QVariant& value)
+{
+    const QString host = value.toString();
+    if (host.isEmpty() || IpAddress::parse(host) || isValidHostname(host)) {
+        return {};
+    }
+    return invalid(host, "a host name or IP address");
+}
+
+Result<void> validateDnsServers(const QVariant& value)
+{
+    for (const QString& item : value.toStringList()) {
+        if (!Endpoint::parse(item, 53)) {
+            return invalid(item, "an IP address with an optional port");
+        }
+    }
+    return {};
+}
+
+Result<void> validateAddresses(const QVariant& value)
+{
+    for (const QString& item : value.toStringList()) {
+        if (!IpAddress::parse(item)) {
+            return invalid(item, "an IP address");
+        }
+    }
+    return {};
+}
+
+Result<void> validateDohUrl(const QVariant& value)
+{
+    const QString text = value.toString();
+    if (text.isEmpty()) {
+        return {};
+    }
+    const QUrl url(text, QUrl::StrictMode);
+    const bool schemeOk = url.scheme() == u"https" || url.scheme() == u"http";
+    if (!url.isValid() || !schemeOk || url.host().isEmpty() || !url.userInfo().isEmpty()) {
+        return invalid(text, "an https:// URL");
+    }
+    return {};
+}
+
+// "host=address" pairs; a host may appear several times to give it more than one address.
+Result<void> validateHostOverrides(const QVariant& value)
+{
+    for (const QString& item : value.toStringList()) {
+        const qsizetype eq = item.indexOf(u'=');
+        if (eq < 0 || !isValidHostname(QStringView(item).first(eq).trimmed()) ||
+            !IpAddress::parse(QStringView(item).sliced(eq + 1))) {
+            return invalid(item, "of the form host=address");
+        }
+    }
+    return {};
+}
+
+// Host names (matching subdomains too), "*.domain", ".domain", IP addresses, CIDR ranges, "<local>" or "*".
+Result<void> validateBypass(const QVariant& value)
+{
+    for (const QString& item : value.toStringList()) {
+        QStringView rule = QStringView(item).trimmed();
+        if (rule == u"*" || rule == u"<local>" || Cidr::parse(rule)) {
+            continue;
+        }
+        if (rule.startsWith(u"*.")) {
+            rule = rule.sliced(2);
+        } else if (rule.startsWith(u'.')) {
+            rule = rule.sliced(1);
+        }
+        if (!isValidHostname(rule)) {
+            return invalid(item, "a host name, *.domain, IP address or CIDR range");
+        }
+    }
+    return {};
 }
 
 std::vector<Section> builtinSections()
@@ -65,6 +151,21 @@ std::vector<Section> builtinSections()
         {"performance.power", Performance, QT_TRANSLATE_NOOP("Settings", "Power"),
          QT_TRANSLATE_NOOP("Settings",
                            "How Noctara reduces its own energy use. Your system power profile is not changed.")},
+
+        {"network.usage", Network, QT_TRANSLATE_NOOP("Settings", "Data usage"),
+         QT_TRANSLATE_NOOP("Settings", "When and how much Noctara downloads.")},
+        {"network.dns", Network, QT_TRANSLATE_NOOP("Settings", "DNS"),
+         QT_TRANSLATE_NOOP("Settings", "How server names are turned into addresses. Applies to all of Noctara's "
+                                       "connections without a restart.")},
+        {"network.dns.cache", Network, QT_TRANSLATE_NOOP("Settings", "DNS cache"),
+         QT_TRANSLATE_NOOP("Settings", "How long answers are remembered. Lifetimes from the DNS server are kept "
+                                       "within these bounds.")},
+        {"network.proxy", Network, QT_TRANSLATE_NOOP("Settings", "Proxy"),
+         QT_TRANSLATE_NOOP("Settings", "Route Noctara's traffic through a proxy server.")},
+        {"network.connection", Network, QT_TRANSLATE_NOOP("Settings", "Connections"),
+         QT_TRANSLATE_NOOP("Settings", "Protocol, time limits and retries.")},
+        {"network.tls", Network, QT_TRANSLATE_NOOP("Settings", "Security"),
+         QT_TRANSLATE_NOOP("Settings", "Encrypted connections. Certificates are always verified.")},
     };
 }
 
@@ -478,6 +579,352 @@ std::vector<Definition> builtinDefinitions()
                         "While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead "
                         "of Liquid Glass or Gaussian, and limits animations to 30 frames per second. Automatic turns "
                         "it on only while the computer runs on battery.")});
+
+    // --- Network: data usage -----------------------------------------------------------------------
+    defs.push_back({.key = keys::OfflineMode,
+                    .type = Type::Bool,
+                    .defaultValue = false,
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Offline mode"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Make no network connections at all. Only content that is already cached is "
+                                    "available."),
+                    .cliAlias = "offline"});
+    defs.push_back({.key = keys::MeteredMode,
+                    .type = Type::Enum,
+                    .defaultValue = str("auto"),
+                    .options = {{"auto", QT_TRANSLATE_NOOP("Settings", "Auto")},
+                                {"on", QT_TRANSLATE_NOOP("Settings", "Always")},
+                                {"off", QT_TRANSLATE_NOOP("Settings", "Never")}},
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Metered connection"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "On a metered connection Noctara skips prefetching and other background "
+                                    "downloads. Auto follows the system's setting for the current network.")});
+    defs.push_back(
+        {.key = keys::BandwidthLimit,
+         .type = Type::Int,
+         .defaultValue = integer(0),
+         .min = 0,
+         .max = 1000,
+         .step = 1,
+         .category = Network,
+         .label = QT_TRANSLATE_NOOP("Settings", "Download speed limit"),
+         .description = QT_TRANSLATE_NOOP("Settings", "Upper bound for all downloads together. 0 means no limit."),
+         .unit = QT_TRANSLATE_NOOP("Settings", "Mbit/s"),
+         .flags = flag::Advanced});
+
+    // --- Network: DNS ------------------------------------------------------------------------------
+    defs.push_back({.key = keys::DnsMode,
+                    .type = Type::Enum,
+                    .defaultValue = str("system"),
+                    .options = {{"system", QT_TRANSLATE_NOOP("Settings", "System resolver")},
+                                {"custom", QT_TRANSLATE_NOOP("Settings", "Custom DNS servers")},
+                                {"doh", QT_TRANSLATE_NOOP("Settings", "DNS over HTTPS")}},
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "DNS mode"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "System uses your computer's settings. DNS over HTTPS encrypts lookups so the "
+                                    "network cannot see or change them."),
+                    .cliAlias = "dns"});
+    defs.push_back({.key = keys::DnsServerPreset,
+                    .type = Type::Enum,
+                    .defaultValue = str("cloudflare"),
+                    .options = {{"cloudflare", "Cloudflare", false},
+                                {"google", "Google", false},
+                                {"quad9", "Quad9", false},
+                                {"adguard", "AdGuard", false},
+                                {"custom", QT_TRANSLATE_NOOP("Settings", "Custom")}},
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "DNS servers"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Asked in order; the next one is tried when a server does not answer."),
+                    .visibleWhen = Condition{keys::DnsMode, {"custom"}}});
+    defs.push_back({.key = keys::DnsServers,
+                    .type = Type::StringList,
+                    .defaultValue = QVariant::fromValue(QStringList{}),
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Server addresses"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "IPv4 or IPv6 addresses, optionally with a port: 192.0.2.1, [2001:db8::1]:5353."),
+                    .visibleWhen = Condition{keys::DnsServerPreset, {"custom"}},
+                    .validator = validateDnsServers});
+    defs.push_back({.key = keys::DohProvider,
+                    .type = Type::Enum,
+                    .defaultValue = str("cloudflare"),
+                    .options = {{"cloudflare", "Cloudflare", false},
+                                {"google", "Google", false},
+                                {"quad9", "Quad9", false},
+                                {"adguard", "AdGuard", false},
+                                {"mullvad", "Mullvad", false},
+                                {"custom", QT_TRANSLATE_NOOP("Settings", "Custom")}},
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "DNS-over-HTTPS provider"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Custom accepts any RFC 8484 server, for example a personal NextDNS address."),
+                    .visibleWhen = Condition{keys::DnsMode, {"doh"}}});
+    defs.push_back({.key = keys::DohUrl,
+                    .type = Type::Url,
+                    .defaultValue = str(""),
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "DoH address"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "For example https://dns.example/dns-query."),
+                    .visibleWhen = Condition{keys::DohProvider, {"custom"}},
+                    .validator = validateDohUrl});
+    defs.push_back({.key = keys::DohBootstrap,
+                    .type = Type::StringList,
+                    .defaultValue = QVariant::fromValue(QStringList{}),
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Bootstrap addresses"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "IP addresses of the DoH server, so its own name never has to be looked up "
+                                    "elsewhere. Required when fallback to the system resolver is off."),
+                    .visibleWhen = Condition{keys::DohProvider, {"custom"}},
+                    .validator = validateAddresses});
+    defs.push_back({.key = keys::DohAllowInsecure,
+                    .type = Type::Bool,
+                    .defaultValue = false,
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Allow insecure DoH"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Accept a plain http:// address, but only for a server on this computer or the "
+                                    "local network."),
+                    .flags = flag::Advanced,
+                    .visibleWhen = Condition{keys::DohProvider, {"custom"}}});
+    defs.push_back({.key = keys::DnsFallbackToSystem,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Fall back to the system resolver"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Keeps Noctara working when the chosen servers are unreachable, but those "
+                                    "lookups are then visible to your network. Off is strict mode: lookups fail "
+                                    "instead."),
+                    .visibleWhen = Condition{keys::DnsMode, {"custom", "doh"}}});
+    defs.push_back({.key = keys::IpFamily,
+                    .type = Type::Enum,
+                    .defaultValue = str("auto"),
+                    .options = {{"auto", QT_TRANSLATE_NOOP("Settings", "Auto")},
+                                {"prefer_ipv4", QT_TRANSLATE_NOOP("Settings", "Prefer IPv4")},
+                                {"prefer_ipv6", QT_TRANSLATE_NOOP("Settings", "Prefer IPv6")},
+                                {"ipv4", QT_TRANSLATE_NOOP("Settings", "IPv4 only")},
+                                {"ipv6", QT_TRANSLATE_NOOP("Settings", "IPv6 only")}},
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "IP version"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Auto tries IPv6 and IPv4 in parallel and keeps whichever connects first."),
+                    .flags = flag::Advanced});
+    defs.push_back({.key = keys::HostOverrides,
+                    .type = Type::StringList,
+                    .defaultValue = QVariant::fromValue(QStringList{}),
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Host overrides"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Fixed addresses that skip DNS, as host=address. Repeat a host to give it "
+                                    "several addresses."),
+                    .flags = flag::Advanced,
+                    .validator = validateHostOverrides});
+    defs.push_back({.key = keys::DnsMinTtl,
+                    .type = Type::Int,
+                    .defaultValue = integer(60),
+                    .min = 0,
+                    .max = 3600,
+                    .step = 1,
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Minimum lifetime"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Answers are kept at least this long."),
+                    .unit = QT_TRANSLATE_NOOP("Settings", "s"),
+                    .flags = flag::Advanced});
+    defs.push_back({.key = keys::DnsMaxTtl,
+                    .type = Type::Int,
+                    .defaultValue = integer(3600),
+                    .min = 60,
+                    .max = 86400,
+                    .step = 1,
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Maximum lifetime"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Answers are looked up again after this long."),
+                    .unit = QT_TRANSLATE_NOOP("Settings", "s"),
+                    .flags = flag::Advanced});
+    defs.push_back(
+        {.key = keys::DnsNegativeTtl,
+         .type = Type::Int,
+         .defaultValue = integer(30),
+         .min = 0,
+         .max = 3600,
+         .step = 1,
+         .category = Network,
+         .label = QT_TRANSLATE_NOOP("Settings", "Failed lookups"),
+         .description = QT_TRANSLATE_NOOP("Settings", "How long a name that does not exist is remembered as missing."),
+         .unit = QT_TRANSLATE_NOOP("Settings", "s"),
+         .flags = flag::Advanced});
+
+    // --- Network: proxy ----------------------------------------------------------------------------
+    defs.push_back({.key = keys::ProxyMode,
+                    .type = Type::Enum,
+                    .defaultValue = str("system"),
+                    .options = {{"none", QT_TRANSLATE_NOOP("Settings", "No proxy")},
+                                {"system", QT_TRANSLATE_NOOP("Settings", "System")},
+                                {"manual", QT_TRANSLATE_NOOP("Settings", "Manual")}},
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Proxy mode"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "System uses the proxy variables of the environment (http_proxy, no_proxy …) "
+                                    "or, if none are set, your desktop's proxy settings."),
+                    .cliAlias = "proxy-mode"});
+    defs.push_back({.key = keys::ProxyType,
+                    .type = Type::Enum,
+                    .defaultValue = str("http"),
+                    .options = {{"http", "HTTP", false},
+                                {"https", "HTTPS", false},
+                                {"socks4", "SOCKS4", false},
+                                {"socks5", "SOCKS5", false},
+                                {"socks5h", QT_TRANSLATE_NOOP("Settings", "SOCKS5 with remote DNS")}},
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Proxy type"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "HTTPS encrypts the connection to the proxy itself. With SOCKS4 and SOCKS5 "
+                                    "Noctara looks up server names itself; the others let the proxy do it."),
+                    .visibleWhen = Condition{keys::ProxyMode, {"manual"}}});
+    defs.push_back({.key = keys::ProxyHost,
+                    .type = Type::String,
+                    .defaultValue = str(""),
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Proxy host"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Host name or IP address of the proxy server."),
+                    .visibleWhen = Condition{keys::ProxyMode, {"manual"}},
+                    .validator = validateHost});
+    defs.push_back({.key = keys::ProxyPort,
+                    .type = Type::Int,
+                    .defaultValue = integer(8080),
+                    .min = 1,
+                    .max = 65535,
+                    .step = 1,
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Proxy port"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Username and password, if the proxy needs them, are kept in the system "
+                                    "keyring, never in the configuration file."),
+                    .visibleWhen = Condition{keys::ProxyMode, {"manual"}}});
+    defs.push_back({.key = keys::ProxyBypass,
+                    .type = Type::StringList,
+                    .defaultValue = QVariant::fromValue(QStringList{}),
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Connect directly to"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Hosts that bypass the proxy: example.com (with its subdomains), *.example.com, "
+                                    "IP addresses or ranges such as 10.0.0.0/8."),
+                    .visibleWhen = Condition{keys::ProxyMode, {"manual"}},
+                    .validator = validateBypass});
+    defs.push_back({.key = keys::ProxyBypassLocal,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Bypass for local addresses"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Connect directly to localhost, private networks and names without a dot."),
+                    .visibleWhen = Condition{keys::ProxyMode, {"manual"}}});
+
+    // --- Network: connections ----------------------------------------------------------------------
+    defs.push_back({.key = keys::HttpVersion,
+                    .type = Type::Enum,
+                    .defaultValue = str("auto"),
+                    .options = {{"auto", QT_TRANSLATE_NOOP("Settings", "Auto")},
+                                {"1.1", "HTTP/1.1", false},
+                                {"2", "HTTP/2", false},
+                                {"3", "HTTP/3", false}},
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "HTTP version"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Auto uses HTTP/2 where the server supports it. HTTP/3 falls back to older "
+                                    "versions when it is blocked."),
+                    .flags = flag::Advanced});
+    defs.push_back({.key = keys::ConnectTimeout,
+                    .type = Type::Int,
+                    .defaultValue = integer(15),
+                    .min = 1,
+                    .max = 120,
+                    .step = 1,
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Connection timeout"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "How long to wait for a server, including the proxy and the encrypted "
+                                    "handshake."),
+                    .unit = QT_TRANSLATE_NOOP("Settings", "s")});
+    defs.push_back({.key = keys::ReadTimeout,
+                    .type = Type::Int,
+                    .defaultValue = integer(30),
+                    .min = 5,
+                    .max = 300,
+                    .step = 5,
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Stall timeout"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "A download is aborted (and retried) when no data arrives for this long."),
+                    .unit = QT_TRANSLATE_NOOP("Settings", "s")});
+    defs.push_back({.key = keys::Retries,
+                    .type = Type::Int,
+                    .defaultValue = integer(2),
+                    .min = 0,
+                    .max = 10,
+                    .step = 1,
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Retries"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "How often a failed request is repeated. Only requests that are safe to repeat "
+                                    "are retried.")});
+    defs.push_back({.key = keys::RetryBackoff,
+                    .type = Type::Int,
+                    .defaultValue = integer(500),
+                    .min = 100,
+                    .max = 10000,
+                    .step = 100,
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Retry delay"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Wait before the first retry; it doubles with every further attempt."),
+                    .unit = QT_TRANSLATE_NOOP("Settings", "ms"),
+                    .flags = flag::Advanced});
+    defs.push_back({.key = keys::MaxConnections,
+                    .type = Type::Int,
+                    .defaultValue = integer(16),
+                    .min = 1,
+                    .max = 64,
+                    .step = 1,
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Maximum connections"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Open connections in total."),
+                    .flags = flag::Advanced});
+    defs.push_back({.key = keys::MaxConnectionsPerHost,
+                    .type = Type::Int,
+                    .defaultValue = integer(6),
+                    .min = 1,
+                    .max = 32,
+                    .step = 1,
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Connections per server"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Open connections to one server. HTTP/2 carries many requests over one."),
+                    .flags = flag::Advanced});
+
+    // --- Network: security -------------------------------------------------------------------------
+    defs.push_back({.key = keys::TlsMinVersion,
+                    .type = Type::Enum,
+                    .defaultValue = str("1.2"),
+                    .options = {{"1.2", "TLS 1.2", false}, {"1.3", "TLS 1.3", false}},
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Minimum TLS version"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Older protocol versions are never used."),
+                    .flags = flag::Advanced});
+    defs.push_back({.key = keys::CaBundle,
+                    .type = Type::Path,
+                    .defaultValue = str(""),
+                    .category = Network,
+                    .label = QT_TRANSLATE_NOOP("Settings", "CA bundle"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "PEM file with the certificate authorities to trust instead of the system's, "
+                                    "for networks that inspect encrypted traffic. Empty uses the system store."),
+                    .flags = flag::Advanced});
 
     return defs;
 }

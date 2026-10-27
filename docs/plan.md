@@ -22,7 +22,7 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 4. **Settings docs**: `noctara-schema-doc`, a small tool linking only `core` and `settings`, prints the schema as Markdown. The `docs-config` task writes the output to `docs/configuration.md`, and CI diffs the result.
 5. **Config file rewrite**: on save the file is regenerated from the schema. Every key is documented. Keys left at their default are written commented out, explicitly set keys are written as values, and unknown keys and tables are preserved verbatim through toml++. User comments are not preserved (documented).
 6. **Warnings**: strict warnings apply only to our own sources through per-file flags. Qt and third-party headers are system includes, and generated code (moc, rcc) is excluded. `-Wuseless-cast` is GCC-only and clang has no equivalent, so it is documented and omitted.
-7. **Network transport (tentative, confirmed by the spike in slice c)**: libcurl multi plus our own DNS layer (system / UDP+TCP custom servers / RFC 8484 DoH with TTL cache). Resolved addresses are pinned with `CURLOPT_RESOLVE`, so curl never calls `getaddrinfo` for app traffic. This makes strict mode provable and gives us TTL clamping, negative caching, EDNS padding and per-host diagnostics, none of which curl's built-in `CURLOPT_DOH_URL` exposes.
+7. **Network transport (confirmed by the slice (c) spike, see [network.md](network.md))**: libcurl multi on a dedicated network thread plus our own DNS layer (system / UDP+TCP custom servers / RFC 8484 DoH with TTL cache). Every host curl connects to, IP literals included, is pinned with `CURLOPT_RESOLVE`, and a resolver-start guard fails any transfer for which curl would resolve by itself. This makes strict mode provable and gives us TTL clamping, negative caching, EDNS padding and per-host diagnostics, none of which curl's built-in `CURLOPT_DOH_URL` exposes. Redirects are followed by Noctara, not curl, so every new host goes through the same rules.
 8. **Native playback (tentative)**: FFmpeg demux/decode reading through a custom `AVIOContext` from `StreamSource`, with `libswresample` and output to `QAudioSink`. `QMediaPlayer` cannot guarantee that every byte goes through our transport and cache, and its seek and buffering control is coarse.
 9. **Tests**: doctest. Qt-dependent tests create a `QCoreApplication` or `QGuiApplication` (offscreen) in a custom `main`.
 10. **UI scale**: applied live through Theme token multipliers rather than `QT_SCALE_FACTOR`, which would need a restart.
@@ -33,6 +33,8 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 15. **Presets change colours only** (Auto / Midnight / Frost; Midnight and Frost untranslated), per the user's review of slice (a).
 16. **Vulkan is preferred under Auto** (user request): pipeline cache on disk, GPU timestamps, device selection for *GPU preference*. OpenGL remains the fallback, including when Vulkan is only lavapipe.
 17. **Selection indicators are computed, not bound by `Binding` elements**: the nav-rail and segmented-control pills derive their geometry from the model and the control size, so they follow resizes and never lag or duplicate.
+18. **Secret store**: `auth::ISecretStore` with a Secret Service (libsecret) implementation on a worker thread; without a keyring, secrets stay in memory and the UI says so. The encrypted-file fallback from the spec is deferred to slice (f), where the session token needs it most.
+19. **Network diagnostics are redacted at the source**: request records keep URLs without user-info or query values, and proxy URLs are displayed as `scheme://<redacted>@host:port`, so nothing secret can reach the UI, the copied report or logs.
 
 ## Slices
 
@@ -47,9 +49,10 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 (i) DRM helper
 (j) polish and performance measurements
 
-Done: (a), (b).
+Done: (a), (b), (c).
 
 ## Open items flagged for verification
+- DoH over HTTP/2 against a local server is not covered by automated tests (the mock speaks HTTP/1.1); real providers negotiate HTTP/2 through ALPN.
 - castlabs Electron version and the `configureHostResolver` secure-DNS support (slice i).
 - Current SoundCloud api-v2 behaviour, including `client_id` discovery and transcodings (slice e).
 - Glass GPU timings on a mainstream iGPU. The dev machine has a GTX 1070, so iGPU numbers need another machine; documented as such.

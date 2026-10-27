@@ -204,6 +204,14 @@ Schema::Schema(std::vector<Section> sections, std::vector<Definition> definition
         if (def.visibleWhen && !m_index.contains(def.visibleWhen->key)) {
             schemaDefect(std::format("key '{}' depends on unknown key '{}'", keyString(def), def.visibleWhen->key));
         }
+        // Visibility follows the chain of dependencies, so it must end.
+        std::size_t depth = 0;
+        for (const Definition* parent = &def; parent != nullptr && parent->visibleWhen;
+             parent = find(parent->visibleWhen->key)) {
+            if (++depth > m_definitions.size()) {
+                schemaDefect(std::format("key '{}' has a cyclic visibility dependency", keyString(def)));
+            }
+        }
     }
 }
 

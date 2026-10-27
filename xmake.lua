@@ -18,6 +18,11 @@ if not get_config("qt") then
 end
 
 add_requires("doctest 2.4.x")
+-- System libraries through pkg-config (see README for the distribution packages).
+add_requires("pkgconfig::libcurl", {alias = "libcurl", system = true})
+add_requires("pkgconfig::libproxy-1.0", {alias = "libproxy", system = true})
+add_requires("pkgconfig::libsecret-1", {alias = "libsecret", system = true})
+add_requires("pkgconfig::openssl", {alias = "openssl", system = true})
 
 -- Toolchain: mold for every link step.
 add_ldflags("-fuse-ld=mold", {force = true})
@@ -106,8 +111,22 @@ noctara_module("settings", {qt = {"QtCore", "QtConcurrent"}, deps = {"noctara_co
 noctara_module("i18n", {qt = {"QtCore"}, deps = {"noctara_core", "noctara_settings"}})
 noctara_module("theme", {qt = {"QtCore", "QtGui", "QtConcurrent"}, deps = {"noctara_core", "noctara_settings"}})
 noctara_module("gfx", {qt = {"QtCore", "QtGui", "QtQuick", "QtDBus"}, deps = {"noctara_core", "noctara_settings"}})
+noctara_module("net", {qt = {"QtCore", "QtConcurrent", "QtDBus"}, deps = {"noctara_core", "noctara_settings"},
+    packages = {"libcurl", "libproxy"}, extra = function ()
+        -- The transport needs TLS and HTTP/2 from libcurl; refuse to build against a libcurl without them.
+        on_config(function (target)
+            local features = os.iorunv("pkg-config", {"--variable=supported_features", "libcurl"}) or ""
+            for _, required in ipairs({"SSL", "HTTP2", "IPv6"}) do
+                if not features:find(required, 1, true) then
+                    raise("libcurl lacks the required feature %s (has: %s)", required, features:trim())
+                end
+            end
+        end)
+    end})
+noctara_module("auth", {qt = {"QtCore", "QtConcurrent"}, deps = {"noctara_core"}, packages = {"libsecret"}})
 noctara_module("ui", {qt = {"QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus"},
-    deps = {"noctara_core", "noctara_settings", "noctara_i18n", "noctara_theme", "noctara_gfx"}})
+    deps = {"noctara_core", "noctara_settings", "noctara_i18n", "noctara_theme", "noctara_gfx", "noctara_net",
+            "noctara_auth"}})
 
 target("noctara")
     set_kind("binary")
@@ -143,7 +162,7 @@ target("noctara-tests")
     add_rules("qt.quickapp", "noctara.qtfix", "noctara.lrelease")
     add_frameworks("QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus", "QtTest")
     add_deps("noctara_ui")
-    add_packages("doctest")
+    add_packages("doctest", "openssl")
     add_files("tests/**.cpp", {cxxflags = STRICT_WARNINGS})
     add_defines("NOCTARA_SOURCE_DIR=\"$(projectdir)\"")
     add_files("translations/*.ts", {rules = {"noctara.lrelease", override = true}})

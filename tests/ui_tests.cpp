@@ -107,6 +107,35 @@ TEST_SUITE("ui.settings")
 
 TEST_SUITE("ui.presets")
 {
+    TEST_CASE("a row whose parent row is hidden stays hidden (chained conditions)")
+    {
+        QTemporaryDir dir;
+        settings::SettingsStore store(settings::Schema::builtin());
+        settings::ConfigFile config(store, dir.filePath(QStringLiteral("config.toml")), {});
+        i18n::LanguageManager languages(store);
+        ui::SettingsController controller(store, config, languages);
+        ui::SettingsModel* page = controller.page(QStringLiteral("network"));
+        REQUIRE(page != nullptr);
+        const auto shown = [page](std::string_view key) {
+            for (int row = 0; row < page->rowCount(); ++row) {
+                if (page->data(page->index(row), ui::SettingsModel::KeyRole).toString() ==
+                    QLatin1StringView(key.data(), static_cast<qsizetype>(key.size()))) {
+                    return page->data(page->index(row), ui::SettingsModel::ShownRole).toBool();
+                }
+            }
+            FAIL("missing row");
+            return false;
+        };
+        // The server list depends on the preset, which only exists in custom DNS mode.
+        REQUIRE(store.setUserValue(settings::keys::DnsServerPreset, QStringLiteral("custom")).has_value());
+        CHECK_FALSE(shown(settings::keys::DnsServerPreset));
+        CHECK_FALSE(shown(settings::keys::DnsServers));
+        REQUIRE(store.setUserValue(settings::keys::DnsMode, QStringLiteral("custom")).has_value());
+        CHECK(shown(settings::keys::DnsServerPreset));
+        CHECK(shown(settings::keys::DnsServers));
+        CHECK_FALSE(shown(settings::keys::DohUrl));
+    }
+
     TEST_CASE("presets apply ordinary settings and are detected from the current values")
     {
         QTemporaryDir dir;

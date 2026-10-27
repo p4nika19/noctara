@@ -35,13 +35,17 @@ Item {
     property bool compact: false
     // Section whose header is already drawn above the list (the Appearance page shows "Theme" over its tiles).
     property string headerShownAbove
+    // Extra controls shown under this row (e.g. "Test DNS" under the DNS mode), only while the row is shown.
+    property Component extension: null
 
     readonly property bool editable: !overridden && disabledReason.length === 0
     readonly property bool segmented: type === "enum" && options.length <= 4
                                       && options.reduce((n, o) => n + o.label.length, 0) <= (compact ? 30 : 46)
-    readonly property bool inline: type === "bool" || (type === "enum" && !segmented)
+    // Ports and similar: too many steps for a slider, so a number field instead.
+    readonly property bool numberField: type === "int" && (maximum - minimum) / Math.max(step, 1) > 300
+    readonly property bool inline: type === "bool" || (type === "enum" && !segmented) || numberField
     readonly property string valueText: {
-        if (type !== "int" && type !== "real")
+        if ((type !== "int" && type !== "real") || numberField)
             return ""
         const v = Number(value)
         if (unit === "%")
@@ -221,7 +225,7 @@ Item {
                     switch (row.type) {
                     case "bool": return boolControl
                     case "enum": return row.segmented ? segmentedControl : comboControl
-                    case "int":
+                    case "int": return row.numberField ? numberFieldControl : numberControl
                     case "real": return numberControl
                     case "color": return colorControl
                     case "list": return listControl
@@ -229,6 +233,14 @@ Item {
                     }
                 }
             }
+        }
+
+        Loader {
+            width: parent.width
+            active: row.extension !== null && row.shown
+            visible: active
+            sourceComponent: row.extension
+            height: item ? item.implicitHeight + Theme.space.md : 0
         }
     }
 
@@ -268,6 +280,18 @@ Item {
             value: row.value
             Accessible.name: row.label
             onMoved: row.commit(value)
+        }
+    }
+    Component {
+        id: numberFieldControl
+        TextField {
+            implicitWidth: 140 * Theme.scale
+            monospace: true
+            text: String(row.value)
+            inputMethodHints: Qt.ImhDigitsOnly
+            validator: IntValidator { bottom: row.minimum; top: row.maximum }
+            Accessible.name: row.label
+            onEditingFinished: if (acceptableInput && Number(text) !== Number(row.value)) row.commit(Number(text))
         }
     }
     Component {

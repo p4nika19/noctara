@@ -5,12 +5,15 @@
 
 #include <QGuiApplication>
 
+#include <csignal>
 #include <cstdlib>
 
 // One GUI application (offscreen platform) for the whole run, so Qt-dependent tests can use
 // event loops, fonts and the scene graph's software backend.
 int main(int argc, char** argv)
 {
+    // Mock servers write to sockets the client may already have closed.
+    (void)std::signal(SIGPIPE, SIG_IGN);
     ::setenv("QT_QPA_PLATFORM", "offscreen", 0);
     ::setenv("QT_QUICK_BACKEND", "software", 0);
     QGuiApplication app(argc, argv);

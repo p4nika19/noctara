@@ -49,4 +49,36 @@ inline constexpr std::string_view VSync = "performance.rendering.vsync";
 inline constexpr std::string_view FrameRateCap = "performance.rendering.frame_rate_cap";
 inline constexpr std::string_view EnergySaving = "performance.power.energy_saving";
 
+inline constexpr std::string_view OfflineMode = "network.usage.offline";
+inline constexpr std::string_view MeteredMode = "network.usage.metered";
+inline constexpr std::string_view BandwidthLimit = "network.usage.bandwidth_limit";
+inline constexpr std::string_view DnsMode = "network.dns.mode";
+inline constexpr std::string_view DnsServerPreset = "network.dns.server_preset";
+inline constexpr std::string_view DnsServers = "network.dns.servers";
+inline constexpr std::string_view DohProvider = "network.dns.doh_provider";
+inline constexpr std::string_view DohUrl = "network.dns.doh_url";
+inline constexpr std::string_view DohBootstrap = "network.dns.doh_bootstrap";
+inline constexpr std::string_view DohAllowInsecure = "network.dns.doh_allow_insecure";
+inline constexpr std::string_view DnsFallbackToSystem = "network.dns.fallback_to_system";
+inline constexpr std::string_view IpFamily = "network.dns.ip_family";
+inline constexpr std::string_view HostOverrides = "network.dns.host_overrides";
+inline constexpr std::string_view DnsMinTtl = "network.dns.cache.min_ttl";
+inline constexpr std::string_view DnsMaxTtl = "network.dns.cache.max_ttl";
+inline constexpr std::string_view DnsNegativeTtl = "network.dns.cache.negative_ttl";
+inline constexpr std::string_view ProxyMode = "network.proxy.mode";
+inline constexpr std::string_view ProxyType = "network.proxy.type";
+inline constexpr std::string_view ProxyHost = "network.proxy.host";
+inline constexpr std::string_view ProxyPort = "network.proxy.port";
+inline constexpr std::string_view ProxyBypass = "network.proxy.bypass";
+inline constexpr std::string_view ProxyBypassLocal = "network.proxy.bypass_local";
+inline constexpr std::string_view HttpVersion = "network.connection.http_version";
+inline constexpr std::string_view ConnectTimeout = "network.connection.connect_timeout";
+inline constexpr std::string_view ReadTimeout = "network.connection.read_timeout";
+inline constexpr std::string_view MaxConnections = "network.connection.max_connections";
+inline constexpr std::string_view MaxConnectionsPerHost = "network.connection.max_per_host";
+inline constexpr std::string_view Retries = "network.connection.retries";
+inline constexpr std::string_view RetryBackoff = "network.connection.retry_backoff";
+inline constexpr std::string_view TlsMinVersion = "network.tls.min_version";
+inline constexpr std::string_view CaBundle = "network.tls.ca_bundle";
+
 }  // namespace noctara::settings::keys

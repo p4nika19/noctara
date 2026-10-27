@@ -87,12 +87,21 @@ bool SettingsModel::isShown(const Definition& def) const
     if (def.configOnly() || (def.advanced() && !m_showAdvanced)) {
         return false;
     }
+    return conditionsHold(def);
+}
+
+// A row whose condition holds is still hidden when the row it depends on is hidden itself (e.g. the custom DNS
+// servers list follows the server preset, which only exists in custom DNS mode).
+bool SettingsModel::conditionsHold(const Definition& def) const
+{
     if (!def.visibleWhen) {
         return true;
     }
     const QString current = m_store.value(def.visibleWhen->key).toString();
-    return std::ranges::any_of(def.visibleWhen->values,
-                               [&](std::string_view value) { return latin(value) == current; });
+    const bool matches =
+        std::ranges::any_of(def.visibleWhen->values, [&](std::string_view value) { return latin(value) == current; });
+    const Definition* parent = m_store.schema().find(def.visibleWhen->key);
+    return matches && (parent == nullptr || conditionsHold(*parent));
 }
 
 QVariantList SettingsModel::options(const Definition& def) const

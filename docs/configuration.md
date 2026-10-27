@@ -161,3 +161,78 @@ How Noctara reduces its own energy use. Your system power profile is not changed
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
 | `energy_saving` | enum | `"auto"` | `auto`, `always`, `off` | **Energy saving.** While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead of Liquid Glass or Gaussian, and limits animations to 30 frames per second. Automatic turns it on only while the computer runs on battery. (env `NOCTARA_PERFORMANCE_POWER_ENERGY_SAVING`) |
+
+## Network
+
+### `[network.usage]` Data usage
+
+When and how much Noctara downloads.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `offline` | bool | `false` | — | **Offline mode.** Make no network connections at all. Only content that is already cached is available. (env `NOCTARA_NETWORK_USAGE_OFFLINE`, CLI `--offline=`) |
+| `metered` | enum | `"auto"` | `auto`, `on`, `off` | **Metered connection.** On a metered connection Noctara skips prefetching and other background downloads. Auto follows the system's setting for the current network. (env `NOCTARA_NETWORK_USAGE_METERED`) |
+| `bandwidth_limit` | integer | `0` | 0 … 1000 | **Download speed limit.** Upper bound for all downloads together. 0 means no limit. (*advanced*, env `NOCTARA_NETWORK_USAGE_BANDWIDTH_LIMIT`) |
+
+### `[network.dns]` DNS
+
+How server names are turned into addresses. Applies to all of Noctara's connections without a restart.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `mode` | enum | `"system"` | `system`, `custom`, `doh` | **DNS mode.** System uses your computer's settings. DNS over HTTPS encrypts lookups so the network cannot see or change them. (env `NOCTARA_NETWORK_DNS_MODE`, CLI `--dns=`) |
+| `server_preset` | enum | `"cloudflare"` | `cloudflare`, `google`, `quad9`, `adguard`, `custom` | **DNS servers.** Asked in order; the next one is tried when a server does not answer. (env `NOCTARA_NETWORK_DNS_SERVER_PRESET`) |
+| `servers` | string list | `[]` | — | **Server addresses.** IPv4 or IPv6 addresses, optionally with a port: 192.0.2.1, [2001:db8::1]:5353. (env `NOCTARA_NETWORK_DNS_SERVERS`) |
+| `doh_provider` | enum | `"cloudflare"` | `cloudflare`, `google`, `quad9`, `adguard`, `mullvad`, `custom` | **DNS-over-HTTPS provider.** Custom accepts any RFC 8484 server, for example a personal NextDNS address. (env `NOCTARA_NETWORK_DNS_DOH_PROVIDER`) |
+| `doh_url` | url | `""` | — | **DoH address.** For example https://dns.example/dns-query. (env `NOCTARA_NETWORK_DNS_DOH_URL`) |
+| `doh_bootstrap` | string list | `[]` | — | **Bootstrap addresses.** IP addresses of the DoH server, so its own name never has to be looked up elsewhere. Required when fallback to the system resolver is off. (env `NOCTARA_NETWORK_DNS_DOH_BOOTSTRAP`) |
+| `doh_allow_insecure` | bool | `false` | — | **Allow insecure DoH.** Accept a plain http:// address, but only for a server on this computer or the local network. (*advanced*, env `NOCTARA_NETWORK_DNS_DOH_ALLOW_INSECURE`) |
+| `fallback_to_system` | bool | `true` | — | **Fall back to the system resolver.** Keeps Noctara working when the chosen servers are unreachable, but those lookups are then visible to your network. Off is strict mode: lookups fail instead. (env `NOCTARA_NETWORK_DNS_FALLBACK_TO_SYSTEM`) |
+| `ip_family` | enum | `"auto"` | `auto`, `prefer_ipv4`, `prefer_ipv6`, `ipv4`, `ipv6` | **IP version.** Auto tries IPv6 and IPv4 in parallel and keeps whichever connects first. (*advanced*, env `NOCTARA_NETWORK_DNS_IP_FAMILY`) |
+| `host_overrides` | string list | `[]` | — | **Host overrides.** Fixed addresses that skip DNS, as host=address. Repeat a host to give it several addresses. (*advanced*, env `NOCTARA_NETWORK_DNS_HOST_OVERRIDES`) |
+
+### `[network.dns.cache]` DNS cache
+
+How long answers are remembered. Lifetimes from the DNS server are kept within these bounds.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `min_ttl` | integer | `60` | 0 … 3600 | **Minimum lifetime.** Answers are kept at least this long. (*advanced*, env `NOCTARA_NETWORK_DNS_CACHE_MIN_TTL`) |
+| `max_ttl` | integer | `3600` | 60 … 86400 | **Maximum lifetime.** Answers are looked up again after this long. (*advanced*, env `NOCTARA_NETWORK_DNS_CACHE_MAX_TTL`) |
+| `negative_ttl` | integer | `30` | 0 … 3600 | **Failed lookups.** How long a name that does not exist is remembered as missing. (*advanced*, env `NOCTARA_NETWORK_DNS_CACHE_NEGATIVE_TTL`) |
+
+### `[network.proxy]` Proxy
+
+Route Noctara's traffic through a proxy server.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `mode` | enum | `"system"` | `none`, `system`, `manual` | **Proxy mode.** System uses the proxy variables of the environment (http_proxy, no_proxy …) or, if none are set, your desktop's proxy settings. (env `NOCTARA_NETWORK_PROXY_MODE`, CLI `--proxy-mode=`) |
+| `type` | enum | `"http"` | `http`, `https`, `socks4`, `socks5`, `socks5h` | **Proxy type.** HTTPS encrypts the connection to the proxy itself. With SOCKS4 and SOCKS5 Noctara looks up server names itself; the others let the proxy do it. (env `NOCTARA_NETWORK_PROXY_TYPE`) |
+| `host` | string | `""` | — | **Proxy host.** Host name or IP address of the proxy server. (env `NOCTARA_NETWORK_PROXY_HOST`) |
+| `port` | integer | `8080` | 1 … 65535 | **Proxy port.** Username and password, if the proxy needs them, are kept in the system keyring, never in the configuration file. (env `NOCTARA_NETWORK_PROXY_PORT`) |
+| `bypass` | string list | `[]` | — | **Connect directly to.** Hosts that bypass the proxy: example.com (with its subdomains), *.example.com, IP addresses or ranges such as 10.0.0.0/8. (env `NOCTARA_NETWORK_PROXY_BYPASS`) |
+| `bypass_local` | bool | `true` | — | **Bypass for local addresses.** Connect directly to localhost, private networks and names without a dot. (env `NOCTARA_NETWORK_PROXY_BYPASS_LOCAL`) |
+
+### `[network.connection]` Connections
+
+Protocol, time limits and retries.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `http_version` | enum | `"auto"` | `auto`, `1.1`, `2`, `3` | **HTTP version.** Auto uses HTTP/2 where the server supports it. HTTP/3 falls back to older versions when it is blocked. (*advanced*, env `NOCTARA_NETWORK_CONNECTION_HTTP_VERSION`) |
+| `connect_timeout` | integer | `15` | 1 … 120 | **Connection timeout.** How long to wait for a server, including the proxy and the encrypted handshake. (env `NOCTARA_NETWORK_CONNECTION_CONNECT_TIMEOUT`) |
+| `read_timeout` | integer | `30` | 5 … 300 | **Stall timeout.** A download is aborted (and retried) when no data arrives for this long. (env `NOCTARA_NETWORK_CONNECTION_READ_TIMEOUT`) |
+| `retries` | integer | `2` | 0 … 10 | **Retries.** How often a failed request is repeated. Only requests that are safe to repeat are retried. (env `NOCTARA_NETWORK_CONNECTION_RETRIES`) |
+| `retry_backoff` | integer | `500` | 100 … 10000 | **Retry delay.** Wait before the first retry; it doubles with every further attempt. (*advanced*, env `NOCTARA_NETWORK_CONNECTION_RETRY_BACKOFF`) |
+| `max_connections` | integer | `16` | 1 … 64 | **Maximum connections.** Open connections in total. (*advanced*, env `NOCTARA_NETWORK_CONNECTION_MAX_CONNECTIONS`) |
+| `max_per_host` | integer | `6` | 1 … 32 | **Connections per server.** Open connections to one server. HTTP/2 carries many requests over one. (*advanced*, env `NOCTARA_NETWORK_CONNECTION_MAX_PER_HOST`) |
+
+### `[network.tls]` Security
+
+Encrypted connections. Certificates are always verified.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `min_version` | enum | `"1.2"` | `1.2`, `1.3` | **Minimum TLS version.** Older protocol versions are never used. (*advanced*, env `NOCTARA_NETWORK_TLS_MIN_VERSION`) |
+| `ca_bundle` | path | `""` | — | **CA bundle.** PEM file with the certificate authorities to trust instead of the system's, for networks that inspect encrypted traffic. Empty uses the system store. (*advanced*, env `NOCTARA_NETWORK_TLS_CA_BUNDLE`) |

@@ -43,21 +43,35 @@ QString errorMessage(ErrorCode code)
     case ErrorCode::GraphicsDeviceLost: return QCoreApplication::translate("Errors", "The graphics device was lost.");
     case ErrorCode::DnsResolutionFailed:
         return QCoreApplication::translate("Errors", "The server name could not be resolved. Check your DNS settings.");
+    case ErrorCode::DnsServerUnreachable:
+        return QCoreApplication::translate("Errors", "None of the configured DNS servers answered.");
     case ErrorCode::DohUnreachable:
         return QCoreApplication::translate("Errors", "The DNS-over-HTTPS server is unreachable.");
     case ErrorCode::DohInvalidResponse:
         return QCoreApplication::translate("Errors", "The DNS-over-HTTPS server returned an invalid answer.");
+    case ErrorCode::DohInsecureUrl:
+        return QCoreApplication::translate(
+            "Errors", "The DNS-over-HTTPS address must start with https://. Plain http:// is allowed only for "
+                      "servers on this computer or the local network, with “Allow insecure DoH” turned on.");
+    case ErrorCode::ProxyNotConfigured:
+        return QCoreApplication::translate("Errors", "A manual proxy is selected, but no proxy host is set.");
     case ErrorCode::ProxyConnectFailed:
         return QCoreApplication::translate("Errors", "Could not connect to the proxy server.");
     case ErrorCode::ProxyAuthRequired:
         return QCoreApplication::translate("Errors", "The proxy server requires a valid username and password.");
     case ErrorCode::TlsHandshakeFailed:
         return QCoreApplication::translate("Errors", "A secure connection could not be established.");
+    case ErrorCode::TlsCertificateInvalid:
+        return QCoreApplication::translate(
+            "Errors", "The server's certificate could not be verified. If your network inspects secure traffic, "
+                      "set its CA bundle under Network → Security.");
     case ErrorCode::ConnectionFailed: return QCoreApplication::translate("Errors", "Could not connect to the server.");
     case ErrorCode::ConnectionRefused:
         return QCoreApplication::translate("Errors", "The server refused the connection.");
     case ErrorCode::HttpError: return QCoreApplication::translate("Errors", "The server returned an error.");
     case ErrorCode::Offline: return QCoreApplication::translate("Errors", "You are offline.");
+    case ErrorCode::MeteredDeferred:
+        return QCoreApplication::translate("Errors", "Skipped to save data on a metered connection.");
     case ErrorCode::RateLimited:
         return QCoreApplication::translate("Errors", "Too many requests. Please wait a moment.");
     case ErrorCode::Unauthorized:

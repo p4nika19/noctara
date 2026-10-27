@@ -1,3 +1,4 @@
+#include "auth/SecretStore.hpp"
 #include "core/Log.hpp"
 #include "core/LsanSuppressions.hpp"
 #include "core/Paths.hpp"
@@ -8,6 +9,10 @@
 #include "gfx/Relaunch.hpp"
 #include "i18n/Formatter.hpp"
 #include "i18n/LanguageManager.hpp"
+#include "net/CurlSupport.hpp"
+#include "net/NetworkMonitor.hpp"
+#include "net/NetworkService.hpp"
+#include "net/ProxyRouter.hpp"
 #include "settings/ConfigFile.hpp"
 #include "settings/Overrides.hpp"
 #include "settings/SchemaDoc.hpp"
@@ -19,6 +24,7 @@
 #include "ui/ArtworkProvider.hpp"
 #include "ui/EffectsController.hpp"
 #include "ui/IconProvider.hpp"
+#include "ui/NetworkController.hpp"
 #include "ui/NoiseProvider.hpp"
 #include "ui/PowerStatus.hpp"
 #include "ui/SettingsController.hpp"
@@ -33,6 +39,7 @@
 #include <QStandardPaths>
 #include <QTimer>
 
+#include <csignal>
 #include <cstdio>
 #include <memory>
 #include <print>
@@ -142,9 +149,13 @@ void printUtf8(const QString& text)
     (void)std::fwrite(bytes.constData(), 1, static_cast<std::size_t>(bytes.size()), stdout);
 }
 
-ui::Availability graphicsAvailability(const gfx::GraphicsDecision& decision)
+ui::Availability availability(const gfx::GraphicsDecision& decision, const net::CurlFeatures& curl)
 {
     ui::Availability availability;
+    if (!curl.http3) {
+        availability.disabledOptions[QStringLiteral("network.connection.http_version")].insert(
+            QStringLiteral("3"), QT_TRANSLATE_NOOP("Settings", "The installed libcurl was built without HTTP/3."));
+    }
     if (!decision.hardware) {
         static const char* const reason =
             QT_TRANSLATE_NOOP("Settings", "Needs hardware acceleration, which is currently off.");
@@ -201,6 +212,8 @@ void runSmokeTest(const QQmlApplicationEngine& engine, const ui::SettingsControl
 int main(int argc, char** argv)
 {
     gfx::RelaunchGuard relaunch;  // destroyed last: performs a requested self-exec after full shutdown
+    // A peer closing a connection must surface as a write error, never terminate the process.
+    (void)std::signal(SIGPIPE, SIG_IGN);
     log::install();
     QCoreApplication::setApplicationName(QString::fromLatin1(kAppId));
     QCoreApplication::setApplicationVersion(QStringLiteral(NOCTARA_VERSION));
@@ -249,6 +262,13 @@ int main(int argc, char** argv)
         return 0;
     }
 
+    // The transport cannot work without TLS and HTTP/2 in libcurl: refuse to start rather than misbehave.
+    const auto curl = net::initialiseCurl();
+    if (!curl) {
+        std::println(stderr, "noctara: {}", curl.error().describe());
+        return 1;
+    }
+
     gfx::CrashSentinel sentinel(paths.stateDir + QStringLiteral("/graphics-init.sentinel"));
     const gfx::GraphicsDecision decision =
         gfx::bootstrapGraphics(store, sentinel, {.cacheDir = paths.cacheDir, .safeModeFlag = cli.safeMode});
@@ -266,13 +286,21 @@ int main(int argc, char** argv)
                      [&theme](std::optional<color::OkLch> seed) { theme.setArtworkSeed(seed); });
 
     ui::SettingsController settingsUi(store, config, languages);
-    settingsUi.setAvailability(graphicsAvailability(decision));
+    settingsUi.setAvailability(availability(decision, *curl));
     gfx::PowerMonitor power;
     const ui::PowerStatusPresenter powerStatus(power, store, languages, settingsUi);
     // Declared before the QML engine: the window's render thread reports to it until the window is gone.
     gfx::FrameMonitor frames;
     ui::EffectsController effects(store, theme, power, frames, graphics, languages, settingsUi);
     ui::AppController appController(store, graphics, relaunch, languages);
+    // All HTTP goes through this service; it runs on its own thread and follows the network settings live.
+    net::NetworkService network(store, net::processEnvironment(), true);
+    net::NetworkMonitor networkMonitor;
+    auth::SecretServiceStore secrets;
+    ui::NetworkController networkUi(network, &networkMonitor, secrets, languages, settingsUi);
+    QObject::connect(
+        &networkUi, &ui::NetworkController::notice, &appController,
+        [&appController](const QString& kind, const QString& message) { appController.showToast(kind, message); });
     QObject::connect(&config, &settings::ConfigFile::reloadIssues, &appController,
                      &ui::AppController::reportConfigIssues);
     config.setHotReloadEnabled(true);
@@ -292,6 +320,7 @@ int main(int argc, char** argv)
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Language", &languages);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Performance", &effects);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Artwork", &accent);
+    qmlRegisterSingletonInstance("Noctara", 1, 0, "Network", &networkUi);
     qmlRegisterUncreatableType<ui::SettingsModel>("Noctara", 1, 0, "SettingsModel",
                                                   QStringLiteral("Provided by SettingsUi"));
     QObject::connect(&languages, &i18n::LanguageManager::languageChanged, &engine, &QQmlEngine::retranslate);

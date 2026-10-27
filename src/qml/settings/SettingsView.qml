@@ -1,6 +1,7 @@
 import QtQuick
 import Noctara
 import "../components"
+import "network"
 
 // Settings: category list + search on the left, generated rows on the right.
 Item {
@@ -13,6 +14,12 @@ Item {
     // Clipped lists start this far left of their content, so glows at the left edge (palette dots,
     // selected segments, accent buttons) are not cut off by the clip.
     readonly property real glowGutter: Theme.space.lg
+    // Controls that belong to a particular setting and are shown right under its row.
+    readonly property var rowExtensions: ({
+        "network.dns.mode": dnsTools,
+        "network.proxy.mode": connectionTools,
+        "network.proxy.port": proxyCredentials,
+    })
 
     GlassPanel {
         id: sidebar
@@ -254,11 +261,20 @@ Item {
                     // Explicit: an unloaded Loader keeps the size of its last item, which left the Appearance
                     // header's height as an empty band at the top of the next page.
                     height: item ? item.implicitHeight : 0
-                    active: !root.searching && (root.category === "appearance" || root.category === "performance")
-                    sourceComponent: root.category === "appearance" ? appearanceHeader : performanceHeader
+                    active: !root.searching && (root.category === "appearance" || root.category === "performance"
+                                                || root.category === "network")
+                    sourceComponent: root.category === "appearance" ? appearanceHeader
+                                   : root.category === "network" ? networkHeader : performanceHeader
+                }
+                footer: Loader {
+                    width: list.width - list.leftMargin - list.rightMargin
+                    height: item ? item.implicitHeight : 0
+                    active: !root.searching && root.category === "network"
+                    sourceComponent: networkDiagnostics
                 }
                 delegate: SettingsRow {
                     showCategory: root.searching
+                    extension: root.rowExtensions[key] || null
                     headerShownAbove: !root.searching && root.category === "appearance" ? "appearance.theme" : ""
                     width: list.width - list.leftMargin - list.rightMargin
                 }
@@ -287,6 +303,26 @@ Item {
         Component {
             id: performanceHeader
             PerformanceHeader {}
+        }
+        Component {
+            id: networkHeader
+            NetworkHeader {}
+        }
+        Component {
+            id: networkDiagnostics
+            NetworkDiagnostics {}
+        }
+        Component {
+            id: dnsTools
+            DnsTools {}
+        }
+        Component {
+            id: connectionTools
+            ConnectionTools {}
+        }
+        Component {
+            id: proxyCredentials
+            ProxyCredentials {}
         }
     }
 }

@@ -6,3 +6,9 @@ race:QWaitCondition
 race:QThreadPoolPrivate
 race:QThreadPoolThread
 mutex:QWaitCondition
+# QThread finishes and is waited for, but Qt detaches/joins it inside the uninstrumented library.
+thread:QThread::start
+# Qt's event dispatcher on Linux is GLib's main loop; its wakeup fd is signalled and closed under GLib's own
+# (uninstrumented) locking.
+race:g_wakeup_signal
+race:g_wakeup_free
