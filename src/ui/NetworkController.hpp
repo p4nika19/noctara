@@ -38,6 +38,7 @@ class NetworkController : public QObject {
     Q_PROPERTY(bool hasProxyCredentials READ hasProxyCredentials NOTIFY credentialsChanged)
     Q_PROPERTY(QString proxyUsername READ proxyUsername NOTIFY credentialsChanged)
     Q_PROPERTY(bool keyringAvailable READ keyringAvailable NOTIFY credentialsChanged)
+    Q_PROPERTY(bool secretsPersistent READ secretsPersistent NOTIFY credentialsChanged)
     Q_PROPERTY(bool dnsTesting READ dnsTesting NOTIFY dnsTestChanged)
     Q_PROPERTY(QVariantList dnsResults READ dnsResults NOTIFY dnsTestChanged)
     Q_PROPERTY(bool connectionTesting READ connectionTesting NOTIFY connectionTestChanged)
@@ -56,7 +57,9 @@ public:
     [[nodiscard]] QString dnsProxyHint() const;
     [[nodiscard]] bool hasProxyCredentials() const noexcept { return !m_username.isEmpty() || !m_password.isEmpty(); }
     [[nodiscard]] const QString& proxyUsername() const noexcept { return m_username; }
+    // Where saved proxy credentials go: the desktop keyring, else Noctara's encrypted file, else memory only.
     [[nodiscard]] bool keyringAvailable() const;
+    [[nodiscard]] bool secretsPersistent() const;
     [[nodiscard]] bool dnsTesting() const noexcept { return m_dnsTesting; }
     [[nodiscard]] QVariantList dnsResults() const;
     [[nodiscard]] bool connectionTesting() const noexcept { return m_connectionTesting; }

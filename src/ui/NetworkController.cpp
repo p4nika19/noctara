@@ -165,6 +165,11 @@ QString NetworkController::dnsProxyHint() const
 
 bool NetworkController::keyringAvailable() const
 {
+    return m_secrets.keyringBacked();
+}
+
+bool NetworkController::secretsPersistent() const
+{
     return m_secrets.persistent();
 }
 
@@ -258,8 +263,12 @@ void NetworkController::saveProxyCredentials(const QString& username, const QStr
                             Q_EMIT notice(QStringLiteral("warning"),
                                           tr("No keyring is available, so the proxy credentials are kept only until "
                                              "Noctara quits."));
-                        } else {
+                        } else if (m_secrets.keyringBacked()) {
                             Q_EMIT notice(QStringLiteral("success"), tr("Proxy credentials saved to the keyring."));
+                        } else {
+                            Q_EMIT notice(QStringLiteral("warning"),
+                                          tr("Proxy credentials saved in Noctara's encrypted local store because no "
+                                             "desktop keyring is available."));
                         }
                     });
 }

@@ -88,7 +88,7 @@
 <context>
     <name>AccountsPane</name>
     <message>
-        <location filename="../src/qml/settings/AccountsPane.qml" line="+57"/>
+        <location filename="../src/qml/settings/AccountsPane.qml" line="+58"/>
         <source>Signed in</source>
         <translation type="unfinished"></translation>
     </message>
@@ -99,12 +99,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+18"/>
+        <source>Session saved in the desktop keyring.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Session saved in Noctara&apos;s encrypted local store, because no desktop keyring is available.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Session kept only until Noctara quits: no persistent secret store is available.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>View profile on SoundCloud</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+8"/>
         <source>Sign out</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1184,13 +1199,18 @@
 <context>
     <name>ProxyCredentials</name>
     <message>
-        <location filename="../src/qml/settings/network/ProxyCredentials.qml" line="+13"/>
+        <location filename="../src/qml/settings/network/ProxyCredentials.qml" line="+14"/>
         <source>Username and password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Optional. Saved in the system keyring, never in the configuration file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Optional. No desktop keyring is available, so credentials are saved in Noctara&apos;s encrypted local store, whose owner-only key file does not protect them as well as a keyring.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3096,7 +3116,7 @@
 <context>
     <name>noctara::ui::AccountController</name>
     <message>
-        <location filename="../src/ui/AccountController.cpp" line="+168"/>
+        <location filename="../src/ui/AccountController.cpp" line="+167"/>
         <source>Paste your SoundCloud OAuth token to sign in.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3106,7 +3126,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-131"/>
+        <location line="-130"/>
         <source>Could not inspect the installed browser profiles.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3159,7 +3179,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+61"/>
         <source>That does not look like an OAuth token. Copy only the oauth_token value, without spaces.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3296,13 +3316,13 @@
     </message>
     <message>
         <location line="+0"/>
-        <location line="+207"/>
+        <location line="+216"/>
         <location line="+27"/>
         <source>direct</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-218"/>
+        <location line="-227"/>
         <source>With SOCKS4 and SOCKS5 Noctara looks up server names itself, using the DNS settings above, and sends only addresses to the proxy. Choose SOCKS5 with remote DNS to let the proxy look them up.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3312,7 +3332,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+35"/>
         <source>Taken from the proxy environment variables (http_proxy, https_proxy, all_proxy).</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3367,7 +3387,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+3"/>
+        <source>Proxy credentials saved in Noctara&apos;s encrypted local store because no desktop keyring is available.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+46"/>
         <source>DNS cache cleared.</source>
         <translation type="unfinished"></translation>
     </message>

@@ -88,7 +88,7 @@
 <context>
     <name>AccountsPane</name>
     <message>
-        <location filename="../src/qml/settings/AccountsPane.qml" line="+57"/>
+        <location filename="../src/qml/settings/AccountsPane.qml" line="+58"/>
         <source>Signed in</source>
         <translation>Вы вошли</translation>
     </message>
@@ -99,12 +99,27 @@
         <translation>@%1</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+18"/>
+        <source>Session saved in the desktop keyring.</source>
+        <translation>Сессия сохранена в системной связке ключей.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Session saved in Noctara&apos;s encrypted local store, because no desktop keyring is available.</source>
+        <translation>Сессия сохранена в зашифрованном локальном хранилище Noctara, так как системная связка ключей недоступна.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Session kept only until Noctara quits: no persistent secret store is available.</source>
+        <translation>Сессия хранится только до выхода из Noctara: постоянное хранилище секретов недоступно.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>View profile on SoundCloud</source>
         <translation>Открыть профиль в SoundCloud</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+8"/>
         <source>Sign out</source>
         <translation>Выйти</translation>
     </message>
@@ -131,7 +146,7 @@
     <message>
         <location line="+8"/>
         <source>No desktop keyring is available. Your session will use Noctara&apos;s encrypted local store; its owner-only key file does not provide the same protection as a desktop keyring.</source>
-        <translation>Системное хранилище ключей недоступно. Сессия будет сохранена в зашифрованном локальном хранилище Noctara; файл ключа, доступный только владельцу, не обеспечивает такую же защиту, как системное хранилище.</translation>
+        <translation>Системная связка ключей недоступна. Сессия будет сохранена в зашифрованном локальном хранилище Noctara; файл ключа, доступный только владельцу, не обеспечивает такую же защиту, как связка ключей.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1191,7 +1206,7 @@
 <context>
     <name>ProxyCredentials</name>
     <message>
-        <location filename="../src/qml/settings/network/ProxyCredentials.qml" line="+13"/>
+        <location filename="../src/qml/settings/network/ProxyCredentials.qml" line="+14"/>
         <source>Username and password</source>
         <translation>Имя пользователя и пароль</translation>
     </message>
@@ -1199,6 +1214,11 @@
         <location line="+8"/>
         <source>Optional. Saved in the system keyring, never in the configuration file.</source>
         <translation>Необязательно. Хранятся в системной связке ключей, никогда — в файле настроек.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Optional. No desktop keyring is available, so credentials are saved in Noctara&apos;s encrypted local store, whose owner-only key file does not protect them as well as a keyring.</source>
+        <translation>Необязательно. Системная связка ключей недоступна, поэтому учётные данные сохраняются в зашифрованном локальном хранилище Noctara; его файл ключа, доступный только владельцу, защищает их хуже, чем связка ключей.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3104,7 +3124,7 @@
 <context>
     <name>noctara::ui::AccountController</name>
     <message>
-        <location filename="../src/ui/AccountController.cpp" line="+168"/>
+        <location filename="../src/ui/AccountController.cpp" line="+167"/>
         <source>Paste your SoundCloud OAuth token to sign in.</source>
         <translation>Вставьте OAuth-токен SoundCloud, чтобы войти.</translation>
     </message>
@@ -3114,7 +3134,7 @@
         <translation>Сессия SoundCloud в Noctara</translation>
     </message>
     <message>
-        <location line="-131"/>
+        <location line="-130"/>
         <source>Could not inspect the installed browser profiles.</source>
         <translation>Не удалось просмотреть установленные профили браузеров.</translation>
     </message>
@@ -3149,7 +3169,7 @@
     <message>
         <location line="+4"/>
         <source>Noctara could not unlock this browser&apos;s cookies. Unlock your desktop keyring and try again, or paste your OAuth token.</source>
-        <translation>Noctara не удалось разблокировать cookie этого браузера. Разблокируйте системное хранилище ключей и повторите попытку или вставьте OAuth-токен.</translation>
+        <translation>Noctara не удалось разблокировать cookie этого браузера. Разблокируйте системную связку ключей и повторите попытку или вставьте OAuth-токен.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -3167,7 +3187,7 @@
         <translation>Выбранный профиль браузера больше недоступен. Выполните сканирование снова.</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+61"/>
         <source>That does not look like an OAuth token. Copy only the oauth_token value, without spaces.</source>
         <translation>Это не похоже на OAuth-токен. Скопируйте только значение oauth_token, без пробелов.</translation>
     </message>
@@ -3179,12 +3199,12 @@
     <message>
         <location line="+4"/>
         <source>Signed in. Your session is saved in the keyring.</source>
-        <translation>Вход выполнен. Сессия сохранена в хранилище ключей.</translation>
+        <translation>Вход выполнен. Сессия сохранена в связке ключей.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Signed in. Your session is saved in Noctara&apos;s encrypted local store because no desktop keyring is available.</source>
-        <translation>Вход выполнен. Поскольку системное хранилище ключей недоступно, сессия сохранена в зашифрованном локальном хранилище Noctara.</translation>
+        <translation>Вход выполнен. Поскольку системная связка ключей недоступна, сессия сохранена в зашифрованном локальном хранилище Noctara.</translation>
     </message>
     <message>
         <location line="-24"/>
@@ -3304,13 +3324,13 @@
     </message>
     <message>
         <location line="+0"/>
-        <location line="+207"/>
+        <location line="+216"/>
         <location line="+27"/>
         <source>direct</source>
         <translation>напрямую</translation>
     </message>
     <message>
-        <location line="-218"/>
+        <location line="-227"/>
         <source>With SOCKS4 and SOCKS5 Noctara looks up server names itself, using the DNS settings above, and sends only addresses to the proxy. Choose SOCKS5 with remote DNS to let the proxy look them up.</source>
         <translation>С SOCKS4 и SOCKS5 Noctara сама определяет адреса серверов по настройкам DNS выше и передаёт прокси только адреса. Выберите «SOCKS5 с удалённым DNS», чтобы это делал прокси.</translation>
     </message>
@@ -3320,7 +3340,7 @@
         <translation>Прокси сам определяет адреса серверов, поэтому настройки DNS выше действуют только на прямые соединения и на поиск самого прокси-сервера.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+35"/>
         <source>Taken from the proxy environment variables (http_proxy, https_proxy, all_proxy).</source>
         <translation>Взято из переменных окружения прокси (http_proxy, https_proxy, all_proxy).</translation>
     </message>
@@ -3375,7 +3395,12 @@
         <translation>Учётные данные прокси сохранены в связке ключей.</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+3"/>
+        <source>Proxy credentials saved in Noctara&apos;s encrypted local store because no desktop keyring is available.</source>
+        <translation>Учётные данные прокси сохранены в зашифрованном локальном хранилище Noctara, так как системная связка ключей недоступна.</translation>
+    </message>
+    <message>
+        <location line="+46"/>
         <source>DNS cache cleared.</source>
         <translation>Кэш DNS очищен.</translation>
     </message>

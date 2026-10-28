@@ -10,6 +10,7 @@ Flickable {
     readonly property int state: Account.state
     readonly property bool signedIn: state === AccountController.SignedIn
     readonly property bool expired: state === AccountController.Expired
+    readonly property real avatarSize: 64 * Theme.scale
 
     contentWidth: width
     contentHeight: column.implicitHeight
@@ -42,7 +43,7 @@ Flickable {
                 spacing: Theme.space.lg
 
                 CoverArt {
-                    width: 64 * Theme.scale
+                    width: root.avatarSize
                     height: width
                     shape: "circle"
                     source: Account.avatarUrl
@@ -50,7 +51,7 @@ Flickable {
                 }
                 Column {
                     anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width - 64 * Theme.scale - signOut.width - parent.spacing * 2
+                    width: parent.width - root.avatarSize - signOut.width - parent.spacing * 2
                     spacing: Theme.space.xxs
                     Text {
                         width: parent.width
@@ -68,24 +69,38 @@ Flickable {
                         color: Theme.colors.textSecondary
                         elide: Text.ElideRight
                     }
-                    Text {
+                    // How the saved session is protected, also after a restart (not only in the sign-in toast).
+                    Row {
                         width: parent.width
-                        visible: Account.permalinkUrl.length > 0
-                        text: qsTr("View profile on SoundCloud")
-                        font: Theme.font.caption
-                        color: Theme.colors.accent
-                        elide: Text.ElideRight
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: Qt.openUrlExternally(Account.permalinkUrl)
+                        spacing: Theme.space.xs
+                        Icon {
+                            name: Account.keyringAvailable ? "shield" : "triangle-alert"
+                            size: Theme.space.iconSizeSmall
+                            color: Account.keyringAvailable ? Theme.targetColors.iconSecondary : Theme.targetColors.warning
+                            anchors.verticalCenter: parent.verticalCenter
                         }
+                        Text {
+                            width: parent.width - Theme.space.iconSizeSmall - parent.spacing
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: Account.keyringAvailable ? qsTr("Session saved in the desktop keyring.")
+                                : Account.persistent ? qsTr("Session saved in Noctara's encrypted local store, because no desktop keyring is available.")
+                                : qsTr("Session kept only until Noctara quits: no persistent secret store is available.")
+                            font: Theme.font.caption
+                            color: Account.keyringAvailable ? Theme.colors.textTertiary : Theme.colors.warning
+                            wrapMode: Text.Wrap
+                        }
+                    }
+                    Button {
+                        visible: Account.permalinkUrl.length > 0
+                        small: true
+                        iconName: "external-link"
+                        text: qsTr("View profile on SoundCloud")
+                        onClicked: Qt.openUrlExternally(Account.permalinkUrl)
                     }
                 }
                 Button {
                     id: signOut
                     anchors.verticalCenter: parent.verticalCenter
-                    variant: "ghost"
                     iconName: "log-out"
                     text: qsTr("Sign out")
                     onClicked: Account.signOut()
@@ -179,7 +194,7 @@ Flickable {
                 color: Theme.colors.textSecondary
                 wrapMode: Text.Wrap
             }
-            Row {
+            Flow {
                 width: parent.width
                 spacing: Theme.space.sm
                 Button {

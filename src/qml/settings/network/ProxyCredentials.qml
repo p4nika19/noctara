@@ -2,7 +2,8 @@ import QtQuick
 import Noctara
 import "../../components"
 
-// Under the proxy port row: credentials for the manual proxy, kept in the system keyring only.
+// Under the proxy port row: credentials for the manual proxy, kept in the secret store (keyring, else the
+// encrypted local store, else memory), never in the configuration file.
 Column {
     id: root
 
@@ -19,7 +20,9 @@ Column {
         width: parent.width
         text: Network.keyringAvailable
               ? qsTr("Optional. Saved in the system keyring, never in the configuration file.")
-              : qsTr("No keyring is available, so saved credentials are kept only until Noctara quits.")
+              : Network.secretsPersistent
+                ? qsTr("Optional. No desktop keyring is available, so credentials are saved in Noctara's encrypted local store, whose owner-only key file does not protect them as well as a keyring.")
+                : qsTr("No keyring is available, so saved credentials are kept only until Noctara quits.")
         font: Theme.font.caption
         color: Network.keyringAvailable ? Theme.colors.textTertiary : Theme.colors.warning
         wrapMode: Text.Wrap
