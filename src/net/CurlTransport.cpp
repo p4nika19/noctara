@@ -141,11 +141,14 @@ public:
 
     ~CurlSession()
     {
+        // Cleanup first: it closes the pooled connections and reports their sockets through onSocket, which
+        // must still find live notifiers (it disables them and deletes them later). Only what curl did not
+        // report is deleted here.
+        (void)curl_multi_cleanup(m_multi);
         for (auto& [fd, watch] : m_watches) {
             delete watch.read;   // NOLINT(cppcoreguidelines-owning-memory): owned by the watch map
             delete watch.write;  // NOLINT(cppcoreguidelines-owning-memory)
         }
-        (void)curl_multi_cleanup(m_multi);
     }
 
     CurlSession(const CurlSession&) = delete;

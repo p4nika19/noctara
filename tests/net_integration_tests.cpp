@@ -13,7 +13,10 @@
 #include <QElapsedTimer>
 #include <QTimer>
 
+#include <algorithm>
+#include <atomic>
 #include <map>
+#include <thread>
 
 using namespace noctara;
 using namespace noctara::net;
@@ -553,6 +556,47 @@ TEST_SUITE("net.transport")
         net.router.setConfig(unset);
         CHECK(test::errorOf(net.get(QStringLiteral("http://example.test/"))) == ErrorCode::ProxyNotConfigured);
         CHECK(test::errorOf(net.get(QStringLiteral("ftp://example.test/"))) == ErrorCode::InvalidArgument);
+    }
+
+    TEST_CASE("the transport can be destroyed with HTTPS transfers in flight and connections pooled")
+    {
+        // Teardown with a pooled TLS connection and a transfer in flight. curl_multi_cleanup reports the sockets
+        // it still watches, whose notifiers must be alive then; the transport used to delete them first, a
+        // use-after-free when Noctara quit mid-request over HTTP/2 (the connection stays pooled while a stream
+        // is removed). The HTTP/1.1 mock closes such connections at once, so this covers the path, not that race.
+        const test::TestCertificate certificate;
+        std::atomic<bool> release{false};
+        test::HttpServer secure(
+            [&](const test::HttpRequest& request) {
+                while (request.target == "/slow" && !release) {
+                    std::this_thread::sleep_for(5ms);
+                }
+                return text("ok");
+            },
+            &certificate);
+        for (int round = 0; round < 3; ++round) {
+            auto net = std::make_unique<Network>();
+            TransportConfig config;
+            config.caBundle = certificate.pemPath();
+            net->transport.setConfig(config);
+            const auto pooled = net->get(QStringLiteral("https://app.test:%1/fast").arg(secure.port()));
+            REQUIRE_MESSAGE(pooled, test::describe(pooled));
+            QObject context;
+            Request slow;
+            slow.url = QUrl(QStringLiteral("https://app.test:%1/slow").arg(secure.port()));
+            bool answered = false;
+            net->transport.send(slow, &context,
+                                {.onResponse = {}, .onData = {}, .onFinished = [&](auto) { answered = true; }});
+            const auto seen = [&] {
+                const auto requests = secure.requests();
+                return std::ranges::count(requests, QByteArray("/slow"), &test::HttpRequest::target);
+            };
+            REQUIRE(test::waitUntil([&] { return seen() == round + 1; }, 10000));
+            net.reset();
+            test::waitUntil([] { return false; }, 50);  // a stale event would be delivered (and crash) now
+            CHECK_FALSE(answered);
+        }
+        release = true;
     }
 }
 
