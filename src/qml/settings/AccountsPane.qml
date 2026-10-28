@@ -27,6 +27,7 @@ Flickable {
 
         // --- Signed in -------------------------------------------------------------------------
         GlassPanel {
+            id: accountCard
             width: parent.width
             level: 1
             radius: Theme.radius.lg
@@ -38,8 +39,10 @@ Flickable {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.margins: Math.max(Theme.space.lg, parent.cornerInset)
-                anchors.leftMargin: Math.max(Theme.space.xl, parent.cornerInset)
+                // `parent` is the panel's inner content item, which has no cornerInset: name the panel.
+                anchors.margins: Math.max(Theme.space.lg, accountCard.cornerInset)
+                anchors.leftMargin: Math.max(Theme.space.xl, accountCard.cornerInset)
+                anchors.rightMargin: Math.max(Theme.space.xl, accountCard.cornerInset)
                 spacing: Theme.space.lg
 
                 CoverArt {
@@ -110,6 +113,7 @@ Flickable {
 
         // --- Session expired warning -----------------------------------------------------------
         GlassPanel {
+            id: expiredBanner
             width: parent.width
             level: 2
             radius: Theme.radius.md
@@ -121,7 +125,7 @@ Flickable {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.margins: Math.max(Theme.space.md, parent.cornerInset)
+                anchors.margins: Math.max(Theme.space.md, expiredBanner.cornerInset)
                 spacing: Theme.space.sm
                 Icon {
                     name: "triangle-alert"
