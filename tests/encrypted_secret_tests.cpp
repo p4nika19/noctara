@@ -99,22 +99,40 @@ TEST_SUITE("auth.encrypted-secret-store")
         CHECK_FALSE(QFileInfo(path).permissions().testFlag(QFileDevice::ReadOther));
     }
 
-    TEST_CASE("rejects authenticated-data tampering and a wrong master key")
+    TEST_CASE("rejects tampering, a secret moved to another key and a wrong master key")
     {
         QTemporaryDir directory;
         const QString path = directory.path() + QStringLiteral("/secrets");
         auth::EncryptedFileSecretStore store(path);
+
+        // Layout: 8-byte magic, 12-byte nonce, ciphertext, 16-byte tag. Flip one bit in each part after the magic.
+        for (const qint64 offset : {qint64{12}, qint64{8 + 12}, qint64{-1}}) {
+            CAPTURE(offset);
+            writeSecret(store, QStringLiteral("key"), QByteArrayLiteral("secret"));
+            QFile encrypted(onlySecretFile(path));
+            REQUIRE(encrypted.open(QIODevice::ReadWrite));
+            const qint64 position = offset < 0 ? encrypted.size() - 1 : offset;
+            REQUIRE(encrypted.seek(position));
+            QByteArray byte = encrypted.read(1);
+            byte[0] = static_cast<char>(byte.at(0) ^ 0x01);
+            REQUIRE(encrypted.seek(position));
+            REQUIRE(encrypted.write(byte) == 1);
+            encrypted.close();
+            CHECK(test::errorOf(readSecret(store, QStringLiteral("key"))) == ErrorCode::Corrupt);
+        }
+
+        // The key name is authenticated data: a file copied under another key's name does not decrypt.
         writeSecret(store, QStringLiteral("key"), QByteArrayLiteral("secret"));
-        const QString secretPath = onlySecretFile(path);
-        QFile encrypted(secretPath);
-        REQUIRE(encrypted.open(QIODevice::ReadWrite));
-        REQUIRE(encrypted.seek(12));
-        QByteArray byte = encrypted.read(1);
-        byte[0] = static_cast<char>(byte.at(0) ^ 0x01);
-        REQUIRE(encrypted.seek(12));
-        REQUIRE(encrypted.write(byte) == 1);
-        encrypted.close();
-        CHECK(test::errorOf(readSecret(store, QStringLiteral("key"))) == ErrorCode::Corrupt);
+        const QString original = onlySecretFile(path);
+        removeSecret(store, QStringLiteral("other"));
+        writeSecret(store, QStringLiteral("other"), QByteArrayLiteral("placeholder"));
+        const QStringList files = QDir(path).entryList({QStringLiteral("*.secret")}, QDir::Files);
+        REQUIRE(files.size() == 2);
+        const QString otherPath = path + u'/' + (path + u'/' + files.at(0) == original ? files.at(1) : files.at(0));
+        REQUIRE(QFile::remove(otherPath));
+        REQUIRE(QFile::copy(original, otherPath));
+        CHECK(test::errorOf(readSecret(store, QStringLiteral("other"))) == ErrorCode::Corrupt);
+        removeSecret(store, QStringLiteral("other"));
 
         writeSecret(store, QStringLiteral("key"), QByteArrayLiteral("new-secret"));
         REQUIRE(writeFileAtomic(path + QStringLiteral("/master.key"), QByteArray(32, 'x')));

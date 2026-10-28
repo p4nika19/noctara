@@ -36,12 +36,62 @@ std::optional<Error> takeError(GError* error)
     return out;
 }
 
+class SecretServiceKeyring final : public IKeyring {
+public:
+    Result<std::optional<QByteArray>> lookup(const QString& key) override
+    {
+        const QByteArray id = key.toUtf8();
+        GError* error = nullptr;
+        gchar* value = secret_password_lookup_sync(schema(), nullptr, &error, "key", id.constData(), nullptr);
+        if (auto failure = takeError(error)) {
+            return std::unexpected(*failure);
+        }
+        if (value == nullptr) {
+            return std::nullopt;
+        }
+        QByteArray secret(value);
+        secret_password_free(value);  // wipes the memory
+        return secret;
+    }
+
+    Result<void> store(const QString& key, const QString& label, const QByteArray& secret) override
+    {
+        const QByteArray id = key.toUtf8();
+        const QByteArray title = label.toUtf8();
+        GError* error = nullptr;
+        secret_password_store_sync(schema(), SECRET_COLLECTION_DEFAULT, title.constData(), secret.constData(), nullptr,
+                                   &error, "key", id.constData(), nullptr);
+        if (auto failure = takeError(error)) {
+            return std::unexpected(*failure);
+        }
+        return {};
+    }
+
+    Result<void> clear(const QString& key) override
+    {
+        const QByteArray id = key.toUtf8();
+        GError* error = nullptr;
+        secret_password_clear_sync(schema(), nullptr, &error, "key", id.constData(), nullptr);
+        if (auto failure = takeError(error)) {
+            return std::unexpected(*failure);
+        }
+        return {};
+    }
+};
+
 template <class T, class Callback> void deliver(QFuture<T> future, QObject* context, Callback callback)
 {
-    future.then(context, [callback = std::move(callback)](const T& result) { callback(result); });
+    future.then(context, [callback = std::move(callback)](T result) mutable { callback(std::move(result)); });
 }
 
+void ignore(const Result<void>& /*result*/) {}
+
 }  // namespace
+
+std::unique_ptr<IKeyring> makeSecretServiceKeyring()
+{
+    return std::make_unique<SecretServiceKeyring>();
+}
 
 void MemorySecretStore::read(const QString& key, QObject* context, ReadCallback callback)
 {
@@ -69,7 +119,13 @@ SecretServiceStore::SecretServiceStore(QObject* parent)
 }
 
 SecretServiceStore::SecretServiceStore(QString encryptedDirectory, QObject* parent)
+    : SecretServiceStore(makeSecretServiceKeyring(), std::move(encryptedDirectory), parent)
+{
+}
+
+SecretServiceStore::SecretServiceStore(std::unique_ptr<IKeyring> keyring, QString encryptedDirectory, QObject* parent)
     : QObject(parent)
+    , m_keyring(std::move(keyring))
 {
     m_pool.setMaxThreadCount(1);  // keeps keyring operations in order
     if (!encryptedDirectory.isEmpty()) {
@@ -85,50 +141,68 @@ SecretServiceStore::~SecretServiceStore()
 
 void SecretServiceStore::fallbackRead(const QString& key, QObject* context, ReadCallback callback)
 {
-    if (m_file && m_fileAvailable) {
-        m_file->read(key, context,
-                     [this, key, context = QPointer(context),
-                      callback = std::move(callback)](Result<std::optional<QByteArray>> result) mutable {
-                         if (!result) {
-                             m_fileAvailable = false;
-                             if (context != nullptr) {
-                                 m_fallback.read(key, context, std::move(callback));
-                             }
-                             return;
-                         }
-                         if (context != nullptr) {
-                             callback(result);
-                         }
-                     });
+    if (!m_file) {
+        m_fallback.read(key, context, std::move(callback));
         return;
     }
-    m_fallback.read(key, context, std::move(callback));
+    m_file->read(key, this,
+                 [this, key, context = QPointer(context),
+                  callback = std::move(callback)](Result<std::optional<QByteArray>> result) mutable {
+                     if (context == nullptr) {
+                         return;
+                     }
+                     if (result && *result) {
+                         callback(std::move(result));
+                         return;
+                     }
+                     if (!result) {
+                         // One unreadable entry (tampered, written with another master key) says nothing about
+                         // the others, so the file tier stays enabled; only a failed write disables it.
+                         qCWarning(lcAuth).noquote()
+                             << QString::fromStdString(result.error().describe()) << "- ignoring the stored secret";
+                     }
+                     m_fallback.read(key, context, std::move(callback));
+                 });
 }
 
 void SecretServiceStore::fallbackWrite(const QString& key, const QString& label, const QByteArray& secret,
-                                       QObject* context, WriteCallback callback)
+                                       quint64 epoch, QObject* context, WriteCallback callback)
 {
-    if (m_file && m_fileAvailable) {
-        m_file->write(key, label, secret, context,
-                      [this, key, label, secret, context = QPointer(context),
-                       callback = std::move(callback)](const Result<void>& result) mutable {
-                          if (!result) {
-                              qCWarning(lcAuth).noquote()
-                                  << QString::fromStdString(result.error().describe())
-                                  << "- encrypted fallback unavailable; keeping secrets in memory only";
-                              m_fileAvailable = false;
-                              if (context != nullptr) {
-                                  m_fallback.write(key, label, secret, context, std::move(callback));
-                              }
-                              return;
-                          }
-                          if (context != nullptr) {
-                              callback(result);
-                          }
-                      });
+    if (!m_file || !m_fileAvailable) {
+        m_fallback.write(key, label, secret, context, std::move(callback));
         return;
     }
-    m_fallback.write(key, label, secret, context, std::move(callback));
+    m_file->write(key, label, secret, this,
+                  [this, key, label, secret, epoch, context = QPointer(context),
+                   callback = std::move(callback)](const Result<void>& result) mutable {
+                      if (result) {
+                          m_fallback.remove(key, this, ignore);
+                      } else {
+                          qCWarning(lcAuth).noquote()
+                              << QString::fromStdString(result.error().describe())
+                              << "- encrypted fallback unavailable; keeping secrets in memory only";
+                          m_fileAvailable = false;
+                          if (!superseded(key, epoch)) {
+                              m_fallback.write(key, label, secret, this, ignore);
+                          }
+                      }
+                      if (context != nullptr) {
+                          callback({});
+                      }
+                  });
+}
+
+void SecretServiceStore::removeFromFallbacks(const QString& key)
+{
+    m_fallback.remove(key, this, ignore);
+    if (m_file) {
+        m_file->remove(key, this, [](const Result<void>& result) {
+            if (!result) {
+                qCWarning(lcAuth).noquote() << QString::fromStdString(result.error().describe())
+                                            << "- could not remove a secret from the encrypted fallback";
+            }
+        });
+    }
 }
 
 void SecretServiceStore::read(const QString& key, QObject* context, ReadCallback callback)
@@ -137,99 +211,77 @@ void SecretServiceStore::read(const QString& key, QObject* context, ReadCallback
         fallbackRead(key, context, std::move(callback));
         return;
     }
-    const QByteArray id = key.toUtf8();
-    deliver(QtConcurrent::run(&m_pool,
-                              [id] -> Result<std::optional<QByteArray>> {
-                                  GError* error = nullptr;
-                                  gchar* value = secret_password_lookup_sync(schema(), nullptr, &error, "key",
-                                                                             id.constData(), nullptr);
-                                  if (auto failure = takeError(error)) {
-                                      return std::unexpected(*failure);
-                                  }
-                                  if (value == nullptr) {
-                                      return std::nullopt;
-                                  }
-                                  QByteArray secret(value);
-                                  secret_password_free(value);  // wipes the memory
-                                  return secret;
-                              }),
-            this, [this, key, context = QPointer(context), callback](Result<std::optional<QByteArray>> result) {
+    deliver(QtConcurrent::run(&m_pool, [keyring = m_keyring.get(), key] { return keyring->lookup(key); }), this,
+            [this, key, context = QPointer(context),
+             callback = std::move(callback)](Result<std::optional<QByteArray>> result) mutable {
+                if (context == nullptr) {
+                    return;
+                }
+                if (result && *result) {
+                    callback(std::move(result));
+                    return;
+                }
                 if (!result) {
                     qCWarning(lcAuth).noquote()
                         << QString::fromStdString(result.error().describe()) << "- using the local secret fallback";
                     m_available = false;
-                    if (context != nullptr) {
-                        fallbackRead(key, context, callback);
-                    }
-                    return;
                 }
-                if (context != nullptr) {
-                    callback(result);
-                }
+                // A keyring miss still checks the fallbacks: the secret may have been saved there in a session
+                // without a keyring. The next write moves it into the keyring.
+                fallbackRead(key, context, std::move(callback));
             });
 }
 
 void SecretServiceStore::write(const QString& key, const QString& label, const QByteArray& secret, QObject* context,
                                WriteCallback callback)
 {
+    const quint64 epoch = ++m_epochs[key];
     if (!m_available) {
-        fallbackWrite(key, label, secret, context, std::move(callback));
+        fallbackWrite(key, label, secret, epoch, context, std::move(callback));
         return;
     }
-    const QByteArray id = key.toUtf8();
-    const QByteArray title = label.toUtf8();
-    deliver(QtConcurrent::run(&m_pool,
-                              [id, title, secret] -> Result<void> {
-                                  GError* error = nullptr;
-                                  secret_password_store_sync(schema(), SECRET_COLLECTION_DEFAULT, title.constData(),
-                                                             secret.constData(), nullptr, &error, "key", id.constData(),
-                                                             nullptr);
-                                  if (auto failure = takeError(error)) {
-                                      return std::unexpected(*failure);
-                                  }
-                                  return {};
-                              }),
-            this, [this, key, label, secret, context = QPointer(context), callback](const Result<void>& result) {
-                if (!result) {
-                    qCWarning(lcAuth).noquote()
-                        << QString::fromStdString(result.error().describe()) << "- using the local secret fallback";
-                    m_available = false;
+    deliver(QtConcurrent::run(&m_pool, [keyring = m_keyring.get(), key, label,
+                                        secret] { return keyring->store(key, label, secret); }),
+            this,
+            [this, key, label, secret, epoch, context = QPointer(context),
+             callback = std::move(callback)](const Result<void>& result) mutable {
+                if (result) {
+                    removeFromFallbacks(key);  // an older copy there must not outlive this one
                     if (context != nullptr) {
-                        fallbackWrite(key, label, secret, context, callback);
+                        callback({});
                     }
                     return;
                 }
-                if (context != nullptr) {
-                    callback(result);
+                qCWarning(lcAuth).noquote()
+                    << QString::fromStdString(result.error().describe()) << "- using the local secret fallback";
+                m_available = false;
+                if (superseded(key, epoch)) {
+                    // Removed (or rewritten) while this write was waiting on the keyring: do not bring it back.
+                    if (context != nullptr) {
+                        callback({});
+                    }
+                    return;
                 }
+                fallbackWrite(key, label, secret, epoch, context, std::move(callback));
             });
 }
 
 void SecretServiceStore::remove(const QString& key, QObject* context, WriteCallback callback)
 {
-    // Best-effort removal from every tier the secret might have reached; a remove failure does not disable a
-    // store (unlike a read/write failure), so the keyring stays primary for the rest of the session.
-    m_fallback.remove(key, this, [](const Result<void>&) {});
-    if (m_file) {
-        m_file->remove(key, this, [](const Result<void>&) {});
-    }
-    if (!m_available) {
-        QMetaObject::invokeMethod(context, [callback] { callback({}); }, Qt::QueuedConnection);
-        return;
-    }
-    const QByteArray id = key.toUtf8();
-    deliver(QtConcurrent::run(&m_pool,
-                              [id] -> Result<void> {
-                                  GError* error = nullptr;
-                                  secret_password_clear_sync(schema(), nullptr, &error, "key", id.constData(), nullptr);
-                                  if (auto failure = takeError(error)) {
-                                      return std::unexpected(*failure);
-                                  }
-                                  return {};
-                              }),
-            this, [context = QPointer(context), callback](const Result<void>& result) {
+    ++m_epochs[key];
+    removeFromFallbacks(key);
+    // Always ask the keyring, even after it failed this session: a copy saved there in an earlier session would
+    // otherwise come back at the next launch. Queued behind any pending keyring write for the same key.
+    const bool expected = m_available;
+    deliver(QtConcurrent::run(&m_pool, [keyring = m_keyring.get(), key] { return keyring->clear(key); }), this,
+            [expected, context = QPointer(context), callback = std::move(callback)](const Result<void>& result) {
+                if (!result && expected) {
+                    qCWarning(lcAuth).noquote() << QString::fromStdString(result.error().describe())
+                                                << "- could not remove a secret from the keyring";
+                }
                 if (context != nullptr) {
-                    callback(result);
+                    // Without a keyring there was nothing to remove there.
+                    callback(expected ? result : Result<void>{});
                 }
             });
 }

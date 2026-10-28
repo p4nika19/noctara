@@ -59,15 +59,40 @@ private:
     QHash<QString, QByteArray> m_secrets;
 };
 
-// The desktop keyring through the Secret Service API (libsecret: GNOME Keyring, KWallet, KeePassXC …).
-// Calls run on a private worker thread because they may block on an unlock prompt. If the service is missing,
-// secrets fall back to EncryptedFileSecretStore when a directory is supplied, then to memory as a last resort.
+// Blocking access to a desktop keyring. SecretServiceStore calls it only from its worker thread, one call at a time.
+class IKeyring {
+public:
+    IKeyring() = default;
+    virtual ~IKeyring() = default;
+    IKeyring(const IKeyring&) = delete;
+    IKeyring& operator=(const IKeyring&) = delete;
+    IKeyring(IKeyring&&) = delete;
+    IKeyring& operator=(IKeyring&&) = delete;
+
+    // An error means the keyring itself is unusable (missing service, locked and not unlocked …).
+    virtual Result<std::optional<QByteArray>> lookup(const QString& key) = 0;
+    virtual Result<void> store(const QString& key, const QString& label, const QByteArray& secret) = 0;
+    virtual Result<void> clear(const QString& key) = 0;
+};
+
+// The Secret Service API through libsecret (GNOME Keyring, KWallet, KeePassXC …).
+std::unique_ptr<IKeyring> makeSecretServiceKeyring();
+
+// The desktop keyring, with EncryptedFileSecretStore (when a directory is supplied) and then memory as fallbacks.
+// Keyring calls run on a private worker thread because they may block on an unlock prompt.
+// - read: the keyring; on a miss or a keyring error, the encrypted file, then memory, so a secret saved while the
+//   keyring was unavailable is still found when it comes back.
+// - write: the first tier that accepts it; copies in lower tiers are then removed so they cannot shadow it later.
+// - remove: every tier, the keyring included even after it failed, and a write still in flight cannot bring the
+//   secret back through a fallback afterwards.
+// After a keyring error, reads and writes skip the keyring for the rest of the session (no repeated prompts).
 class SecretServiceStore : public QObject, public ISecretStore {
     Q_OBJECT
 
 public:
     explicit SecretServiceStore(QObject* parent = nullptr);
     explicit SecretServiceStore(QString encryptedDirectory, QObject* parent = nullptr);
+    SecretServiceStore(std::unique_ptr<IKeyring> keyring, QString encryptedDirectory, QObject* parent = nullptr);
     ~SecretServiceStore() override;
     SecretServiceStore(const SecretServiceStore&) = delete;
     SecretServiceStore& operator=(const SecretServiceStore&) = delete;
@@ -83,14 +108,19 @@ public:
 
 private:
     void fallbackRead(const QString& key, QObject* context, ReadCallback callback);
-    void fallbackWrite(const QString& key, const QString& label, const QByteArray& secret, QObject* context,
-                       WriteCallback callback);
+    void fallbackWrite(const QString& key, const QString& label, const QByteArray& secret, quint64 epoch,
+                       QObject* context, WriteCallback callback);
+    void removeFromFallbacks(const QString& key);
+    [[nodiscard]] bool superseded(const QString& key, quint64 epoch) const { return m_epochs.value(key) != epoch; }
 
     QThreadPool m_pool;
+    std::unique_ptr<IKeyring> m_keyring;
     std::atomic<bool> m_available{true};
     std::atomic<bool> m_fileAvailable{false};
     std::unique_ptr<EncryptedFileSecretStore> m_file;
     MemorySecretStore m_fallback;
+    // Bumped by every write and remove of a key: a slow write's fallback is dropped once a newer call exists.
+    QHash<QString, quint64> m_epochs;
 };
 
 }  // namespace noctara::auth
