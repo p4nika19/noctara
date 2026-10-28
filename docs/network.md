@@ -96,10 +96,11 @@ Common to all modes:
 | System (default) | Proxy environment variables if any is set: `https_proxy`/`HTTPS_PROXY` for https, `http_proxy` for http (upper-case `HTTP_PROXY` is ignored, as in curl, because of httpoxy), then `all_proxy`/`ALL_PROXY`; `no_proxy` is honoured. Otherwise the desktop's settings through libproxy (GNOME, KDE, PAC/WPAD), cached per scheme and host for a minute. The settings page shows which source is used and what it resolved to. |
 | Manual | HTTP, HTTPS, SOCKS4, SOCKS5, or SOCKS5 with remote DNS (socks5h). The bypass list takes host names (with subdomains), `*.domain`, `.domain`, IP addresses, CIDR ranges, `<local>` and `*`. "Bypass for local addresses" (default on) adds localhost, private and link-local ranges and dot-less names. |
 
-Proxy credentials are kept only in the system keyring (Secret Service via libsecret, under the key
-`network.proxy.credentials`). They never go to the config file, logs, diagnostics or `--print-config`; proxy URLs
-are always displayed as `scheme://<redacted>@host:port`. Without a keyring, credentials are kept in memory and the UI
-says so. HTTP proxies negotiate authentication with `CURLAUTH_ANY`; SOCKS5 uses RFC 1929.
+Proxy credentials are kept only in the secret store (see [auth.md](auth.md#where-the-token-lives)): the system
+keyring (Secret Service via libsecret, under the key `network.proxy.credentials`), else Noctara's encrypted local
+store, else memory. They never go to the config file, logs, diagnostics or `--print-config`; proxy URLs are always
+displayed as `scheme://<redacted>@host:port`. The credentials row and the save toast say which of the three holds
+them, with a warning for the encrypted store and for memory only. HTTP proxies negotiate authentication with `CURLAUTH_ANY`; SOCKS5 uses RFC 1929.
 
 ### DNS ↔ proxy
 

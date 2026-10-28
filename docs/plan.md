@@ -33,7 +33,7 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 15. **Presets change colours only** (Auto / Midnight / Frost; Midnight and Frost untranslated), per the user's review of slice (a).
 16. **Vulkan is preferred under Auto** (user request): pipeline cache on disk, GPU timestamps, device selection for *GPU preference*. OpenGL remains the fallback, including when Vulkan is only lavapipe.
 17. **Selection indicators are computed, not bound by `Binding` elements**: the nav-rail and segmented-control pills derive their geometry from the model and the control size, so they follow resizes and never lag or duplicate.
-18. **Secret store**: `auth::ISecretStore` uses Secret Service (libsecret) on a worker thread, then an AES-256-GCM encrypted-file store under the app state directory, then memory only as a last resort. The UI distinguishes keyring, encrypted-local, and memory-only protection.
+18. **Secret store**: `auth::ISecretStore` uses Secret Service (libsecret, behind the injectable `IKeyring`) on a worker thread, then an AES-256-GCM encrypted-file store under the app state directory, then memory only as a last resort. Reads fall through to the fallbacks on a keyring miss, so a secret saved without a keyring is not lost when the keyring returns; writes remove lower-tier copies; removes reach every tier. The Accounts page and the proxy credentials row distinguish keyring, encrypted-local, and memory-only protection.
 19. **Network diagnostics are redacted at the source**: request records keep URLs without user-info or query values, and proxy URLs are displayed as `scheme://<redacted>@host:port`, so nothing secret can reach the UI, the copied report or logs.
 20. **Audio cache pieces**: 64 KiB chunks of progressive streams at fixed offsets in a sparse file plus a checksummed piece map (resumable, validated per piece); one piece per HLS segment. Entries are keyed by track id + transcoding. One fetch per entry serves all readers.
 21. **Readers are bound to a generation** of an entry's file: tagging rewrites the file into a new generation, and readers opened earlier keep the old file through their descriptor, so a decoder never sees bytes shift.
@@ -58,10 +58,10 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 31. **Cover shapes are cut on the CPU by the image provider** (`image://cover/mask/<fraction>/…`, on Qt's image
     loader thread), so rounded and circular covers look the same with and without shader effects.
 32. **One sign-in entry point** (`AccountController::signInWithToken`): manual paste and consented browser cookie
-    import both verify against `/me` and store through `ISecretStore`
-    before it is kept, so a bad token never replaces a working session and the token is never in the config
-    file. Session expiry is detected once, from `api::Session::rejected` (a 401 on any request). See
-    [auth.md](auth.md).
+    import both check the token with its own `/me` request (`ApiRequest::candidateToken`, never cached) before it
+    is installed in `api::Session` and stored through `ISecretStore`, so a bad token never disturbs a working
+    session and the token is never in the config file. Session expiry comes from `api::Session::rejected` (a 401
+    on any request) or a 401 on the background check. See [auth.md](auth.md).
 
 ## Slices
 
@@ -80,23 +80,32 @@ Done: (a), (b), (c), (d), (e), (f).
 
 ## Slice (f) status (auth / secret store / session)
 
-Complete on Linux; see [auth.md](auth.md) for the format and platform matrix.
+Done on Linux after a review round (separate "Review fix (f)" commits); see [auth.md](auth.md) for the formats and
+the per-browser path table.
 
-- Manual OAuth-token paste and **consented browser cookie import** share one `/me` verification path. A rejected
-  token never replaces a working session, and successful tokens are stored only through `ISecretStore`.
-- Chrome, Chromium, Brave, Edge, Vivaldi, Opera, Firefox, and LibreWolf profiles are discovered in native,
-  Flatpak, and Snap locations. Discovery exposes metadata only; the selected cookie DB is snapshotted read-only
-  after explicit consent. Firefox cookies and Chromium Linux `v10` cookies are supported.
-- Secret Service runs off-thread and falls back to an atomic AES-256-GCM file store under the app state directory,
-  then memory only if persistent storage fails. The UI distinguishes these protection levels.
-- Startup session loading, expiry on any API `401`, sign-out everywhere, en/ru strings, and the Accounts page are
-  integrated. Fixture tests cover browser formats/discovery/WAL, account consent and failures, encrypted storage,
-  tampering, permissions, and persistence. Tests never access real profiles or keyrings.
+- Manual OAuth-token paste and **consented browser cookie import** share one verification path: the candidate is
+  checked with its own `/me` request and only then installed in `api::Session`, so a refused token never disturbs a
+  working session. Stale asynchronous answers (slow keyring read, superseded check, save after sign-out) are dropped.
+- Chrome, Chromium, Brave, Edge, Vivaldi, Opera, Firefox and LibreWolf are discovered in native, Flatpak and Snap
+  locations (Opera's profile-less layout included). Discovery exposes metadata only; the selected cookie DB (with its
+  WAL/journal) is snapshotted read-only after explicit consent.
+- Firefox cookies, and Chromium `v10` (`peanuts`) and `v11` (Safe Storage password from the Secret Service or KWallet)
+  cookies, including the `SHA-256(host_key)` prefix of cookie DB version 24+ (Chromium 130+).
+- `SecretServiceStore` (keyring, behind `IKeyring`) falls back to an AES-256-GCM file store under the state directory,
+  then memory; reads fall through on a keyring miss, writes clean lower tiers, removes reach every tier. The Accounts
+  page and the proxy credentials row show which protection is in use.
+- Startup session loading, expiry on a `401` (with a "Sign in" toast action), offline retry with backoff, sign-out
+  everywhere, en/ru strings, and the Accounts page are integrated. Tests use fixture databases with the real schemas
+  and a fake keyring; only the opt-in `real browser profile import` touches the user's profiles and keyring.
 
-Windows DPAPI/app-bound cookies and macOS Keychain remain platform-specific follow-ups behind the auth interfaces;
-unknown Linux cookie encryption versions fail honestly and retain the manual-paste path.
+Windows DPAPI/app-bound cookies and macOS Keychain remain platform-specific follow-ups (another
+`IBrowserCookieSource`); unknown cookie encryption versions fail honestly and keep the manual-paste path.
 
 ## Open items flagged for verification
+- Chromium-family import is verified against fixture databases built from Chromium's own format description
+  (`os_crypt_linux`, cookie DB version 24), not against installed browsers; the KWallet D-Bus path has not run
+  against a real wallet, and the Brave/Vivaldi/Opera Snap paths follow the Snap `$HOME` convention unchecked. Check
+  with `noctara-tests --no-skip -tc="real browser profile import"` on a desktop with those browsers signed in.
 - DoH over HTTP/2 against a local server is not covered by automated tests (the mock speaks HTTP/1.1); real providers negotiate HTTP/2 through ALPN.
 - castlabs Electron version and the `configureHostResolver` secure-DNS support (slice i).
 - Live api-v2 behaviour (client_id discovery, field names, transcodings, `/charts`) is covered by fixtures only; the

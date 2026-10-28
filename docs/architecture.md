@@ -11,8 +11,15 @@ This document grows with each slice. It currently covers slices (a) to (f).
  (errors,  (schema,     (Language- (OKLCH,        (policy,       (SettingsModel/
   logging,  store,       Manager,   Palette,       GpuProbe,      Controller,
   atomic    TOML,        Formatter, Theme,         CrashSentinel, AppController,
-  file I/O) ConfigFile,  Error-     FontLoader)    Relaunch)      IconProvider)
-            overrides)   Messages)
+  file I/O) ConfigFile,  Error-     FontLoader)    Relaunch)      Account, Network,
+            overrides)   Messages)                                Storage, Catalog …)
+     ▲          ▲
+     │          └──── net ◄── cache ◄── api ◄── models ◄── ui
+     │               (transport,  (audio RAM/  (api-v2,    (Collection-
+     │                DNS/DoH,     disk, image, client_id,  Model)
+     │                proxy)       HTTP cache)  Session)
+     └──── auth ◄────────────────────────────────────────── ui
+          (ISecretStore tiers, BrowserCookieSource, KWallet)
 ```
 
 Slice (c) adds two modules: `net` (depends on `core` and `settings`: transport, DNS, proxy, diagnostics) and `auth`
