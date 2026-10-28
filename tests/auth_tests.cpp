@@ -81,6 +81,7 @@ public:
                                             QStringLiteral("Fixture Browser"),
                                             QStringLiteral("Personal"),
                                             auth::BrowserFamily::Firefox,
+                                            auth::BrowserInstall::Native,
                                             QStringLiteral("/fixture/cookies.sqlite"),
                                             {}}};
     Result<QByteArray> token = QByteArrayLiteral("good-token");

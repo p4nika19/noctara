@@ -196,8 +196,8 @@ Flickable {
                         for (const entry of Account.browserProfiles) {
                             if (entry.id === signInColumn.selectedProfile) {
                                 consent.profileId = entry.id
-                                consent.browserName = entry.browser
-                                consent.profileName = entry.profile
+                                consent.profileLabel = entry.label
+                                consent.encrypted = entry.encrypted
                                 consent.open()
                                 break
                             }
@@ -212,6 +212,15 @@ Flickable {
                 currentId: signInColumn.selectedProfile
                 enabled: !Account.browserBusy
                 onPicked: id => signInColumn.selectedProfile = id
+            }
+            // Preselect the first profile after a scan, so Import is usable right away.
+            Connections {
+                target: Account
+                function onBrowserProfilesChanged() {
+                    const profiles = Account.browserProfiles
+                    if (!profiles.some(entry => entry.id === signInColumn.selectedProfile))
+                        signInColumn.selectedProfile = profiles.length > 0 ? profiles[0].id : ""
+                }
             }
 
             Item { width: 1; height: Theme.space.xs }
@@ -245,10 +254,14 @@ Flickable {
             Dialog {
                 id: consent
                 property string profileId
-                property string browserName
-                property string profileName
+                property string profileLabel
+                property bool encrypted
                 title: qsTr("Allow browser cookie access?")
-                message: qsTr("Noctara will make a temporary read-only copy of the cookie database for %1 (%2), read only the SoundCloud oauth_token cookie, and delete the copy. The token will be verified with SoundCloud and saved in your secret store. No other cookies are read.").arg(browserName).arg(profileName)
+                //: %1 is the browser and profile, e.g. "Chromium (Flatpak) — Personal"
+                message: encrypted
+                         ? qsTr("Noctara will make a temporary read-only copy of the cookie database of %1, read only the SoundCloud oauth_token cookie, and delete the copy. This browser encrypts its cookies, so Noctara will also read the browser's cookie password from your desktop keyring or KWallet, which may ask you to unlock it. The token will be verified with SoundCloud and saved in your secret store. No other cookies are read.").arg(profileLabel)
+                         //: %1 is the browser and profile, e.g. "Firefox — default-release"
+                         : qsTr("Noctara will make a temporary read-only copy of the cookie database of %1, read only the SoundCloud oauth_token cookie, and delete the copy. The token will be verified with SoundCloud and saved in your secret store. No other cookies are read.").arg(profileLabel)
                 confirmText: qsTr("Read cookie and sign in")
                 onAccepted: Account.importBrowserToken(profileId)
             }

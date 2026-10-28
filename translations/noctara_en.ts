@@ -88,7 +88,7 @@
 <context>
     <name>AccountsPane</name>
     <message>
-        <location filename="../src/qml/settings/AccountsPane.qml" line="+56"/>
+        <location filename="../src/qml/settings/AccountsPane.qml" line="+57"/>
         <source>Signed in</source>
         <translation type="unfinished"></translation>
     </message>
@@ -159,7 +159,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+37"/>
         <source>Or paste an OAuth token</source>
         <translation type="unfinished"></translation>
     </message>
@@ -169,8 +169,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Noctara will make a temporary read-only copy of the cookie database for %1 (%2), read only the SoundCloud oauth_token cookie, and delete the copy. The token will be verified with SoundCloud and saved in your secret store. No other cookies are read.</source>
+        <location line="+3"/>
+        <source>Noctara will make a temporary read-only copy of the cookie database of %1, read only the SoundCloud oauth_token cookie, and delete the copy. This browser encrypts its cookies, so Noctara will also read the browser&apos;s cookie password from your desktop keyring or KWallet, which may ask you to unlock it. The token will be verified with SoundCloud and saved in your secret store. No other cookies are read.</source>
+        <extracomment>%1 is the browser and profile, e.g. &quot;Chromium (Flatpak) — Personal&quot;</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Noctara will make a temporary read-only copy of the cookie database of %1, read only the SoundCloud oauth_token cookie, and delete the copy. The token will be verified with SoundCloud and saved in your secret store. No other cookies are read.</source>
+        <extracomment>%1 is the browser and profile, e.g. &quot;Firefox — default-release&quot;</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -179,7 +186,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-26"/>
         <source>OAuth token</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3089,7 +3096,7 @@
 <context>
     <name>noctara::ui::AccountController</name>
     <message>
-        <location filename="../src/ui/AccountController.cpp" line="+149"/>
+        <location filename="../src/ui/AccountController.cpp" line="+159"/>
         <source>Paste your SoundCloud OAuth token to sign in.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3104,7 +3111,25 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-25"/>
+        <source>%1 (Flatpak)</source>
+        <comment>browser installed as a Flatpak</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>%1 (Snap)</source>
+        <comment>browser installed as a Snap</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>%1 — %2</source>
+        <comment>browser, then the profile name</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+26"/>
         <source>No supported browser profiles were found. You can still paste your OAuth token.</source>
         <translation type="unfinished"></translation>
     </message>

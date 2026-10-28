@@ -53,11 +53,21 @@ QVariantList AccountController::browserProfiles() const
     QVariantList result;
     result.reserve(m_profiles.size());
     for (const auto& profile : m_profiles) {
-        result.append(QVariantMap{
-            {QStringLiteral("id"), profile.id},
-            {QStringLiteral("browser"), profile.browserName},
-            {QStringLiteral("profile"), profile.profileName},
-            {QStringLiteral("label"), QStringLiteral("%1 — %2").arg(profile.browserName, profile.profileName)}});
+        // Flatpak and Snap are product names and stay untranslated; they tell apart installs of one browser.
+        QString browser = profile.browserName;
+        if (profile.install == auth::BrowserInstall::Flatpak) {
+            browser = tr("%1 (Flatpak)", "browser installed as a Flatpak").arg(browser);
+        } else if (profile.install == auth::BrowserInstall::Snap) {
+            browser = tr("%1 (Snap)", "browser installed as a Snap").arg(browser);
+        }
+        const QString label = profile.profileName.isEmpty()
+                                  ? browser
+                                  : tr("%1 — %2", "browser, then the profile name").arg(browser, profile.profileName);
+        result.append(QVariantMap{{QStringLiteral("id"), profile.id},
+                                  {QStringLiteral("browser"), browser},
+                                  {QStringLiteral("profile"), profile.profileName},
+                                  {QStringLiteral("label"), label},
+                                  {QStringLiteral("encrypted"), profile.family == auth::BrowserFamily::Chromium}});
     }
     return result;
 }

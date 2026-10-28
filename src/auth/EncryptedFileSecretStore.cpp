@@ -1,5 +1,6 @@
 #include "auth/EncryptedFileSecretStore.hpp"
 
+#include "auth/SecureBytes.hpp"
 #include "core/FileIo.hpp"
 
 #include <QCryptographicHash>
@@ -44,12 +45,8 @@ struct SensitiveBytes : QByteArray {
     SensitiveBytes(SensitiveBytes&&) noexcept = default;
     SensitiveBytes& operator=(const SensitiveBytes&) = default;
     SensitiveBytes& operator=(SensitiveBytes&&) noexcept = default;
-    ~SensitiveBytes()
-    {
-        if (!isEmpty()) {
-            OPENSSL_cleanse(data(), static_cast<std::size_t>(size()));
-        }
-    }
+    // A buffer still shared (e.g. with the QByteArray returned from decrypt()) is left to its other owner.
+    ~SensitiveBytes() { wipe(*this); }
 };
 
 QString secretPath(const QString& directory, const QString& key)
@@ -73,9 +70,7 @@ Result<SensitiveBytes> masterKey(const QString& directory)
         if (stored->size() != kKeySize) {
             return fail(ErrorCode::Corrupt, "Encrypted secret-store master key has the wrong size");
         }
-        SensitiveBytes key(*stored);
-        OPENSSL_cleanse(stored->data(), static_cast<std::size_t>(stored->size()));
-        return key;
+        return SensitiveBytes(*stored);  // shares the buffer: the key outlives `stored`, which must not wipe it
     }
 
     SensitiveBytes key(kKeySize, Qt::Uninitialized);

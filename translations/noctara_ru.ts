@@ -88,7 +88,7 @@
 <context>
     <name>AccountsPane</name>
     <message>
-        <location filename="../src/qml/settings/AccountsPane.qml" line="+56"/>
+        <location filename="../src/qml/settings/AccountsPane.qml" line="+57"/>
         <source>Signed in</source>
         <translation>Вы вошли</translation>
     </message>
@@ -159,7 +159,7 @@
         <translation>Импортировать сессию…</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+37"/>
         <source>Or paste an OAuth token</source>
         <translation>Или вставьте OAuth-токен</translation>
     </message>
@@ -169,9 +169,16 @@
         <translation>Разрешить доступ к cookie браузера?</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Noctara will make a temporary read-only copy of the cookie database for %1 (%2), read only the SoundCloud oauth_token cookie, and delete the copy. The token will be verified with SoundCloud and saved in your secret store. No other cookies are read.</source>
-        <translation>Noctara создаст временную копию базы cookie %1 (%2), откроет её только для чтения, прочитает только cookie oauth_token SoundCloud и удалит копию. Токен будет проверен в SoundCloud и сохранён в вашем хранилище секретов. Другие cookie не читаются.</translation>
+        <location line="+3"/>
+        <source>Noctara will make a temporary read-only copy of the cookie database of %1, read only the SoundCloud oauth_token cookie, and delete the copy. This browser encrypts its cookies, so Noctara will also read the browser&apos;s cookie password from your desktop keyring or KWallet, which may ask you to unlock it. The token will be verified with SoundCloud and saved in your secret store. No other cookies are read.</source>
+        <extracomment>%1 is the browser and profile, e.g. &quot;Chromium (Flatpak) — Personal&quot;</extracomment>
+        <translation>Noctara создаст временную копию базы cookie %1, откроет её только для чтения, прочитает только cookie oauth_token SoundCloud и удалит копию. Этот браузер шифрует cookie, поэтому Noctara также прочитает пароль браузера для cookie из системной связки ключей или KWallet — они могут попросить их разблокировать. Токен будет проверен в SoundCloud и сохранён в вашем хранилище секретов. Другие cookie не читаются.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Noctara will make a temporary read-only copy of the cookie database of %1, read only the SoundCloud oauth_token cookie, and delete the copy. The token will be verified with SoundCloud and saved in your secret store. No other cookies are read.</source>
+        <extracomment>%1 is the browser and profile, e.g. &quot;Firefox — default-release&quot;</extracomment>
+        <translation>Noctara создаст временную копию базы cookie %1, откроет её только для чтения, прочитает только cookie oauth_token SoundCloud и удалит копию. Токен будет проверен в SoundCloud и сохранён в вашем хранилище секретов. Другие cookie не читаются.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -179,7 +186,7 @@
         <translation>Прочитать cookie и войти</translation>
     </message>
     <message>
-        <location line="-22"/>
+        <location line="-26"/>
         <source>OAuth token</source>
         <translation>OAuth-токен</translation>
     </message>
@@ -3097,7 +3104,7 @@
 <context>
     <name>noctara::ui::AccountController</name>
     <message>
-        <location filename="../src/ui/AccountController.cpp" line="+149"/>
+        <location filename="../src/ui/AccountController.cpp" line="+159"/>
         <source>Paste your SoundCloud OAuth token to sign in.</source>
         <translation>Вставьте OAuth-токен SoundCloud, чтобы войти.</translation>
     </message>
@@ -3112,7 +3119,25 @@
         <translation>Не удалось просмотреть установленные профили браузеров.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-25"/>
+        <source>%1 (Flatpak)</source>
+        <comment>browser installed as a Flatpak</comment>
+        <translation>%1 (Flatpak)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>%1 (Snap)</source>
+        <comment>browser installed as a Snap</comment>
+        <translation>%1 (Snap)</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>%1 — %2</source>
+        <comment>browser, then the profile name</comment>
+        <translation>%1 — %2</translation>
+    </message>
+    <message>
+        <location line="+26"/>
         <source>No supported browser profiles were found. You can still paste your OAuth token.</source>
         <translation>Поддерживаемые профили браузеров не найдены. Вы можете вставить OAuth-токен вручную.</translation>
     </message>
