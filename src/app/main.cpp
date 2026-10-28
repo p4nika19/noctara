@@ -1,4 +1,5 @@
 #include "auth/SecretStore.hpp"
+#include "cache/CacheService.hpp"
 #include "core/Log.hpp"
 #include "core/LsanSuppressions.hpp"
 #include "core/Paths.hpp"
@@ -22,6 +23,7 @@
 #include "theme/Theme.hpp"
 #include "ui/AppController.hpp"
 #include "ui/ArtworkProvider.hpp"
+#include "ui/CoverImageProvider.hpp"
 #include "ui/EffectsController.hpp"
 #include "ui/IconProvider.hpp"
 #include "ui/NetworkController.hpp"
@@ -29,6 +31,7 @@
 #include "ui/PowerStatus.hpp"
 #include "ui/SettingsController.hpp"
 #include "ui/SettingsModel.hpp"
+#include "ui/StorageController.hpp"
 
 #include <QCommandLineParser>
 #include <QGuiApplication>
@@ -301,6 +304,12 @@ int main(int argc, char** argv)
     QObject::connect(
         &networkUi, &ui::NetworkController::notice, &appController,
         [&appController](const QString& kind, const QString& message) { appController.showToast(kind, message); });
+    // Caches (audio RAM + disk, images, HTTP) on their own thread; the API client will use cache.transport().
+    cache::CacheService cache(store, network.transport(), paths.cacheDir);
+    ui::StorageController storageUi(cache, languages, settingsUi);
+    QObject::connect(
+        &storageUi, &ui::StorageController::notice, &appController,
+        [&appController](const QString& kind, const QString& message) { appController.showToast(kind, message); });
     QObject::connect(&config, &settings::ConfigFile::reloadIssues, &appController,
                      &ui::AppController::reportConfigIssues);
     config.setHotReloadEnabled(true);
@@ -312,6 +321,8 @@ int main(int argc, char** argv)
     engine.addImageProvider(QStringLiteral("noise"), new ui::NoiseProvider);
     // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
     engine.addImageProvider(QStringLiteral("artwork"), new ui::ArtworkProvider(accent));
+    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
+    engine.addImageProvider(QStringLiteral("cover"), new ui::CoverImageProvider(cache.images()));
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Theme", &theme);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Format", &formatter);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "SettingsUi", &settingsUi);
@@ -321,6 +332,7 @@ int main(int argc, char** argv)
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Performance", &effects);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Artwork", &accent);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Network", &networkUi);
+    qmlRegisterSingletonInstance("Noctara", 1, 0, "Storage", &storageUi);
     qmlRegisterUncreatableType<ui::SettingsModel>("Noctara", 1, 0, "SettingsModel",
                                                   QStringLiteral("Provided by SettingsUi"));
     QObject::connect(&languages, &i18n::LanguageManager::languageChanged, &engine, &QQmlEngine::retranslate);

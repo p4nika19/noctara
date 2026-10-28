@@ -77,6 +77,13 @@ QString errorMessage(ErrorCode code)
     case ErrorCode::Unauthorized:
         return QCoreApplication::translate("Errors", "Your session has expired. Please sign in again.");
     case ErrorCode::Forbidden: return QCoreApplication::translate("Errors", "Access to this content is not allowed.");
+    case ErrorCode::NotCacheable:
+        return QCoreApplication::translate("Errors", "Protected tracks are never stored on this computer.");
+    case ErrorCode::CacheLocked:
+        return QCoreApplication::translate(
+            "Errors", "Another Noctara window is using the cache, so this one keeps its cache in memory only.");
+    case ErrorCode::ContentChanged:
+        return QCoreApplication::translate("Errors", "The track changed on the server and is being reloaded.");
     }
     return QCoreApplication::translate("Errors", "Something went wrong.");
 }

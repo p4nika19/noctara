@@ -1,6 +1,6 @@
 # Architecture
 
-This document grows with each slice. It currently covers slices (a) to (c).
+This document grows with each slice. It currently covers slices (a) to (d).
 
 ```
             ┌──────────────── app/main.cpp (composition root) ────────────────┐
@@ -16,7 +16,8 @@ This document grows with each slice. It currently covers slices (a) to (c).
 ```
 
 Slice (c) adds two modules: `net` (depends on `core` and `settings`: transport, DNS, proxy, diagnostics) and `auth`
-(depends on `core`: the secret store for now). `ui` depends on both and `app` wires them up.
+(depends on `core`: the secret store for now). Slice (d) adds `cache` (depends on `core`, `settings` and `net`: the
+audio RAM and disk tiers, the image cache, the HTTP cache). `ui` depends on all of them and `app` wires them up.
 
 Static libraries per module (`noctara_<module>`); the executable only wires them together. Dependencies point downward only: `ui` may use everything, and `core` uses nothing but Qt Core.
 
@@ -91,8 +92,27 @@ settings (network.*) ──► NetworkService (GUI thread) ── config snapsho
 any module ── INetworkTransport::send(request, context, callbacks) ── results on context's thread
 ```
 
-Later slices plug in here: the API client (e) and the caches (d) call `send()`, and `StreamSource` → audio cache →
-transport feeds the decoder (g). See [network.md](network.md) for details.
+The caches (d) call `send()`; the API client (e) will use the caching transport below. See [network.md](network.md)
+for details.
+
+## Transport → cache → StreamSource → decoder
+
+```
+                         settings (cache.*) ──► CacheService (GUI thread) ── budgets, location, lock
+                                                      │ owns
+                                                      ▼
+            cache thread:  CachingTransport (HTTP cache, <cache>/http) ──► API client (e)
+                           ImageCache (RAM LRU + <cache>/images) ◄── image://cover/… (QML)
+                           AudioCache (disk tier, <cache>/audio) ── one fetch per entry, Range requests
+                               │  stores pieces                  └─► INetworkTransport (net thread)
+                               ▼
+                           MemoryTier (RAM tier, thread-safe, shared immutable pieces)
+                               │
+  decoder thread (g):  StreamSource ── AudioReader::read(piece) ── RAM → disk (pread + checksum) → network
+```
+
+DRM tracks never enter this path: `AudioCache::open` refuses them before anything is created, and the DRM backend
+(slice i) plays them in the Electron helper. See [caching.md](caching.md).
 
 ## Ownership and threading
 
@@ -104,4 +124,9 @@ transport feeds the decoder (g). See [network.md](network.md) for details.
   both), so its timers and socket notifiers belong to that thread. Callbacks reach callers through
   `CallbackChannel` (a queued signal), which Qt drops when the receiver is gone. Asynchronous continuations inside
   the thread look objects up by id or `QPointer` instead of keeping raw pointers.
+- The caches live on their own thread (`CacheService`, created and destroyed there like the network stack). Audio
+  readers are thread-safe: the decoder reads pieces (RAM hit, else `pread`) on its own thread and waits on the
+  entry's condition variable for missing ones; everything that writes runs on the cache thread. Tagging and image
+  decoding run on the thread pool and post their results back through a `Mailbox`, which drops them if the cache is
+  gone.
 - `AccentEngine` workers capture only copies of their inputs. Results carry a generation number, and stale ones are dropped. The backdrop images it hands to the image provider (loader threads) are guarded by a mutex.

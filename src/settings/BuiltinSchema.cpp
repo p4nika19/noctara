@@ -4,6 +4,7 @@
 #include "settings/Keys.hpp"
 #include "settings/Schema.hpp"
 
+#include <QDir>
 #include <QUrl>
 
 #include <format>
@@ -114,6 +115,15 @@ Result<void> validateBypass(const QVariant& value)
     return {};
 }
 
+Result<void> validateCacheDir(const QVariant& value)
+{
+    const QString dir = value.toString();
+    if (dir.isEmpty() || QDir::isAbsolutePath(dir)) {
+        return {};
+    }
+    return invalid(dir, "an absolute path");
+}
+
 std::vector<Section> builtinSections()
 {
     return {
@@ -166,6 +176,15 @@ std::vector<Section> builtinSections()
          QT_TRANSLATE_NOOP("Settings", "Protocol, time limits and retries.")},
         {"network.tls", Network, QT_TRANSLATE_NOOP("Settings", "Security"),
          QT_TRANSLATE_NOOP("Settings", "Encrypted connections. Certificates are always verified.")},
+
+        {"cache", Storage, QT_TRANSLATE_NOOP("Settings", "Audio cache"),
+         QT_TRANSLATE_NOOP("Settings", "Tracks you play are kept on this computer, so replays, seeking and the next "
+                                       "track start instantly and use no data. Protected tracks are never stored.")},
+        {"cache.images", Storage, QT_TRANSLATE_NOOP("Settings", "Images"),
+         QT_TRANSLATE_NOOP("Settings", "Cover art and profile pictures.")},
+        {"cache.metadata", Storage, QT_TRANSLATE_NOOP("Settings", "Metadata"),
+         QT_TRANSLATE_NOOP("Settings", "Track, playlist and profile information from SoundCloud, so pages open "
+                                       "quickly and work offline.")},
     };
 }
 
@@ -924,6 +943,124 @@ std::vector<Definition> builtinDefinitions()
                     .description = QT_TRANSLATE_NOOP(
                         "Settings", "PEM file with the certificate authorities to trust instead of the system's, "
                                     "for networks that inspect encrypted traffic. Empty uses the system store."),
+                    .flags = flag::Advanced});
+
+    // --- Storage & Cache --------------------------------------------------------------------------
+    defs.push_back({.key = keys::AudioCacheEnabled,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Storage,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Keep played tracks"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Off keeps only the current track in memory; nothing is written to disk."),
+                    .cliAlias = "audio-cache"});
+    defs.push_back({.key = keys::AudioDiskMb,
+                    .type = Type::Int,
+                    .defaultValue = integer(2048),
+                    .min = 0,
+                    .max = 102400,
+                    .step = 256,
+                    .category = Storage,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Disk space for tracks"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "The tracks played longest ago make room for new ones. 0 turns the disk cache "
+                                    "off."),
+                    .unit = QT_TRANSLATE_NOOP("Settings", "MB"),
+                    .visibleWhen = Condition{keys::AudioCacheEnabled, {"true"}}});
+    defs.push_back({.key = keys::AudioRamMb,
+                    .type = Type::Int,
+                    .defaultValue = integer(128),
+                    .min = 16,
+                    .max = 2048,
+                    .step = 16,
+                    .category = Storage,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Memory for tracks"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "For the current and upcoming tracks, so seeking is instant. Released early when "
+                                    "the system runs low on memory."),
+                    .unit = QT_TRANSLATE_NOOP("Settings", "MB")});
+    defs.push_back({.key = keys::Prefetch,
+                    .type = Type::Int,
+                    .defaultValue = integer(2),
+                    .min = 0,
+                    .max = 5,
+                    .step = 1,
+                    .category = Storage,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Prepare upcoming tracks"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "How many tracks of the queue are downloaded in advance. None on a metered "
+                                    "connection; at most one while the disk cache is off.")});
+    defs.push_back({.key = keys::EmbedTags,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Storage,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Embed tags in cached audio"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Completed tracks get title, artist and cover inside the file. The audio itself "
+                                    "is never altered."),
+                    .flags = flag::Advanced,
+                    .visibleWhen = Condition{keys::AudioCacheEnabled, {"true"}}});
+    defs.push_back({.key = keys::CacheDir,
+                    .type = Type::Path,
+                    .defaultValue = str(""),
+                    .category = Storage,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Cache location"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "A folder for all caches; Noctara creates a “noctara” folder inside it. Empty "
+                                    "uses the standard cache folder of your system."),
+                    .flags = flag::Advanced,
+                    .validator = validateCacheDir});
+    defs.push_back({.key = keys::ClearCacheOnExit,
+                    .type = Type::Bool,
+                    .defaultValue = false,
+                    .category = Storage,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Clear cache on exit"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Removes cached tracks, images and metadata whenever Noctara quits.")});
+    defs.push_back({.key = keys::MinFreeMb,
+                    .type = Type::Int,
+                    .defaultValue = integer(1024),
+                    .min = 0,
+                    .max = 102400,
+                    .step = 256,
+                    .category = Storage,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Keep free on disk"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "The cache gives space back before the disk gets fuller than this."),
+                    .unit = QT_TRANSLATE_NOOP("Settings", "MB"),
+                    .flags = flag::Advanced});
+    defs.push_back({.key = keys::ImageRamMb,
+                    .type = Type::Int,
+                    .defaultValue = integer(64),
+                    .min = 16,
+                    .max = 1024,
+                    .step = 16,
+                    .category = Storage,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Memory for images"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Decoded images ready to be shown."),
+                    .unit = QT_TRANSLATE_NOOP("Settings", "MB"),
+                    .flags = flag::Advanced});
+    defs.push_back({.key = keys::ImageDiskMb,
+                    .type = Type::Int,
+                    .defaultValue = integer(512),
+                    .min = 0,
+                    .max = 10240,
+                    .step = 64,
+                    .category = Storage,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Disk space for images"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "0 keeps images in memory only."),
+                    .unit = QT_TRANSLATE_NOOP("Settings", "MB")});
+    defs.push_back({.key = keys::MetadataDiskMb,
+                    .type = Type::Int,
+                    .defaultValue = integer(128),
+                    .min = 0,
+                    .max = 2048,
+                    .step = 16,
+                    .category = Storage,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Disk space for metadata"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "0 turns the metadata cache off; pages then always load from the network."),
+                    .unit = QT_TRANSLATE_NOOP("Settings", "MB"),
                     .flags = flag::Advanced});
 
     return defs;

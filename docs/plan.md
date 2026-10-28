@@ -35,6 +35,12 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 17. **Selection indicators are computed, not bound by `Binding` elements**: the nav-rail and segmented-control pills derive their geometry from the model and the control size, so they follow resizes and never lag or duplicate.
 18. **Secret store**: `auth::ISecretStore` with a Secret Service (libsecret) implementation on a worker thread; without a keyring, secrets stay in memory and the UI says so. The encrypted-file fallback from the spec is deferred to slice (f), where the session token needs it most.
 19. **Network diagnostics are redacted at the source**: request records keep URLs without user-info or query values, and proxy URLs are displayed as `scheme://<redacted>@host:port`, so nothing secret can reach the UI, the copied report or logs.
+20. **Audio cache pieces**: 64 KiB chunks of progressive streams at fixed offsets in a sparse file plus a checksummed piece map (resumable, validated per piece); one piece per HLS segment. Entries are keyed by track id + transcoding. One fetch per entry serves all readers.
+21. **Readers are bound to a generation** of an entry's file: tagging rewrites the file into a new generation, and readers opened earlier keep the old file through their descriptor, so a decoder never sees bytes shift.
+22. **Tag-independent payload hash** (MPEG frames, MP4 `mdat` contents, Ogg packets) proves tagging left the audio byte-identical; TagLib audio properties check duration, rate and channels. A full decode comparison waits for FFmpeg (slice g).
+23. **HTTP cache as a transport decorator** (`CachingTransport`), so the API client gets RFC 9111 caching, revalidation and stale-if-offline without knowing about it. Keys include a digest of the credentials.
+24. **A second instance runs without disk caches** (flock on `<cache>/lock`) instead of sharing them, and says so on the Storage page.
+25. **A custom cache location gets a `noctara` subfolder**, and caches are wiped only on a *different* layout-version marker, so pointing the setting at an existing folder can never delete user files.
 
 ## Slices
 
@@ -49,7 +55,7 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 (i) DRM helper
 (j) polish and performance measurements
 
-Done: (a), (b), (c).
+Done: (a), (b), (c), (d).
 
 ## Open items flagged for verification
 - DoH over HTTP/2 against a local server is not covered by automated tests (the mock speaks HTTP/1.1); real providers negotiate HTTP/2 through ALPN.

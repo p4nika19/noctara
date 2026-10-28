@@ -47,6 +47,9 @@ std::string_view errorCodeName(ErrorCode code) noexcept
     case ErrorCode::RateLimited: return "RateLimited";
     case ErrorCode::Unauthorized: return "Unauthorized";
     case ErrorCode::Forbidden: return "Forbidden";
+    case ErrorCode::NotCacheable: return "NotCacheable";
+    case ErrorCode::CacheLocked: return "CacheLocked";
+    case ErrorCode::ContentChanged: return "ContentChanged";
     }
     return "Unknown";
 }

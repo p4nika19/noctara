@@ -257,14 +257,24 @@ Item {
                 model: root.searching ? SettingsUi.searchResults : SettingsUi.page(root.category)
                 ScrollBar.vertical: ScrollBar {}
                 header: Loader {
+                    property real previousHeight: 0
                     width: list.width - list.leftMargin - list.rightMargin
                     // Explicit: an unloaded Loader keeps the size of its last item, which left the Appearance
                     // header's height as an empty band at the top of the next page.
                     height: item ? item.implicitHeight : 0
+                    // A header that grows after loading (status arriving) moves the list's origin; a list that
+                    // was at the top stays at the top instead of showing the header cut off.
+                    onHeightChanged: {
+                        const grown = height - previousHeight
+                        previousHeight = height
+                        if (Math.abs(list.contentY - (list.originY + grown)) < 1)
+                            list.contentY = list.originY
+                    }
                     active: !root.searching && (root.category === "appearance" || root.category === "performance"
-                                                || root.category === "network")
+                                                || root.category === "network" || root.category === "storage")
                     sourceComponent: root.category === "appearance" ? appearanceHeader
-                                   : root.category === "network" ? networkHeader : performanceHeader
+                                   : root.category === "network" ? networkHeader
+                                   : root.category === "storage" ? storageHeader : performanceHeader
                 }
                 footer: Loader {
                     width: list.width - list.leftMargin - list.rightMargin
@@ -307,6 +317,10 @@ Item {
         Component {
             id: networkHeader
             NetworkHeader {}
+        }
+        Component {
+            id: storageHeader
+            StorageHeader {}
         }
         Component {
             id: networkDiagnostics

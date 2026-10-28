@@ -21,15 +21,6 @@ namespace {
 
 constexpr std::chrono::milliseconds kDohTimeout{5000};
 
-// Channels are deleted on the network thread, directly (never from inside their own signal) and under the handoff
-// lock, so the caller thread's cancel-on-destroy connection cannot overlap with the deletion.
-struct ChannelDeleter {
-    void operator()(CallbackChannel* channel) const noexcept
-    {
-        handoff::send([channel] { delete channel; });  // NOLINT(cppcoreguidelines-owning-memory)
-    }
-};
-
 bool isRedirect(int status)
 {
     return status == 301 || status == 302 || status == 303 || status == 307 || status == 308;
@@ -94,9 +85,9 @@ struct Transfer {
     Request request;
     Callbacks callbacks;
     std::shared_ptr<RequestHandle::State> state;
-    std::unique_ptr<CallbackChannel, ChannelDeleter> channel;  // null for internal transfers
-    std::function<void(Result<Response>)> internalDone;        // DoH
-    std::vector<IpAddress> pinned;                             // DoH: addresses of the server
+    ChannelPtr channel;                                  // null for internal transfers
+    std::function<void(Result<Response>)> internalDone;  // DoH
+    std::vector<IpAddress> pinned;                       // DoH: addresses of the server
 
     // Current attempt.
     CurlEasy easy;
@@ -329,21 +320,7 @@ RequestHandle CurlTransport::send(Request request, QObject* context, Callbacks c
     transfer->request = std::move(request);
     transfer->callbacks = std::move(callbacks);
     transfer->state = state;
-    transfer->channel.reset(new CallbackChannel(context));  // NOLINT(cppcoreguidelines-owning-memory)
-    // The receiver going away cancels the request; only an atomic store, so a direct connection is safe. A weak
-    // reference: the connection must not keep the request state alive.
-    connect(
-        context, &QObject::destroyed, transfer->channel.get(),
-        [weak = std::weak_ptr(state)] {
-            // The channel (and with it this connection) is deleted on the network thread under the same lock.
-            handoff::send([&] {
-                if (const auto locked = weak.lock()) {
-                    locked->cancelled.store(true, std::memory_order_relaxed);
-                }
-            });
-        },
-        Qt::DirectConnection);
-    transfer->channel->moveToThread(thread());
+    transfer->channel = makeChannel(context, std::shared_ptr<std::atomic<bool>>(state, &state->cancelled), thread());
     handoff::post(this, [this, transfer = std::move(transfer)] mutable { begin(std::move(transfer)); });
     return RequestHandle(state);
 }

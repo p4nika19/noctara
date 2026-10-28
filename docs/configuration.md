@@ -236,3 +236,37 @@ Encrypted connections. Certificates are always verified.
 |---|---|---|---|---|
 | `min_version` | enum | `"1.2"` | `1.2`, `1.3` | **Minimum TLS version.** Older protocol versions are never used. (*advanced*, env `NOCTARA_NETWORK_TLS_MIN_VERSION`) |
 | `ca_bundle` | path | `""` | — | **CA bundle.** PEM file with the certificate authorities to trust instead of the system's, for networks that inspect encrypted traffic. Empty uses the system store. (*advanced*, env `NOCTARA_NETWORK_TLS_CA_BUNDLE`) |
+
+## Storage & Cache
+
+### `[cache]` Audio cache
+
+Tracks you play are kept on this computer, so replays, seeking and the next track start instantly and use no data. Protected tracks are never stored.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `audio_enabled` | bool | `true` | — | **Keep played tracks.** Off keeps only the current track in memory; nothing is written to disk. (env `NOCTARA_CACHE_AUDIO_ENABLED`, CLI `--audio-cache=`) |
+| `disk_mb` | integer | `2048` | 0 … 102400 | **Disk space for tracks.** The tracks played longest ago make room for new ones. 0 turns the disk cache off. (env `NOCTARA_CACHE_DISK_MB`) |
+| `ram_mb` | integer | `128` | 16 … 2048 | **Memory for tracks.** For the current and upcoming tracks, so seeking is instant. Released early when the system runs low on memory. (env `NOCTARA_CACHE_RAM_MB`) |
+| `prefetch` | integer | `2` | 0 … 5 | **Prepare upcoming tracks.** How many tracks of the queue are downloaded in advance. None on a metered connection; at most one while the disk cache is off. (env `NOCTARA_CACHE_PREFETCH`) |
+| `embed_tags` | bool | `true` | — | **Embed tags in cached audio.** Completed tracks get title, artist and cover inside the file. The audio itself is never altered. (*advanced*, env `NOCTARA_CACHE_EMBED_TAGS`) |
+| `dir` | path | `""` | — | **Cache location.** A folder for all caches; Noctara creates a “noctara” folder inside it. Empty uses the standard cache folder of your system. (*advanced*, env `NOCTARA_CACHE_DIR`) |
+| `clear_on_exit` | bool | `false` | — | **Clear cache on exit.** Removes cached tracks, images and metadata whenever Noctara quits. (env `NOCTARA_CACHE_CLEAR_ON_EXIT`) |
+| `min_free_mb` | integer | `1024` | 0 … 102400 | **Keep free on disk.** The cache gives space back before the disk gets fuller than this. (*advanced*, env `NOCTARA_CACHE_MIN_FREE_MB`) |
+
+### `[cache.images]` Images
+
+Cover art and profile pictures.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `ram_mb` | integer | `64` | 16 … 1024 | **Memory for images.** Decoded images ready to be shown. (*advanced*, env `NOCTARA_CACHE_IMAGES_RAM_MB`) |
+| `disk_mb` | integer | `512` | 0 … 10240 | **Disk space for images.** 0 keeps images in memory only. (env `NOCTARA_CACHE_IMAGES_DISK_MB`) |
+
+### `[cache.metadata]` Metadata
+
+Track, playlist and profile information from SoundCloud, so pages open quickly and work offline.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `disk_mb` | integer | `128` | 0 … 2048 | **Disk space for metadata.** 0 turns the metadata cache off; pages then always load from the network. (*advanced*, env `NOCTARA_CACHE_METADATA_DISK_MB`) |

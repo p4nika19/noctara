@@ -57,6 +57,11 @@ enum class ErrorCode : std::uint16_t {
     RateLimited,
     Unauthorized,
     Forbidden,
+
+    // cache
+    NotCacheable,    // protected (DRM) or encrypted media: never stored in any cache tier
+    CacheLocked,     // another Noctara instance owns the cache directory
+    ContentChanged,  // the source changed while an entry was being read; reopen it
 };
 
 // Stable English identifier, used in logs and diagnostics.

@@ -23,6 +23,8 @@ add_requires("pkgconfig::libcurl", {alias = "libcurl", system = true})
 add_requires("pkgconfig::libproxy-1.0", {alias = "libproxy", system = true})
 add_requires("pkgconfig::libsecret-1", {alias = "libsecret", system = true})
 add_requires("pkgconfig::openssl", {alias = "openssl", system = true})
+add_requires("pkgconfig::taglib", {alias = "taglib", system = true})
+add_requires("pkgconfig::libxxhash", {alias = "xxhash", system = true})
 
 -- Toolchain: mold for every link step.
 add_ldflags("-fuse-ld=mold", {force = true})
@@ -123,10 +125,12 @@ noctara_module("net", {qt = {"QtCore", "QtConcurrent", "QtDBus"}, deps = {"nocta
             end
         end)
     end})
+noctara_module("cache", {qt = {"QtCore", "QtGui", "QtConcurrent"},
+    deps = {"noctara_core", "noctara_settings", "noctara_net"}, packages = {"taglib", "xxhash"}})
 noctara_module("auth", {qt = {"QtCore", "QtConcurrent"}, deps = {"noctara_core"}, packages = {"libsecret"}})
 noctara_module("ui", {qt = {"QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus"},
     deps = {"noctara_core", "noctara_settings", "noctara_i18n", "noctara_theme", "noctara_gfx", "noctara_net",
-            "noctara_auth"}})
+            "noctara_cache", "noctara_auth"}})
 
 target("noctara")
     set_kind("binary")

@@ -160,6 +160,19 @@
     </message>
 </context>
 <context>
+    <name>Dialog</name>
+    <message>
+        <location filename="../src/qml/components/Dialog.qml" line="+11"/>
+        <source>OK</source>
+        <translation>OK</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+</context>
+<context>
     <name>DnsTools</name>
     <message>
         <location filename="../src/qml/settings/network/DnsTools.qml" line="+15"/>
@@ -244,12 +257,12 @@
     <name>Errors</name>
     <message>
         <location filename="../src/i18n/ErrorMessages.cpp" line="+11"/>
-        <location line="+70"/>
+        <location line="+77"/>
         <source>Something went wrong.</source>
         <translation>Что-то пошло не так.</translation>
     </message>
     <message>
-        <location line="-69"/>
+        <location line="-76"/>
         <source>The operation was cancelled.</source>
         <translation>Операция отменена.</translation>
     </message>
@@ -442,6 +455,21 @@
         <location line="+1"/>
         <source>Access to this content is not allowed.</source>
         <translation>Доступ к этому содержимому запрещён.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Protected tracks are never stored on this computer.</source>
+        <translation>Защищённые треки никогда не сохраняются на этом компьютере.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Another Noctara window is using the cache, so this one keeps its cache in memory only.</source>
+        <translation>Кэш занят другим окном Noctara, поэтому это окно хранит кэш только в памяти.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The track changed on the server and is being reloaded.</source>
+        <translation>Трек изменился на сервере и загружается заново.</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -1028,7 +1056,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+157"/>
+        <location filename="../src/app/main.cpp" line="+160"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation>Установленная libcurl собрана без поддержки HTTP/3.</translation>
     </message>
@@ -1043,13 +1071,13 @@
         <translation>Недоступно на этом графическом устройстве.</translation>
     </message>
     <message>
-        <location filename="../src/settings/BuiltinSchema.cpp" line="+120"/>
-        <location line="+64"/>
+        <location filename="../src/settings/BuiltinSchema.cpp" line="+130"/>
+        <location line="+73"/>
         <source>Language</source>
         <translation>Язык</translation>
     </message>
     <message>
-        <location line="-63"/>
+        <location line="-72"/>
         <source>Interface language.</source>
         <translation>Язык интерфейса.</translation>
     </message>
@@ -1065,23 +1093,23 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+86"/>
+        <location line="+95"/>
         <source>Theme</source>
         <translation>Тема</translation>
     </message>
     <message>
-        <location line="-85"/>
+        <location line="-94"/>
         <source>Midnight (dark), Frost (light) or follow the system.</source>
         <translation>Midnight (тёмная), Frost (светлая) или как в системе.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+109"/>
+        <location line="+118"/>
         <source>Accent color</source>
         <translation>Акцентный цвет</translation>
     </message>
     <message>
-        <location line="-108"/>
+        <location line="-117"/>
         <source>The whole palette is generated from a single accent color.</source>
         <translation>Вся палитра строится из одного акцентного цвета.</translation>
     </message>
@@ -1171,7 +1199,7 @@
         <translation>Как Noctara снижает собственное энергопотребление. Системный профиль питания не меняется.</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+37"/>
         <source>System default</source>
         <translation>Как в системе</translation>
     </message>
@@ -1262,7 +1290,7 @@
         <translation>Базовый цвет всей палитры, когда подбор по обложке выключен.</translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-116"/>
         <source>The light behind the interface.</source>
         <translation>Свет за интерфейсом.</translation>
     </message>
@@ -1347,7 +1375,37 @@
         <translation>Зашифрованные соединения. Сертификаты проверяются всегда.</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+2"/>
+        <source>Audio cache</source>
+        <translation>Кэш треков</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tracks you play are kept on this computer, so replays, seeking and the next track start instantly and use no data. Protected tracks are never stored.</source>
+        <translation>Прослушанные треки хранятся на этом компьютере, поэтому повтор, перемотка и следующий трек запускаются мгновенно и не тратят трафик. Защищённые треки никогда не сохраняются.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Images</source>
+        <translation>Изображения</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cover art and profile pictures.</source>
+        <translation>Обложки и фото профилей.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Metadata</source>
+        <translation>Метаданные</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Track, playlist and profile information from SoundCloud, so pages open quickly and work offline.</source>
+        <translation>Сведения о треках, плейлистах и профилях из SoundCloud — чтобы страницы открывались быстро и работали без сети.</translation>
+    </message>
+    <message>
+        <location line="+76"/>
         <source>Vivid</source>
         <translation>Яркие</translation>
     </message>
@@ -2320,6 +2378,126 @@
         <translation>PEM-файл с центрами сертификации, которым доверять вместо системных, — для сетей, проверяющих зашифрованный трафик. Пусто — системное хранилище.</translation>
     </message>
     <message>
+        <location line="+10"/>
+        <source>Keep played tracks</source>
+        <translation>Сохранять прослушанные треки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Off keeps only the current track in memory; nothing is written to disk.</source>
+        <translation>Если выключено, в памяти остаётся только текущий трек, на диск ничего не записывается.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Disk space for tracks</source>
+        <translation>Место на диске для треков</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The tracks played longest ago make room for new ones. 0 turns the disk cache off.</source>
+        <translation>Треки, которые слушали давнее всего, уступают место новым. 0 отключает кэш на диске.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <location line="+13"/>
+        <location line="+49"/>
+        <location line="+11"/>
+        <location line="+11"/>
+        <location line="+11"/>
+        <source>MB</source>
+        <translation>МБ</translation>
+    </message>
+    <message>
+        <location line="-86"/>
+        <source>Memory for tracks</source>
+        <translation>Память для треков</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>For the current and upcoming tracks, so seeking is instant. Released early when the system runs low on memory.</source>
+        <translation>Для текущего и следующих треков, чтобы перемотка была мгновенной. Освобождается раньше, когда системе не хватает памяти.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Prepare upcoming tracks</source>
+        <translation>Заранее загружать треки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How many tracks of the queue are downloaded in advance. None on a metered connection; at most one while the disk cache is off.</source>
+        <translation>Сколько треков из очереди загружается заранее. При лимитном подключении — ни одного, при выключенном кэше на диске — не больше одного.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Embed tags in cached audio</source>
+        <translation>Записывать теги в кэшированные треки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Completed tracks get title, artist and cover inside the file. The audio itself is never altered.</source>
+        <translation>Полностью загруженные треки получают название, исполнителя и обложку внутри файла. Сам звук никогда не изменяется.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Cache location</source>
+        <translation>Расположение кэша</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>A folder for all caches; Noctara creates a “noctara” folder inside it. Empty uses the standard cache folder of your system.</source>
+        <translation>Папка для всех кэшей; Noctara создаёт в ней папку «noctara». Если пусто, используется стандартная папка кэша системы.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Clear cache on exit</source>
+        <translation>Очищать кэш при выходе</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Removes cached tracks, images and metadata whenever Noctara quits.</source>
+        <translation>Удаляет кэшированные треки, изображения и метаданные при каждом закрытии Noctara.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Keep free on disk</source>
+        <translation>Оставлять свободным на диске</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The cache gives space back before the disk gets fuller than this.</source>
+        <translation>Кэш освобождает место, прежде чем свободного места на диске станет меньше.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Memory for images</source>
+        <translation>Память для изображений</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Decoded images ready to be shown.</source>
+        <translation>Декодированные изображения, готовые к показу.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Disk space for images</source>
+        <translation>Место на диске для изображений</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>0 keeps images in memory only.</source>
+        <translation>0 — хранить изображения только в памяти.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Disk space for metadata</source>
+        <translation>Место на диске для метаданных</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>0 turns the metadata cache off; pages then always load from the network.</source>
+        <translation>0 отключает кэш метаданных; тогда страницы всегда загружаются из сети.</translation>
+    </message>
+    <message>
         <location filename="../src/settings/Schema.cpp" line="+142"/>
         <source>General</source>
         <translation>Общие</translation>
@@ -2458,7 +2636,7 @@
         <translation>Перезапустить</translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+56"/>
         <source>No settings match “%1”.</source>
         <translation>Нет настроек, подходящих под «%1».</translation>
     </message>
@@ -2469,6 +2647,152 @@
         <location filename="../src/qml/components/Skeleton.qml" line="+16"/>
         <source>Loading</source>
         <translation>Загрузка</translation>
+    </message>
+</context>
+<context>
+    <name>StorageHeader</name>
+    <message>
+        <location filename="../src/qml/settings/StorageHeader.qml" line="+19"/>
+        <source>Tracks</source>
+        <translation>Треки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Partly downloaded</source>
+        <translation>Загружены частично</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Track covers</source>
+        <translation>Обложки треков</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Images</source>
+        <translation>Изображения</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Metadata</source>
+        <translation>Метаданные</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Remove cached tracks?</source>
+        <translation>Удалить кэшированные треки?</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tracks will be downloaded again the next time you play them. Tracks that are playing right now are removed when they stop.</source>
+        <translation>Треки будут загружены заново при следующем прослушивании. Треки, которые играют сейчас, удалятся, когда воспроизведение остановится.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remove cached images?</source>
+        <translation>Удалить кэшированные изображения?</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cover art and profile pictures will be downloaded again when they are shown.</source>
+        <translation>Обложки и фото профилей будут загружены заново при показе.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Clear all caches?</source>
+        <translation>Очистить все кэши?</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cached tracks, images and metadata are removed. Your settings, likes and playlists are not affected.</source>
+        <translation>Кэшированные треки, изображения и метаданные будут удалены. Настройки, лайки и плейлисты не затрагиваются.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Usage</source>
+        <translation>Использование</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Caches use %1</source>
+        <extracomment>%1 = total size of all caches, e.g. &quot;1.2 GB&quot;</extracomment>
+        <translation>Кэши занимают %1</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>%1 · %2</source>
+        <extracomment>Legend entry of the cache usage meter: %1 = category, %2 = size</extracomment>
+        <translation>%1 · %2</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>On disk</source>
+        <translation>На диске</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing cached yet</source>
+        <translation>Пока ничего не сохранено</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%1 · %n complete track(s)</source>
+        <extracomment>%1 = size used, %2 = number of complete cached tracks</extracomment>
+        <translation>
+            <numerusform>%1 · %n полный трек</numerusform>
+            <numerusform>%1 · %n полных трека</numerusform>
+            <numerusform>%1 · %n полных треков</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>In memory</source>
+        <translation>В памяти</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>%1 of %2</source>
+        <extracomment>%1 = memory in use, %2 = memory budget</extracomment>
+        <translation>%1 из %2</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Free space</source>
+        <translation>Свободно</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Location</source>
+        <translation>Расположение</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Memory only</source>
+        <translation>Только в памяти</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The disk space for tracks is used up by tracks that are playing, so new data is kept in memory only.</source>
+        <translation>Место для треков на диске занято играющими треками, поэтому новые данные хранятся только в памяти.</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Clear tracks</source>
+        <translation>Очистить треки</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Clear images</source>
+        <translation>Очистить изображения</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Clear all</source>
+        <translation>Очистить всё</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Remove</source>
+        <translation>Удалить</translation>
     </message>
 </context>
 <context>
@@ -2779,6 +3103,51 @@
         <location line="+18"/>
         <source>Network report copied. Passwords and tokens are not included.</source>
         <translation>Сетевой отчёт скопирован. Пароли и токены в него не входят.</translation>
+    </message>
+</context>
+<context>
+    <name>noctara::ui::StorageController</name>
+    <message>
+        <location filename="../src/ui/StorageController.cpp" line="+77"/>
+        <source>The cache folder cannot be used, so caches are kept in memory only. %1</source>
+        <extracomment>%1 = explanation of the error</extracomment>
+        <translation>Папку кэша нельзя использовать, поэтому кэши хранятся только в памяти. %1</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>The chosen cache location cannot be used, so the standard folder is used instead.</source>
+        <translation>Выбранное расположение кэша нельзя использовать, поэтому вместо него используется стандартная папка.</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Cached tracks removed.</source>
+        <translation>Кэшированные треки удалены.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cached images removed.</source>
+        <translation>Кэшированные изображения удалены.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cached metadata removed.</source>
+        <translation>Кэшированные метаданные удалены.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>All caches cleared.</source>
+        <translation>Все кэши очищены.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Not in use: caches are kept in memory only.</source>
+        <extracomment>%1 = folder path</extracomment>
+        <translation>Не используется: кэши хранятся только в памяти.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>In use: %1</source>
+        <translation>Используется: %1</translation>
     </message>
 </context>
 </TS>

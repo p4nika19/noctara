@@ -160,6 +160,19 @@
     </message>
 </context>
 <context>
+    <name>Dialog</name>
+    <message>
+        <location filename="../src/qml/components/Dialog.qml" line="+11"/>
+        <source>OK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>DnsTools</name>
     <message>
         <location filename="../src/qml/settings/network/DnsTools.qml" line="+15"/>
@@ -244,12 +257,12 @@
     <name>Errors</name>
     <message>
         <location filename="../src/i18n/ErrorMessages.cpp" line="+11"/>
-        <location line="+70"/>
+        <location line="+77"/>
         <source>Something went wrong.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-69"/>
+        <location line="-76"/>
         <source>The operation was cancelled.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -441,6 +454,21 @@
     <message>
         <location line="+1"/>
         <source>Access to this content is not allowed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Protected tracks are never stored on this computer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Another Noctara window is using the cache, so this one keeps its cache in memory only.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The track changed on the server and is being reloaded.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1022,7 +1050,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+157"/>
+        <location filename="../src/app/main.cpp" line="+160"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1037,13 +1065,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings/BuiltinSchema.cpp" line="+120"/>
-        <location line="+64"/>
+        <location filename="../src/settings/BuiltinSchema.cpp" line="+130"/>
+        <location line="+73"/>
         <source>Language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-63"/>
+        <location line="-72"/>
         <source>Interface language.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1059,23 +1087,23 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+86"/>
+        <location line="+95"/>
         <source>Theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-85"/>
+        <location line="-94"/>
         <source>Midnight (dark), Frost (light) or follow the system.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+109"/>
+        <location line="+118"/>
         <source>Accent color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-108"/>
+        <location line="-117"/>
         <source>The whole palette is generated from a single accent color.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1165,7 +1193,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+37"/>
         <source>System default</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1256,7 +1284,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-116"/>
         <source>The light behind the interface.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1341,7 +1369,37 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+2"/>
+        <source>Audio cache</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tracks you play are kept on this computer, so replays, seeking and the next track start instantly and use no data. Protected tracks are never stored.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cover art and profile pictures.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Metadata</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Track, playlist and profile information from SoundCloud, so pages open quickly and work offline.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+76"/>
         <source>Vivid</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2314,6 +2372,126 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="+10"/>
+        <source>Keep played tracks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Off keeps only the current track in memory; nothing is written to disk.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Disk space for tracks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The tracks played longest ago make room for new ones. 0 turns the disk cache off.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <location line="+13"/>
+        <location line="+49"/>
+        <location line="+11"/>
+        <location line="+11"/>
+        <location line="+11"/>
+        <source>MB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-86"/>
+        <source>Memory for tracks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>For the current and upcoming tracks, so seeking is instant. Released early when the system runs low on memory.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Prepare upcoming tracks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How many tracks of the queue are downloaded in advance. None on a metered connection; at most one while the disk cache is off.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Embed tags in cached audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Completed tracks get title, artist and cover inside the file. The audio itself is never altered.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Cache location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>A folder for all caches; Noctara creates a “noctara” folder inside it. Empty uses the standard cache folder of your system.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Clear cache on exit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Removes cached tracks, images and metadata whenever Noctara quits.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Keep free on disk</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The cache gives space back before the disk gets fuller than this.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Memory for images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Decoded images ready to be shown.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Disk space for images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>0 keeps images in memory only.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Disk space for metadata</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>0 turns the metadata cache off; pages then always load from the network.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/settings/Schema.cpp" line="+142"/>
         <source>General</source>
         <translation type="unfinished"></translation>
@@ -2452,7 +2630,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+56"/>
         <source>No settings match “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2462,6 +2640,151 @@
     <message>
         <location filename="../src/qml/components/Skeleton.qml" line="+16"/>
         <source>Loading</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>StorageHeader</name>
+    <message>
+        <location filename="../src/qml/settings/StorageHeader.qml" line="+19"/>
+        <source>Tracks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Partly downloaded</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Track covers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Metadata</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Remove cached tracks?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tracks will be downloaded again the next time you play them. Tracks that are playing right now are removed when they stop.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remove cached images?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cover art and profile pictures will be downloaded again when they are shown.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Clear all caches?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cached tracks, images and metadata are removed. Your settings, likes and playlists are not affected.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Usage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Caches use %1</source>
+        <extracomment>%1 = total size of all caches, e.g. &quot;1.2 GB&quot;</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>%1 · %2</source>
+        <extracomment>Legend entry of the cache usage meter: %1 = category, %2 = size</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>On disk</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing cached yet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%1 · %n complete track(s)</source>
+        <extracomment>%1 = size used, %2 = number of complete cached tracks</extracomment>
+        <translation>
+            <numerusform>%1 · %n complete track</numerusform>
+            <numerusform>%1 · %n complete tracks</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>In memory</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>%1 of %2</source>
+        <extracomment>%1 = memory in use, %2 = memory budget</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Free space</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Memory only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The disk space for tracks is used up by tracks that are playing, so new data is kept in memory only.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Clear tracks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Clear images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Clear all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2772,6 +3095,51 @@
     <message>
         <location line="+18"/>
         <source>Network report copied. Passwords and tokens are not included.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>noctara::ui::StorageController</name>
+    <message>
+        <location filename="../src/ui/StorageController.cpp" line="+77"/>
+        <source>The cache folder cannot be used, so caches are kept in memory only. %1</source>
+        <extracomment>%1 = explanation of the error</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>The chosen cache location cannot be used, so the standard folder is used instead.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Cached tracks removed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cached images removed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cached metadata removed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>All caches cleared.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Not in use: caches are kept in memory only.</source>
+        <extracomment>%1 = folder path</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>In use: %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

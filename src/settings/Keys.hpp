@@ -81,4 +81,16 @@ inline constexpr std::string_view RetryBackoff = "network.connection.retry_backo
 inline constexpr std::string_view TlsMinVersion = "network.tls.min_version";
 inline constexpr std::string_view CaBundle = "network.tls.ca_bundle";
 
+inline constexpr std::string_view AudioCacheEnabled = "cache.audio_enabled";
+inline constexpr std::string_view AudioDiskMb = "cache.disk_mb";
+inline constexpr std::string_view AudioRamMb = "cache.ram_mb";
+inline constexpr std::string_view Prefetch = "cache.prefetch";
+inline constexpr std::string_view EmbedTags = "cache.embed_tags";
+inline constexpr std::string_view CacheDir = "cache.dir";
+inline constexpr std::string_view ClearCacheOnExit = "cache.clear_on_exit";
+inline constexpr std::string_view MinFreeMb = "cache.min_free_mb";
+inline constexpr std::string_view ImageRamMb = "cache.images.ram_mb";
+inline constexpr std::string_view ImageDiskMb = "cache.images.disk_mb";
+inline constexpr std::string_view MetadataDiskMb = "cache.metadata.disk_mb";
+
 }  // namespace noctara::settings::keys

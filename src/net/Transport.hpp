@@ -21,6 +21,14 @@ namespace noctara::net {
 
 enum class Method : std::uint8_t { Get, Head, Post, Put, Delete };
 
+// How the HTTP cache (cache::CachingTransport) treats a request; the plain transport ignores it.
+enum class CacheMode : std::uint8_t {
+    Default,      // RFC 9111: fresh entries are served, stale ones revalidated; stale served when offline
+    Refresh,      // always revalidate with the server (but still store the answer)
+    Bypass,       // neither read nor write the cache
+    OnlyIfCached  // never touch the network; fails with ErrorCode::Offline on a miss
+};
+
 using Headers = QList<QPair<QByteArray, QByteArray>>;  // names in lower case
 
 struct ByteRange {
@@ -38,6 +46,10 @@ struct Request {
     bool background = false;               // prefetch and similar: skipped on metered connections
     std::optional<bool> retry;             // default: retry idempotent methods (GET, HEAD, PUT, DELETE)
     int maxRedirects = 10;
+    CacheMode cache = CacheMode::Default;
+    // Freshness for responses that carry no Cache-Control/Expires: short for volatile endpoints (feed, likes),
+    // long for immutable ones (track metadata, waveforms). 0 = revalidate every time.
+    std::chrono::seconds cacheTtl{0};
 };
 
 // Phase durations of the last attempt, measured from its start.
@@ -60,6 +72,8 @@ struct Response {
     Timings timings;
     std::int64_t bytesReceived = 0;
     int attempts = 1;
+    bool fromCache = false;  // served by the HTTP cache (fresh, revalidated with 304, or stale while offline)
+    bool stale = false;      // served from the cache past its freshness because the network was unavailable
 
     [[nodiscard]] QByteArray header(QByteArrayView name) const;
     [[nodiscard]] bool successful() const noexcept { return status >= 200 && status < 300; }

@@ -90,7 +90,7 @@ Result<void> ensureDirectory(const QString& path, mode_t mode)
     return {};
 }
 
-Result<void> writeFileAtomic(const QString& path, QByteArrayView data, mode_t mode)
+Result<void> writeFileAtomic(const QString& path, QByteArrayView data, mode_t mode, Durability durability)
 {
     const QFileInfo info(path);
     if (auto dir = ensureDirectory(info.absolutePath()); !dir) {
@@ -117,7 +117,7 @@ Result<void> writeFileAtomic(const QString& path, QByteArrayView data, mode_t mo
         cleanup();
         return written;
     }
-    if (::fsync(fd.get()) != 0) {
+    if (durability == Durability::Synced && ::fsync(fd.get()) != 0) {
         const int err = errno;
         cleanup();
         return fail(errorCodeFromErrno(err), errnoDetail("fsync", tempPath, err));
@@ -131,6 +131,9 @@ Result<void> writeFileAtomic(const QString& path, QByteArrayView data, mode_t mo
     }
 
     // Persist the rename itself; failure here is not fatal for correctness of the content.
+    if (durability == Durability::Atomic) {
+        return {};
+    }
     if (const UniqueFd dirFd(
             ::open(QFile::encodeName(info.absolutePath()).constData(), O_RDONLY | O_DIRECTORY | O_CLOEXEC));
         dirFd) {
