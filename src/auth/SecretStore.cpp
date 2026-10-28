@@ -1,5 +1,6 @@
 #include "auth/SecretStore.hpp"
 
+#include "auth/EncryptedFileSecretStore.hpp"
 #include "core/Log.hpp"
 
 #include <QFuture>
@@ -63,9 +64,18 @@ void MemorySecretStore::remove(const QString& key, QObject* context, WriteCallba
 }
 
 SecretServiceStore::SecretServiceStore(QObject* parent)
+    : SecretServiceStore(QString{}, parent)
+{
+}
+
+SecretServiceStore::SecretServiceStore(QString encryptedDirectory, QObject* parent)
     : QObject(parent)
 {
     m_pool.setMaxThreadCount(1);  // keeps keyring operations in order
+    if (!encryptedDirectory.isEmpty()) {
+        m_file = std::make_unique<EncryptedFileSecretStore>(std::move(encryptedDirectory));
+        m_fileAvailable = true;
+    }
 }
 
 SecretServiceStore::~SecretServiceStore()
@@ -73,10 +83,58 @@ SecretServiceStore::~SecretServiceStore()
     m_pool.waitForDone();
 }
 
+void SecretServiceStore::fallbackRead(const QString& key, QObject* context, ReadCallback callback)
+{
+    if (m_file && m_fileAvailable) {
+        m_file->read(key, context,
+                     [this, key, context = QPointer(context),
+                      callback = std::move(callback)](Result<std::optional<QByteArray>> result) mutable {
+                         if (!result) {
+                             m_fileAvailable = false;
+                             if (context != nullptr) {
+                                 m_fallback.read(key, context, std::move(callback));
+                             }
+                             return;
+                         }
+                         if (context != nullptr) {
+                             callback(result);
+                         }
+                     });
+        return;
+    }
+    m_fallback.read(key, context, std::move(callback));
+}
+
+void SecretServiceStore::fallbackWrite(const QString& key, const QString& label, const QByteArray& secret,
+                                       QObject* context, WriteCallback callback)
+{
+    if (m_file && m_fileAvailable) {
+        m_file->write(key, label, secret, context,
+                      [this, key, label, secret, context = QPointer(context),
+                       callback = std::move(callback)](const Result<void>& result) mutable {
+                          if (!result) {
+                              qCWarning(lcAuth).noquote()
+                                  << QString::fromStdString(result.error().describe())
+                                  << "- encrypted fallback unavailable; keeping secrets in memory only";
+                              m_fileAvailable = false;
+                              if (context != nullptr) {
+                                  m_fallback.write(key, label, secret, context, std::move(callback));
+                              }
+                              return;
+                          }
+                          if (context != nullptr) {
+                              callback(result);
+                          }
+                      });
+        return;
+    }
+    m_fallback.write(key, label, secret, context, std::move(callback));
+}
+
 void SecretServiceStore::read(const QString& key, QObject* context, ReadCallback callback)
 {
     if (!m_available) {
-        m_fallback.read(key, context, std::move(callback));
+        fallbackRead(key, context, std::move(callback));
         return;
     }
     const QByteArray id = key.toUtf8();
@@ -98,9 +156,12 @@ void SecretServiceStore::read(const QString& key, QObject* context, ReadCallback
             this, [this, key, context = QPointer(context), callback](Result<std::optional<QByteArray>> result) {
                 if (!result) {
                     qCWarning(lcAuth).noquote()
-                        << QString::fromStdString(result.error().describe()) << "- keeping secrets in memory only";
+                        << QString::fromStdString(result.error().describe()) << "- using the local secret fallback";
                     m_available = false;
-                    result = std::nullopt;
+                    if (context != nullptr) {
+                        fallbackRead(key, context, callback);
+                    }
+                    return;
                 }
                 if (context != nullptr) {
                     callback(result);
@@ -112,7 +173,7 @@ void SecretServiceStore::write(const QString& key, const QString& label, const Q
                                WriteCallback callback)
 {
     if (!m_available) {
-        m_fallback.write(key, label, secret, context, std::move(callback));
+        fallbackWrite(key, label, secret, context, std::move(callback));
         return;
     }
     const QByteArray id = key.toUtf8();
@@ -131,10 +192,10 @@ void SecretServiceStore::write(const QString& key, const QString& label, const Q
             this, [this, key, label, secret, context = QPointer(context), callback](const Result<void>& result) {
                 if (!result) {
                     qCWarning(lcAuth).noquote()
-                        << QString::fromStdString(result.error().describe()) << "- keeping secrets in memory only";
+                        << QString::fromStdString(result.error().describe()) << "- using the local secret fallback";
                     m_available = false;
                     if (context != nullptr) {
-                        m_fallback.write(key, label, secret, context, callback);
+                        fallbackWrite(key, label, secret, context, callback);
                     }
                     return;
                 }
@@ -146,7 +207,12 @@ void SecretServiceStore::write(const QString& key, const QString& label, const Q
 
 void SecretServiceStore::remove(const QString& key, QObject* context, WriteCallback callback)
 {
+    // Best-effort removal from every tier the secret might have reached; a remove failure does not disable a
+    // store (unlike a read/write failure), so the keyring stays primary for the rest of the session.
     m_fallback.remove(key, this, [](const Result<void>&) {});
+    if (m_file) {
+        m_file->remove(key, this, [](const Result<void>&) {});
+    }
     if (!m_available) {
         QMetaObject::invokeMethod(context, [callback] { callback({}); }, Qt::QueuedConnection);
         return;

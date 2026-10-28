@@ -1,6 +1,6 @@
 # Architecture
 
-This document grows with each slice. It currently covers slices (a) to (e).
+This document grows with each slice. It currently covers slices (a) to (f).
 
 ```
             ┌──────────────── app/main.cpp (composition root) ────────────────┐
@@ -16,11 +16,14 @@ This document grows with each slice. It currently covers slices (a) to (e).
 ```
 
 Slice (c) adds two modules: `net` (depends on `core` and `settings`: transport, DNS, proxy, diagnostics) and `auth`
-(depends on `core`: the secret store for now). Slice (d) adds `cache` (depends on `core`, `settings` and `net`: the
+(depends on `core`: secret storage, then browser cookie import in slice f). Slice (d) adds `cache` (depends on `core`, `settings` and `net`: the
 audio RAM and disk tiers, the image cache, the HTTP cache). Slice (e) adds `api` (depends on `core`, `settings`,
 `net` and `cache`: SoundCloud's api-v2, client_id discovery, JSON parsing into domain structs, stream selection) and
 `models` (depends on `api`: list models for QML). `ui` depends on all of them and `app` wires them up. See
-[api.md](api.md).
+[api.md](api.md). Slice (f) fills in `auth`: `ui::AccountController` (the QML `Account` singleton) accepts a pasted
+token or a consented `IBrowserCookieSource` import. Both are verified against `/me`, kept in `api::Session` and
+`ISecretStore`, never in the config file. Browser readers snapshot only the selected SQLite DB off-thread; secret
+storage flows from Secret Service to the encrypted-file fallback and finally memory. See [auth.md](auth.md).
 
 Static libraries per module (`noctara_<module>`); the executable only wires them together. Dependencies point downward only: `ui` may use everything, and `core` uses nothing but Qt Core.
 

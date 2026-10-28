@@ -33,7 +33,7 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 15. **Presets change colours only** (Auto / Midnight / Frost; Midnight and Frost untranslated), per the user's review of slice (a).
 16. **Vulkan is preferred under Auto** (user request): pipeline cache on disk, GPU timestamps, device selection for *GPU preference*. OpenGL remains the fallback, including when Vulkan is only lavapipe.
 17. **Selection indicators are computed, not bound by `Binding` elements**: the nav-rail and segmented-control pills derive their geometry from the model and the control size, so they follow resizes and never lag or duplicate.
-18. **Secret store**: `auth::ISecretStore` with a Secret Service (libsecret) implementation on a worker thread; without a keyring, secrets stay in memory and the UI says so. The encrypted-file fallback from the spec is deferred to slice (f), where the session token needs it most.
+18. **Secret store**: `auth::ISecretStore` uses Secret Service (libsecret) on a worker thread, then an AES-256-GCM encrypted-file store under the app state directory, then memory only as a last resort. The UI distinguishes keyring, encrypted-local, and memory-only protection.
 19. **Network diagnostics are redacted at the source**: request records keep URLs without user-info or query values, and proxy URLs are displayed as `scheme://<redacted>@host:port`, so nothing secret can reach the UI, the copied report or logs.
 20. **Audio cache pieces**: 64 KiB chunks of progressive streams at fixed offsets in a sparse file plus a checksummed piece map (resumable, validated per piece); one piece per HLS segment. Entries are keyed by track id + transcoding. One fetch per entry serves all readers.
 21. **Readers are bound to a generation** of an entry's file: tagging rewrites the file into a new generation, and readers opened earlier keep the old file through their descriptor, so a decoder never sees bytes shift.
@@ -57,6 +57,11 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
     cannot leak it. `api::Session` holds the token in memory; auth/ fills it from the secret store (slice f).
 31. **Cover shapes are cut on the CPU by the image provider** (`image://cover/mask/<fraction>/…`, on Qt's image
     loader thread), so rounded and circular covers look the same with and without shader effects.
+32. **One sign-in entry point** (`AccountController::signInWithToken`): manual paste and consented browser cookie
+    import both verify against `/me` and store through `ISecretStore`
+    before it is kept, so a bad token never replaces a working session and the token is never in the config
+    file. Session expiry is detected once, from `api::Session::rejected` (a 401 on any request). See
+    [auth.md](auth.md).
 
 ## Slices
 
@@ -71,7 +76,25 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 (i) DRM helper
 (j) polish and performance measurements
 
-Done: (a), (b), (c), (d), (e).
+Done: (a), (b), (c), (d), (e), (f).
+
+## Slice (f) status (auth / secret store / session)
+
+Complete on Linux; see [auth.md](auth.md) for the format and platform matrix.
+
+- Manual OAuth-token paste and **consented browser cookie import** share one `/me` verification path. A rejected
+  token never replaces a working session, and successful tokens are stored only through `ISecretStore`.
+- Chrome, Chromium, Brave, Edge, Vivaldi, Opera, Firefox, and LibreWolf profiles are discovered in native,
+  Flatpak, and Snap locations. Discovery exposes metadata only; the selected cookie DB is snapshotted read-only
+  after explicit consent. Firefox cookies and Chromium Linux `v10` cookies are supported.
+- Secret Service runs off-thread and falls back to an atomic AES-256-GCM file store under the app state directory,
+  then memory only if persistent storage fails. The UI distinguishes these protection levels.
+- Startup session loading, expiry on any API `401`, sign-out everywhere, en/ru strings, and the Accounts page are
+  integrated. Fixture tests cover browser formats/discovery/WAL, account consent and failures, encrypted storage,
+  tampering, permissions, and persistence. Tests never access real profiles or keyrings.
+
+Windows DPAPI/app-bound cookies and macOS Keychain remain platform-specific follow-ups behind the auth interfaces;
+unknown Linux cookie encryption versions fail honestly and retain the manual-paste path.
 
 ## Open items flagged for verification
 - DoH over HTTP/2 against a local server is not covered by automated tests (the mock speaks HTTP/1.1); real providers negotiate HTTP/2 through ALPN.

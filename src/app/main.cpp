@@ -1,6 +1,7 @@
 #include "api/ApiService.hpp"
 #include "api/Session.hpp"
 
+#include "auth/BrowserCookieSource.hpp"
 #include "auth/SecretStore.hpp"
 #include "cache/CacheService.hpp"
 #include "core/Log.hpp"
@@ -25,6 +26,7 @@
 #include "theme/AccentEngine.hpp"
 #include "theme/FontLoader.hpp"
 #include "theme/Theme.hpp"
+#include "ui/AccountController.hpp"
 #include "ui/AppController.hpp"
 #include "ui/ArtworkProvider.hpp"
 #include "ui/CatalogController.hpp"
@@ -304,7 +306,7 @@ int main(int argc, char** argv)
     // All HTTP goes through this service; it runs on its own thread and follows the network settings live.
     net::NetworkService network(store, net::processEnvironment(), true);
     net::NetworkMonitor networkMonitor;
-    auth::SecretServiceStore secrets;
+    auth::SecretServiceStore secrets(paths.stateDir + QStringLiteral("/secrets"));
     ui::NetworkController networkUi(network, &networkMonitor, secrets, languages, settingsUi);
     QObject::connect(
         &networkUi, &ui::NetworkController::notice, &appController,
@@ -319,9 +321,12 @@ int main(int argc, char** argv)
     api::Session session;
     api::ApiService soundcloud(store, cache.transport(), session, paths.stateDir);
     ui::CatalogController catalog(soundcloud);
-    QObject::connect(&session, &api::Session::rejected, &appController, [&appController] {
-        appController.showToast(QStringLiteral("warning"), i18n::errorMessage(ErrorCode::Unauthorized));
-    });
+    auth::BrowserCookieSource browserCookies;
+    // Browser discovery never reads cookies; Account asks for consent before importing the selected profile.
+    ui::AccountController account(soundcloud.client(), session, secrets, &browserCookies);
+    QObject::connect(
+        &account, &ui::AccountController::notice, &appController,
+        [&appController](const QString& kind, const QString& message) { appController.showToast(kind, message); });
     QObject::connect(&config, &settings::ConfigFile::reloadIssues, &appController,
                      &ui::AppController::reportConfigIssues);
     config.setHotReloadEnabled(true);
@@ -346,10 +351,15 @@ int main(int argc, char** argv)
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Network", &networkUi);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Storage", &storageUi);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Catalog", &catalog);
+    qmlRegisterSingletonInstance("Noctara", 1, 0, "Account", &account);
     qmlRegisterUncreatableType<models::CollectionModel>("Noctara", 1, 0, "CollectionModel",
                                                         QStringLiteral("Provided by Catalog"));
     qmlRegisterUncreatableType<ui::SettingsModel>("Noctara", 1, 0, "SettingsModel",
                                                   QStringLiteral("Provided by SettingsUi"));
+    // Registered as a type as well so QML can use its State enum (AccountController.SignedIn); the instance is
+    // the Account singleton above.
+    qmlRegisterUncreatableType<ui::AccountController>("Noctara", 1, 0, "AccountController",
+                                                      QStringLiteral("Provided by Account"));
     QObject::connect(&languages, &i18n::LanguageManager::languageChanged, &engine, &QQmlEngine::retranslate);
 
     if (!cli.page.isEmpty()) {

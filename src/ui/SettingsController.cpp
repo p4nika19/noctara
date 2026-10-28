@@ -90,7 +90,8 @@ QVariantList SettingsController::categories() const
         const bool hasRows = std::ranges::any_of(m_store.schema().definitions(), [&](const settings::Definition& def) {
             return def.category == category && !def.configOnly();
         });
-        if (!hasRows && category != Category::About) {
+        // Accounts and About have no generated rows; they are shown as custom panes (see SettingsView.qml).
+        if (!hasRows && category != Category::About && category != Category::Accounts) {
             continue;
         }
         list.append(QVariantMap{

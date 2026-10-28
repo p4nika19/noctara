@@ -86,6 +86,115 @@
     </message>
 </context>
 <context>
+    <name>AccountsPane</name>
+    <message>
+        <location filename="../src/qml/settings/AccountsPane.qml" line="+56"/>
+        <source>Signed in</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>@%1</source>
+        <extracomment>Shown under the account name; %1 is the SoundCloud username</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>View profile on SoundCloud</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Sign out</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>Your session has expired. Sign in again below to keep listening to your library and likes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Sign in to SoundCloud</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Import your existing SoundCloud session from a browser, or paste an OAuth token. Noctara verifies every token with SoundCloud before saving it, and never stores it in the configuration file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>No persistent secret store is available, so a saved session is kept only until Noctara quits.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>No desktop keyring is available. Your session will use Noctara&apos;s encrypted local store; its owner-only key file does not provide the same protection as a desktop keyring.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Sign in from your browser</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Scanning only lists installed profiles. Noctara reads the selected profile&apos;s SoundCloud oauth_token cookie only after you confirm.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Working…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Find browser profiles</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Import session…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>Or paste an OAuth token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Allow browser cookie access?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Noctara will make a temporary read-only copy of the cookie database for %1 (%2), read only the SoundCloud oauth_token cookie, and delete the copy. The token will be verified with SoundCloud and saved in your secret store. No other cookies are read.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Read cookie and sign in</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-22"/>
+        <source>OAuth token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Checking…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Sign in</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>AppearanceDrawer</name>
     <message>
         <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+44"/>
@@ -1174,7 +1283,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+164"/>
+        <location filename="../src/app/main.cpp" line="+167"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2794,7 +2903,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+67"/>
         <source>No settings match “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2974,6 +3083,85 @@
     <message>
         <location filename="../src/qml/components/Toast.qml" line="+62"/>
         <source>Dismiss</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>noctara::ui::AccountController</name>
+    <message>
+        <location filename="../src/ui/AccountController.cpp" line="+149"/>
+        <source>Paste your SoundCloud OAuth token to sign in.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Noctara SoundCloud session</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-116"/>
+        <source>Could not inspect the installed browser profiles.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>No supported browser profiles were found. You can still paste your OAuth token.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>No SoundCloud session was found in this browser profile. Sign in to SoundCloud in that browser first, or paste your OAuth token.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Noctara could not unlock this browser&apos;s cookies. Unlock your desktop keyring and try again, or paste your OAuth token.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>This browser&apos;s cookie encryption is not supported yet. Paste your OAuth token instead.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Could not read the selected browser profile. You can still paste your OAuth token.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>The selected browser profile is no longer available. Scan again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+69"/>
+        <source>Signed in, but no persistent secret store is available, so you will need to sign in again after Noctara quits.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Signed in. Your session is saved in the keyring.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Signed in. Your session is saved in Noctara&apos;s encrypted local store because no desktop keyring is available.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>That token was not accepted. Copy the whole oauth_token value and try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <location line="+29"/>
+        <source>Your SoundCloud session has expired. Please sign in again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>Signed out of SoundCloud.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

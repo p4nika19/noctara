@@ -189,7 +189,7 @@ Item {
                 id: resetPage
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                visible: !root.searching && root.category !== "about"
+                visible: !root.searching && root.category !== "about" && root.category !== "accounts"
                 iconName: "rotate-ccw"
                 text: qsTr("Reset page")
                 onClicked: SettingsUi.resetCategory(root.category)
@@ -240,7 +240,9 @@ Item {
             anchors.leftMargin: Theme.space.xl - root.glowGutter
             anchors.rightMargin: Math.max(Theme.space.lg, content.cornerInset)
             anchors.bottomMargin: content.cornerInset
-            sourceComponent: !root.searching && root.category === "about" ? about : rows
+            sourceComponent: root.searching ? rows
+                           : root.category === "about" ? about
+                           : root.category === "accounts" ? accounts : rows
         }
 
         Component {
@@ -301,6 +303,15 @@ Item {
             id: about
             Item {
                 AboutPane {
+                    anchors.fill: parent
+                    anchors.leftMargin: root.glowGutter
+                }
+            }
+        }
+        Component {
+            id: accounts
+            Item {
+                AccountsPane {
                     anchors.fill: parent
                     anchors.leftMargin: root.glowGutter
                 }

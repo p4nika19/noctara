@@ -2,7 +2,7 @@
 
 Noctara is a native SoundCloud desktop client written in C++23 and Qt 6 Quick. It uses glass surfaces over a backdrop taken from the cover art, comes with two themes (Midnight and Frost), and runs with GPU acceleration or a full software fallback. The UI is localized in English and Russian.
 
-> Status: slices (a)–(e) of the plan are done (foundations, glass pipeline, network stack: DNS/DoH, proxies, transport; caches: audio RAM and disk tiers, images, HTTP; SoundCloud api-v2 client, list models and search). See [docs/plan.md](docs/plan.md).
+> Status: slices (a)–(f) of the plan are done (foundations, glass pipeline, network stack, caches, SoundCloud api-v2 models, and authentication). Sign-in supports consented cookie import from popular browsers and manual OAuth tokens, with keyring or encrypted-local secret storage. See [docs/plan.md](docs/plan.md).
 
 ## Dependencies
 
@@ -16,12 +16,13 @@ Noctara is a native SoundCloud desktop client written in C++23 and Qt 6 Quick. I
 | libsecret | 0.21 | system, pkg-config |
 | TagLib | 2.3 | system, pkg-config |
 | xxHash | 0.8 | system, pkg-config |
-| OpenSSL (tests only: mock TLS server) | 3.6 | system, pkg-config |
+| OpenSSL (cookie/secret encryption and mock TLS tests) | 3.6 | system, pkg-config |
+| sqlite3 (read-only browser cookie snapshots) | 3.54 | system, pkg-config |
 | doctest | 2.4.12 | xrepo (fetched automatically) |
 
-Arch: `pacman -S curl libproxy libsecret openssl simdjson taglib xxhash`; Debian/Ubuntu: `libcurl4-openssl-dev
-libproxy-dev libsecret-1-dev libssl-dev libsimdjson-dev libtag-dev libxxhash-dev`. The build fails early if libcurl
-lacks SSL, HTTP2 or IPv6. Later slices add FFmpeg and sqlite.
+Arch: `pacman -S curl libproxy libsecret openssl sqlite simdjson taglib xxhash`; Debian/Ubuntu: `libcurl4-openssl-dev
+libproxy-dev libsecret-1-dev libssl-dev libsqlite3-dev libsimdjson-dev libtag-dev libxxhash-dev`. The build fails early
+if libcurl lacks SSL, HTTP2 or IPv6. Later slices add FFmpeg.
 
 ## Build and run
 
@@ -57,7 +58,7 @@ Settings are layered with this precedence: defaults < `/etc/xdg/noctara/config.t
 
 ## Documentation
 
-[architecture](docs/architecture.md) · [design and tokens](docs/design.md) · [configuration](docs/configuration.md) · [GPU and fallbacks](docs/gpu.md) · [network](docs/network.md) · [caching](docs/caching.md) · [SoundCloud API](docs/api.md) · [localization](docs/localization.md) · [performance](docs/performance.md)
+[architecture](docs/architecture.md) · [design and tokens](docs/design.md) · [configuration](docs/configuration.md) · [GPU and fallbacks](docs/gpu.md) · [network](docs/network.md) · [caching](docs/caching.md) · [SoundCloud API](docs/api.md) · [authentication](docs/auth.md) · [localization](docs/localization.md) · [performance](docs/performance.md)
 
 ## Licenses
 

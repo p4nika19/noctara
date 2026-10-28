@@ -86,6 +86,115 @@
     </message>
 </context>
 <context>
+    <name>AccountsPane</name>
+    <message>
+        <location filename="../src/qml/settings/AccountsPane.qml" line="+56"/>
+        <source>Signed in</source>
+        <translation>Вы вошли</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>@%1</source>
+        <extracomment>Shown under the account name; %1 is the SoundCloud username</extracomment>
+        <translation>@%1</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>View profile on SoundCloud</source>
+        <translation>Открыть профиль в SoundCloud</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Sign out</source>
+        <translation>Выйти</translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>Your session has expired. Sign in again below to keep listening to your library and likes.</source>
+        <translation>Срок сессии истёк. Войдите снова ниже, чтобы слушать свою медиатеку и лайки.</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Sign in to SoundCloud</source>
+        <translation>Вход в SoundCloud</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Import your existing SoundCloud session from a browser, or paste an OAuth token. Noctara verifies every token with SoundCloud before saving it, and never stores it in the configuration file.</source>
+        <translation>Импортируйте текущую сессию SoundCloud из браузера или вставьте OAuth-токен. Перед сохранением Noctara проверяет каждый токен в SoundCloud и никогда не записывает его в файл конфигурации.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>No persistent secret store is available, so a saved session is kept only until Noctara quits.</source>
+        <translation>Постоянное хранилище секретов недоступно, поэтому сессия сохраняется только до выхода из Noctara.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>No desktop keyring is available. Your session will use Noctara&apos;s encrypted local store; its owner-only key file does not provide the same protection as a desktop keyring.</source>
+        <translation>Системное хранилище ключей недоступно. Сессия будет сохранена в зашифрованном локальном хранилище Noctara; файл ключа, доступный только владельцу, не обеспечивает такую же защиту, как системное хранилище.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Sign in from your browser</source>
+        <translation>Войти через браузер</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Scanning only lists installed profiles. Noctara reads the selected profile&apos;s SoundCloud oauth_token cookie only after you confirm.</source>
+        <translation>При сканировании отображаются только установленные профили. Noctara читает cookie oauth_token SoundCloud из выбранного профиля только после вашего подтверждения.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Working…</source>
+        <translation>Выполняется…</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Find browser profiles</source>
+        <translation>Найти профили браузеров</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Import session…</source>
+        <translation>Импортировать сессию…</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>Or paste an OAuth token</source>
+        <translation>Или вставьте OAuth-токен</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Allow browser cookie access?</source>
+        <translation>Разрешить доступ к cookie браузера?</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Noctara will make a temporary read-only copy of the cookie database for %1 (%2), read only the SoundCloud oauth_token cookie, and delete the copy. The token will be verified with SoundCloud and saved in your secret store. No other cookies are read.</source>
+        <translation>Noctara создаст временную копию базы cookie %1 (%2), откроет её только для чтения, прочитает только cookie oauth_token SoundCloud и удалит копию. Токен будет проверен в SoundCloud и сохранён в вашем хранилище секретов. Другие cookie не читаются.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Read cookie and sign in</source>
+        <translation>Прочитать cookie и войти</translation>
+    </message>
+    <message>
+        <location line="-22"/>
+        <source>OAuth token</source>
+        <translation>OAuth-токен</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Checking…</source>
+        <translation>Проверка…</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Sign in</source>
+        <translation>Войти</translation>
+    </message>
+</context>
+<context>
     <name>AppearanceDrawer</name>
     <message>
         <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+44"/>
@@ -1181,7 +1290,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+164"/>
+        <location filename="../src/app/main.cpp" line="+167"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation>Установленная libcurl собрана без поддержки HTTP/3.</translation>
     </message>
@@ -2801,7 +2910,7 @@
         <translation>Перезапустить</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+67"/>
         <source>No settings match “%1”.</source>
         <translation>Нет настроек, подходящих под «%1».</translation>
     </message>
@@ -2983,6 +3092,85 @@
         <location filename="../src/qml/components/Toast.qml" line="+62"/>
         <source>Dismiss</source>
         <translation>Закрыть</translation>
+    </message>
+</context>
+<context>
+    <name>noctara::ui::AccountController</name>
+    <message>
+        <location filename="../src/ui/AccountController.cpp" line="+149"/>
+        <source>Paste your SoundCloud OAuth token to sign in.</source>
+        <translation>Вставьте OAuth-токен SoundCloud, чтобы войти.</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Noctara SoundCloud session</source>
+        <translation>Сессия SoundCloud в Noctara</translation>
+    </message>
+    <message>
+        <location line="-116"/>
+        <source>Could not inspect the installed browser profiles.</source>
+        <translation>Не удалось просмотреть установленные профили браузеров.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>No supported browser profiles were found. You can still paste your OAuth token.</source>
+        <translation>Поддерживаемые профили браузеров не найдены. Вы можете вставить OAuth-токен вручную.</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>No SoundCloud session was found in this browser profile. Sign in to SoundCloud in that browser first, or paste your OAuth token.</source>
+        <translation>В этом профиле браузера не найдена сессия SoundCloud. Сначала войдите в SoundCloud в этом браузере или вставьте OAuth-токен.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Noctara could not unlock this browser&apos;s cookies. Unlock your desktop keyring and try again, or paste your OAuth token.</source>
+        <translation>Noctara не удалось разблокировать cookie этого браузера. Разблокируйте системное хранилище ключей и повторите попытку или вставьте OAuth-токен.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>This browser&apos;s cookie encryption is not supported yet. Paste your OAuth token instead.</source>
+        <translation>Шифрование cookie этого браузера пока не поддерживается. Вместо этого вставьте OAuth-токен.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Could not read the selected browser profile. You can still paste your OAuth token.</source>
+        <translation>Не удалось прочитать выбранный профиль браузера. Вы можете вставить OAuth-токен вручную.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>The selected browser profile is no longer available. Scan again.</source>
+        <translation>Выбранный профиль браузера больше недоступен. Выполните сканирование снова.</translation>
+    </message>
+    <message>
+        <location line="+69"/>
+        <source>Signed in, but no persistent secret store is available, so you will need to sign in again after Noctara quits.</source>
+        <translation>Вход выполнен, но постоянное хранилище секретов недоступно, поэтому после выхода из Noctara потребуется войти снова.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Signed in. Your session is saved in the keyring.</source>
+        <translation>Вход выполнен. Сессия сохранена в хранилище ключей.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Signed in. Your session is saved in Noctara&apos;s encrypted local store because no desktop keyring is available.</source>
+        <translation>Вход выполнен. Поскольку системное хранилище ключей недоступно, сессия сохранена в зашифрованном локальном хранилище Noctara.</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>That token was not accepted. Copy the whole oauth_token value and try again.</source>
+        <translation>Токен не принят. Скопируйте значение oauth_token целиком и попробуйте снова.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <location line="+29"/>
+        <source>Your SoundCloud session has expired. Please sign in again.</source>
+        <translation>Срок сессии SoundCloud истёк. Войдите снова.</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>Signed out of SoundCloud.</source>
+        <translation>Выход из SoundCloud выполнен.</translation>
     </message>
 </context>
 <context>
