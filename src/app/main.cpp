@@ -15,11 +15,18 @@
 #include "i18n/ErrorMessages.hpp"
 #include "i18n/Formatter.hpp"
 #include "i18n/LanguageManager.hpp"
+#include "media/AudioOutput.hpp"
+#include "media/CoverFiles.hpp"
+#include "media/Mpris.hpp"
+#include "media/NativeBackend.hpp"
+#include "media/PlaybackController.hpp"
+#include "media/QueueModel.hpp"
 #include "net/CurlSupport.hpp"
 #include "net/NetworkMonitor.hpp"
 #include "net/NetworkService.hpp"
 #include "net/ProxyRouter.hpp"
 #include "settings/ConfigFile.hpp"
+#include "settings/Keys.hpp"
 #include "settings/Overrides.hpp"
 #include "settings/SchemaDoc.hpp"
 #include "settings/SettingsStore.hpp"
@@ -39,10 +46,15 @@
 #include "ui/SettingsController.hpp"
 #include "ui/SettingsModel.hpp"
 #include "ui/StorageController.hpp"
+#include "ui/TrackNotifier.hpp"
+#include "ui/TrayIcon.hpp"
+#include "ui/WaveformItem.hpp"
 
+#include <QApplication>
 #include <QCommandLineParser>
-#include <QGuiApplication>
+#include <QIcon>
 #include <QImage>
+#include <QPointer>
 #include <QProcessEnvironment>
 #include <QQmlApplicationEngine>
 #include <QQuickWindow>
@@ -76,6 +88,7 @@ struct CommandLine {
     QString page;            // dev/testing: initial page id
     QString navigate;        // dev/testing: pages to switch to after startup, comma-separated
     QString artwork;         // dev/testing: image file used as the current track's artwork
+    QString play;            // dev/testing: a SoundCloud link to play after startup
     bool smokeTest = false;  // visit every page and settings category; fail on any warning
     QStringList assignments;
     QStringList aliases;
@@ -114,7 +127,10 @@ CommandLine parseCommandLine(const QCoreApplication& app, const settings::Schema
     QCommandLineOption artwork(QStringLiteral("artwork"), QStringLiteral("Use an image file as the artwork."),
                                QStringLiteral("file"));
     artwork.setFlags(QCommandLineOption::HiddenFromHelp);
-    parser.addOptions({config, print, reset, safe, disableGpu, set, pgo, screenshot, page, smoke, navigate, artwork});
+    QCommandLineOption play(QStringLiteral("play"), QStringLiteral("Play a SoundCloud link."), QStringLiteral("url"));
+    play.setFlags(QCommandLineOption::HiddenFromHelp);
+    parser.addOptions(
+        {config, print, reset, safe, disableGpu, set, pgo, screenshot, page, smoke, navigate, artwork, play});
 
     std::vector<QCommandLineOption> aliasOptions;
     for (const settings::Definition& def : schema.definitions()) {
@@ -141,6 +157,7 @@ CommandLine parseCommandLine(const QCoreApplication& app, const settings::Schema
     cli.smokeTest = parser.isSet(smoke);
     cli.navigate = parser.value(navigate);
     cli.artwork = parser.value(artwork);
+    cli.play = parser.value(play);
     cli.assignments = parser.values(set);
     for (const QCommandLineOption& option : aliasOptions) {
         if (parser.isSet(option)) {
@@ -195,6 +212,9 @@ void runSmokeTest(const QQmlApplicationEngine& engine, const ui::SettingsControl
         steps.append(QStringLiteral("settings/") + category.toMap().value(QStringLiteral("id")).toString());
     }
     const int baseline = log::warningCount();
+    // The player bar and the queue drawer appear without a track, so their software and GPU paths render too.
+    root->setProperty("playerPreview", true);
+    steps.append(QStringLiteral("queue"));
     const auto index = std::make_shared<qsizetype>(0);
     auto* timer = new QTimer(root);  // NOLINT(cppcoreguidelines-owning-memory): owned by its QObject parent
     timer->setInterval(150);
@@ -209,6 +229,10 @@ void runSmokeTest(const QQmlApplicationEngine& engine, const ui::SettingsControl
             return;
         }
         const QString& step = steps.at((*index)++);
+        if (step == u"queue") {
+            root->setProperty("queuePanel", true);
+            return;
+        }
         root->setProperty("page", step.section(u'/', 0, 0));
         if (step.contains(u'/')) {
             root->setProperty("settingsCategory", step.section(u'/', 1, 1));
@@ -237,8 +261,9 @@ int main(int argc, char** argv)
     const std::span<char*> rawArgs(argv, static_cast<std::size_t>(argc));
     const bool headless = hasFlag(rawArgs, "--print-config") || hasFlag(rawArgs, "--reset-config") ||
                           hasFlag(rawArgs, "--help") || hasFlag(rawArgs, "-h") || hasFlag(rawArgs, "--version");
+    // QApplication (not QGuiApplication) for the tray icon's menu; the UI itself is Qt Quick.
     const std::unique_ptr<QCoreApplication> app =
-        headless ? std::make_unique<QCoreApplication>(argc, argv) : std::make_unique<QGuiApplication>(argc, argv);
+        headless ? std::make_unique<QCoreApplication>(argc, argv) : std::make_unique<QApplication>(argc, argv);
 
     const settings::Schema& schema = settings::Schema::builtin();
     const CommandLine cli = parseCommandLine(*app, schema);
@@ -278,6 +303,8 @@ int main(int argc, char** argv)
         std::println(stderr, "noctara: {}", curl.error().describe());
         return 1;
     }
+
+    QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/app/noctara.svg")));
 
     gfx::CrashSentinel sentinel(paths.stateDir + QStringLiteral("/graphics-init.sentinel"));
     const gfx::GraphicsDecision decision =
@@ -325,6 +352,58 @@ int main(int argc, char** argv)
     // Browser discovery never reads cookies; Account asks for consent before importing the selected profile.
     ui::AccountController account(soundcloud.client(), session, secrets, &browserCookies);
     QObject::connect(&account, &ui::AccountController::notice, &appController, &ui::AppController::showToast);
+
+    // Native playback: the audio cache feeds FFmpeg, the mixer feeds the default output device (opened on the
+    // first track). Protected tracks wait for the DRM helper (slice i).
+    media::QtAudioOutput audioOutput;
+    media::NativeBackend nativePlayback(cache.audio(), audioOutput);
+    media::PlaybackController player({.settings = store,
+                                      .api = soundcloud.client(),
+                                      .cache = &cache,
+                                      .native = nativePlayback,
+                                      .metered = [&network] { return network.meteredActive(); },
+                                      .statePath = paths.stateDir + QStringLiteral("/session.json")});
+    QObject::connect(&player, &media::PlaybackController::problem, &appController, [&appController](int code) {
+        appController.showToast(QStringLiteral("error"), i18n::errorMessage(static_cast<ErrorCode>(code)));
+    });
+    // The current track's cover drives the accent palette and the backdrop.
+    QObject::connect(&player, &media::PlaybackController::trackChanged, &accent, [&player, &accent, &cache] {
+        const QString url = player.artworkUrl();
+        if (url.isEmpty()) {
+            return;
+        }
+        cache.images().request(QUrl(url), QSize(500, 500), &accent, [&accent, &player, url](Result<QImage> image) {
+            if (image && url == player.artworkUrl()) {
+                accent.setArtwork(url, *image);
+            }
+        });
+    });
+    QString runtimeDir = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
+    if (runtimeDir.isEmpty()) {
+        runtimeDir = paths.cacheDir;
+    }
+    media::CoverFiles coverFiles(cache.images(), runtimeDir + QStringLiteral("/noctara/covers-") +
+                                                     QString::number(QCoreApplication::applicationPid()));
+    media::MprisService mpris(player, &coverFiles);
+    mpris.setEnabled(store.boolValue(settings::keys::MediaControls));
+    QObject::connect(&store, &settings::SettingsStore::valueChanged, &mpris, [&mpris, &store](const QString& key) {
+        if (key == QLatin1StringView(settings::keys::MediaControls)) {
+            mpris.setEnabled(store.boolValue(settings::keys::MediaControls));
+        }
+    });
+    QPointer<QQuickWindow> mainWindow;
+    const auto showWindow = [&mainWindow] {
+        if (mainWindow) {
+            mainWindow->show();
+            mainWindow->raise();
+            mainWindow->requestActivate();
+        }
+    };
+    QObject::connect(&mpris, &media::MprisService::raiseRequested, &mpris, showWindow);
+    ui::TrayIcon tray(player, store, languages);
+    QObject::connect(&tray, &ui::TrayIcon::showRequested, &tray, showWindow);
+    const ui::TrackNotifier notifier(player, store, &coverFiles,
+                                     [&mainWindow] { return mainWindow && mainWindow->isActive(); });
     QObject::connect(&config, &settings::ConfigFile::reloadIssues, &appController,
                      &ui::AppController::reportConfigIssues);
     config.setHotReloadEnabled(true);
@@ -350,6 +429,9 @@ int main(int argc, char** argv)
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Storage", &storageUi);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Catalog", &catalog);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Account", &account);
+    qmlRegisterSingletonInstance("Noctara", 1, 0, "Player", &player);
+    qmlRegisterUncreatableType<media::QueueModel>("Noctara", 1, 0, "QueueModel", QStringLiteral("Provided by Player"));
+    qmlRegisterType<ui::WaveformItem>("Noctara", 1, 0, "WaveformItem");
     qmlRegisterUncreatableType<models::CollectionModel>("Noctara", 1, 0, "CollectionModel",
                                                         QStringLiteral("Provided by Catalog"));
     qmlRegisterUncreatableType<ui::SettingsModel>("Noctara", 1, 0, "SettingsModel",
@@ -373,6 +455,7 @@ int main(int argc, char** argv)
         return 1;
     }
     if (auto* window = qobject_cast<QQuickWindow*>(engine.rootObjects().constFirst())) {
+        mainWindow = window;
         graphics.watch(window);
         // Main.qml starts hidden so GPU timestamps can be enabled before the scene graph initialises.
         gfx::configureWindow(*window, decision, paths.cacheDir);
@@ -384,6 +467,10 @@ int main(int argc, char** argv)
             QTimer::singleShot(600 + static_cast<int>(i) * 500, window, [window, target = steps.at(i)] {
                 if (target == u"appearance-panel") {
                     window->setProperty("appearancePanel", true);
+                    return;
+                }
+                if (target == u"queue-panel") {
+                    window->setProperty("queuePanel", true);
                     return;
                 }
                 window->setProperty("page", target.section(u'/', 0, 0));
@@ -416,6 +503,17 @@ int main(int argc, char** argv)
     }
     if (cli.smokeTest) {
         runSmokeTest(engine, settingsUi);
+    }
+    if (!cli.play.isEmpty()) {
+        (void)api::fetch(soundcloud.client(), api::endpoints::resolve(QUrl(cli.play)), &player,
+                         [&player, &appController](Result<api::Item> item) {
+                             if (item) {
+                                 player.playItem(*item);
+                             } else {
+                                 appController.showToast(QStringLiteral("error"),
+                                                         i18n::errorMessage(item.error().code));
+                             }
+                         });
     }
     if (cli.pgoScenario) {
         QTimer::singleShot(5000, app.get(), &QCoreApplication::quit);

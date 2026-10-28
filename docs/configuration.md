@@ -133,6 +133,51 @@ How densely pages are laid out.
 |---|---|---|---|---|
 | `density` | enum | `"cozy"` | `compact`, `cozy`, `airy` | **Density.** Spacing between sections, cards and rows. (env `NOCTARA_LAYOUT_CONTENT_DENSITY`) |
 
+## Playback
+
+### `[playback.stream]` Sound
+
+Which of SoundCloud's streams is played.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `quality` | enum | `"auto"` | `auto`, `best`, `data_saver` | **Audio quality.** Auto plays the best stream your account may play, and the smallest one on a metered connection. Applies from the next track. (env `NOCTARA_PLAYBACK_STREAM_QUALITY`) |
+
+### `[playback.transitions]` Transitions
+
+How one track leads into the next.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `crossfade` | integer | `0` | 0 … 12 | **Crossfade.** Blends the end of a track into the next one. 0 plays them back to back without a gap. (env `NOCTARA_PLAYBACK_TRANSITIONS_CROSSFADE`) |
+
+### `[playback.volume]` Volume
+
+Volume when Noctara starts.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `remember` | bool | `true` | — | **Remember volume.** Start with the volume you last used. (env `NOCTARA_PLAYBACK_VOLUME_REMEMBER`) |
+| `startup` | integer | `70` | 0 … 100 | **Volume at start.** The volume every session starts with. (env `NOCTARA_PLAYBACK_VOLUME_STARTUP`) |
+
+### `[playback.queue]` Queue
+
+What happens when the queue runs out.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `autoplay` | bool | `true` | — | **Autoplay related tracks.** When the queue ends, keep playing tracks related to the last one. Repeat takes precedence. (env `NOCTARA_PLAYBACK_QUEUE_AUTOPLAY`) |
+
+### `[playback.desktop]` Desktop integration
+
+Controlling playback from outside the window.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `media_controls` | bool | `true` | — | **Media keys and system controls.** Lets media keys, the desktop's media controls and other apps control playback and show the current track (MPRIS). (env `NOCTARA_PLAYBACK_DESKTOP_MEDIA_CONTROLS`) |
+| `tray` | bool | `true` | — | **Tray icon.** Playback controls in the system tray, where the desktop provides one. (env `NOCTARA_PLAYBACK_DESKTOP_TRAY`) |
+| `notifications` | bool | `false` | — | **Notify on track change.** Shows a desktop notification with the next track while Noctara's window is not in front. (env `NOCTARA_PLAYBACK_DESKTOP_NOTIFICATIONS`) |
+
 ## Library & Content
 
 ### `[library.loading]` Loading

@@ -3,7 +3,7 @@ import Noctara
 import "../components"
 
 // Home: date and greeting, the now-playing card and recently played. Until an account is connected the
-// cards show skeleton placeholders.
+// recently played cards show skeleton placeholders.
 Flickable {
     id: root
 
@@ -65,7 +65,14 @@ Flickable {
                     Skeleton {
                         id: cover
                         anchors.fill: parent
+                        visible: !Player.hasTrack
                         radius: Theme.coverShape === "circle" ? width / 2 : (Theme.coverShape === "square" ? 0 : Theme.radius.lg)
+                    }
+                    CoverArt {
+                        anchors.fill: parent
+                        visible: Player.hasTrack
+                        radius: Theme.radius.lg
+                        source: Player.artworkUrl
                     }
                 }
                 Column {
@@ -79,17 +86,25 @@ Flickable {
                     }
                     Text {
                         width: parent.width
-                        text: qsTr("Nothing is playing yet")
+                        text: Player.hasTrack ? Player.title : qsTr("Nothing is playing yet")
                         font: Theme.font.headline
                         color: Theme.colors.textPrimary
                         wrapMode: Text.Wrap
+                        maximumLineCount: 2
+                        elide: Text.ElideRight
+                        textFormat: Text.PlainText
                     }
                     Text {
                         width: parent.width
-                        text: qsTr("Connect your SoundCloud account to see your feed, likes and playlists.")
+                        text: Player.hasTrack
+                              ? (Player.context.length > 0 ? qsTr("%1 · from %2").arg(Player.artist).arg(Player.context)
+                                                           : Player.artist)
+                              : (Account.signedIn ? qsTr("Find something in Search and it starts here.")
+                                                  : qsTr("Connect your SoundCloud account to see your feed, likes and playlists."))
                         font: Theme.font.body
                         color: Theme.colors.textSecondary
                         wrapMode: Text.Wrap
+                        textFormat: Text.PlainText
                     }
                 }
             }

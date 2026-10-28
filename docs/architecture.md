@@ -1,6 +1,6 @@
 # Architecture
 
-This document grows with each slice. It currently covers slices (a) to (f).
+This document grows with each slice. It currently covers slices (a) to (g).
 
 ```
             ┌──────────────── app/main.cpp (composition root) ────────────────┐
@@ -14,10 +14,10 @@ This document grows with each slice. It currently covers slices (a) to (f).
   file I/O) ConfigFile,  Error-     FontLoader)    Relaunch)      Account, Network,
             overrides)   Messages)                                Storage, Catalog …)
      ▲          ▲
-     │          └──── net ◄── cache ◄── api ◄── models ◄── ui
-     │               (transport,  (audio RAM/  (api-v2,    (Collection-
-     │                DNS/DoH,     disk, image, client_id,  Model)
-     │                proxy)       HTTP cache)  Session)
+     │          └──── net ◄── cache ◄── api ◄── models ◄── media ◄── ui
+     │               (transport,  (audio RAM/  (api-v2,    (Collection- (decoder, mixer,
+     │                DNS/DoH,     disk, image, client_id,  Model)       backends, queue,
+     │                proxy)       HTTP cache)  Session)                 Player, MPRIS)
      └──── auth ◄────────────────────────────────────────── ui
           (ISecretStore tiers, BrowserCookieSource, KWallet)
 ```
@@ -31,6 +31,10 @@ audio RAM and disk tiers, the image cache, the HTTP cache). Slice (e) adds `api`
 token or a consented `IBrowserCookieSource` import. Both are verified against `/me`, kept in `api::Session` and
 `ISecretStore`, never in the config file. Browser readers snapshot only the selected SQLite DB off-thread; secret
 storage flows from Secret Service to the encrypted-file fallback and finally memory. See [auth.md](auth.md).
+Slice (g) adds `media` (depends on `core`, `settings`, `cache`, `api` and `models`): `StreamSource` and the FFmpeg
+`Decoder`, per-track `Voice` threads, the `Mixer` in the audio callback, `NativeBackend` behind `IPlaybackBackend`,
+the pure `PlaybackQueue`, `PlaybackController` (the QML `Player` singleton) and MPRIS. `ui` adds the waveform item,
+the tray icon and track notifications. See [playback.md](playback.md).
 
 Static libraries per module (`noctara_<module>`); the executable only wires them together. Dependencies point downward only: `ui` may use everything, and `core` uses nothing but Qt Core.
 
@@ -121,7 +125,9 @@ for details.
                                ▼
                            MemoryTier (RAM tier, thread-safe, shared immutable pieces)
                                │
-  decoder thread (g):  StreamSource ── AudioReader::read(piece) ── RAM → disk (pread + checksum) → network
+  voice thread (g):    StreamSource ── AudioReader::read(piece) ── RAM → disk (pread + checksum) → network
+                           │ custom AVIOContext
+                       Decoder (FFmpeg demux + decode + resample) ──► PcmRing ──► Mixer (audio thread) ──► QAudioSink
 ```
 
 DRM tracks never enter this path: `AudioCache::open` refuses them before anything is created, and the DRM backend
@@ -145,4 +151,10 @@ DRM tracks never enter this path: `AudioCache::open` refuses them before anythin
 - The SoundCloud client lives on its own thread (`ApiService`, `noctara-api`), with `ClientIdProvider` and
   `ApiClient` created and destroyed there. JSON is parsed on that thread; callers get finished structs through a
   `CallbackChannel`. Models live on the GUI thread and hand the API only value types (endpoints, ids).
+- Playback (g): each `Voice` decodes on a thread of its own (joined when the voice is destroyed, which wakes it
+  through a `std::stop_source`), the `Mixer` runs in Qt Multimedia's audio callback, and everything else
+  (`NativeBackend`, `PlaybackController`, MPRIS) lives on the GUI thread. Voices and mixer share only `PcmRing`s
+  (mutex, condition variable) and atomics; a voice is destroyed only after the mixer let go of its ring
+  (`Mixer::replaceNext` refuses to drop a voice that already took over). Voice events reach the GUI thread through
+  `handoff::post`. The stream-URL resolver the cache calls on its thread is disabled before the controller goes.
 - `AccentEngine` workers capture only copies of their inputs. Results carry a generation number, and stale ones are dropped. The backdrop images it hands to the image provider (loader threads) are guarded by a mutex.

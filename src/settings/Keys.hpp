@@ -42,6 +42,15 @@ inline constexpr std::string_view BodyFont = "appearance.text.body_font";
 inline constexpr std::string_view MonoFont = "appearance.text.mono_font";
 inline constexpr std::string_view IconWeight = "appearance.icons.weight";
 
+inline constexpr std::string_view StreamQuality = "playback.stream.quality";
+inline constexpr std::string_view Crossfade = "playback.transitions.crossfade";
+inline constexpr std::string_view RememberVolume = "playback.volume.remember";
+inline constexpr std::string_view StartupVolume = "playback.volume.startup";
+inline constexpr std::string_view Autoplay = "playback.queue.autoplay";
+inline constexpr std::string_view MediaControls = "playback.desktop.media_controls";
+inline constexpr std::string_view TrayIcon = "playback.desktop.tray";
+inline constexpr std::string_view TrackNotifications = "playback.desktop.notifications";
+
 inline constexpr std::string_view GpuAcceleration = "performance.gpu.acceleration";
 inline constexpr std::string_view GraphicsApi = "performance.gpu.api";
 inline constexpr std::string_view GpuPreference = "performance.gpu.preference";

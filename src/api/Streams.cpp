@@ -30,7 +30,9 @@ std::optional<Transcoding> pickTranscoding(const Track& track, StreamPreference 
                           t.protocol == cache::StreamProtocol::Progressive);
     };
     for (const Transcoding& candidate : track.transcodings) {
-        if (candidate.encrypted || candidate.url.isEmpty() || (wholeAvailable && candidate.snipped)) {
+        // "abr_*" presets are adaptive master playlists; the cache stores media playlists only.
+        if (candidate.encrypted || candidate.url.isEmpty() || (wholeAvailable && candidate.snipped) ||
+            candidate.preset.startsWith(u"abr")) {
             continue;
         }
         if (!best || rank(candidate) > rank(*best)) {

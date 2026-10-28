@@ -65,7 +65,7 @@ This is an integrity and metadata feature of an internal cache. The layout stays
 
 ### Prefetch
 
-`Prefetcher::setQueue` warms the next queue items as background requests (skipped on metered connections) and drops the previous prefetch when the queue changes. The count is `cache.prefetch` (2): none on a metered connection, at most one while the disk cache is off (then only the first 1 MiB, in RAM). Playback (slice g) feeds it the queue.
+`Prefetcher::setQueue` warms the next queue items as background requests (skipped on metered connections) and drops the previous prefetch when the queue changes. The count is `cache.prefetch` (2): none on a metered connection, at most one while the disk cache is off (then only the first 1 MiB, in RAM). The player feeds it the queue items after the current one; the item that follows is in addition opened and decoded ahead by the backend in the last 30 s of the current track (see [playback.md](playback.md)).
 
 ## DRM-protected tracks
 

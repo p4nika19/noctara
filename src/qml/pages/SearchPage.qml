@@ -71,6 +71,7 @@ Item {
             ScrollBar.vertical: ScrollBar {}
             delegate: CatalogRow {
                 width: ListView.view.width
+                onActivated: Player.playCollection(root.results, index)
             }
             footer: Column {
                 width: list.width

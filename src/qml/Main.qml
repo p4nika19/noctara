@@ -11,6 +11,10 @@ Window {
     property string page: "home"
     property string settingsCategory: "general"
     property bool appearancePanel: false
+    property bool queuePanel: false
+    // Shows the player bar without a track (smoke tests and screenshots).
+    property bool playerPreview: false
+    readonly property bool playerShown: Player.hasTrack || playerPreview
     // The shared blurred backdrop sampled by every GlassPanel (null when no blur style is in use).
     readonly property Item backdropTexture: blur.item ? blur.item.output : null
 
@@ -39,6 +43,48 @@ Window {
     Shortcut {
         sequence: "Ctrl+Shift+A"
         onActivated: window.appearancePanel = !window.appearancePanel
+    }
+    // Playback. Text fields keep Space for typing (they accept it before shortcuts see it).
+    Shortcut {
+        sequences: ["Space", "Media Play", "Toggle Media Play/Pause"]
+        enabled: Player.hasTrack
+        onActivated: Player.playPause()
+    }
+    Shortcut {
+        sequences: ["Media Pause"]
+        onActivated: Player.pause()
+    }
+    Shortcut {
+        sequences: ["Ctrl+Right", "Media Next"]
+        onActivated: Player.next()
+    }
+    Shortcut {
+        sequences: ["Ctrl+Left", "Media Previous"]
+        onActivated: Player.previous()
+    }
+    Shortcut {
+        sequences: ["Shift+Right"]
+        onActivated: Player.seekBy(5000)
+    }
+    Shortcut {
+        sequences: ["Shift+Left"]
+        onActivated: Player.seekBy(-5000)
+    }
+    Shortcut {
+        sequences: ["Ctrl+Up", "Volume Up"]
+        onActivated: Player.volume = Math.min(1, Player.volume + 0.05)
+    }
+    Shortcut {
+        sequences: ["Ctrl+Down", "Volume Down"]
+        onActivated: Player.volume = Math.max(0, Player.volume - 0.05)
+    }
+    Shortcut {
+        sequences: ["Ctrl+M", "Volume Mute"]
+        onActivated: Player.toggleMute()
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+Q"
+        onActivated: window.queuePanel = !window.queuePanel
     }
 
     Backdrop {
@@ -117,7 +163,7 @@ Window {
         anchors.left: rail.right
         anchors.right: parent.right
         anchors.top: notice.visible ? notice.bottom : parent.top
-        anchors.bottom: parent.bottom
+        anchors.bottom: window.playerShown ? player.top : parent.bottom
         anchors.margins: Theme.space.lg
         anchors.leftMargin: Theme.space.lg
 
@@ -174,6 +220,29 @@ Window {
                 onCategoryRequested: id => window.settingsCategory = id
             }
         }
+    }
+
+    NowPlayingBar {
+        id: player
+        anchors.left: rail.right
+        anchors.right: parent.right
+        anchors.margins: Theme.space.lg
+        y: window.playerShown ? parent.height - height - Theme.space.lg : parent.height + Theme.space.lg
+        height: implicitHeight
+        visible: y < parent.height
+        queueOpen: window.queuePanel
+        onQueueRequested: window.queuePanel = !window.queuePanel
+        Behavior on y { NumberAnimation { duration: Theme.motion.slow; easing.type: Theme.motion.easingEmphasized } }
+    }
+
+    QueueDrawer {
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: window.playerShown ? player.top : parent.bottom
+        anchors.margins: Theme.space.lg
+        width: parent.width - rail.width - Theme.space.lg * 3
+        open: window.queuePanel
+        onCloseRequested: window.queuePanel = false
     }
 
     AppearanceDrawer {

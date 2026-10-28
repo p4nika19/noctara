@@ -220,6 +220,45 @@ std::vector<std::pair<std::int64_t, std::int64_t>> AudioReader::cachedRanges() c
     return m_generation->map.ranges();
 }
 
+std::vector<std::pair<double, double>> AudioReader::cachedFractions() const
+{
+    std::vector<std::pair<double, double>> out;
+    const auto add = [&out](double from, double to) {
+        if (!out.empty() && from <= out.back().second + 1e-9) {
+            out.back().second = std::max(out.back().second, to);
+        } else if (to > from) {
+            out.emplace_back(from, to);
+        }
+    };
+    const std::scoped_lock lock(m_entry->mutex);
+    const PieceMap& map = m_generation->map;
+    if (map.layout() == PieceMap::Layout::Progressive) {
+        const auto length = static_cast<double>(map.contentLength());
+        if (length <= 0) {
+            return out;
+        }
+        for (const auto& [first, last] : map.ranges()) {
+            add(static_cast<double>(first) / length, static_cast<double>(last) / length);
+        }
+        return out;
+    }
+    if (!m_entry->playlist || m_entry->playlist->totalDuration() <= 0) {
+        return out;
+    }
+    const HlsPlaylist& playlist = *m_entry->playlist;
+    const double total = playlist.totalDuration();
+    const int first = playlist.init ? 1 : 0;
+    double start = 0;
+    for (std::size_t i = 0; i < playlist.segments.size(); ++i) {
+        const double end = start + playlist.segments[i].duration;
+        if (map.has(first + static_cast<int>(i))) {
+            add(start / total, end / total);
+        }
+        start = end;
+    }
+    return out;
+}
+
 void AudioReader::request(int piece)
 {
     if (m_requested.exchange(piece) == piece) {

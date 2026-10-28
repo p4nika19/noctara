@@ -14,8 +14,9 @@ enum class StreamPreference : std::uint8_t {
     DataSaver,  // the lowest bitrate (metered connections)
 };
 
-// The transcoding to play natively: never an encrypted one (those belong to the DRM helper); a preview only when
-// nothing else is available to this account. Among equals, progressive beats HLS (simpler to cache by range).
+// The transcoding to play natively: never an encrypted one (those belong to the DRM helper) nor an adaptive
+// master playlist ("abr_*"); a preview only when nothing else is available to this account. Among equals,
+// progressive beats HLS (simpler to cache by range).
 [[nodiscard]] std::optional<Transcoding> pickTranscoding(const Track& track, StreamPreference preference);
 
 // Rough bitrate of a preset ("aac_160k" → 160; "mp3_*" → 128; "opus_*" → 64), for ordering only.

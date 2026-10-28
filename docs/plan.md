@@ -23,7 +23,7 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 5. **Config file rewrite**: on save the file is regenerated from the schema. Every key is documented. Keys left at their default are written commented out, explicitly set keys are written as values, and unknown keys and tables are preserved verbatim through toml++. User comments are not preserved (documented).
 6. **Warnings**: strict warnings apply only to our own sources through per-file flags. Qt and third-party headers are system includes, and generated code (moc, rcc) is excluded. `-Wuseless-cast` is GCC-only and clang has no equivalent, so it is documented and omitted.
 7. **Network transport (confirmed by the slice (c) spike, see [network.md](network.md))**: libcurl multi on a dedicated network thread plus our own DNS layer (system / UDP+TCP custom servers / RFC 8484 DoH with TTL cache). Every host curl connects to, IP literals included, is pinned with `CURLOPT_RESOLVE`, and a resolver-start guard fails any transfer for which curl would resolve by itself. This makes strict mode provable and gives us TTL clamping, negative caching, EDNS padding and per-host diagnostics, none of which curl's built-in `CURLOPT_DOH_URL` exposes. Redirects are followed by Noctara, not curl, so every new host goes through the same rules.
-8. **Native playback (tentative)**: FFmpeg demux/decode reading through a custom `AVIOContext` from `StreamSource`, with `libswresample` and output to `QAudioSink`. `QMediaPlayer` cannot guarantee that every byte goes through our transport and cache, and its seek and buffering control is coarse.
+8. **Native playback**: FFmpeg demux/decode reading through a custom `AVIOContext` from `StreamSource`, with `libswresample` and output to `QAudioSink`'s pull callback (Qt 6.12). `QMediaPlayer` cannot guarantee that every byte goes through our transport and cache, and its seek and buffering control is coarse. Confirmed in slice (g); see [playback.md](playback.md).
 9. **Tests**: doctest. Qt-dependent tests create a `QCoreApplication` or `QGuiApplication` (offscreen) in a custom `main`.
 10. **UI scale**: applied live through Theme token multipliers rather than `QT_SCALE_FACTOR`, which would need a restart.
 11. **Glass pipeline in QML**: a `ShaderEffectSource` chain (capture, Kawase levels / Gaussian passes) rather than a `QQuickRhiItem`. Each pass renders only when its input changes, so a static scene costs nothing, and all GPU APIs are covered without per-API code. Texture providers stay visible at zero size, because invisible `ShaderEffectSource`s are never updated.
@@ -62,6 +62,20 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
     is installed in `api::Session` and stored through `ISecretStore`, so a bad token never disturbs a working
     session and the token is never in the config file. Session expiry comes from `api::Session::rejected` (a 401
     on any request) or a 401 on the background check. See [auth.md](auth.md).
+33. **HLS is read as one concatenated stream**, not through FFmpeg's HLS demuxer (which opens URLs itself): the
+    init segment, then the media segments from the one holding the start position. Seeking opens a new source at a
+    segment and drops decoded audio before the target. SoundCloud serves most tracks as HLS fMP4 (AAC) now.
+34. **One thread per playing voice, mixing in the audio callback**: the current and the prepared next track decode
+    into `PcmRing`s; the `Mixer` switches between them inside the callback, which makes gapless transitions and
+    crossfades exact to the frame. The rings use a mutex (short copies only) rather than a lock-free design: simpler,
+    TSan-visible, and the callback never waits on I/O.
+35. **The next track is prepared only near the end** (30 s plus the crossfade): earlier would download tracks that
+    the user skips or removes; `cache::Prefetcher` covers the items after it within the `cache.prefetch` budget.
+36. **Player state is not a setting**: volume, mute, shuffle and repeat live in `<state>/session.json`; *Remember
+    volume* and *Volume at start* are the settings.
+37. **Desktop integration without fetching**: MPRIS art and notification images are local files written from the
+    image cache, so no other process fetches artwork from the network (bypassing DNS/proxy settings). The tray is a
+    `QSystemTrayIcon` (StatusNotifierItem over D-Bus), which needs a `QApplication`; the UI stays Qt Quick.
 
 ## Slices
 
@@ -76,7 +90,7 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 (i) DRM helper
 (j) polish and performance measurements
 
-Done: (a), (b), (c), (d), (e), (f).
+Done: (a), (b), (c), (d), (e), (f), (g).
 
 ## Slice (f) status (auth / secret store / session)
 
@@ -101,6 +115,25 @@ the per-browser path table.
 Windows DPAPI/app-bound cookies and macOS Keychain remain platform-specific follow-ups (another
 `IBrowserCookieSource`); unknown cookie encryption versions fail honestly and keep the manual-paste path.
 
+## Slice (g) status (native playback)
+
+- `media` module: `StreamSource` over `AudioReader` (progressive random access, HLS concatenated with the init
+  segment), FFmpeg `Decoder` (RAII, accurate seeking), a `Voice` thread per track, `PcmRing`, the `Mixer` in the
+  `QAudioSink` callback (gapless, equal-power crossfade, ramped volume/pause), `NativeBackend` behind
+  `IPlaybackBackend`, the pure `PlaybackQueue` (shuffle that restores the original order, repeat off/all/one),
+  `PlaybackController` (QML `Player`), MPRIS 2, cover files for other processes.
+- UI: the now-playing bar (Liquid Glass, waveform scrubber with stored ranges, transport, volume, queue), the queue
+  drawer, search rows that play, the Home card following the current track, the cover driving accent and backdrop.
+  `WaveformItem` is one geometry node with a custom material on the GPU, two cached images in software mode.
+- Playback settings: audio quality, crossfade, remember volume / volume at start, autoplay related, media controls
+  (MPRIS), tray icon, notifications. en/ru strings. Tray menu and notifications follow the language live.
+- Tests: queue, ring, mixer (gapless, crossfade, ramps, starvation), decoding MP3/AAC/Opus and HLS (MP3 segments,
+  fMP4 with init) including seeks, the backend over a fake device (gapless advance, seek, pause, a replay and a
+  backward seek with zero requests, a DRM source never writing), the controller over fake API and backend, MPRIS
+  metadata, session state, waveform bars.
+- Not done: loudness normalization (no loudness data from SoundCloud), output device selection, the DRM backend
+  (slice i). The full-screen player, queue restore and remappable shortcuts belong to slice (h).
+
 ## Open items flagged for verification
 - Chromium-family import is verified against fixture databases built from Chromium's own format description
   (`os_crypt_linux`, cookie DB version 24), not against installed browsers; the KWallet D-Bus path has not run
@@ -111,4 +144,6 @@ Windows DPAPI/app-bound cookies and macOS Keychain remain platform-specific foll
 - Live api-v2 behaviour (client_id discovery, field names, transcodings, `/charts`) is covered by fixtures only; the
   live check (`noctara-tests --no-skip -tc="real api*"`) needs internet access and has not been run from the
   development sandbox. See [api.md](api.md#verification-status).
+- The tray icon and notifications were checked on Hyprland (StatusNotifierItem through a bar); GNOME without the
+  AppIndicator extension has no tray, and the setting then has no effect.
 - Glass GPU timings on a mainstream iGPU. The dev machine has a GTX 1070, so iGPU numbers need another machine; documented as such.

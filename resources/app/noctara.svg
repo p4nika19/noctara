@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- Noctara app icon: a night-sky tile with a crescent and a waveform. Original artwork. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2b2f7a"/>
+      <stop offset="1" stop-color="#7a4fe0"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#c9c4ff" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#sky)"/>
+  <path d="M152 52a56 56 0 1 0 52 76a44 44 0 1 1-52-76z" fill="#e8e6ff" opacity="0.9"/>
+  <g fill="url(#glow)">
+    <rect x="44" y="150" width="14" height="44" rx="7"/>
+    <rect x="70" y="128" width="14" height="88" rx="7"/>
+    <rect x="96" y="142" width="14" height="60" rx="7"/>
+    <rect x="122" y="118" width="14" height="108" rx="7"/>
+    <rect x="148" y="146" width="14" height="52" rx="7"/>
+    <rect x="174" y="136" width="14" height="72" rx="7"/>
+    <rect x="200" y="156" width="14" height="32" rx="7"/>
+  </g>
+</svg>

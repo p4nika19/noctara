@@ -15,9 +15,16 @@ rule("noctara.qsb")
         batchcmds:show_progress(opt.progress, "${color.build.object}compiling.qsb %s", sourcefile)
         batchcmds:mkdir(outdir)
         -- GLSL 100es/120/150 + 330 for desktop GL, SPIR-V for Vulkan; HLSL/MSL kept for portability.
-        batchcmds:vrunv("sh", {path.join(os.projectdir(), "tools", "qsb-strict.sh"), target:data("noctara.qsb"),
-            "--glsl", "100 es,120,150,330", "--hlsl", "50", "--msl", "12",
-            "-o", path(qsbfile), path(sourcefile)})
+        -- Vertex shaders also get the batchable variant the scene graph needs for custom materials (QSGMaterial).
+        local args = {path.join(os.projectdir(), "tools", "qsb-strict.sh"), target:data("noctara.qsb"),
+            "--glsl", "100 es,120,150,330", "--hlsl", "50", "--msl", "12"}
+        if path.extension(sourcefile) == ".vert" then
+            table.insert(args, "-b")
+        end
+        table.insert(args, "-o")
+        table.insert(args, path(qsbfile))
+        table.insert(args, path(sourcefile))
+        batchcmds:vrunv("sh", args)
         local objectfile = embed.embed_generated(target, batchcmds, qsbfile, "/shaders", path.filename(qsbfile))
         batchcmds:add_depfiles(sourcefile)
         batchcmds:set_depmtime(os.mtime(objectfile))

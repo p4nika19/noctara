@@ -92,6 +92,16 @@ QString errorMessage(ErrorCode code)
         return QCoreApplication::translate("Errors", "SoundCloud sent a response Noctara does not understand.");
     case ErrorCode::SignInRequired:
         return QCoreApplication::translate("Errors", "Sign in to your SoundCloud account to see this.");
+    case ErrorCode::NotPlayable:
+        return QCoreApplication::translate("Errors", "This track cannot be played with your account.");
+    case ErrorCode::DecodeFailed:
+        return QCoreApplication::translate("Errors", "This track's audio could not be decoded.");
+    case ErrorCode::AudioOutputFailed:
+        return QCoreApplication::translate("Errors",
+                                           "No sound device is available. Check your system's audio settings.");
+    case ErrorCode::ProtectedPlayback:
+        return QCoreApplication::translate(
+            "Errors", "This track is protected and needs the protected player, which is not set up yet.");
     }
     return QCoreApplication::translate("Errors", "Something went wrong.");
 }

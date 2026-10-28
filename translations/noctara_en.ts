@@ -88,7 +88,7 @@
 <context>
     <name>AccountsPane</name>
     <message>
-        <location filename="../src/qml/settings/AccountsPane.qml" line="+58"/>
+        <location filename="../src/qml/settings/AccountsPane.qml" line="+61"/>
         <source>Signed in</source>
         <translation type="unfinished"></translation>
     </message>
@@ -124,7 +124,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Your session has expired. Sign in again below to keep listening to your library and likes.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -444,12 +444,12 @@
     <name>Errors</name>
     <message>
         <location filename="../src/i18n/ErrorMessages.cpp" line="+11"/>
-        <location line="+85"/>
+        <location line="+95"/>
         <source>Something went wrong.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-94"/>
         <source>The operation was cancelled.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -674,7 +674,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+2"/>
+        <source>This track cannot be played with your account.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>This track&apos;s audio could not be decoded.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>No sound device is available. Check your system&apos;s audio settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>This track is protected and needs the protected player, which is not set up yet.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>%1 (%2 in %3, line %4)</source>
         <extracomment>%1 = explanation, %2 = setting key, %3 = file name, %4 = line number</extracomment>
         <translation type="unfinished"></translation>
@@ -814,17 +834,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+67"/>
+        <source>%1 · from %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Find something in Search and it starts here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Connect your SoundCloud account to see your feed, likes and playlists.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
         <source>Recently played</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-26"/>
+        <location line="-34"/>
         <source>Now playing</source>
         <translation type="unfinished"></translation>
     </message>
@@ -837,7 +867,7 @@
 <context>
     <name>Main</name>
     <message>
-        <location filename="../src/qml/Main.qml" line="+33"/>
+        <location filename="../src/qml/Main.qml" line="+37"/>
         <source>Noctara</source>
         <translation type="unfinished"></translation>
     </message>
@@ -868,17 +898,17 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+143"/>
+        <location line="+185"/>
         <source>Charts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-183"/>
         <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+85"/>
+        <location line="+127"/>
         <source>Got it</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1010,6 +1040,84 @@
     <message>
         <location line="+5"/>
         <source>Proxy</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>NowPlayingBar</name>
+    <message>
+        <location filename="../src/qml/components/NowPlayingBar.qml" line="+22"/>
+        <source>Now playing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Preview · %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Shuffle: on</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Shuffle: off</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Previous</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Pause</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Play</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Next</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Repeat: this track</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Repeat: all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Repeat: off</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+53"/>
+        <source>Unmute</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Mute</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Volume</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Queue</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1245,6 +1353,63 @@
     </message>
 </context>
 <context>
+    <name>QueueDrawer</name>
+    <message>
+        <location filename="../src/qml/components/QueueDrawer.qml" line="+30"/>
+        <location line="+18"/>
+        <source>Queue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+7"/>
+        <source>%n track(s)</source>
+        <translation type="unfinished">
+            <numerusform>%n track</numerusform>
+            <numerusform>%n tracks</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Clear upcoming tracks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Close queue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+42"/>
+        <source>Nothing queued. Play a track or a playlist and it shows up here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Loading</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1, %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>Loading…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>%1 · Protected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Remove from queue</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>SearchPage</name>
     <message>
         <location filename="../src/qml/pages/SearchPage.qml" line="+20"/>
@@ -1282,7 +1447,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+63"/>
         <source>Nothing found for “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1310,7 +1475,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+167"/>
+        <location filename="../src/app/main.cpp" line="+184"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1326,12 +1491,12 @@
     </message>
     <message>
         <location filename="../src/settings/BuiltinSchema.cpp" line="+142"/>
-        <location line="+79"/>
+        <location line="+90"/>
         <source>Language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-78"/>
+        <location line="-89"/>
         <source>Interface language.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1347,23 +1512,23 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+101"/>
+        <location line="+112"/>
         <source>Theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-100"/>
+        <location line="-111"/>
         <source>Midnight (dark), Frost (light) or follow the system.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+124"/>
+        <location line="+135"/>
         <source>Accent color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-123"/>
+        <location line="-134"/>
         <source>The whole palette is generated from a single accent color.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1423,7 +1588,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+16"/>
         <source>Graphics</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1499,12 +1664,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+560"/>
+        <location line="+633"/>
         <source>System</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-559"/>
+        <location line="-632"/>
         <source>Midnight (dark)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1544,7 +1709,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-122"/>
+        <location line="-133"/>
         <source>The light behind the interface.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1566,6 +1731,56 @@
     <message>
         <location line="+1"/>
         <source>How densely pages are laid out.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Sound</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Which of SoundCloud&apos;s streams is played.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transitions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How one track leads into the next.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Volume</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Volume when Noctara starts.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Queue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What happens when the queue runs out.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Desktop integration</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Controlling playback from outside the window.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1841,7 +2056,8 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+169"/>
+        <location line="+168"/>
+        <location line="+74"/>
         <location line="+13"/>
         <location line="+12"/>
         <location line="+57"/>
@@ -1851,7 +2067,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-486"/>
+        <location line="-559"/>
         <source>Low</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1989,13 +2205,13 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+226"/>
+        <location line="+299"/>
         <location line="+23"/>
         <source>Custom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-247"/>
+        <location line="-320"/>
         <source>Corner radius</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2067,11 +2283,12 @@
     <message>
         <location line="+1"/>
         <location line="+10"/>
+        <location line="+83"/>
         <source>%</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-2"/>
+        <location line="-85"/>
         <source>Text size</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2161,7 +2378,97 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Best available</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data saver</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Audio quality</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Auto plays the best stream your account may play, and the smallest one on a metered connection. Applies from the next track.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Crossfade</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Blends the end of a track into the next one. 0 plays them back to back without a gap.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+8"/>
+        <source>Remember volume</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Start with the volume you last used.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Volume at start</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The volume every session starts with.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Autoplay related tracks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>When the queue ends, keep playing tracks related to the last one. Repeat takes precedence.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Media keys and system controls</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lets media keys, the desktop&apos;s media controls and other apps control playback and show the current track (MPRIS).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Tray icon</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Playback controls in the system tray, where the desktop provides one.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Notify on track change</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Shows a desktop notification with the next track while Noctara&apos;s window is not in front.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>On</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2453,7 +2760,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-276"/>
+        <location line="+277"/>
         <location line="+11"/>
         <location line="+12"/>
         <location line="+94"/>
@@ -3114,6 +3422,14 @@
     </message>
 </context>
 <context>
+    <name>WaveformView</name>
+    <message>
+        <location filename="../src/qml/components/WaveformView.qml" line="+24"/>
+        <source>Position</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>noctara::ui::AccountController</name>
     <message>
         <location filename="../src/ui/AccountController.cpp" line="+167"/>
@@ -3559,6 +3875,44 @@
     <message>
         <location line="+0"/>
         <source>In use: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>noctara::ui::TrayIcon</name>
+    <message>
+        <location filename="../src/ui/TrayIcon.cpp" line="+83"/>
+        <source>Previous</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Next</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show Noctara</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Quit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Pause</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Play</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>%1 — %2</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -85,6 +85,35 @@ is copied once.
 Idle cost: none. The API thread sleeps, and the only timers are the 10 ms lookup-coalescing window and the pause
 after a 429, both started only on demand.
 
+## Slice (g): playback
+
+Release build on the dev machine (GTX 1070, Vulkan, Hyprland), a 150-second track that SoundCloud serves as HLS
+AAC 160 kbit/s (fMP4), measured from the moment the backend starts loading to the first audio frame. Reproduce with
+`--play <link>` and `QT_LOGGING_RULES="noctara.media.debug=true"` (the backend logs its state changes); CPU over
+10 s of playback from `/proc/<pid>/stat`.
+
+| Measurement | Result |
+|---|---|
+| Time to first audio, cold (stream URL, HLS playlist, first segment; includes opening the audio device) | 1.2–1.8 s |
+| Time to first audio, cached (disk tier, new process) | ≈ 270 ms |
+| CPU while playing, GPU renderer, backdrop drift off | ≈ 3 % of one core |
+| CPU while playing, software renderer | ≈ 2.7 % |
+| CPU idle, GPU renderer, backdrop drift off / on (default) | 0.2 % / 6.7 % |
+| RSS while playing (GPU / software) | ≈ 285 / 205 MiB |
+
+Most of the playing cost is repainting the window for position updates, not decoding. Announcing the position 10
+times a second cost ≈ 4.8 %; the controller now announces it 4 times a second (the waveform still moves by less
+than a pixel per update on tracks of a few minutes), which brought it to ≈ 3 %. Decoding AAC and resampling to the
+device rate is well under 1 %. The cold start is dominated by network round trips (resolve the stream URL, fetch the
+playlist, fetch the first segment); about 0.35 s of it is opening Qt Multimedia's audio backend for the first time.
+
+The idle number with the default *animated backdrop* (slice b) is far from "≈ 0": the slow drift redraws the window
+continuously while it is visible and focused (it pauses when unfocused, minimized or on battery saver). Turning the
+drift off gives 0.2 %. Whether the drift should stay on by default is an open question for the polish slice (j).
+
+Idle cost of playback when paused: none. The backend suspends the device once the fade-out has played, and its
+100 ms check stops; the decoder threads wait on a condition variable.
+
 ## Design choices that affect cost
 
 - Colors cross-fade by updating one gadget per frame for 400–500 ms. Icons do not re-rasterize per frame: they bind to `targetColors` and crossfade two cached images.

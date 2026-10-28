@@ -27,6 +27,10 @@ add_requires("pkgconfig::sqlite3", {alias = "sqlite3", system = true})
 add_requires("pkgconfig::taglib", {alias = "taglib", system = true})
 add_requires("pkgconfig::libxxhash", {alias = "xxhash", system = true})
 add_requires("pkgconfig::simdjson", {alias = "simdjson", system = true})
+add_requires("pkgconfig::libavformat", {alias = "avformat", system = true})
+add_requires("pkgconfig::libavcodec", {alias = "avcodec", system = true})
+add_requires("pkgconfig::libavutil", {alias = "avutil", system = true})
+add_requires("pkgconfig::libswresample", {alias = "swresample", system = true})
 
 -- Toolchain: mold for every link step.
 add_ldflags("-fuse-ld=mold", {force = true})
@@ -132,16 +136,20 @@ noctara_module("cache", {qt = {"QtCore", "QtGui", "QtConcurrent"},
 noctara_module("api", {qt = {"QtCore"}, deps = {"noctara_core", "noctara_settings", "noctara_net", "noctara_cache"},
     packages = {"simdjson"}})
 noctara_module("models", {qt = {"QtCore"}, deps = {"noctara_core", "noctara_api"}})
+-- Native playback: FFmpeg decodes what StreamSource reads from the audio cache; Qt Multimedia is the device.
+noctara_module("media", {qt = {"QtCore", "QtGui", "QtMultimedia", "QtDBus"},
+    deps = {"noctara_core", "noctara_settings", "noctara_cache", "noctara_api", "noctara_models"},
+    packages = {"avformat", "avcodec", "avutil", "swresample"}})
 noctara_module("auth", {qt = {"QtCore", "QtConcurrent", "QtDBus"}, deps = {"noctara_core"},
     packages = {"libsecret", "openssl", "sqlite3"}})
-noctara_module("ui", {qt = {"QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus"},
+noctara_module("ui", {qt = {"QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus", "QtMultimedia", "QtWidgets"},
     deps = {"noctara_core", "noctara_settings", "noctara_i18n", "noctara_theme", "noctara_gfx", "noctara_net",
-            "noctara_cache", "noctara_api", "noctara_models", "noctara_auth"}})
+            "noctara_cache", "noctara_api", "noctara_models", "noctara_media", "noctara_auth"}})
 
 target("noctara")
     set_kind("binary")
     add_rules("qt.quickapp", "noctara.qtfix", "noctara.qsb", "noctara.lrelease", "noctara.qrcgen")
-    add_frameworks("QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus")
+    add_frameworks("QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus", "QtMultimedia", "QtWidgets")
     add_deps("noctara_ui")
     add_files("src/app/*.cpp", {cxxflags = STRICT_WARNINGS})
     add_files("resources/shaders/*.vert", "resources/shaders/*.frag")
@@ -151,6 +159,7 @@ target("noctara")
         {name = "fonts", prefix = "/fonts", root = "resources/fonts",  patterns = {"*.ttf", "licenses/*.txt"}},
         {name = "icons", prefix = "/icons", root = "resources/icons",  patterns = {"*.svg"}},
         {name = "data",  prefix = "/data",  root = "resources/data",   patterns = {"*.json", "*.toml"}},
+        {name = "app",   prefix = "/app",   root = "resources/app",    patterns = {"*.svg"}},
     })
     after_build(function (target)
         -- Keep a stable path for tasks and docs regardless of mode.
@@ -170,7 +179,7 @@ target("noctara-tests")
     set_kind("binary")
     set_default(false)
     add_rules("qt.quickapp", "noctara.qtfix", "noctara.lrelease")
-    add_frameworks("QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus", "QtTest")
+    add_frameworks("QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus", "QtMultimedia", "QtWidgets", "QtTest")
     add_deps("noctara_ui")
     add_packages("doctest", "openssl")
     add_files("tests/**.cpp", {cxxflags = STRICT_WARNINGS})

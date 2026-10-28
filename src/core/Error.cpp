@@ -53,6 +53,10 @@ std::string_view errorCodeName(ErrorCode code) noexcept
     case ErrorCode::ClientIdUnavailable: return "ClientIdUnavailable";
     case ErrorCode::InvalidResponse: return "InvalidResponse";
     case ErrorCode::SignInRequired: return "SignInRequired";
+    case ErrorCode::NotPlayable: return "NotPlayable";
+    case ErrorCode::DecodeFailed: return "DecodeFailed";
+    case ErrorCode::AudioOutputFailed: return "AudioOutputFailed";
+    case ErrorCode::ProtectedPlayback: return "ProtectedPlayback";
     }
     return "Unknown";
 }

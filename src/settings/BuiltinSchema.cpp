@@ -166,6 +166,17 @@ std::vector<Section> builtinSections()
         {"layout.content", Layout, QT_TRANSLATE_NOOP("Settings", "Content"),
          QT_TRANSLATE_NOOP("Settings", "How densely pages are laid out.")},
 
+        {"playback.stream", Playback, QT_TRANSLATE_NOOP("Settings", "Sound"),
+         QT_TRANSLATE_NOOP("Settings", "Which of SoundCloud's streams is played.")},
+        {"playback.transitions", Playback, QT_TRANSLATE_NOOP("Settings", "Transitions"),
+         QT_TRANSLATE_NOOP("Settings", "How one track leads into the next.")},
+        {"playback.volume", Playback, QT_TRANSLATE_NOOP("Settings", "Volume"),
+         QT_TRANSLATE_NOOP("Settings", "Volume when Noctara starts.")},
+        {"playback.queue", Playback, QT_TRANSLATE_NOOP("Settings", "Queue"),
+         QT_TRANSLATE_NOOP("Settings", "What happens when the queue runs out.")},
+        {"playback.desktop", Playback, QT_TRANSLATE_NOOP("Settings", "Desktop integration"),
+         QT_TRANSLATE_NOOP("Settings", "Controlling playback from outside the window.")},
+
         {"performance.gpu", Performance, QT_TRANSLATE_NOOP("Settings", "Graphics"),
          QT_TRANSLATE_NOOP("Settings", "GPU acceleration. Changes take effect after a restart.")},
         {"performance.rendering", Performance, QT_TRANSLATE_NOOP("Settings", "Rendering"),
@@ -542,6 +553,79 @@ std::vector<Definition> builtinDefinitions()
                     .category = Layout,
                     .label = QT_TRANSLATE_NOOP("Settings", "Density"),
                     .description = QT_TRANSLATE_NOOP("Settings", "Spacing between sections, cards and rows.")});
+
+    // --- Playback -------------------------------------------------------------------------------
+    defs.push_back({.key = keys::StreamQuality,
+                    .type = Type::Enum,
+                    .defaultValue = str("auto"),
+                    .options = {{"auto", QT_TRANSLATE_NOOP("Settings", "Auto")},
+                                {"best", QT_TRANSLATE_NOOP("Settings", "Best available")},
+                                {"data_saver", QT_TRANSLATE_NOOP("Settings", "Data saver")}},
+                    .category = Playback,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Audio quality"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Auto plays the best stream your account may play, and the smallest one on a "
+                                    "metered connection. Applies from the next track.")});
+    defs.push_back({.key = keys::Crossfade,
+                    .type = Type::Int,
+                    .defaultValue = integer(0),
+                    .min = 0,
+                    .max = 12,
+                    .step = 1,
+                    .category = Playback,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Crossfade"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Blends the end of a track into the next one. 0 plays them back to back without "
+                                    "a gap."),
+                    .unit = QT_TRANSLATE_NOOP("Settings", "s")});
+    defs.push_back({.key = keys::RememberVolume,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Playback,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Remember volume"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Start with the volume you last used.")});
+    defs.push_back({.key = keys::StartupVolume,
+                    .type = Type::Int,
+                    .defaultValue = integer(70),
+                    .min = 0,
+                    .max = 100,
+                    .step = 5,
+                    .category = Playback,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Volume at start"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "The volume every session starts with."),
+                    .unit = QT_TRANSLATE_NOOP("Settings", "%"),
+                    .visibleWhen = Condition{keys::RememberVolume, {"false"}}});
+    defs.push_back({.key = keys::Autoplay,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Playback,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Autoplay related tracks"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "When the queue ends, keep playing tracks related to the last one. Repeat "
+                                    "takes precedence.")});
+    defs.push_back({.key = keys::MediaControls,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Playback,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Media keys and system controls"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Lets media keys, the desktop's media controls and other apps control playback "
+                                    "and show the current track (MPRIS).")});
+    defs.push_back({.key = keys::TrayIcon,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Playback,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Tray icon"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Playback controls in the system tray, where the desktop provides one.")});
+    defs.push_back({.key = keys::TrackNotifications,
+                    .type = Type::Bool,
+                    .defaultValue = false,
+                    .category = Playback,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Notify on track change"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Shows a desktop notification with the next track while Noctara's window is "
+                                    "not in front.")});
 
     // --- Performance -----------------------------------------------------------------------------
     defs.push_back(

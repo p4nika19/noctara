@@ -88,6 +88,9 @@ public:
     [[nodiscard]] bool complete() const;
     // Stored byte ranges of a progressive entry (for the waveform's cached-range display).
     [[nodiscard]] std::vector<std::pair<std::int64_t, std::int64_t>> cachedRanges() const;
+    // What is stored, as merged fractions [from, to) of the track: by bytes for progressive entries, by playing
+    // time (segment durations) for HLS. Empty while the size or the playlist is unknown.
+    [[nodiscard]] std::vector<std::pair<double, double>> cachedFractions() const;
 
     // Never waits for the network: Pending means the piece has been requested.
     [[nodiscard]] Piece tryRead(int piece);

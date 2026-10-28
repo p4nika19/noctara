@@ -67,6 +67,12 @@ enum class ErrorCode : std::uint16_t {
     ClientIdUnavailable,  // the web client's client_id could not be found (the site changed, or it was rejected)
     InvalidResponse,      // the API answered with JSON Noctara does not understand
     SignInRequired,       // the endpoint needs an account and none is signed in
+
+    // playback
+    NotPlayable,        // SoundCloud offers no stream this account may play (blocked, removed, not streamable)
+    DecodeFailed,       // the audio could not be demuxed or decoded
+    AudioOutputFailed,  // no usable audio device, or the device failed
+    ProtectedPlayback,  // a protected (DRM) track; it needs the protected player (DRM helper)
 };
 
 // Stable English identifier, used in logs and diagnostics.
