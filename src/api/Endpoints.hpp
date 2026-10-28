@@ -31,6 +31,9 @@ struct ApiRequest {
     net::CacheMode cache = net::CacheMode::Default;
     std::chrono::seconds cacheTtl{0};  // freshness when SoundCloud sends no Cache-Control
     bool background = false;
+    // Sent instead of the session's token, to check a token before it is kept (sign-in). A 401 then only means
+    // that this token is wrong: the session is not reported as rejected and the request is not repeated.
+    QByteArray candidateToken;
 };
 
 // A request plus the parser of its answer.
@@ -56,6 +59,8 @@ enum class ChartKind : std::uint8_t { Top, Trending };
 inline constexpr std::size_t kMaxTrackIds = 50;
 [[nodiscard]] Endpoint<User> user(Id id);
 [[nodiscard]] Endpoint<User> me();
+// /me for a token that is not the session's yet, always answered by SoundCloud (never by the HTTP cache).
+[[nodiscard]] Endpoint<User> verifyToken(const QByteArray& token);
 [[nodiscard]] Endpoint<Playlist> playlist(Id id);
 
 [[nodiscard]] Endpoint<Page<Entry>> search(const QString& query, SearchKind kind, int limit);

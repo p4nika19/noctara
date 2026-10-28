@@ -191,5 +191,16 @@ Window {
         }
     }
 
+    // Toast actions such as "Sign in" open a page.
+    Connections {
+        target: App
+        function onPageRequested(page, category) {
+            if (category.length > 0)
+                window.settingsCategory = category
+            window.appearancePanel = false
+            window.page = page
+        }
+    }
+
     ToastHost { anchors.fill: parent }
 }

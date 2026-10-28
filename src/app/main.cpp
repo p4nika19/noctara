@@ -324,9 +324,7 @@ int main(int argc, char** argv)
     auth::BrowserCookieSource browserCookies;
     // Browser discovery never reads cookies; Account asks for consent before importing the selected profile.
     ui::AccountController account(soundcloud.client(), session, secrets, &browserCookies);
-    QObject::connect(
-        &account, &ui::AccountController::notice, &appController,
-        [&appController](const QString& kind, const QString& message) { appController.showToast(kind, message); });
+    QObject::connect(&account, &ui::AccountController::notice, &appController, &ui::AppController::showToast);
     QObject::connect(&config, &settings::ConfigFile::reloadIssues, &appController,
                      &ui::AppController::reportConfigIssues);
     config.setHotReloadEnabled(true);

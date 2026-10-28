@@ -45,6 +45,8 @@ Q_SIGNALS:
     // kind: "info" | "success" | "warning" | "error"
     void toastRequested(const QString& kind, const QString& message, const QString& actionLabel,
                         const QString& actionId);
+    // Main.qml switches to `page` (and, for "settings", to the settings `category`).
+    void pageRequested(const QString& page, const QString& category);
     void graphicsNoticeChanged();
 
 private:

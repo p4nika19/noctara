@@ -1,6 +1,7 @@
 #include "auth/BrowserCookieSource.hpp"
 
 #include "auth/SecureBytes.hpp"
+#include "auth/Token.hpp"
 
 #include <QCryptographicHash>
 #include <QDBusConnection>
@@ -477,14 +478,6 @@ QByteArray columnBytes(sqlite3_stmt* statement, int column)
     return {value, sqlite3_column_bytes(statement, column)};
 }
 
-bool validToken(const QByteArray& token)
-{
-    return !token.isEmpty() && token.size() <= 4096 && std::ranges::all_of(token, [](const char value) {
-        const auto byte = static_cast<unsigned char>(value);
-        return byte >= 0x21 && byte <= 0x7e;
-    });
-}
-
 Result<QByteArray> readFirefox(const QString& path)
 {
     const CookieSnapshot snapshot(path);
@@ -515,7 +508,7 @@ Result<QByteArray> readFirefox(const QString& path)
             continue;
         }
         QByteArray token = columnBytes(selected->get(), 0);
-        if (validToken(token)) {
+        if (isPlausibleToken(token)) {
             return token;
         }
         wipe(token);
@@ -597,7 +590,7 @@ std::optional<QByteArray> chromiumToken(QByteArrayView ciphertext, const Chromiu
         value = value.sliced(kDomainHashSize);
     }
     QByteArray token = value.toByteArray();
-    if (!validToken(token)) {
+    if (!isPlausibleToken(token)) {
         wipe(token);
         return std::nullopt;
     }
@@ -658,7 +651,7 @@ Result<QByteArray> readChromium(const BrowserProfile& profile, const ChromiumPas
         if (encrypted.isEmpty()) {
             // Values from before cookie encryption (or written with encryption disabled) are plain text.
             QByteArray plain = columnBytes(statement, 1);
-            if (validToken(plain)) {
+            if (isPlausibleToken(plain)) {
                 return plain;
             }
             wipe(plain);

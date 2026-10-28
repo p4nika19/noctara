@@ -6,21 +6,25 @@
 #include "api/Types.hpp"
 
 #include "auth/SecretStore.hpp"
+#include "auth/Token.hpp"
 #include "i18n/ErrorMessages.hpp"
 
 #include <QVariantMap>
+
+#include <algorithm>
 
 namespace noctara::ui {
 
 namespace {
 
+using namespace std::chrono_literals;
+
 // Stable key in the secret store; the user sees `label` in their keyring manager.
 constexpr auto kTokenKey = "soundcloud.oauth_token";
 
-bool isAuthFailure(ErrorCode code) noexcept
-{
-    return code == ErrorCode::Unauthorized || code == ErrorCode::Forbidden || code == ErrorCode::SignInRequired;
-}
+// A background check that failed for a non-auth reason (offline, timeout, 5xx) is repeated, backing off.
+constexpr std::chrono::milliseconds kFirstRetry = 30s;
+constexpr std::chrono::milliseconds kMaxRetry = 10min;
 
 }  // namespace
 
@@ -31,10 +35,13 @@ AccountController::AccountController(api::IApiClient& client, api::Session& sess
     , m_session(session)
     , m_secrets(secrets)
     , m_browsers(browsers)
+    , m_retryDelay(kFirstRetry)
 {
     // A 401 on any request (not just /me) means the stored token stopped working: fall back to Expired so the
-    // page asks the user to sign in again. verify() owns the outcome while it is itself checking a token.
+    // page asks the user to sign in again. Candidate tokens never cause this (see api::ApiRequest).
     connect(&m_session, &api::Session::rejected, this, &AccountController::onRejected);
+    m_retry.setSingleShot(true);
+    connect(&m_retry, &QTimer::timeout, this, &AccountController::checkSession);
     loadStored();
 }
 
@@ -98,57 +105,58 @@ void AccountController::importBrowserToken(const QString& profileId)
     if (m_browsers == nullptr || m_browserBusy) {
         return;
     }
-    for (const auto& profile : m_profiles) {
-        if (profile.id != profileId) {
-            continue;
-        }
-        setBrowserBusy(true);
-        m_browsers->importToken(profile, this, [this](Result<QByteArray> result) {
-            setBrowserBusy(false);
-            if (!result) {
-                QString message;
-                switch (result.error().code) {
-                case ErrorCode::NotFound:
-                    message = tr("No SoundCloud session was found in this browser profile. Sign in to SoundCloud in "
-                                 "that browser first, or paste your OAuth token.");
-                    break;
-                case ErrorCode::PermissionDenied:
-                    message = tr("Noctara could not unlock this browser's cookies. Unlock your desktop keyring and "
-                                 "try again, or paste your OAuth token.");
-                    break;
-                case ErrorCode::Unsupported:
-                    message = tr("This browser's cookie encryption is not supported yet. Paste your OAuth token "
-                                 "instead.");
-                    break;
-                default:
-                    message = tr("Could not read the selected browser profile. You can still paste your OAuth token.");
-                    break;
-                }
-                Q_EMIT notice(QStringLiteral("error"), message);
-                return;
-            }
-            QByteArray token = std::move(*result);
-            signInWithToken(QString::fromLatin1(token));
-            token.fill('\0');
-        });
+    const auto profile =
+        std::ranges::find_if(m_profiles, [&](const auth::BrowserProfile& entry) { return entry.id == profileId; });
+    if (profile == m_profiles.cend()) {
+        Q_EMIT notice(QStringLiteral("error"), tr("The selected browser profile is no longer available. Scan again."));
         return;
     }
-    Q_EMIT notice(QStringLiteral("error"), tr("The selected browser profile is no longer available. Scan again."));
+    setBrowserBusy(true);
+    m_browsers->importToken(*profile, this, [this](Result<QByteArray> result) {
+        setBrowserBusy(false);
+        if (!result) {
+            QString message;
+            switch (result.error().code) {
+            case ErrorCode::NotFound:
+                message = tr("No SoundCloud session was found in this browser profile. Sign in to SoundCloud in "
+                             "that browser first, or paste your OAuth token.");
+                break;
+            case ErrorCode::PermissionDenied:
+                message = tr("Noctara could not unlock this browser's cookies. Unlock your desktop keyring and "
+                             "try again, or paste your OAuth token.");
+                break;
+            case ErrorCode::Unsupported:
+                message = tr("This browser's cookie encryption is not supported yet. Paste your OAuth token "
+                             "instead.");
+                break;
+            default:
+                message = tr("Could not read the selected browser profile. You can still paste your OAuth token.");
+                break;
+            }
+            Q_EMIT notice(QStringLiteral("error"), message);
+            return;
+        }
+        verifyCandidate(*result);
+    });
 }
 
 void AccountController::loadStored()
 {
-    m_secrets.read(QString::fromLatin1(kTokenKey), this, [this](Result<std::optional<QByteArray>> stored) {
-        if (!stored || !*stored || (*stored)->isEmpty()) {
-            return;  // nothing saved: stay signed out
+    const int generation = m_generation;
+    m_secrets.read(QString::fromLatin1(kTokenKey), this, [this, generation](Result<std::optional<QByteArray>> stored) {
+        Q_EMIT changed();  // the store knows its protection level after its first answer
+        if (generation != m_generation) {
+            return;  // the user signed in or out while the keyring was still answering
         }
-        const QByteArray token = **stored;
-        m_session.setToken(token);
-        // A saved token is presumed good until SoundCloud says otherwise, so the app is usable at once; the
-        // account details (and any expiry) follow from the background check.
+        if (!stored || !*stored || !auth::isPlausibleToken(**stored)) {
+            return;  // nothing usable saved: stay signed out
+        }
+        // A saved token is presumed good until SoundCloud says otherwise, so the app is usable at
+        // once; the account details (and any expiry) follow from the background check.
+        m_session.setToken(**stored);
         setState(SignedIn);
         Q_EMIT changed();
-        verify(token, /*interactive=*/false);
+        checkSession();
     });
 }
 
@@ -159,113 +167,142 @@ void AccountController::signInWithToken(const QString& token)
         Q_EMIT notice(QStringLiteral("error"), tr("Paste your SoundCloud OAuth token to sign in."));
         return;
     }
-    verify(trimmed, /*interactive=*/true);
+    if (!auth::isPlausibleToken(trimmed)) {
+        Q_EMIT notice(QStringLiteral("error"),
+                      tr("That does not look like an OAuth token. Copy only the oauth_token value, without spaces."));
+        return;
+    }
+    verifyCandidate(trimmed);
 }
 
 void AccountController::refresh()
 {
-    const QByteArray token = m_session.token();
-    if (token.isEmpty()) {
-        return;
-    }
-    verify(token, /*interactive=*/true);
+    checkSession();
 }
 
-void AccountController::verify(const QByteArray& token, bool interactive)
+void AccountController::verifyCandidate(const QByteArray& token)
 {
-    const QByteArray previous = m_session.token();
-    m_verify.cancel();  // drop any check still in flight
-    const int generation = ++m_verifyGen;
-    m_verifying = true;
-    m_session.setToken(token);  // /me reads the token from the session
-    if (interactive) {
-        setBusy(true);
-        setState(Verifying);
+    m_verify.cancel();
+    m_check.cancel();
+    m_retry.stop();
+    const int generation = ++m_generation;
+    if (m_state != Verifying) {
+        m_beforeVerify = m_state;  // a check that supersedes another one keeps the original state to return to
     }
-    m_verify = api::fetch(
-        m_client, api::endpoints::me(), this,
-        [this, generation, interactive, token, previous](Result<api::User> result) {
-            if (generation != m_verifyGen) {
-                return;  // a newer verify() or signOut() superseded this one
-            }
-            m_verifying = false;
-            if (interactive) {
-                setBusy(false);
-            }
-            if (result) {
-                applyUser(*result);
-                setState(SignedIn);
-                Q_EMIT changed();
-                if (interactive) {
-                    m_secrets.write(QString::fromLatin1(kTokenKey), tr("Noctara SoundCloud session"), token, this,
-                                    [this](const Result<void>& written) {
-                                        Q_EMIT changed();
-                                        if (!written || !m_secrets.persistent()) {
-                                            Q_EMIT notice(QStringLiteral("warning"),
-                                                          tr("Signed in, but no persistent secret store is available, "
-                                                             "so you will need to sign in again after Noctara quits."));
-                                        } else if (m_secrets.keyringBacked()) {
-                                            Q_EMIT notice(QStringLiteral("success"),
-                                                          tr("Signed in. Your session is saved in the keyring."));
-                                        } else {
-                                            Q_EMIT notice(QStringLiteral("warning"),
-                                                          tr("Signed in. Your session is saved in Noctara's encrypted "
-                                                             "local store because no desktop keyring is available."));
-                                        }
-                                    });
-                }
-                return;
-            }
-            const ErrorCode code = result.error().code;
-            if (interactive) {
-                // A rejected interactive sign-in must not disturb an existing session.
-                m_session.setToken(previous);
-                setState(previous.isEmpty() ? SignedOut : SignedIn);
-                Q_EMIT changed();
-                Q_EMIT notice(QStringLiteral("error"),
-                              isAuthFailure(code)
-                                  ? tr("That token was not accepted. Copy the whole oauth_token value and try again.")
-                                  : i18n::errorMessage(code));
-                return;
-            }
-            // Background check of a saved token.
-            if (isAuthFailure(code)) {
-                clearAccount();
-                m_session.clear();
-                m_secrets.remove(QString::fromLatin1(kTokenKey), this, [](const Result<void>&) {});
-                setState(Expired);
-                Q_EMIT changed();
-                Q_EMIT notice(QStringLiteral("warning"),
-                              tr("Your SoundCloud session has expired. Please sign in again."));
-            }
-            // A non-auth error (offline, timeout) leaves the saved token in place to retry later.
-        });
+    setBusy(true);
+    setState(Verifying);
+    // The session keeps its current token (if any) until the candidate has been accepted.
+    m_verify = api::fetch(m_client, api::endpoints::verifyToken(token), this,
+                          [this, generation, token](Result<api::User> result) {
+                              if (generation != m_generation) {
+                                  return;  // a newer sign-in, a sign-out or an expiry superseded this check
+                              }
+                              setBusy(false);
+                              if (result) {
+                                  m_session.setToken(token);
+                                  applyUser(*result);
+                                  setState(SignedIn);
+                                  saveToken(token);
+                                  return;
+                              }
+                              setState(m_beforeVerify);  // an expired session stays visibly expired
+                              const ErrorCode code = result.error().code;
+                              Q_EMIT notice(QStringLiteral("error"),
+                                            code == ErrorCode::Unauthorized || code == ErrorCode::Forbidden
+                                                ? tr("That token was not accepted. Copy the whole oauth_token value "
+                                                     "and try again.")
+                                                : i18n::errorMessage(code));
+                          });
+}
+
+void AccountController::saveToken(const QByteArray& token)
+{
+    const int generation = m_generation;
+    m_secrets.write(QString::fromLatin1(kTokenKey), tr("Noctara SoundCloud session"), token, this,
+                    [this, generation](const Result<void>& written) {
+                        Q_EMIT changed();  // the protection level may have changed with this write
+                        if (generation != m_generation) {
+                            return;  // signed out meanwhile: no "saved" message
+                        }
+                        if (!written || !m_secrets.persistent()) {
+                            Q_EMIT notice(QStringLiteral("warning"),
+                                          tr("Signed in, but no persistent secret store is available, so you will "
+                                             "need to sign in again after Noctara quits."));
+                        } else if (m_secrets.keyringBacked()) {
+                            Q_EMIT notice(QStringLiteral("success"),
+                                          tr("Signed in. Your session is saved in the keyring."));
+                        } else {
+                            Q_EMIT notice(QStringLiteral("warning"),
+                                          tr("Signed in. Your session is saved in Noctara's encrypted local store "
+                                             "because no desktop keyring is available."));
+                        }
+                    });
+}
+
+void AccountController::checkSession()
+{
+    const QByteArray token = m_session.token();
+    if (token.isEmpty() || m_state == Verifying) {
+        return;
+    }
+    m_check.cancel();
+    m_retry.stop();
+    const int generation = m_generation;
+    m_check = api::fetch(m_client, api::endpoints::me(), this, [this, generation, token](Result<api::User> result) {
+        if (generation != m_generation || m_session.token() != token) {
+            return;
+        }
+        if (result) {
+            m_retryDelay = kFirstRetry;
+            applyUser(*result);
+            Q_EMIT changed();
+            return;
+        }
+        if (result.error().code == ErrorCode::Unauthorized) {
+            expire();
+            return;
+        }
+        // Offline, timeout, a server error …: the saved token stays; ask again later.
+        m_retry.start(m_retryDelay);
+        m_retryDelay = std::min(m_retryDelay * 2, kMaxRetry);
+    });
+}
+
+void AccountController::expire()
+{
+    if (m_session.token().isEmpty()) {
+        return;
+    }
+    ++m_generation;
+    m_verify.cancel();
+    m_check.cancel();
+    m_retry.stop();
+    setBusy(false);
+    clearAccount();
+    m_session.clear();
+    m_secrets.remove(QString::fromLatin1(kTokenKey), this, [this](const Result<void>&) { Q_EMIT changed(); });
+    setState(Expired);
+    Q_EMIT notice(QStringLiteral("warning"), tr("Your SoundCloud session has expired. Please sign in again."),
+                  tr("Sign in"), QStringLiteral("open-accounts"));
 }
 
 void AccountController::signOut()
 {
+    ++m_generation;
     m_verify.cancel();
-    ++m_verifyGen;
-    m_verifying = false;
+    m_check.cancel();
+    m_retry.stop();
+    setBusy(false);
     clearAccount();
     m_session.clear();
-    m_secrets.remove(QString::fromLatin1(kTokenKey), this, [](const Result<void>&) {});
+    m_secrets.remove(QString::fromLatin1(kTokenKey), this, [this](const Result<void>&) { Q_EMIT changed(); });
     setState(SignedOut);
-    Q_EMIT changed();
     Q_EMIT notice(QStringLiteral("info"), tr("Signed out of SoundCloud."));
 }
 
 void AccountController::onRejected()
 {
-    if (m_verifying || m_session.token().isEmpty()) {
-        return;  // verify() handles its own token; nothing to do once signed out
-    }
-    clearAccount();
-    m_session.clear();
-    m_secrets.remove(QString::fromLatin1(kTokenKey), this, [](const Result<void>&) {});
-    setState(Expired);
-    Q_EMIT changed();
-    Q_EMIT notice(QStringLiteral("warning"), tr("Your SoundCloud session has expired. Please sign in again."));
+    expire();  // a no-op once signed out or already expired
 }
 
 void AccountController::applyUser(const api::User& user)
@@ -288,6 +325,7 @@ void AccountController::setState(State state)
 {
     if (m_state != state) {
         m_state = state;
+        Q_EMIT changed();
     }
 }
 

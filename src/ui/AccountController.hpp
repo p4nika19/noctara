@@ -5,8 +5,11 @@
 
 #include <QObject>
 #include <QString>
+#include <QTimer>
 #include <QUrl>
 #include <QVariantList>
+
+#include <chrono>
 
 namespace noctara::api {
 class IApiClient;
@@ -22,6 +25,11 @@ namespace noctara::ui {
 
 // QML "Account" singleton. Both manual and consented browser-cookie sign-in funnel through signInWithToken(),
 // which verifies the token against /me before keeping it. Secrets live only in ISecretStore and api::Session.
+//
+// A candidate token is checked with its own /me request and only then installed in api::Session, so other
+// requests never run with it and a bad one never disturbs a working session. Every sign-in, sign-out and expiry
+// starts a new generation; answers that arrive for an older one (a slow keyring read at startup, a superseded
+// check, a save finishing after sign-out) are dropped.
 class AccountController : public QObject {
     Q_OBJECT
     Q_PROPERTY(State state READ state NOTIFY changed)
@@ -64,6 +72,7 @@ public:
 
     Q_INVOKABLE void signInWithToken(const QString& token);
     Q_INVOKABLE void signOut();
+    // Re-checks the current session with SoundCloud (and expires it if the token stopped working).
     Q_INVOKABLE void refresh();
     // Discovery reads profile metadata only. importBrowserToken() is called after explicit in-app consent.
     Q_INVOKABLE void discoverBrowsers();
@@ -74,11 +83,16 @@ Q_SIGNALS:
     void busyChanged();
     void browserProfilesChanged();
     void browserBusyChanged();
-    void notice(const QString& kind, const QString& message);
+    // A toast; `actionId` is handled by App.triggerAction (e.g. "open-accounts").
+    void notice(const QString& kind, const QString& message, const QString& actionLabel = {},
+                const QString& actionId = {});
 
 private:
     void loadStored();
-    void verify(const QByteArray& token, bool interactive);
+    void verifyCandidate(const QByteArray& token);
+    void checkSession();
+    void expire();
+    void saveToken(const QByteArray& token);
     void applyUser(const api::User& user);
     void clearAccount();
     void setState(State state);
@@ -91,10 +105,13 @@ private:
     auth::ISecretStore& m_secrets;
     auth::IBrowserCookieSource* m_browsers;
     QVector<auth::BrowserProfile> m_profiles;
-    net::RequestHandle m_verify;
-    int m_verifyGen = 0;
-    bool m_verifying = false;
+    net::RequestHandle m_verify;  // the interactive check of a candidate token
+    net::RequestHandle m_check;   // the background check of the current session
+    QTimer m_retry;               // repeats a background check that failed for a non-auth reason (offline …)
+    std::chrono::milliseconds m_retryDelay;
+    int m_generation = 0;
     State m_state = SignedOut;
+    State m_beforeVerify = SignedOut;  // restored when a candidate token is refused
     bool m_busy = false;
     bool m_browserBusy = false;
     QString m_username;

@@ -75,6 +75,42 @@ struct Harness {
     }
 };
 
+// A memory store whose reads are held until release(), like a keyring that is slow to answer at startup.
+class SlowSecretStore final : public QObject, public auth::ISecretStore {
+public:
+    auth::MemorySecretStore inner;
+
+    void read(const QString& key, QObject* context, ReadCallback callback) override
+    {
+        m_held.push_back([this, key, context = QPointer(context), callback = std::move(callback)] {
+            if (context != nullptr) {
+                inner.read(key, context, callback);
+            }
+        });
+    }
+    void write(const QString& key, const QString& label, const QByteArray& secret, QObject* context,
+               WriteCallback callback) override
+    {
+        inner.write(key, label, secret, context, std::move(callback));
+    }
+    void remove(const QString& key, QObject* context, WriteCallback callback) override
+    {
+        inner.remove(key, context, std::move(callback));
+    }
+    [[nodiscard]] bool persistent() const noexcept override { return true; }
+    [[nodiscard]] bool keyringBacked() const noexcept override { return true; }
+
+    void release()
+    {
+        for (auto& held : std::exchange(m_held, {})) {
+            held();
+        }
+    }
+
+private:
+    std::vector<std::function<void()>> m_held;
+};
+
 class FakeBrowserSource final : public auth::IBrowserCookieSource {
 public:
     QVector<auth::BrowserProfile> profiles{{QStringLiteral("profile-1"),
@@ -244,6 +280,106 @@ TEST_SUITE("ui.account")
         CHECK(browsers.imports == 1);
         CHECK(h.session.token() == QByteArray("good-token"));
         CHECK(h.stored() == QByteArray("good-token"));
+    }
+
+    TEST_CASE("a refused token never reaches the session, other requests or its rejection signal")
+    {
+        Harness h("good-token");
+        AccountController account(h.client, h.session, h.secrets);
+        account.signInWithToken(QStringLiteral("good-token"));
+        REQUIRE(test::waitUntil([&] { return account.signedIn() && account.username() == u"nightowl"; }, 3000));
+
+        QByteArray sessionDuringCheck;
+        h.transport.setHandler([&](const net::Request& request) -> Result<net::Response> {
+            sessionDuringCheck = h.session.token();
+            const bool good = FakeApi::header(request, QByteArrayLiteral("authorization")) == "OAuth good-token";
+            return good ? FakeApi::reply(200, meJson(), jsonHeaders())
+                        : FakeApi::reply(401, R"({"error":"401 - Unauthorized"})", jsonHeaders());
+        });
+        QSignalSpy rejected(&h.session, &api::Session::rejected);
+        QSignalSpy notice(&account, &AccountController::notice);
+        account.signInWithToken(QStringLiteral("wrong-token"));
+        CHECK(h.session.token() == QByteArray("good-token"));  // not installed while it is being checked
+        REQUIRE(notice.wait(3000));
+        CHECK(notice.constFirst().constFirst().toString() == u"error");
+        CHECK(sessionDuringCheck == QByteArray("good-token"));
+        CHECK(account.state() == AccountController::SignedIn);
+        CHECK(h.session.token() == QByteArray("good-token"));
+        CHECK(h.stored() == QByteArray("good-token"));
+        CHECK(rejected.isEmpty());  // a wrong candidate says nothing about the working session
+    }
+
+    TEST_CASE("the check of a candidate token bypasses the HTTP cache")
+    {
+        Harness h("good-token");
+        AccountController account(h.client, h.session, h.secrets);
+        account.signInWithToken(QStringLiteral("good-token"));
+        REQUIRE(test::waitUntil([&] { return account.signedIn(); }, 3000));
+        const auto requests = h.transport.requests();
+        REQUIRE(requests.size() == 1);
+        CHECK(requests.front().cache == net::CacheMode::Bypass);
+    }
+
+    TEST_CASE("a token with spaces or line breaks is refused without any request")
+    {
+        Harness h;
+        AccountController account(h.client, h.session, h.secrets);
+        QSignalSpy notice(&account, &AccountController::notice);
+        account.signInWithToken(QStringLiteral("good-token\r\nX-Injected: 1"));
+        REQUIRE(notice.count() == 1);
+        CHECK(notice.constFirst().constFirst().toString() == u"error");
+        CHECK(h.transport.count() == 0);
+    }
+
+    TEST_CASE("signing out while a token is being checked is final")
+    {
+        Harness h("good-token");
+        AccountController account(h.client, h.session, h.secrets);
+        account.signInWithToken(QStringLiteral("good-token"));
+        CHECK(account.busy());
+        account.signOut();  // before /me has answered
+        CHECK_FALSE(account.busy());
+        test::waitUntil([] { return false; }, 300);
+        CHECK(account.state() == AccountController::SignedOut);
+        CHECK(h.session.token().isEmpty());
+        CHECK_FALSE(h.stored().has_value());
+    }
+
+    TEST_CASE("a slow startup read of the saved token does not override a newer sign-in")
+    {
+        Harness h("good-token");
+        SlowSecretStore secrets;
+        secrets.inner.write(QString::fromLatin1(kTokenKey), QStringLiteral("test"), "old-token", &secrets,
+                            [](const Result<void>&) {});
+        AccountController account(h.client, h.session, secrets);
+        account.signInWithToken(QStringLiteral("good-token"));
+        REQUIRE(test::waitUntil([&] { return account.signedIn(); }, 3000));
+
+        secrets.release();  // the startup read finally answers with the token of an earlier session
+        test::waitUntil([] { return false; }, 300);
+        CHECK(h.session.token() == QByteArray("good-token"));
+        CHECK(account.signedIn());
+        CHECK_FALSE(account.busy());
+    }
+
+    TEST_CASE("a saved token that stopped working expires at startup, offering to sign in")
+    {
+        Harness h("good-token");
+        h.preStore(QByteArray("dead-token"));
+        AccountController account(h.client, h.session, h.secrets);
+        QSignalSpy notice(&account, &AccountController::notice);
+        REQUIRE(test::waitUntil([&] { return account.state() == AccountController::Expired; }, 3000));
+        CHECK(h.session.token().isEmpty());
+        CHECK_FALSE(h.stored().has_value());
+        REQUIRE(test::waitUntil([&] { return !notice.isEmpty(); }));
+        const auto arguments = notice.constLast();
+        CHECK(arguments.at(0).toString() == u"warning");
+        CHECK(arguments.at(3).toString() == u"open-accounts");
+
+        // A refused attempt to sign in again keeps the session visibly expired.
+        account.signInWithToken(QStringLiteral("wrong-token"));
+        REQUIRE(test::waitUntil([&] { return !account.busy(); }, 3000));
+        CHECK(account.state() == AccountController::Expired);
     }
 
     TEST_CASE("browser reader and token failures do not replace the session")

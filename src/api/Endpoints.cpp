@@ -102,6 +102,14 @@ Endpoint<User> me()
     return get<User>(apiUrl(QStringLiteral("/me")), parse::user, kVolatile, Auth::Required);
 }
 
+Endpoint<User> verifyToken(const QByteArray& token)
+{
+    Endpoint<User> endpoint = me();
+    endpoint.request.candidateToken = token;
+    endpoint.request.cache = net::CacheMode::Bypass;
+    return endpoint;
+}
+
 Endpoint<Playlist> playlist(Id id)
 {
     return get<Playlist>(apiUrl(idPath("/playlists/", id)), parse::playlist, kMetadata);

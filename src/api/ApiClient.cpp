@@ -122,7 +122,9 @@ void ApiClient::admit(ApiRequest request, const std::shared_ptr<Subscriber>& sub
         finish(subscriber, fail(ErrorCode::InvalidArgument, "not a SoundCloud API URL"));
         return;
     }
-    const QByteArray token = request.auth == Auth::None ? QByteArray() : m_session.token();
+    const QByteArray token = request.auth == Auth::None          ? QByteArray()
+                             : !request.candidateToken.isEmpty() ? request.candidateToken
+                                                                 : m_session.token();
     if (request.auth == Auth::Required && token.isEmpty()) {
         finish(subscriber, fail(ErrorCode::SignInRequired, "endpoint needs a signed-in account"));
         return;
@@ -210,7 +212,7 @@ void ApiClient::transmit(const std::shared_ptr<Flight>& flight)
     }
     flight->tokenSent.clear();
     if (api.auth != Auth::None && !flight->anonymous) {
-        flight->tokenSent = m_session.token();
+        flight->tokenSent = api.candidateToken.isEmpty() ? m_session.token() : api.candidateToken;
         if (!flight->tokenSent.isEmpty()) {
             request.headers.append({QByteArrayLiteral("authorization"), "OAuth " + flight->tokenSent});
         } else if (api.auth == Auth::Required) {
@@ -238,6 +240,10 @@ void ApiClient::onFinished(const std::shared_ptr<Flight>& flight, Result<net::Re
     const bool canRepeat = flight->attempts < kMaxAttempts;
     switch (response.status) {
     case 401:
+        if (!flight->request.candidateToken.isEmpty()) {
+            complete(flight, fail(ErrorCode::Unauthorized, "the candidate OAuth token was rejected"));
+            return;
+        }
         if (!flight->tokenSent.isEmpty()) {
             m_session.reportRejected(flight->tokenSent);
             if (flight->request.auth == Auth::Optional && canRepeat) {

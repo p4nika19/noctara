@@ -96,6 +96,8 @@ void AppController::triggerAction(const QString& actionId)
 {
     if (actionId == u"restart") {
         restart();
+    } else if (actionId == u"open-accounts") {
+        Q_EMIT pageRequested(QStringLiteral("settings"), QStringLiteral("accounts"));
     }
 }
 

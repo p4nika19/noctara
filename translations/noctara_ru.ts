@@ -3104,17 +3104,17 @@
 <context>
     <name>noctara::ui::AccountController</name>
     <message>
-        <location filename="../src/ui/AccountController.cpp" line="+159"/>
+        <location filename="../src/ui/AccountController.cpp" line="+168"/>
         <source>Paste your SoundCloud OAuth token to sign in.</source>
         <translation>Вставьте OAuth-токен SoundCloud, чтобы войти.</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+54"/>
         <source>Noctara SoundCloud session</source>
         <translation>Сессия SoundCloud в Noctara</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-131"/>
         <source>Could not inspect the installed browser profiles.</source>
         <translation>Не удалось просмотреть установленные профили браузеров.</translation>
     </message>
@@ -3142,7 +3142,7 @@
         <translation>Поддерживаемые профили браузеров не найдены. Вы можете вставить OAuth-токен вручную.</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+23"/>
         <source>No SoundCloud session was found in this browser profile. Sign in to SoundCloud in that browser first, or paste your OAuth token.</source>
         <translation>В этом профиле браузера не найдена сессия SoundCloud. Сначала войдите в SoundCloud в этом браузере или вставьте OAuth-токен.</translation>
     </message>
@@ -3162,12 +3162,17 @@
         <translation>Не удалось прочитать выбранный профиль браузера. Вы можете вставить OAuth-токен вручную.</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="-22"/>
         <source>The selected browser profile is no longer available. Scan again.</source>
         <translation>Выбранный профиль браузера больше недоступен. Выполните сканирование снова.</translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+62"/>
+        <source>That does not look like an OAuth token. Copy only the oauth_token value, without spaces.</source>
+        <translation>Это не похоже на OAuth-токен. Скопируйте только значение oauth_token, без пробелов.</translation>
+    </message>
+    <message>
+        <location line="+57"/>
         <source>Signed in, but no persistent secret store is available, so you will need to sign in again after Noctara quits.</source>
         <translation>Вход выполнен, но постоянное хранилище секретов недоступно, поэтому после выхода из Noctara потребуется войти снова.</translation>
     </message>
@@ -3182,18 +3187,22 @@
         <translation>Вход выполнен. Поскольку системное хранилище ключей недоступно, сессия сохранена в зашифрованном локальном хранилище Noctara.</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="-24"/>
         <source>That token was not accepted. Copy the whole oauth_token value and try again.</source>
         <translation>Токен не принят. Скопируйте значение oauth_token целиком и попробуйте снова.</translation>
     </message>
     <message>
-        <location line="+12"/>
-        <location line="+29"/>
+        <location line="+73"/>
         <source>Your SoundCloud session has expired. Please sign in again.</source>
         <translation>Срок сессии SoundCloud истёк. Войдите снова.</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="+1"/>
+        <source>Sign in</source>
+        <translation>Войти</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Signed out of SoundCloud.</source>
         <translation>Выход из SoundCloud выполнен.</translation>
     </message>
@@ -3231,7 +3240,7 @@
         <translation>Не удалось запустить выбранный графический API; вместо него используется другой.</translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+58"/>
         <source>More configuration problems were found. See the log for details.</source>
         <translation>Найдены и другие проблемы в настройках. Подробности — в журнале.</translation>
     </message>

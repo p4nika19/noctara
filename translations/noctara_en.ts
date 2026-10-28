@@ -3096,17 +3096,17 @@
 <context>
     <name>noctara::ui::AccountController</name>
     <message>
-        <location filename="../src/ui/AccountController.cpp" line="+159"/>
+        <location filename="../src/ui/AccountController.cpp" line="+168"/>
         <source>Paste your SoundCloud OAuth token to sign in.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+54"/>
         <source>Noctara SoundCloud session</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-131"/>
         <source>Could not inspect the installed browser profiles.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3134,7 +3134,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+23"/>
         <source>No SoundCloud session was found in this browser profile. Sign in to SoundCloud in that browser first, or paste your OAuth token.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3154,12 +3154,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="-22"/>
         <source>The selected browser profile is no longer available. Scan again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+62"/>
+        <source>That does not look like an OAuth token. Copy only the oauth_token value, without spaces.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+57"/>
         <source>Signed in, but no persistent secret store is available, so you will need to sign in again after Noctara quits.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3174,18 +3179,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="-24"/>
         <source>That token was not accepted. Copy the whole oauth_token value and try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+12"/>
-        <location line="+29"/>
+        <location line="+73"/>
         <source>Your SoundCloud session has expired. Please sign in again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="+1"/>
+        <source>Sign in</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Signed out of SoundCloud.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3223,7 +3232,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+58"/>
         <source>More configuration problems were found. See the log for details.</source>
         <translation type="unfinished"></translation>
     </message>
