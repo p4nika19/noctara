@@ -10,25 +10,7 @@
 
 #include <QPointer>
 
-#include <future>
-
 namespace noctara::net {
-
-namespace {
-
-// Runs `function` on `target`'s thread and waits for it. A promise rather than Qt::BlockingQueuedConnection makes the
-// hand-back visible to ThreadSanitizer (Qt's own semaphore is inside the uninstrumented Qt library).
-template <class Function> void runAndWait(QObject* target, Function function)
-{
-    std::promise<void> done;
-    handoff::post(target, [&] {
-        function();
-        done.set_value();
-    });
-    done.get_future().wait();
-}
-
-}  // namespace
 
 // Everything that lives on the network thread.
 class NetworkCore : public QObject {
@@ -77,7 +59,7 @@ NetworkService::NetworkService(settings::SettingsStore& settings, QHash<QString,
     m_systemProxySource = envProxy ? ProxySource::Environment : desktopProxy ? ProxySource::Desktop : ProxySource::None;
     // Everything on the network thread is created there, so its timers and socket notifiers belong to it.
     m_anchor->moveToThread(&m_thread);
-    runAndWait(m_anchor, [&] {
+    handoff::runAndWait(m_anchor, [&] {
         m_core = new NetworkCore(std::move(environment), desktopProxy);  // NOLINT(cppcoreguidelines-owning-memory)
     });
     connect(&m_core->transport, &CurlTransport::requestFinished, this, &NetworkService::onRecord);
@@ -95,7 +77,7 @@ NetworkService::NetworkService(settings::SettingsStore& settings, QHash<QString,
 
 NetworkService::~NetworkService()
 {
-    runAndWait(m_anchor, [this] {
+    handoff::runAndWait(m_anchor, [this] {
         delete std::exchange(m_core, nullptr);    // NOLINT(cppcoreguidelines-owning-memory)
         delete std::exchange(m_anchor, nullptr);  // NOLINT(cppcoreguidelines-owning-memory)
     });

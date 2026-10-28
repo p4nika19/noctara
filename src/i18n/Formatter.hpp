@@ -36,6 +36,8 @@ public:
     [[nodiscard]] QString relativeTime(const QDateTime& when, const QDateTime& now) const;
     Q_INVOKABLE [[nodiscard]] QString time(const QDateTime& when) const;
     Q_INVOKABLE [[nodiscard]] QString date(const QDateTime& when) const;
+    // Translated message for an ErrorCode passed as int (e.g. a model's errorCode); empty for -1.
+    Q_INVOKABLE [[nodiscard]] QString error(int code) const;
 
     // Plural helpers used by C++ code (tray, notifications).
     [[nodiscard]] static QString tracks(int count);

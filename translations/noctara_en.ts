@@ -139,6 +139,62 @@
     </message>
 </context>
 <context>
+    <name>CatalogRow</name>
+    <message>
+        <location filename="../src/qml/components/CatalogRow.qml" line="+30"/>
+        <source>Loading</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1, %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>%1 followers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+3"/>
+        <source>%n track(s)</source>
+        <translation>
+            <numerusform>%n track</numerusform>
+            <numerusform>%n tracks</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>reposted by %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Album</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+77"/>
+        <source>Not cacheable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Protected track: it plays through the protected player and is never stored on this computer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Preview</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Only a 30-second preview is available to your account.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ColorPicker</name>
     <message>
         <location filename="../src/qml/components/ColorPicker.qml" line="+79"/>
@@ -257,12 +313,12 @@
     <name>Errors</name>
     <message>
         <location filename="../src/i18n/ErrorMessages.cpp" line="+11"/>
-        <location line="+77"/>
+        <location line="+85"/>
         <source>Something went wrong.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-84"/>
         <source>The operation was cancelled.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -472,6 +528,21 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Could not connect to SoundCloud: its web player changed. Try again later, or set a client ID under Advanced → SoundCloud.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>SoundCloud sent a response Noctara does not understand.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Sign in to your SoundCloud account to see this.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+11"/>
         <source>%1 (%2 in %3, line %4)</source>
         <extracomment>%1 = explanation, %2 = setting key, %3 = file name, %4 = line number</extracomment>
@@ -493,7 +564,7 @@
 <context>
     <name>Format</name>
     <message>
-        <location filename="../src/i18n/Formatter.cpp" line="+85"/>
+        <location filename="../src/i18n/Formatter.cpp" line="+86"/>
         <source>%1K</source>
         <comment>compact thousands, e.g. 1.2K</comment>
         <translation type="unfinished"></translation>
@@ -581,7 +652,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+29"/>
+        <location line="+34"/>
         <source>%n track(s)</source>
         <translation>
             <numerusform>%n track</numerusform>
@@ -666,12 +737,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+150"/>
+        <location line="+143"/>
         <source>Charts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-148"/>
+        <location line="-141"/>
         <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
@@ -681,17 +752,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+31"/>
-        <source>Search SoundCloud</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Find tracks, playlists and people once your account is connected.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+32"/>
         <source>Your library</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1048,9 +1109,72 @@
     </message>
 </context>
 <context>
+    <name>SearchPage</name>
+    <message>
+        <location filename="../src/qml/pages/SearchPage.qml" line="+20"/>
+        <source>Search</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Tracks, playlists, albums and people</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tracks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Playlists</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Albums</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>People</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+62"/>
+        <source>Nothing found for “%1”.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Offline: showing saved results</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Search SoundCloud</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Find tracks, playlists, albums and people. Results load as you scroll.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+160"/>
+        <location filename="../src/app/main.cpp" line="+164"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1065,13 +1189,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings/BuiltinSchema.cpp" line="+130"/>
-        <location line="+73"/>
+        <location filename="../src/settings/BuiltinSchema.cpp" line="+142"/>
+        <location line="+79"/>
         <source>Language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-78"/>
         <source>Interface language.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1087,23 +1211,23 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+95"/>
+        <location line="+101"/>
         <source>Theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-94"/>
+        <location line="-100"/>
         <source>Midnight (dark), Frost (light) or follow the system.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+118"/>
+        <location line="+124"/>
         <source>Accent color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-117"/>
+        <location line="-123"/>
         <source>The whole palette is generated from a single accent color.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1193,7 +1317,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+43"/>
         <source>System default</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1284,7 +1408,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-122"/>
         <source>The light behind the interface.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1399,7 +1523,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+3"/>
+        <source>Loading</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How lists of tracks, playlists and people are fetched from SoundCloud.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>SoundCloud</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How Noctara talks to SoundCloud&apos;s web API.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+75"/>
         <source>Vivid</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2492,6 +2636,26 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="+13"/>
+        <source>Items per request</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lists load more as you scroll. Larger requests mean fewer pauses but more data up front.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Client ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Empty: found automatically in SoundCloud&apos;s web player. Set it only if that stops working; it is not a secret and not tied to your account.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/settings/Schema.cpp" line="+142"/>
         <source>General</source>
         <translation type="unfinished"></translation>
@@ -2630,7 +2794,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+65"/>
         <source>No settings match “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2671,7 +2835,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+19"/>
         <source>Remove cached tracks?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2712,7 +2876,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+50"/>
         <source>%1 · %2</source>
         <extracomment>Legend entry of the cache usage meter: %1 = category, %2 = size</extracomment>
         <translation type="unfinished"></translation>
@@ -2785,6 +2949,14 @@
     <message>
         <location line="+10"/>
         <source>Remove</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Tag</name>
+    <message>
+        <location filename="../src/qml/components/Tag.qml" line="+18"/>
+        <source>%1: %2</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3101,7 +3273,7 @@
 <context>
     <name>noctara::ui::StorageController</name>
     <message>
-        <location filename="../src/ui/StorageController.cpp" line="+77"/>
+        <location filename="../src/ui/StorageController.cpp" line="+86"/>
         <source>The cache folder cannot be used, so caches are kept in memory only. %1</source>
         <extracomment>%1 = explanation of the error</extracomment>
         <translation type="unfinished"></translation>
@@ -3138,7 +3310,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+0"/>
         <source>In use: %1</source>
         <translation type="unfinished"></translation>
     </message>

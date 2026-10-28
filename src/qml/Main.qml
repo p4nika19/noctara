@@ -134,14 +134,7 @@ Window {
         }
 
         Page { pageId: "home"; sourceComponent: HomePage {} }
-        Page {
-            pageId: "search"
-            sourceComponent: EmptyPage {
-                iconName: "search"
-                title: qsTr("Search SoundCloud")
-                message: qsTr("Find tracks, playlists and people once your account is connected.")
-            }
-        }
+        Page { pageId: "search"; sourceComponent: SearchPage {} }
         Page {
             pageId: "library"
             sourceComponent: EmptyPage {

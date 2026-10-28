@@ -139,6 +139,63 @@
     </message>
 </context>
 <context>
+    <name>CatalogRow</name>
+    <message>
+        <location filename="../src/qml/components/CatalogRow.qml" line="+30"/>
+        <source>Loading</source>
+        <translation>Загрузка</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1, %2</source>
+        <translation>%1, %2</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>%1 followers</source>
+        <translation>Подписчиков: %1</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+3"/>
+        <source>%n track(s)</source>
+        <translation>
+            <numerusform>%n трек</numerusform>
+            <numerusform>%n трека</numerusform>
+            <numerusform>%n треков</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>reposted by %1</source>
+        <translation>репост: %1</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Album</source>
+        <translation>Альбом</translation>
+    </message>
+    <message>
+        <location line="+77"/>
+        <source>Not cacheable</source>
+        <translation>Не кэшируется</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Protected track: it plays through the protected player and is never stored on this computer.</source>
+        <translation>Защищённый трек: он воспроизводится через защищённый плеер и никогда не сохраняется на этом компьютере.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Preview</source>
+        <translation>Фрагмент</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Only a 30-second preview is available to your account.</source>
+        <translation>Вашей учётной записи доступен только 30-секундный фрагмент.</translation>
+    </message>
+</context>
+<context>
     <name>ColorPicker</name>
     <message>
         <location filename="../src/qml/components/ColorPicker.qml" line="+79"/>
@@ -257,12 +314,12 @@
     <name>Errors</name>
     <message>
         <location filename="../src/i18n/ErrorMessages.cpp" line="+11"/>
-        <location line="+77"/>
+        <location line="+85"/>
         <source>Something went wrong.</source>
         <translation>Что-то пошло не так.</translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-84"/>
         <source>The operation was cancelled.</source>
         <translation>Операция отменена.</translation>
     </message>
@@ -472,6 +529,21 @@
         <translation>Трек изменился на сервере и загружается заново.</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Could not connect to SoundCloud: its web player changed. Try again later, or set a client ID under Advanced → SoundCloud.</source>
+        <translation>Не удалось подключиться к SoundCloud: его веб-плеер изменился. Попробуйте позже или укажите идентификатор клиента в разделе «Дополнительно → SoundCloud».</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>SoundCloud sent a response Noctara does not understand.</source>
+        <translation>SoundCloud прислал ответ, который Noctara не понимает.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Sign in to your SoundCloud account to see this.</source>
+        <translation>Войдите в учётную запись SoundCloud, чтобы увидеть это.</translation>
+    </message>
+    <message>
         <location line="+11"/>
         <source>%1 (%2 in %3, line %4)</source>
         <extracomment>%1 = explanation, %2 = setting key, %3 = file name, %4 = line number</extracomment>
@@ -493,7 +565,7 @@
 <context>
     <name>Format</name>
     <message>
-        <location filename="../src/i18n/Formatter.cpp" line="+85"/>
+        <location filename="../src/i18n/Formatter.cpp" line="+86"/>
         <source>%1K</source>
         <comment>compact thousands, e.g. 1.2K</comment>
         <translation>%1 тыс.</translation>
@@ -586,7 +658,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+29"/>
+        <location line="+34"/>
         <source>%n track(s)</source>
         <translation>
             <numerusform>%n трек</numerusform>
@@ -672,12 +744,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+150"/>
+        <location line="+143"/>
         <source>Charts</source>
         <translation>Чарты</translation>
     </message>
     <message>
-        <location line="-148"/>
+        <location line="-141"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
@@ -687,17 +759,7 @@
         <translation>Понятно</translation>
     </message>
     <message>
-        <location line="+31"/>
-        <source>Search SoundCloud</source>
-        <translation>Поиск в SoundCloud</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Find tracks, playlists and people once your account is connected.</source>
-        <translation>Ищите треки, плейлисты и людей после подключения аккаунта.</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+32"/>
         <source>Your library</source>
         <translation>Ваша медиатека</translation>
     </message>
@@ -1054,9 +1116,72 @@
     </message>
 </context>
 <context>
+    <name>SearchPage</name>
+    <message>
+        <location filename="../src/qml/pages/SearchPage.qml" line="+20"/>
+        <source>Search</source>
+        <translation>Поиск</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Tracks, playlists, albums and people</source>
+        <translation>Треки, плейлисты, альбомы и люди</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>All</source>
+        <translation>Всё</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tracks</source>
+        <translation>Треки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Playlists</source>
+        <translation>Плейлисты</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Albums</source>
+        <translation>Альбомы</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>People</source>
+        <translation>Люди</translation>
+    </message>
+    <message>
+        <location line="+62"/>
+        <source>Nothing found for “%1”.</source>
+        <translation>По запросу «%1» ничего не найдено.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Try again</source>
+        <translation>Повторить</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Offline: showing saved results</source>
+        <translation>Нет сети: показаны сохранённые результаты</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Search SoundCloud</source>
+        <translation>Поиск в SoundCloud</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Find tracks, playlists, albums and people. Results load as you scroll.</source>
+        <translation>Ищите треки, плейлисты, альбомы и людей. Результаты подгружаются при прокрутке.</translation>
+    </message>
+</context>
+<context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+160"/>
+        <location filename="../src/app/main.cpp" line="+164"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation>Установленная libcurl собрана без поддержки HTTP/3.</translation>
     </message>
@@ -1071,13 +1196,13 @@
         <translation>Недоступно на этом графическом устройстве.</translation>
     </message>
     <message>
-        <location filename="../src/settings/BuiltinSchema.cpp" line="+130"/>
-        <location line="+73"/>
+        <location filename="../src/settings/BuiltinSchema.cpp" line="+142"/>
+        <location line="+79"/>
         <source>Language</source>
         <translation>Язык</translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-78"/>
         <source>Interface language.</source>
         <translation>Язык интерфейса.</translation>
     </message>
@@ -1093,23 +1218,23 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+95"/>
+        <location line="+101"/>
         <source>Theme</source>
         <translation>Тема</translation>
     </message>
     <message>
-        <location line="-94"/>
+        <location line="-100"/>
         <source>Midnight (dark), Frost (light) or follow the system.</source>
         <translation>Midnight (тёмная), Frost (светлая) или как в системе.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+118"/>
+        <location line="+124"/>
         <source>Accent color</source>
         <translation>Акцентный цвет</translation>
     </message>
     <message>
-        <location line="-117"/>
+        <location line="-123"/>
         <source>The whole palette is generated from a single accent color.</source>
         <translation>Вся палитра строится из одного акцентного цвета.</translation>
     </message>
@@ -1199,7 +1324,7 @@
         <translation>Как Noctara снижает собственное энергопотребление. Системный профиль питания не меняется.</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+43"/>
         <source>System default</source>
         <translation>Как в системе</translation>
     </message>
@@ -1290,7 +1415,7 @@
         <translation>Базовый цвет всей палитры, когда подбор по обложке выключен.</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-122"/>
         <source>The light behind the interface.</source>
         <translation>Свет за интерфейсом.</translation>
     </message>
@@ -1405,7 +1530,27 @@
         <translation>Сведения о треках, плейлистах и профилях из SoundCloud — чтобы страницы открывались быстро и работали без сети.</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+3"/>
+        <source>Loading</source>
+        <translation>Загрузка</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How lists of tracks, playlists and people are fetched from SoundCloud.</source>
+        <translation>Как списки треков, плейлистов и людей загружаются из SoundCloud.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>SoundCloud</source>
+        <translation>SoundCloud</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How Noctara talks to SoundCloud&apos;s web API.</source>
+        <translation>Как Noctara обращается к веб-API SoundCloud.</translation>
+    </message>
+    <message>
+        <location line="+75"/>
         <source>Vivid</source>
         <translation>Яркие</translation>
     </message>
@@ -2498,6 +2643,26 @@
         <translation>0 отключает кэш метаданных; тогда страницы всегда загружаются из сети.</translation>
     </message>
     <message>
+        <location line="+13"/>
+        <source>Items per request</source>
+        <translation>Элементов за запрос</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lists load more as you scroll. Larger requests mean fewer pauses but more data up front.</source>
+        <translation>Списки подгружаются при прокрутке. Чем больше запрос, тем реже паузы, но тем больше данных загружается сразу.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Client ID</source>
+        <translation>Идентификатор клиента</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Empty: found automatically in SoundCloud&apos;s web player. Set it only if that stops working; it is not a secret and not tied to your account.</source>
+        <translation>Пусто — определяется автоматически по веб-плееру SoundCloud. Указывайте вручную, только если это перестало работать; он не секретный и не связан с вашей учётной записью.</translation>
+    </message>
+    <message>
         <location filename="../src/settings/Schema.cpp" line="+142"/>
         <source>General</source>
         <translation>Общие</translation>
@@ -2636,7 +2801,7 @@
         <translation>Перезапустить</translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+65"/>
         <source>No settings match “%1”.</source>
         <translation>Нет настроек, подходящих под «%1».</translation>
     </message>
@@ -2677,7 +2842,7 @@
         <translation>Метаданные</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+19"/>
         <source>Remove cached tracks?</source>
         <translation>Удалить кэшированные треки?</translation>
     </message>
@@ -2718,7 +2883,7 @@
         <translation>Кэши занимают %1</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+50"/>
         <source>%1 · %2</source>
         <extracomment>Legend entry of the cache usage meter: %1 = category, %2 = size</extracomment>
         <translation>%1 · %2</translation>
@@ -2793,6 +2958,14 @@
         <location line="+10"/>
         <source>Remove</source>
         <translation>Удалить</translation>
+    </message>
+</context>
+<context>
+    <name>Tag</name>
+    <message>
+        <location filename="../src/qml/components/Tag.qml" line="+18"/>
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
     </message>
 </context>
 <context>
@@ -3108,7 +3281,7 @@
 <context>
     <name>noctara::ui::StorageController</name>
     <message>
-        <location filename="../src/ui/StorageController.cpp" line="+77"/>
+        <location filename="../src/ui/StorageController.cpp" line="+86"/>
         <source>The cache folder cannot be used, so caches are kept in memory only. %1</source>
         <extracomment>%1 = explanation of the error</extracomment>
         <translation>Папку кэша нельзя использовать, поэтому кэши хранятся только в памяти. %1</translation>
@@ -3145,7 +3318,7 @@
         <translation>Не используется: кэши хранятся только в памяти.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+0"/>
         <source>In use: %1</source>
         <translation>Используется: %1</translation>
     </message>

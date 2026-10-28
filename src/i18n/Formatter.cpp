@@ -1,5 +1,6 @@
 #include "i18n/Formatter.hpp"
 
+#include "i18n/ErrorMessages.hpp"
 #include "i18n/LanguageManager.hpp"
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
@@ -168,6 +169,11 @@ QString Formatter::time(const QDateTime& when) const
 QString Formatter::date(const QDateTime& when) const
 {
     return m_languages.locale().toString(when.toLocalTime().date(), QLocale::ShortFormat);
+}
+
+QString Formatter::error(int code) const
+{
+    return code < 0 ? QString() : errorMessage(static_cast<ErrorCode>(code));
 }
 
 QString Formatter::tracks(int count)

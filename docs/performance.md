@@ -65,6 +65,26 @@ noise next to the I/O, and hits share the buffer without copying.
 Idle cost: none. The cache thread sleeps; the index flush timer runs only after a change, memory pressure arrives
 as a kernel PSI event, and the Storage page re-reads usage at most once a second while the caches change.
 
+## Slice (e): SoundCloud API
+
+Release build. Reproduce with `noctara-tests --no-skip -tc="api parse benchmark"`.
+
+| Measurement (50-track search page, 80 KB of JSON) | Result |
+|---|---|
+| simdjson DOM → `Page<Entry>` of compact structs | ≈ 180 µs (≈ 445 MB/s) |
+| `QJsonDocument::fromJson`, tree only, no structs | ≈ 620 µs |
+| First version, with every URL as a `QUrl` | ≈ 410 µs |
+
+Without a profiler on the dev machine, the cost was found by elimination. Building `QUrl`s (7 per track) was 60 %
+of the total, so the structs keep URLs as text and requests build `QUrl`s when they need them. A fast path for
+SoundCloud's fixed ISO-8601 timestamps skips `QDateTime::fromString`; it made no measurable difference, but it is
+simpler than the general parser. Parsing runs on the API thread, never on the GUI thread. Each thread keeps one
+simdjson parser, so its buffers are reused. Bodies with enough spare capacity are parsed in place; anything else
+is copied once.
+
+Idle cost: none. The API thread sleeps, and the only timers are the 10 ms lookup-coalescing window and the pause
+after a 429, both started only on demand.
+
 ## Design choices that affect cost
 
 - Colors cross-fade by updating one gadget per frame for 400–500 ms. Icons do not re-rasterize per frame: they bind to `targetColors` and crossfade two cached images.

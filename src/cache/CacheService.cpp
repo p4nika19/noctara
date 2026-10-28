@@ -9,23 +9,11 @@
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
 
-#include <future>
-
 namespace noctara::cache {
 
 namespace {
 
 constexpr std::int64_t kMiB = 1024LL * 1024;
-
-template <class Function> void runAndWait(QObject* target, Function function)
-{
-    std::promise<void> done;
-    handoff::post(target, [&] {
-        function();
-        done.set_value();
-    });
-    done.get_future().wait();
-}
 
 }  // namespace
 
@@ -84,7 +72,7 @@ CacheService::CacheService(settings::SettingsStore& settings, net::INetworkTrans
     m_thread.start();
     m_anchor->moveToThread(&m_thread);
     FileOps& fileOps = ops != nullptr ? *ops : FileOps::posix();
-    runAndWait(m_anchor, [&] {
+    handoff::runAndWait(m_anchor, [&] {
         m_core = new CacheCore(network, m_memory, fileOps);  // NOLINT(cppcoreguidelines-owning-memory)
     });
     connect(&m_core->audio, &AudioCache::usageChanged, this, &CacheService::usageChanged);
@@ -108,7 +96,7 @@ CacheService::CacheService(settings::SettingsStore& settings, net::INetworkTrans
 CacheService::~CacheService()
 {
     const bool clearOnExit = m_settings.boolValue(settings::keys::ClearCacheOnExit);
-    runAndWait(m_anchor, [this, clearOnExit] {
+    handoff::runAndWait(m_anchor, [this, clearOnExit] {
         if (clearOnExit) {
             m_core->audio.clear();
             m_core->images.clear();
@@ -144,7 +132,7 @@ int CacheService::prefetchCount(bool metered) const
 
 void CacheService::runOnCacheThread(const std::function<void()>& function)
 {
-    runAndWait(m_anchor, function);
+    handoff::runAndWait(m_anchor, function);
 }
 
 void CacheService::scheduleApply()
@@ -165,7 +153,7 @@ void CacheService::apply()
         status = CacheStatus{};
         status.custom = !custom.isEmpty();
         // Layout, lock and the directory checks touch the disk: done on the cache thread.
-        runAndWait(m_anchor, [&] {
+        handoff::runAndWait(m_anchor, [&] {
             m_core->lock.reset();
             const auto prepare = [&](const QString& root) -> Result<CacheLayout> {
                 Result<CacheLayout> layout = prepareLayout(root);

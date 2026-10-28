@@ -1,6 +1,6 @@
 # Architecture
 
-This document grows with each slice. It currently covers slices (a) to (d).
+This document grows with each slice. It currently covers slices (a) to (e).
 
 ```
             ┌──────────────── app/main.cpp (composition root) ────────────────┐
@@ -17,7 +17,10 @@ This document grows with each slice. It currently covers slices (a) to (d).
 
 Slice (c) adds two modules: `net` (depends on `core` and `settings`: transport, DNS, proxy, diagnostics) and `auth`
 (depends on `core`: the secret store for now). Slice (d) adds `cache` (depends on `core`, `settings` and `net`: the
-audio RAM and disk tiers, the image cache, the HTTP cache). `ui` depends on all of them and `app` wires them up.
+audio RAM and disk tiers, the image cache, the HTTP cache). Slice (e) adds `api` (depends on `core`, `settings`,
+`net` and `cache`: SoundCloud's api-v2, client_id discovery, JSON parsing into domain structs, stream selection) and
+`models` (depends on `api`: list models for QML). `ui` depends on all of them and `app` wires them up. See
+[api.md](api.md).
 
 Static libraries per module (`noctara_<module>`); the executable only wires them together. Dependencies point downward only: `ui` may use everything, and `core` uses nothing but Qt Core.
 
@@ -101,7 +104,7 @@ for details.
                          settings (cache.*) ──► CacheService (GUI thread) ── budgets, location, lock
                                                       │ owns
                                                       ▼
-            cache thread:  CachingTransport (HTTP cache, <cache>/http) ──► API client (e)
+            cache thread:  CachingTransport (HTTP cache, <cache>/http) ◄── ApiClient (api thread)
                            ImageCache (RAM LRU + <cache>/images) ◄── image://cover/… (QML)
                            AudioCache (disk tier, <cache>/audio) ── one fetch per entry, Range requests
                                │  stores pieces                  └─► INetworkTransport (net thread)
@@ -129,4 +132,7 @@ DRM tracks never enter this path: `AudioCache::open` refuses them before anythin
   entry's condition variable for missing ones; everything that writes runs on the cache thread. Tagging and image
   decoding run on the thread pool and post their results back through a `Mailbox`, which drops them if the cache is
   gone.
+- The SoundCloud client lives on its own thread (`ApiService`, `noctara-api`), with `ClientIdProvider` and
+  `ApiClient` created and destroyed there. JSON is parsed on that thread; callers get finished structs through a
+  `CallbackChannel`. Models live on the GUI thread and hand the API only value types (endpoints, ids).
 - `AccentEngine` workers capture only copies of their inputs. Results carry a generation number, and stale ones are dropped. The backdrop images it hands to the image provider (loader threads) are guarded by a mutex.

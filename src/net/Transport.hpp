@@ -88,6 +88,14 @@ struct Callbacks {
     std::function<void(Result<Response>)> onFinished;
 };
 
+// Callbacks with only the completion handler.
+[[nodiscard]] inline Callbacks whenFinished(std::function<void(Result<Response>)> done)
+{
+    Callbacks callbacks;
+    callbacks.onFinished = std::move(done);
+    return callbacks;
+}
+
 // Lets the caller cancel a request; copies share the request. Dropping the handle does not cancel.
 class RequestHandle {
 public:

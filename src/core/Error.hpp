@@ -62,6 +62,11 @@ enum class ErrorCode : std::uint16_t {
     NotCacheable,    // protected (DRM) or encrypted media: never stored in any cache tier
     CacheLocked,     // another Noctara instance owns the cache directory
     ContentChanged,  // the source changed while an entry was being read; reopen it
+
+    // SoundCloud API
+    ClientIdUnavailable,  // the web client's client_id could not be found (the site changed, or it was rejected)
+    InvalidResponse,      // the API answered with JSON Noctara does not understand
+    SignInRequired,       // the endpoint needs an account and none is signed in
 };
 
 // Stable English identifier, used in logs and diagnostics.

@@ -3,6 +3,7 @@
 #include <QMetaObject>
 #include <QObject>
 
+#include <future>
 #include <mutex>
 #include <utility>
 
@@ -63,6 +64,18 @@ template <class Post> void send(Post post)
 template <class Function> void post(QObject* target, Function function)
 {
     send([&] { QMetaObject::invokeMethod(target, receive(std::move(function)), Qt::QueuedConnection); });
+}
+
+// Runs `function` on `target`'s thread and waits for it. A promise rather than Qt::BlockingQueuedConnection makes
+// the hand-back visible to ThreadSanitizer (Qt's own semaphore is inside the uninstrumented Qt library).
+template <class Function> void runAndWait(QObject* target, Function function)
+{
+    std::promise<void> done;
+    post(target, [&] {
+        function();
+        done.set_value();
+    });
+    done.get_future().wait();
 }
 
 }  // namespace noctara::handoff

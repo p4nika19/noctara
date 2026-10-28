@@ -42,6 +42,22 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 24. **A second instance runs without disk caches** (flock on `<cache>/lock`) instead of sharing them, and says so on the Storage page.
 25. **A custom cache location gets a `noctara` subfolder**, and caches are wiped only on a *different* layout-version marker, so pointing the setting at an existing folder can never delete user files.
 
+26. **The API is its own module (`api`), not part of `net`**: it maps tracks to the cache's `TrackInfo`, so it sits
+    above `cache`, and `net` stays free of SoundCloud knowledge. List models are a separate `models` module. See
+    [api.md](api.md).
+27. **simdjson (DOM, one parser per thread) behind `api/Parse`**, parsing into compact structs on the API thread.
+    A 50-track page parses into structs about 3.4× faster than `QJsonDocument` builds its tree alone. URLs are
+    kept as `QString`: building `QUrl`s cost more than the parse itself (see performance.md).
+28. **One `CollectionModel` for tracks, playlists and users** (`Entry` = variant + timestamp + reposter), since
+    search, the feed and likes mix kinds. Rows asked for while still stubs are hydrated through coalesced
+    `/tracks?ids=` lookups.
+29. **client_id: override → stored → discovered** (hydration data, then the last ≤ 8 asset scripts), single-flight and
+    throttled for 30 s after a failed discovery; all site-specific knowledge lives in `api/ClientId.cpp`.
+30. **The OAuth token goes only to SoundCloud's API hosts over https**, so a manipulated `next_href` or waveform URL
+    cannot leak it. `api::Session` holds the token in memory; auth/ fills it from the secret store (slice f).
+31. **Cover shapes are cut on the CPU by the image provider** (`image://cover/mask/<fraction>/…`, on Qt's image
+    loader thread), so rounded and circular covers look the same with and without shader effects.
+
 ## Slices
 
 (a) build system, skeleton, settings schema/store/TOML, graphics bootstrap, Theme tokens (Midnight and Frost), fonts, LanguageManager (en/ru), generated settings UI
@@ -55,10 +71,12 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 (i) DRM helper
 (j) polish and performance measurements
 
-Done: (a), (b), (c), (d).
+Done: (a), (b), (c), (d), (e).
 
 ## Open items flagged for verification
 - DoH over HTTP/2 against a local server is not covered by automated tests (the mock speaks HTTP/1.1); real providers negotiate HTTP/2 through ALPN.
 - castlabs Electron version and the `configureHostResolver` secure-DNS support (slice i).
-- Current SoundCloud api-v2 behaviour, including `client_id` discovery and transcodings (slice e).
+- Live api-v2 behaviour (client_id discovery, field names, transcodings, `/charts`) is covered by fixtures only; the
+  live check (`noctara-tests --no-skip -tc="real api*"`) needs internet access and has not been run from the
+  development sandbox. See [api.md](api.md#verification-status).
 - Glass GPU timings on a mainstream iGPU. The dev machine has a GTX 1070, so iGPU numbers need another machine; documented as such.

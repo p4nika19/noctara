@@ -93,4 +93,8 @@ inline constexpr std::string_view ImageRamMb = "cache.images.ram_mb";
 inline constexpr std::string_view ImageDiskMb = "cache.images.disk_mb";
 inline constexpr std::string_view MetadataDiskMb = "cache.metadata.disk_mb";
 
+inline constexpr std::string_view PageSize = "library.loading.page_size";
+
+inline constexpr std::string_view ClientId = "soundcloud.client_id";
+
 }  // namespace noctara::settings::keys

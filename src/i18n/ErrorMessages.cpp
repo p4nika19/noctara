@@ -84,6 +84,14 @@ QString errorMessage(ErrorCode code)
             "Errors", "Another Noctara window is using the cache, so this one keeps its cache in memory only.");
     case ErrorCode::ContentChanged:
         return QCoreApplication::translate("Errors", "The track changed on the server and is being reloaded.");
+    case ErrorCode::ClientIdUnavailable:
+        return QCoreApplication::translate(
+            "Errors", "Could not connect to SoundCloud: its web player changed. Try again later, or set a client ID "
+                      "under Advanced → SoundCloud.");
+    case ErrorCode::InvalidResponse:
+        return QCoreApplication::translate("Errors", "SoundCloud sent a response Noctara does not understand.");
+    case ErrorCode::SignInRequired:
+        return QCoreApplication::translate("Errors", "Sign in to your SoundCloud account to see this.");
     }
     return QCoreApplication::translate("Errors", "Something went wrong.");
 }

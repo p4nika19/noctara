@@ -1,3 +1,6 @@
+#include "api/ApiService.hpp"
+#include "api/Session.hpp"
+
 #include "auth/SecretStore.hpp"
 #include "cache/CacheService.hpp"
 #include "core/Log.hpp"
@@ -8,6 +11,7 @@
 #include "gfx/GraphicsBootstrap.hpp"
 #include "gfx/PowerMonitor.hpp"
 #include "gfx/Relaunch.hpp"
+#include "i18n/ErrorMessages.hpp"
 #include "i18n/Formatter.hpp"
 #include "i18n/LanguageManager.hpp"
 #include "net/CurlSupport.hpp"
@@ -23,6 +27,7 @@
 #include "theme/Theme.hpp"
 #include "ui/AppController.hpp"
 #include "ui/ArtworkProvider.hpp"
+#include "ui/CatalogController.hpp"
 #include "ui/CoverImageProvider.hpp"
 #include "ui/EffectsController.hpp"
 #include "ui/IconProvider.hpp"
@@ -310,6 +315,13 @@ int main(int argc, char** argv)
     QObject::connect(
         &storageUi, &ui::StorageController::notice, &appController,
         [&appController](const QString& kind, const QString& message) { appController.showToast(kind, message); });
+    // SoundCloud's api-v2 on its own thread, over the caching transport. The session token comes from auth/ (f).
+    api::Session session;
+    api::ApiService soundcloud(store, cache.transport(), session, paths.stateDir);
+    ui::CatalogController catalog(soundcloud);
+    QObject::connect(&session, &api::Session::rejected, &appController, [&appController] {
+        appController.showToast(QStringLiteral("warning"), i18n::errorMessage(ErrorCode::Unauthorized));
+    });
     QObject::connect(&config, &settings::ConfigFile::reloadIssues, &appController,
                      &ui::AppController::reportConfigIssues);
     config.setHotReloadEnabled(true);
@@ -333,6 +345,9 @@ int main(int argc, char** argv)
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Artwork", &accent);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Network", &networkUi);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Storage", &storageUi);
+    qmlRegisterSingletonInstance("Noctara", 1, 0, "Catalog", &catalog);
+    qmlRegisterUncreatableType<models::CollectionModel>("Noctara", 1, 0, "CollectionModel",
+                                                        QStringLiteral("Provided by Catalog"));
     qmlRegisterUncreatableType<ui::SettingsModel>("Noctara", 1, 0, "SettingsModel",
                                                   QStringLiteral("Provided by SettingsUi"));
     QObject::connect(&languages, &i18n::LanguageManager::languageChanged, &engine, &QQmlEngine::retranslate);

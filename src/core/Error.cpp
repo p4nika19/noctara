@@ -50,6 +50,9 @@ std::string_view errorCodeName(ErrorCode code) noexcept
     case ErrorCode::NotCacheable: return "NotCacheable";
     case ErrorCode::CacheLocked: return "CacheLocked";
     case ErrorCode::ContentChanged: return "ContentChanged";
+    case ErrorCode::ClientIdUnavailable: return "ClientIdUnavailable";
+    case ErrorCode::InvalidResponse: return "InvalidResponse";
+    case ErrorCode::SignInRequired: return "SignInRequired";
     }
     return "Unknown";
 }

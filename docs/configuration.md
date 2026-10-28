@@ -133,6 +133,16 @@ How densely pages are laid out.
 |---|---|---|---|---|
 | `density` | enum | `"cozy"` | `compact`, `cozy`, `airy` | **Density.** Spacing between sections, cards and rows. (env `NOCTARA_LAYOUT_CONTENT_DENSITY`) |
 
+## Library & Content
+
+### `[library.loading]` Loading
+
+How lists of tracks, playlists and people are fetched from SoundCloud.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `page_size` | integer | `50` | 10 … 200 | **Items per request.** Lists load more as you scroll. Larger requests mean fewer pauses but more data up front. (*advanced*, env `NOCTARA_LIBRARY_LOADING_PAGE_SIZE`) |
+
 ## Performance
 
 ### `[performance.gpu]` Graphics
@@ -270,3 +280,13 @@ Track, playlist and profile information from SoundCloud, so pages open quickly a
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
 | `disk_mb` | integer | `128` | 0 … 2048 | **Disk space for metadata.** 0 turns the metadata cache off; pages then always load from the network. (*advanced*, env `NOCTARA_CACHE_METADATA_DISK_MB`) |
+
+## Advanced
+
+### `[soundcloud]` SoundCloud
+
+How Noctara talks to SoundCloud's web API.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `client_id` | string | `""` | — | **Client ID.** Empty: found automatically in SoundCloud's web player. Set it only if that stops working; it is not a secret and not tied to your account. (env `NOCTARA_SOUNDCLOUD_CLIENT_ID`) |

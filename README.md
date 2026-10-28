@@ -2,7 +2,7 @@
 
 Noctara is a native SoundCloud desktop client written in C++23 and Qt 6 Quick. It uses glass surfaces over a backdrop taken from the cover art, comes with two themes (Midnight and Frost), and runs with GPU acceleration or a full software fallback. The UI is localized in English and Russian.
 
-> Status: slices (a)–(d) of the plan are done (foundations, glass pipeline, network stack: DNS/DoH, proxies, transport; caches: audio RAM and disk tiers, images, HTTP). See [docs/plan.md](docs/plan.md).
+> Status: slices (a)–(e) of the plan are done (foundations, glass pipeline, network stack: DNS/DoH, proxies, transport; caches: audio RAM and disk tiers, images, HTTP; SoundCloud api-v2 client, list models and search). See [docs/plan.md](docs/plan.md).
 
 ## Dependencies
 
@@ -19,9 +19,9 @@ Noctara is a native SoundCloud desktop client written in C++23 and Qt 6 Quick. I
 | OpenSSL (tests only: mock TLS server) | 3.6 | system, pkg-config |
 | doctest | 2.4.12 | xrepo (fetched automatically) |
 
-Arch: `pacman -S curl libproxy libsecret openssl taglib xxhash`; Debian/Ubuntu: `libcurl4-openssl-dev libproxy-dev
-libsecret-1-dev libssl-dev libtag-dev libxxhash-dev`. The build fails early if libcurl lacks SSL, HTTP2 or IPv6. Later
-slices add FFmpeg, sqlite and simdjson.
+Arch: `pacman -S curl libproxy libsecret openssl simdjson taglib xxhash`; Debian/Ubuntu: `libcurl4-openssl-dev
+libproxy-dev libsecret-1-dev libssl-dev libsimdjson-dev libtag-dev libxxhash-dev`. The build fails early if libcurl
+lacks SSL, HTTP2 or IPv6. Later slices add FFmpeg and sqlite.
 
 ## Build and run
 
@@ -57,7 +57,7 @@ Settings are layered with this precedence: defaults < `/etc/xdg/noctara/config.t
 
 ## Documentation
 
-[architecture](docs/architecture.md) · [design and tokens](docs/design.md) · [configuration](docs/configuration.md) · [GPU and fallbacks](docs/gpu.md) · [network](docs/network.md) · [caching](docs/caching.md) · [localization](docs/localization.md) · [performance](docs/performance.md)
+[architecture](docs/architecture.md) · [design and tokens](docs/design.md) · [configuration](docs/configuration.md) · [GPU and fallbacks](docs/gpu.md) · [network](docs/network.md) · [caching](docs/caching.md) · [SoundCloud API](docs/api.md) · [localization](docs/localization.md) · [performance](docs/performance.md)
 
 ## Licenses
 

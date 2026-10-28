@@ -7,6 +7,7 @@
 #include <QDir>
 #include <QUrl>
 
+#include <algorithm>
 #include <format>
 
 // Entries rely on designated initializers leaving defaulted fields out; that is the intended idiom here.
@@ -66,6 +67,17 @@ Result<void> validateAddresses(const QVariant& value)
         }
     }
     return {};
+}
+
+Result<void> validateClientId(const QVariant& value)
+{
+    const QString id = value.toString().trimmed();
+    const bool alphanumeric =
+        std::ranges::all_of(id, [](QChar c) { return c.isDigit() || (c.isLetter() && c.unicode() < 128); });
+    if (id.isEmpty() || (id.size() >= 24 && id.size() <= 64 && alphanumeric)) {
+        return {};
+    }
+    return invalid(id, "a client ID (24–64 letters and digits)");
 }
 
 Result<void> validateDohUrl(const QVariant& value)
@@ -185,6 +197,12 @@ std::vector<Section> builtinSections()
         {"cache.metadata", Storage, QT_TRANSLATE_NOOP("Settings", "Metadata"),
          QT_TRANSLATE_NOOP("Settings", "Track, playlist and profile information from SoundCloud, so pages open "
                                        "quickly and work offline.")},
+
+        {"library.loading", Library, QT_TRANSLATE_NOOP("Settings", "Loading"),
+         QT_TRANSLATE_NOOP("Settings", "How lists of tracks, playlists and people are fetched from SoundCloud.")},
+
+        {"soundcloud", Advanced, QT_TRANSLATE_NOOP("Settings", "SoundCloud"),
+         QT_TRANSLATE_NOOP("Settings", "How Noctara talks to SoundCloud's web API.")},
     };
 }
 
@@ -1062,6 +1080,31 @@ std::vector<Definition> builtinDefinitions()
                         "Settings", "0 turns the metadata cache off; pages then always load from the network."),
                     .unit = QT_TRANSLATE_NOOP("Settings", "MB"),
                     .flags = flag::Advanced});
+
+    // --- Library -------------------------------------------------------------------------------
+    defs.push_back({.key = keys::PageSize,
+                    .type = Type::Int,
+                    .defaultValue = integer(50),
+                    .min = 10,
+                    .max = 200,
+                    .step = 10,
+                    .category = Library,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Items per request"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Lists load more as you scroll. Larger requests mean fewer pauses but more data "
+                                    "up front."),
+                    .flags = flag::Advanced});
+
+    // --- Advanced ------------------------------------------------------------------------------
+    defs.push_back({.key = keys::ClientId,
+                    .type = Type::String,
+                    .defaultValue = str(""),
+                    .category = Advanced,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Client ID"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Empty: found automatically in SoundCloud's web player. Set it only if that "
+                                    "stops working; it is not a secret and not tied to your account."),
+                    .validator = validateClientId});
 
     return defs;
 }
