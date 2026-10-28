@@ -12,6 +12,7 @@
 #include <format>
 #include <sys/stat.h>
 #include <system_error>
+#include <unistd.h>
 
 namespace noctara {
 
@@ -90,7 +91,11 @@ Result<void> ensureDirectory(const QString& path, mode_t mode)
     return {};
 }
 
-Result<void> writeFileAtomic(const QString& path, QByteArrayView data, mode_t mode, Durability durability)
+namespace {
+
+enum class Publish : std::uint8_t { Replace, CreateOnly };
+
+Result<void> writeViaTemp(const QString& path, QByteArrayView data, mode_t mode, Durability durability, Publish publish)
 {
     const QFileInfo info(path);
     if (auto dir = ensureDirectory(info.absolutePath()); !dir) {
@@ -124,10 +129,21 @@ Result<void> writeFileAtomic(const QString& path, QByteArrayView data, mode_t mo
     }
     fd.reset();
 
-    if (::rename(nativeTemp.constData(), nativeTarget.constData()) != 0) {
+    if (publish == Publish::Replace) {
+        if (::rename(nativeTemp.constData(), nativeTarget.constData()) != 0) {
+            const int err = errno;
+            cleanup();
+            return fail(errorCodeFromErrno(err), errnoDetail("rename", path, err));
+        }
+    } else {
+        // link() never replaces an existing file, so of two concurrent creators exactly one wins.
+        const int linked = ::link(nativeTemp.constData(), nativeTarget.constData());
         const int err = errno;
         cleanup();
-        return fail(errorCodeFromErrno(err), errnoDetail("rename", path, err));
+        if (linked != 0) {
+            return fail(err == EEXIST ? ErrorCode::AlreadyExists : errorCodeFromErrno(err),
+                        errnoDetail("link", path, err));
+        }
     }
 
     // Persist the rename itself; failure here is not fatal for correctness of the content.
@@ -140,6 +156,18 @@ Result<void> writeFileAtomic(const QString& path, QByteArrayView data, mode_t mo
         ::fsync(dirFd.get());
     }
     return {};
+}
+
+}  // namespace
+
+Result<void> writeFileAtomic(const QString& path, QByteArrayView data, mode_t mode, Durability durability)
+{
+    return writeViaTemp(path, data, mode, durability, Publish::Replace);
+}
+
+Result<void> createFileAtomic(const QString& path, QByteArrayView data, mode_t mode)
+{
+    return writeViaTemp(path, data, mode, Durability::Synced, Publish::CreateOnly);
 }
 
 }  // namespace noctara

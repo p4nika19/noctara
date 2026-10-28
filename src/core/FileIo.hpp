@@ -24,6 +24,10 @@ enum class Durability : std::uint8_t {
 [[nodiscard]] Result<void> writeFileAtomic(const QString& path, QByteArrayView data, mode_t mode = 0600,
                                            Durability durability = Durability::Synced);
 
+// Like writeFileAtomic, but never replaces an existing file: fails with ErrorCode::AlreadyExists instead, so
+// concurrent creators (two processes) agree on one content.
+[[nodiscard]] Result<void> createFileAtomic(const QString& path, QByteArrayView data, mode_t mode = 0600);
+
 // Creates the directory (and parents) with the given permissions for newly created components.
 [[nodiscard]] Result<void> ensureDirectory(const QString& path, mode_t mode = 0700);
 

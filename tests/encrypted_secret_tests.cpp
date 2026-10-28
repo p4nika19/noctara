@@ -138,4 +138,24 @@ TEST_SUITE("auth.encrypted-secret-store")
         REQUIRE(writeFileAtomic(path + QStringLiteral("/master.key"), QByteArray(32, 'x')));
         CHECK(test::errorOf(readSecret(store, QStringLiteral("key"))) == ErrorCode::Corrupt);
     }
+
+    TEST_CASE("the master key is created once and never replaced")
+    {
+        QTemporaryDir directory;
+        const QString path = directory.path() + QStringLiteral("/master.key");
+        REQUIRE(createFileAtomic(path, QByteArray(32, 'a')));
+        // A second creator (another Noctara instance starting at the same time) loses instead of replacing it.
+        CHECK(test::errorOf(createFileAtomic(path, QByteArray(32, 'b'))) == ErrorCode::AlreadyExists);
+        auto stored = readWholeFile(path);
+        REQUIRE(stored);
+        CHECK(*stored == QByteArray(32, 'a'));
+        CHECK(QDir(directory.path()).entryList(QDir::Files | QDir::Hidden).size() == 1);  // no temp file left
+        CHECK_FALSE(QFileInfo(path).permissions().testFlag(QFileDevice::ReadOther));
+
+        auth::EncryptedFileSecretStore store(directory.path());
+        writeSecret(store, QStringLiteral("key"), QByteArrayLiteral("secret"));
+        auto again = readWholeFile(path);
+        REQUIRE(again);
+        CHECK(*again == QByteArray(32, 'a'));  // the store used the existing key
+    }
 }

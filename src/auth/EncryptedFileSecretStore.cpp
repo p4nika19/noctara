@@ -62,7 +62,7 @@ Result<SensitiveBytes> masterKey(const QString& directory)
         return std::unexpected(created.error());
     }
     const QString path = directory + QStringLiteral("/master.key");
-    if (QFileInfo::exists(path)) {
+    const auto load = [&path] -> Result<SensitiveBytes> {
         Result<QByteArray> stored = readWholeFile(path);
         if (!stored) {
             return std::unexpected(stored.error());
@@ -71,14 +71,18 @@ Result<SensitiveBytes> masterKey(const QString& directory)
             return fail(ErrorCode::Corrupt, "Encrypted secret-store master key has the wrong size");
         }
         return SensitiveBytes(*stored);  // shares the buffer: the key outlives `stored`, which must not wipe it
+    };
+    if (QFileInfo::exists(path)) {
+        return load();
     }
 
     SensitiveBytes key(kKeySize, Qt::Uninitialized);
     if (RAND_bytes(reinterpret_cast<unsigned char*>(key.data()), static_cast<int>(key.size())) != 1) {
         return fail(ErrorCode::Unknown, "Could not generate the encrypted secret-store master key");
     }
-    if (auto written = writeFileAtomic(path, key); !written) {
-        return std::unexpected(written.error());
+    // Never replace a key another instance created meanwhile: its secrets would become undecryptable.
+    if (auto written = createFileAtomic(path, key); !written) {
+        return written.error().code == ErrorCode::AlreadyExists ? load() : std::unexpected(written.error());
     }
     return key;
 }
