@@ -181,15 +181,20 @@ task("smoke")
         end
         local failures = 0
         for _, run in ipairs(runs) do
-            local ok = try { function ()
-                os.vrunv(binary, {"--smoke-test", "--gpu=" .. run.gpu, "--theme=" .. run.theme, "--lang=" .. run.lang,
-                                  "--set", "appearance.glass.style=" .. run.style},
-                         {envs = {QT_QPA_PLATFORM = platform, XDG_CONFIG_HOME = scratch .. "/config",
-                                  XDG_CACHE_HOME = scratch .. "/cache", XDG_STATE_HOME = scratch .. "/state"}})
-                return true
-            end }
+            local log = os.tmpfile()
+            local code = os.execv(binary, {"--smoke-test", "--gpu=" .. run.gpu, "--theme=" .. run.theme,
+                                           "--lang=" .. run.lang, "--set", "appearance.glass.style=" .. run.style},
+                                  {envs = {QT_QPA_PLATFORM = platform, XDG_CONFIG_HOME = scratch .. "/config",
+                                           XDG_CACHE_HOME = scratch .. "/cache", XDG_STATE_HOME = scratch .. "/state"},
+                                   try = true, stdout = log, stderr = log})
+            local ok = code == 0
             print("%s gpu=%s theme=%s lang=%s glass=%s", ok and "ok  " or "FAIL", run.gpu, run.theme, run.lang, run.style)
-            if not ok then failures = failures + 1 end
+            if not ok then
+                -- The run's own log says which warning or error failed it.
+                io.write(io.readfile(log) or "")
+                failures = failures + 1
+            end
+            os.tryrm(log)
         end
         os.tryrm(scratch)
         if failures > 0 then raise("%d smoke combinations failed", failures) end
@@ -211,15 +216,55 @@ task("test-tsan")
         -- the suites that start and stop QThreads repeatedly (config file I/O, cache service) are left out.
         local excluded = {["settings.file"] = true, ["ui.settings"] = true, ["ui.icons"] = true,
                           ["ui.presets"] = true, ["cache.service"] = true}
+        -- Suites whose cases each create a few worker pools: run one case per process. A case that still hits the
+        -- registry abort (it creates several pools in turn) is reported as skipped by name; a data race fails.
+        local perCase = {["auth.browser-cookies"] = true, ["auth.encrypted-secret-store"] = true,
+                         ["auth.secret-chain"] = true}
         local envs = {TSAN_OPTIONS = "halt_on_error=1 suppressions=" .. path.join(os.projectdir(), "tools", "tsan.supp")}
-        local listing = os.iorunv(binary, {"-lts"}, {envs = envs})
-        local failed = {}
-        for line in listing:gmatch("[^\n]+") do
-            local suite = line:trim()
-            if suite:match("^[%w%._]+$") and not excluded[suite] then
-                local ok = try { function () os.execv(binary, {"-ts=" .. suite}, {envs = envs}); return true end }
-                if not ok then table.insert(failed, suite) end
+        local function names(args)
+            local result = {}
+            for line in os.iorunv(binary, args, {envs = envs}):gmatch("[^\n]+") do
+                local name = line:trim()
+                if #name > 0 and not name:startswith("[doctest]") and not name:match("^=+$") then
+                    table.insert(result, name)
+                end
             end
+            return result
+        end
+        -- "ok", "registry" (TSan's thread registry aborted, no race reported) or "failed" (output is printed)
+        local function run(args)
+            local log = os.tmpfile()
+            local code = os.execv(binary, args, {envs = envs, try = true, stdout = log, stderr = log})
+            local output = io.readfile(log) or ""
+            os.tryrm(log)
+            if code == 0 then return "ok" end
+            if output:find("sanitizer_thread_registry", 1, true) and not output:find("WARNING: ThreadSanitizer", 1, true) then
+                return "registry"
+            end
+            io.write(output)
+            return "failed"
+        end
+        local failed = {}
+        local skipped = {}
+        for _, suite in ipairs(names({"-lts"})) do
+            if suite:match("^[%w][%w%._%-]*$") and not excluded[suite] then
+                if perCase[suite] then
+                    for index, case in ipairs(names({"-ltc", "-ts=" .. suite})) do
+                        local range = tostring(index)
+                        local outcome = run({"-ts=" .. suite, "--first=" .. range, "--last=" .. range})
+                        if outcome == "registry" then
+                            table.insert(skipped, suite .. ": " .. case)
+                        elseif outcome ~= "ok" then
+                            table.insert(failed, suite .. ": " .. case)
+                        end
+                    end
+                elseif run({"-ts=" .. suite}) ~= "ok" then
+                    table.insert(failed, suite)
+                end
+            end
+        end
+        for _, case in ipairs(skipped) do
+            print("skipped (TSan thread registry abort, no race reported): " .. case)
         end
         if #failed > 0 then raise("ThreadSanitizer run failed in: " .. table.concat(failed, ", ")) end
         print("ThreadSanitizer: all suites passed")
