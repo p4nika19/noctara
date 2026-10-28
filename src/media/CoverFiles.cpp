@@ -8,6 +8,7 @@
 
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QImage>
 
 namespace noctara::media {
@@ -18,6 +19,22 @@ CoverFiles::CoverFiles(cache::ImageCache& images, QString directory, QObject* pa
     , m_directory(std::move(directory))
 {
     m_writer.setMaxThreadCount(1);
+    // Folders of earlier runs that ended without cleaning up (crash, SIGTERM): their process no longer exists.
+    m_writer.start([directory = m_directory] {
+        const QString name = directory.section(u'/', -1);
+        const QString prefix = name.left(name.lastIndexOf(u'-') + 1);
+        if (prefix.isEmpty()) {
+            return;
+        }
+        const QDir parent(directory.section(u'/', 0, -2));
+        for (const QString& entry : parent.entryList({prefix + u'*'}, QDir::Dirs | QDir::NoDotAndDotDot)) {
+            bool numeric = false;
+            const qint64 pid = entry.mid(prefix.size()).toLongLong(&numeric);
+            if (numeric && entry != name && !QFileInfo::exists(QStringLiteral("/proc/%1").arg(pid))) {
+                QDir(parent.filePath(entry)).removeRecursively();
+            }
+        }
+    });
 }
 
 CoverFiles::~CoverFiles()
