@@ -61,7 +61,10 @@ item, the tray icon and notifications; QML shows the now-playing bar and the que
 
 `PlaybackQueue` (pure, unit-tested) keeps items in playing order. Shuffling reorders only what comes after the
 current item and remembers the original order to return to; *play next* lands after the current item in both
-orders. *Repeat one* repeats on its own but a skip moves on; *Previous* restarts the track after 3 s.
+orders. The shuffle is a plain uniform Fisher–Yates shuffle (`std::shuffle`), with no weighting by artist or
+similarity, and it draws fresh randomness from `QRandomGenerator::global()` every time: when shuffle is turned on
+and when a new list starts while it is on. That generator is seeded from the operating system's entropy source
+(`getrandom` on Linux); nothing about the order is stored or repeatable between shuffles or sessions. *Repeat one* repeats on its own but a skip moves on; *Previous* restarts the track after 3 s.
 
 The controller prepares the following item (opens it and decodes ahead) only in the last 30 s plus the crossfade,
 so queue edits and stops do not download tracks that never play. Further items are prefetched into the cache by

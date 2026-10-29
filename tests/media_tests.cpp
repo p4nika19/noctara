@@ -458,35 +458,57 @@ TEST_SUITE("media.queue")
             many.push_back({.track = apiTrack(id)});
         }
         queue.replace(std::move(many), 4);
-        queue.setShuffle(true, 1234);
+        queue.setShuffle(true);
         CHECK(queue.currentItem()->track.id == 5);
         std::vector<api::Id> shuffled = order(queue);
         CHECK(std::vector<api::Id>(shuffled.begin(), shuffled.begin() + 5) == std::vector<api::Id>{1, 2, 3, 4, 5});
         CHECK_FALSE(std::ranges::is_sorted(shuffled));
         REQUIRE(queue.advance(false));
         const api::Id playing = queue.currentItem()->track.id;
-        queue.setShuffle(false, 0);
+        queue.setShuffle(false);
         CHECK(std::ranges::is_sorted(order(queue)));
         CHECK(queue.currentItem()->track.id == playing);
 
         // A new queue while shuffling starts with the chosen item.
-        queue.setShuffle(true, 99);
+        queue.setShuffle(true);
         queue.replace(items({10, 11, 12, 13}), 2);
         CHECK(queue.current() == 0);
         CHECK(queue.currentItem()->track.id == 12);
-        queue.setShuffle(false, 0);
+        queue.setShuffle(false);
         CHECK(order(queue) == std::vector<api::Id>{10, 11, 12, 13});
         CHECK(queue.currentItem()->track.id == 12);
+    }
+
+    TEST_CASE("every shuffle draws fresh randomness: the same queue shuffles differently each time")
+    {
+        const auto shuffled = [] {
+            PlaybackQueue queue;
+            std::vector<QueueItem> many;
+            for (api::Id id = 1; id <= 30; ++id) {
+                many.push_back({.track = apiTrack(id)});
+            }
+            queue.replace(std::move(many), 0);
+            queue.setShuffle(true);
+            return order(queue);
+        };
+        const std::vector<api::Id> first = shuffled();
+        const std::vector<api::Id> second = shuffled();
+        // Both keep the current item first and are permutations of the same items.
+        CHECK(first.front() == 1);
+        CHECK(second.front() == 1);
+        CHECK(std::ranges::is_permutation(first, second));
+        // Identical orders by chance: 1 in 29! (about 1e-31).
+        CHECK(first != second);
     }
 
     TEST_CASE("play next lands after the current item, also in the original order")
     {
         PlaybackQueue queue;
         queue.replace(items({1, 2, 3}), 0);
-        queue.setShuffle(true, 7);
+        queue.setShuffle(true);
         queue.insertNext(items({9}));
         CHECK(order(queue)[1] == 9);
-        queue.setShuffle(false, 0);
+        queue.setShuffle(false);
         CHECK(order(queue) == std::vector<api::Id>{1, 9, 2, 3});
     }
 }

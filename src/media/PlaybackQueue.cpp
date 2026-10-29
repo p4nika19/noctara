@@ -1,7 +1,8 @@
 #include "media/PlaybackQueue.hpp"
 
+#include <QRandomGenerator>
+
 #include <algorithm>
-#include <random>
 #include <unordered_map>
 
 namespace noctara::media {
@@ -33,7 +34,7 @@ void PlaybackQueue::replace(std::vector<QueueItem> items, int start)
         // The chosen item plays first; the rest follows in random order.
         std::rotate(m_items.begin(), m_items.begin() + m_current, m_items.begin() + m_current + 1);
         m_current = 0;
-        shuffleAfterCurrent(m_seed ^ static_cast<std::uint32_t>(m_nextUid));
+        shuffleAfterCurrent();
     }
 }
 
@@ -123,26 +124,25 @@ bool PlaybackQueue::jump(int index)
     return true;
 }
 
-void PlaybackQueue::shuffleAfterCurrent(std::uint32_t seed)
+void PlaybackQueue::shuffleAfterCurrent()
 {
-    std::mt19937 random(seed);
-    std::shuffle(m_items.begin() + (m_current + 1), m_items.end(), random);
+    // Uniform, unweighted; fresh randomness on every shuffle.
+    std::shuffle(m_items.begin() + (m_current + 1), m_items.end(), *QRandomGenerator::global());
 }
 
-void PlaybackQueue::setShuffle(bool shuffle, std::uint32_t seed)
+void PlaybackQueue::setShuffle(bool shuffle)
 {
     if (shuffle == m_shuffle) {
         return;
     }
     m_shuffle = shuffle;
-    m_seed = seed;
     if (shuffle) {
         m_original.clear();
         for (const QueueItem& item : m_items) {
             m_original.push_back(item.uid);
         }
         // Items already played stay where they are; only what is still to come is shuffled.
-        shuffleAfterCurrent(seed);
+        shuffleAfterCurrent();
         return;
     }
     // Back to the original order, the current item staying current.

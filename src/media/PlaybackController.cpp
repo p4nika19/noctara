@@ -9,7 +9,6 @@
 #include "settings/SettingsStore.hpp"
 
 #include <QCoreApplication>
-#include <QRandomGenerator>
 #include <QSet>
 
 #include <cmath>
@@ -68,7 +67,7 @@ PlaybackController::PlaybackController(Dependencies dependencies, QObject* paren
         m_session.volume = static_cast<double>(m_settings.intValue(keys::StartupVolume)) / 100.0;
         m_session.muted = false;
     }
-    m_queue.setShuffle(m_session.shuffle, QRandomGenerator::global()->generate());
+    m_queue.setShuffle(m_session.shuffle);
     m_queue.setRepeat(m_session.repeat);
     if (m_cache != nullptr) {
         m_prefetcher = std::make_unique<cache::Prefetcher>(m_cache->audio());
@@ -706,7 +705,7 @@ void PlaybackController::setShuffle(bool shuffle)
         return;
     }
     const int previous = m_queue.current();
-    m_queue.setShuffle(shuffle, QRandomGenerator::global()->generate());
+    m_queue.setShuffle(shuffle);
     queueEdited();
     m_queueModel.currentMoved(previous);
     Q_EMIT modesChanged();

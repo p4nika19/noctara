@@ -20,7 +20,9 @@ struct QueueItem {
 };
 
 // The play queue: items in playing order and the current one. Shuffling reorders the items after the current one
-// (and remembers the original order to return to); repeat decides what follows the last item. Pure logic.
+// with a uniform Fisher–Yates shuffle that draws fresh randomness from QRandomGenerator::global() (seeded from the
+// operating system's entropy source) every time, and remembers the original order to return to; repeat decides
+// what follows the last item.
 class PlaybackQueue {
 public:
     // Replaces the queue; `start` becomes current. With shuffle on, the others are shuffled around it.
@@ -34,7 +36,7 @@ public:
     // Makes `index` current.
     bool jump(int index);
 
-    void setShuffle(bool shuffle, std::uint32_t seed);
+    void setShuffle(bool shuffle);
     void setRepeat(Repeat repeat) noexcept { m_repeat = repeat; }
     [[nodiscard]] bool shuffle() const noexcept { return m_shuffle; }
     [[nodiscard]] Repeat repeat() const noexcept { return m_repeat; }
@@ -59,7 +61,7 @@ public:
 
 private:
     std::uint64_t assign(std::vector<QueueItem>& items);
-    void shuffleAfterCurrent(std::uint32_t seed);
+    void shuffleAfterCurrent();
 
     std::vector<QueueItem> m_items;
     std::vector<std::uint64_t> m_original;  // order before shuffling (uids)
@@ -67,7 +69,6 @@ private:
     bool m_shuffle = false;
     Repeat m_repeat = Repeat::Off;
     std::uint64_t m_nextUid = 1;
-    std::uint32_t m_seed = 0;
 };
 
 }  // namespace noctara::media
