@@ -33,13 +33,16 @@ Item {
 
         Repeater {
             model: toasts
+            // The roles are passed to Toast's own properties; re-declaring them here would shadow those and
+            // leave every toast blank with the default kind.
             delegate: Toast {
                 id: toast
                 required property int index
-                required property string kind
-                required property string message
-                required property string actionLabel
-                required property string actionId
+                required property var model
+                kind: model.kind
+                message: model.message
+                actionLabel: model.actionLabel
+                actionId: model.actionId
                 anchors.horizontalCenter: parent.horizontalCenter
                 onDismissed: toasts.remove(index)
 
