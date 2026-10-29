@@ -75,7 +75,18 @@ The pools drift very slowly (22–34 s sine loops, driven by a 12 Hz clock). The
 
 Hover adds an accent halo when *Button and selection glow* is on. Press scales to 0.94–0.96 with a decelerating curve and shades the bottom. *Reduce transparency* forces Solid, except for Clear.
 
-Panel blur algorithms (Dual Kawase / Gaussian / Liquid Glass shader) are a separate setting, `appearance.glass.style`, described next.
+The look of panels is two independent settings (split in slice h, config v7):
+
+- **Backdrop blur** (`appearance.glass.style`): `kawase` (Dual Kawase), `gaussian` or `solid` (no blur, opaque
+  surfaces).
+- **Surface style** (`appearance.glass.surface`): `frosted` (lit top edge, sheen, saturation/brightness lift,
+  shadow), `liquid` (Liquid Glass refraction; needs a blur, else frosted is used) or `flat` (only the blurred
+  backdrop, the tint and a hairline in the divider color: no lift, sheen, lit edge or shadow).
+
+So flat panels over a Dual Kawase blur, or frosted glass over a Gaussian one, are both possible. The *Plain* button
+material (a flat translucent fill and a hairline) goes with flat surfaces. The quality governor and energy saving
+still step down in the same order: Liquid Glass surfaces become frosted first (the "kawase" cap), then the blur
+goes. `Theme.glass.style` is the effective blur, `Theme.glass.surface`/`flat` the effective surface style.
 
 ## Glass pipeline
 
@@ -84,17 +95,17 @@ One shared pipeline, no per-panel blur:
 ```
 Backdrop (aurora | cover | dark, grain)
    └─ capture: ShaderEffectSource at 1/downsample of the window (only re-rendered when the backdrop changes)
-        ├─ kawase, liquid: Dual Kawase down x N -> up x N   (kawase_down.frag / kawase_up.frag)
+        ├─ kawase:   Dual Kawase down x N -> up x N   (kawase_down.frag / kawase_up.frag)
         └─ gaussian:       horizontal pass -> vertical pass   (gaussian.frag)
               └─ output texture ──► every GlassPanel samples the texel behind itself
                                        (glass.vert maps qt_Matrix back to window coordinates)
-                                       ├─ glass.frag   frosted: saturation/brightness lift, faint grain, SDF mask
-                                       └─ liquid.frag  Liquid Glass (opt-in surfaces only)
+                                       ├─ glass.frag   frosted (lift) or flat (no lift): faint grain, SDF mask
+                                       └─ liquid.frag  Liquid Glass surface style
 ```
 
 - **Parameters** come from `theme::blurPlan(style, strength, quality)`, which is pure and unit-tested. Quality changes the capture resolution (High 1/2, Medium 1/3, Low 1/4) and, at Low, removes one Kawase level. The offsets compensate, so the blur radius stays the same: the governor changes the cost, not the look. *Blur strength* maps to 1–5 Kawase levels, or to a Gaussian sigma of 2–40 px, which is captured at a resolution that keeps sigma at or below 3/5/8 texels.
 - **Cost does not grow with panels.** Each panel adds one quad that samples the shared texture. A static backdrop is never re-blurred. The aurora drift updates at 12 Hz, because it moves only a few pixels per second, so even the animated backdrop re-blurs about 12 times a second instead of at the display rate.
-- **Liquid Glass** is an original shader. The rounded-rectangle SDF provides the surface normal. Within `thickness` px of the rim, the sample is pulled inwards by up to `refraction` px (lens profile `rim²`), and R/G/B bend by 1 ± `dispersion`. Light comes from `lightAngle` (top-left): the rim facing the light gets a specular highlight, the whole rim gets a Fresnel lift, and the rim facing away gets the accent-tinted catch light (Midnight) and is darkened. The parameters are per scheme (`glassTokensFor`). With the Liquid Glass style every panel uses it (`GlassPanel.liquid`, on by default). List rows and other repeated items are never GlassPanels, so the effect does not multiply across lists. The specular highlight is a thin line on the rim (`rim⁸`), so large rounded corners facing the light do not flare.
+- **Liquid Glass** is an original shader. The rounded-rectangle SDF provides the surface normal. Within `thickness` px of the rim, the sample is pulled inwards by up to `refraction` px (lens profile `rim²`), and R/G/B bend by 1 ± `dispersion`. Light comes from `lightAngle` (top-left): the rim facing the light gets a specular highlight, the whole rim gets a Fresnel lift, and the rim facing away gets the accent-tinted catch light (Midnight) and is darkened. The parameters are per scheme (`glassTokensFor`). With the Liquid Glass surface style every panel uses it (`GlassPanel.liquid`, on by default). List rows and other repeated items are never GlassPanels, so the effect does not multiply across lists. The specular highlight is a thin line on the rim (`rim⁸`), so large rounded corners facing the light do not flare.
 - **Solid** (requested, *Reduce transparency*, software renderer, or the governor's last tier) uses the opaque `solid*` surfaces. No shader is loaded.
 - **Lit edge** (`RimLight.qml`). The light from above is drawn **on** the 1 px edge as a gradient stroke (`ShapePath.strokeGradient`, curve renderer, anti-aliased). It follows the rounded corners and fades out down the sides within about 1.6 × the radius. It replaced a straight 1 px inner line, which looked detached for three reasons: it stopped short of the corners, it sat one pixel below the edge (so the top looked doubled while the sides did not), and in Frost it was nearly opaque white. Glass panels and glass buttons use it. Liquid Glass panels light their own rim in the shader.
 - **Defaults:** *Glass tint* and *Grain* start at 0% (scale 0–100%). Tint 0% is the clearest, darkest glass in Midnight: since config v6 the scale is shifted by 20%, so the former 0% is now 20% and the former 80% is now 100% (stored values are migrated). Contrast is still enforced at every setting. Grain 0% means no grain. At 0% grain the backdrop keeps a dithering floor of one to two 8-bit steps, which is invisible as texture but removes the banding rings of wide radial gradients. Config v5 restores absolute values from the short-lived relative v4 format.
@@ -121,7 +132,7 @@ The settings UI is styled after the reference's appearance drawer:
 - **Categories.** Sidebar categories are lit pill items, the same treatment as the active navigation item.
 - **Buttons follow *Button material*:** text buttons (including Reset page and the per-section Reset buttons), icon buttons, dropdowns, and the tracks of segmented controls. Exceptions: primary actions (accent gradient) and the navigation rail (flat; its moving pill is the selection).
 - **Appearance page.** Starts with the **Theme** group: the colour tiles: Auto, Midnight and Frost, three tiles sharing the full width. They are the only control for `appearance.theme.mode` (a config-only key), so there is no separate Theme selector. Auto (the default) follows the desktop colour scheme live: Midnight when it is dark, Frost when it is light. A preset changes colours only: it sets the theme mode and never touches materials, shapes or layout. Midnight and Frost are product names and stay untranslated; "Auto" is translated. The active preset is detected by value.
-- **Performance page.** Starts with a live status block: renderer and device, effective glass style and quality, frame rate, GPU time per frame against the budget, the active frame cap, and why effects are reduced (governor, energy saving, software rendering). When the governor has lowered quality, a **Restore full quality** button appears. The *Glass style* and *Effects quality* rows show the same reasons as status lines.
+- **Performance page.** Starts with a live status block: renderer and device, effective glass style and quality, frame rate, GPU time per frame against the budget, the active frame cap, and why effects are reduced (governor, energy saving, software rendering). When the governor has lowered quality, a **Restore full quality** button appears. The *Backdrop blur*, *Surface style* and *Effects quality* rows show the same reasons as status lines.
 - **Quick Appearance panel.** Ctrl+Shift+A, or right-click the settings button. A dark glass drawer that slides in from the right, built from the same generated rows (`SettingsUi.subset(keys)`), with Reset (just those keys) and All settings.
 
 ## Components (`src/qml/components/`)

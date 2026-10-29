@@ -38,6 +38,21 @@ void PlaybackQueue::replace(std::vector<QueueItem> items, int start)
     }
 }
 
+void PlaybackQueue::restore(std::vector<QueueItem> items, int current, bool shuffle)
+{
+    assign(items);
+    m_items = std::move(items);
+    m_current = m_items.empty() ? -1 : std::clamp(current, 0, size() - 1);
+    m_shuffle = shuffle;
+    m_original.clear();
+    if (shuffle) {
+        // The order before shuffling is gone; turning shuffle off keeps this one.
+        for (const QueueItem& item : m_items) {
+            m_original.push_back(item.uid);
+        }
+    }
+}
+
 void PlaybackQueue::append(std::vector<QueueItem> items)
 {
     assign(items);

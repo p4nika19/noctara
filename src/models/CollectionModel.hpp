@@ -50,6 +50,7 @@ public:
         VerifiedRole,
         AlbumRole,
         PendingRole,  // a track known only by id, being fetched
+        OwnerIdRole,  // the uploader (tracks), owner (playlists) or the user itself
     };
     Q_ENUM(Role)
 

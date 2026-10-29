@@ -442,6 +442,26 @@ Result<std::vector<Track>> tracks(const QByteArray& json)
     return result;
 }
 
+Result<Page<Entry>> playlistTracks(const QByteArray& json)
+{
+    Result<element> root = document(json);
+    if (!root) {
+        return std::unexpected(root.error());
+    }
+    simdjson::dom::array list;
+    if ((*root)["tracks"].get_array().get(list) != simdjson::SUCCESS) {
+        return fail(ErrorCode::InvalidResponse, "expected a playlist with tracks");
+    }
+    Page<Entry> page;
+    page.items.reserve(list.size());
+    for (const element entry : list) {
+        if (Result<Track> track = trackFrom(entry)) {
+            page.items.push_back({.item = std::move(*track), .at = {}, .repostedBy = std::nullopt});
+        }
+    }
+    return page;
+}
+
 Result<Page<Entry>> collection(const QByteArray& json)
 {
     Result<element> root = document(json);

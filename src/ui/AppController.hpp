@@ -34,6 +34,10 @@ public:
     Q_INVOKABLE void restart();
     Q_INVOKABLE void triggerAction(const QString& actionId);
     Q_INVOKABLE void dismissGraphicsNotice();
+    // Puts text on the clipboard (links from context menus).
+    Q_INVOKABLE static void copyText(const QString& text);
+    // Opens a web link in the default browser.
+    Q_INVOKABLE static void openLink(const QString& url);
     // Bundled license texts shown in About (allow-listed ids: "manrope", "inter", "jetbrains-mono", "lucide").
     Q_INVOKABLE QString licenseText(const QString& id) const;
 

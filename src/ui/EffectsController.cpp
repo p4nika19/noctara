@@ -31,10 +31,7 @@ QString styleName(const QString& style)
     if (style == u"gaussian") {
         return QCoreApplication::translate("Effects", "Gaussian blur");
     }
-    if (style == u"liquid") {
-        return QCoreApplication::translate("Effects", "Liquid Glass");
-    }
-    return QCoreApplication::translate("Effects", "Solid");
+    return QCoreApplication::translate("Effects", "no blur");
 }
 
 QString qualityName(int quality)
@@ -139,17 +136,30 @@ void EffectsController::updateRowStatuses()
     }
     m_settingsUi.setRowStatus(keyName(keys::GlassStyle), styleStatus);
 
+    QString surfaceStatus;
+    if (glass.surface != glass.requestedSurface) {
+        if (!glass.blurred) {
+            surfaceStatus = QCoreApplication::translate("Effects", "Liquid Glass needs a blur: frosted glass is used.");
+        } else {
+            surfaceStatus =
+                m_state.energySaving
+                    ? QCoreApplication::translate("Effects", "Energy saving is active: frosted glass is used for now.")
+                    : QCoreApplication::translate("Effects",
+                                                  "Switched to frosted glass automatically to keep animations smooth.");
+        }
+    }
+    m_settingsUi.setRowStatus(keyName(keys::GlassSurface), surfaceStatus);
+
     QString qualityStatus;
     if (m_state.energySaving) {
         qualityStatus = QCoreApplication::translate("Effects", "Energy saving is active: effects run at %1 quality.")
                             .arg(qualityName(m_state.quality));
     } else if (m_state.governed) {
-        qualityStatus = QCoreApplication::translate(
-                            "Effects", "Lowered automatically to %1 because frames took too long. It is raised "
-                                       "again when there is headroom.")
-                            .arg(m_governor.tier() == gfx::Tier::Kawase || m_governor.tier() == gfx::Tier::Solid
-                                     ? styleName(glass.style)
-                                     : qualityName(m_state.quality));
+        qualityStatus =
+            QCoreApplication::translate("Effects",
+                                        "Lowered automatically to %1 because frames took too long. It is raised "
+                                        "again when there is headroom.")
+                .arg(m_governor.tier() == gfx::Tier::Solid ? styleName(glass.style) : qualityName(m_state.quality));
     }
     m_settingsUi.setRowStatus(keyName(keys::GlassQuality), qualityStatus);
 }

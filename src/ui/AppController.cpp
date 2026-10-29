@@ -9,8 +9,12 @@
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
 
+#include <QClipboard>
 #include <QCoreApplication>
+#include <QDesktopServices>
+#include <QGuiApplication>
 #include <QHash>
+#include <QUrl>
 
 namespace noctara::ui {
 
@@ -63,6 +67,20 @@ QString AppController::graphicsNotice() const
     case Reason::UserDisabled: break;
     }
     return {};
+}
+
+void AppController::copyText(const QString& text)
+{
+    QGuiApplication::clipboard()->setText(text);
+}
+
+void AppController::openLink(const QString& url)
+{
+    const QUrl link(url);
+    // Only web links: nothing from SoundCloud data may open local files or other schemes.
+    if (link.scheme() == u"https" || link.scheme() == u"http") {
+        QDesktopServices::openUrl(link);
+    }
 }
 
 void AppController::dismissGraphicsNotice()

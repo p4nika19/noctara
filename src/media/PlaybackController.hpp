@@ -49,6 +49,7 @@ class PlaybackController : public QObject {
     Q_PROPERTY(QString artworkUrl READ artworkUrl NOTIFY trackChanged)  // 500 px
     Q_PROPERTY(QString coverUrl READ coverUrl NOTIFY trackChanged)      // 300 px, for the bar
     Q_PROPERTY(QString permalink READ permalink NOTIFY trackChanged)
+    Q_PROPERTY(qint64 artistId READ artistId NOTIFY trackChanged)
     Q_PROPERTY(QString context READ context NOTIFY trackChanged)
     Q_PROPERTY(bool preview READ preview NOTIFY trackChanged)
     Q_PROPERTY(qint64 duration READ duration NOTIFY durationChanged)
@@ -88,7 +89,10 @@ public:
     PlaybackController& operator=(PlaybackController&&) = delete;
 
     // Plays a row of a list: a track (the list's other tracks become the queue) or a playlist (its tracks).
-    Q_INVOKABLE void playCollection(noctara::models::CollectionModel* model, int row);
+    // `context`: the playlist or page it plays from (shown in MPRIS and the queue).
+    Q_INVOKABLE void playCollection(noctara::models::CollectionModel* model, int row, const QString& context = {});
+    // Plays a list's tracks shuffled, starting at a random one (system-seeded randomness).
+    Q_INVOKABLE void shufflePlay(noctara::models::CollectionModel* model, const QString& context = {});
     // Adds a row (a track, or a playlist's tracks) after the current item or at the end of the queue.
     Q_INVOKABLE void enqueueCollection(noctara::models::CollectionModel* model, int row, bool next);
     void playTracks(std::vector<api::Track> tracks, int start, const QString& context);
@@ -120,6 +124,7 @@ public:
     [[nodiscard]] QString artworkUrl() const;
     [[nodiscard]] QString coverUrl() const;
     [[nodiscard]] QString permalink() const;
+    [[nodiscard]] qint64 artistId() const;
     [[nodiscard]] QString context() const;
     [[nodiscard]] bool preview() const;
     [[nodiscard]] qint64 duration() const noexcept { return m_duration; }
@@ -174,6 +179,7 @@ private:
     void prepareFollowing();
     void prefetchUpcoming();
     void playPlaylist(const api::Playlist& playlist, std::optional<bool> enqueueNext);
+    void restoreQueue(const SessionState& saved);
     void hydrateStubs();
     void hydrate(const std::vector<api::Id>& ids, std::function<void()> then);
     [[nodiscard]] std::optional<PlaybackSource> sourceFor(const QueueItem& item, ErrorCode* why = nullptr) const;
@@ -209,6 +215,7 @@ private:
     bool m_ended = false;        // the queue played to its end
     bool m_nextPrepared = false;
     int m_failuresInRow = 0;
+    qint64 m_resumeAt = 0;  // a restored queue starts here when played
     qint64 m_duration = 0;
     int m_error = -1;
     QList<float> m_waveform;

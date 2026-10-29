@@ -26,11 +26,19 @@ QString repeatName(Repeat repeat)
 
 QByteArray SessionState::toJson() const
 {
+    QJsonArray ids;
+    for (const qint64 id : queue) {
+        ids.append(id);
+    }
     const QJsonObject object{{QStringLiteral("version"), 1},
                              {QStringLiteral("volume"), volume},
                              {QStringLiteral("muted"), muted},
                              {QStringLiteral("shuffle"), shuffle},
-                             {QStringLiteral("repeat"), repeatName(repeat)}};
+                             {QStringLiteral("repeat"), repeatName(repeat)},
+                             {QStringLiteral("queue"), ids},
+                             {QStringLiteral("current"), current},
+                             {QStringLiteral("position"), positionMs},
+                             {QStringLiteral("context"), context}};
     return QJsonDocument(object).toJson(QJsonDocument::Compact);
 }
 
@@ -46,6 +54,16 @@ SessionState SessionState::fromJson(const QByteArray& json)
     state.shuffle = object.value(QStringLiteral("shuffle")).toBool();
     const QString repeat = object.value(QStringLiteral("repeat")).toString();
     state.repeat = repeat == u"all" ? Repeat::All : (repeat == u"one" ? Repeat::One : Repeat::Off);
+    for (const QJsonValue id : object.value(QStringLiteral("queue")).toArray()) {
+        if (id.isDouble() && id.toInteger() > 0 && state.queue.size() < kMaxQueue) {
+            state.queue.push_back(id.toInteger());
+        }
+    }
+    state.current = state.queue.empty() ? -1
+                                        : std::clamp(object.value(QStringLiteral("current")).toInt(-1), 0,
+                                                     static_cast<int>(state.queue.size()) - 1);
+    state.positionMs = std::max<qint64>(0, object.value(QStringLiteral("position")).toInteger());
+    state.context = object.value(QStringLiteral("context")).toString();
     return state;
 }
 

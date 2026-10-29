@@ -5,6 +5,7 @@ import Noctara
 //   frosted  milky glass veil with a sheen and light edge (default)
 //   liquid   glossy glass: bright rim, specular highlight, light caught at the bottom edge
 //   tinted   glass coloured by the accent
+//   plain    flat translucent fill and a hairline, no sheen or light edge (goes with flat surfaces)
 //   clear    outline only
 //   solid    opaque surface
 //   flat     invisible until hovered (toolbar/icon buttons)
@@ -29,6 +30,7 @@ Item {
         switch (material) {
         case "primary": return accent
         case "tinted": return alpha(accent, hovered ? 0.30 : 0.18)
+        case "plain": return dark ? white(hovered ? 0.12 : 0.07) : Qt.rgba(0, 0, 0, hovered ? 0.08 : 0.045)
         case "solid": return dark ? Qt.tint(Theme.colors.solidRaised, white(hovered ? 0.12 : 0.08))
                                   : Qt.tint(Theme.colors.solidRaised, Qt.rgba(0, 0, 0, hovered ? 0.06 : 0.03))
         case "clear":
@@ -43,6 +45,7 @@ Item {
         case "flat": return "transparent"
         case "tinted": return alpha(accent, 0.5)
         case "solid": return Theme.colors.outline
+        case "plain": return active ? alpha(accent, 0.55) : Theme.colors.divider
         case "liquid": return white(dark ? 0.30 : 0.95)
         default: return active ? alpha(accent, 0.55) : Theme.colors.edge
         }

@@ -3,10 +3,12 @@
 #include "theme/FontLoader.hpp"
 #include "theme/Palette.hpp"
 #include "theme/Tokens.hpp"
+#include "theme/UserTheme.hpp"
 
 #include <QObject>
 #include <QVariantAnimation>
 
+#include <memory>
 #include <optional>
 
 namespace noctara::settings {
@@ -58,6 +60,10 @@ public:
 
     // Seed extracted from the current artwork (AccentEngine); nullopt when there is none.
     void setArtworkSeed(std::optional<color::OkLch> seed);
+    // A user theme's overrides (null: the built-in look). Applied on top of the generated palette and tokens.
+    void setUserTheme(std::shared_ptr<const UserTheme> theme);
+    [[nodiscard]] const std::shared_ptr<const UserTheme>& userTheme() const noexcept { return m_userTheme; }
+
     // False in the software renderer: blur styles fall back to Solid.
     void setBlurAvailable(bool available);
     // Limits from the quality governor and energy saving: effects quality (0 low, 1 medium, 2 high), the most
@@ -112,6 +118,7 @@ private:
     int m_quality = 2;
     QString m_styleCap;
     bool m_backdropAnimationAllowed = true;
+    std::shared_ptr<const UserTheme> m_userTheme;
 };
 
 }  // namespace noctara::theme

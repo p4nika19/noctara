@@ -188,7 +188,8 @@ Schema::Schema(std::vector<Section> sections, std::vector<Definition> definition
         if (sec->category != def.category) {
             schemaDefect(std::format("key '{}' category differs from its section", def.key));
         }
-        if (def.label == nullptr || def.description == nullptr) {
+        // Shortcut rows are explained once by their section (the label says what the keys do).
+        if (def.label == nullptr || (def.description == nullptr && def.type != Type::Shortcut)) {
             schemaDefect(std::format("key '{}' lacks a label or description", def.key));
         }
         if (def.type == Type::Enum && def.options.empty()) {

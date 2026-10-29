@@ -242,6 +242,18 @@ TEST_SUITE("settings.toml")
         CHECK(on.unknownToml.empty());
     }
 
+    TEST_CASE("v6 Liquid Glass style splits into the Dual Kawase blur and the Liquid surface")
+    {
+        const auto liquid = parse("config_version = 6\n[appearance.glass]\nstyle = \"liquid\"\n");
+        REQUIRE(liquid.syntaxOk);
+        CHECK(liquid.issues.empty());
+        CHECK(parsedValue(liquid, keys::GlassStyle)->toString() == QStringLiteral("kawase"));
+        CHECK(parsedValue(liquid, keys::GlassSurface)->toString() == QStringLiteral("liquid"));
+        const auto gaussian = parse("config_version = 6\n[appearance.glass]\nstyle = \"gaussian\"\n");
+        CHECK(parsedValue(gaussian, keys::GlassStyle)->toString() == QStringLiteral("gaussian"));
+        CHECK_FALSE(parsedValue(gaussian, keys::GlassSurface).has_value());  // default (frosted)
+    }
+
     TEST_CASE("glass tint and grain: v4 relative values become absolute again, v3 values pass unchanged")
     {
         const auto v4 = parse("config_version = 4\n[appearance.glass]\nopacity = 0.3\ngrain = -0.35\n");

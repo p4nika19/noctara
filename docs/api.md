@@ -80,7 +80,9 @@ closure that runs on `context`'s thread. `fetch(client, endpoint, context, done)
 | `related(id)` | `/tracks/{id}/related` | optional |
 | `stream()` | `/stream` (the feed) | required |
 | `history()` | `/me/play-history/tracks` | required |
-| `charts(kind, genre)` | `/charts?kind=top\|trending&genre=` | optional |
+| `trending(genre)` | `/system-playlists/soundcloud:system-playlists:trending-by-genre:<genre>` | optional |
+| `followings(user)` | `/users/{id}/followings` | optional |
+| `library()` | `/me/library/all` | required |
 | `waveform(url)` | the track's `waveform_url` (wave.sndcdn.com) | none |
 | `streamUrl(transcoding, track_authorization)` | the transcoding's URL → `{"url": signed media URL}` | optional |
 
@@ -132,7 +134,8 @@ not the live service. The live check is a test that is skipped by default and ne
 It discovers the client_id, searches, resolves a permalink and resolves a stream URL. If SoundCloud changes the site,
 start in `api/ClientId.cpp` (discovery) and `api/Parse.cpp` (field names). Known unknowns:
 
-- `/charts` may be retired or limited by SoundCloud. The endpoint stays isolated, and the UI will hide charts if it
+- `/charts` was retired by SoundCloud (404 as of October 2026); the Charts page now uses the "trending by genre"
+  system playlists the web player shows. The endpoint stays isolated, and the UI will hide charts if it
   fails (slice h).
 - Whether api-v2 sends `Cache-Control` on listings is not known; the TTLs above apply when it does not.
 - Write endpoints (like, follow, repost) are not part of this slice; they arrive with the pages in slice (h).

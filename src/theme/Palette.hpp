@@ -132,6 +132,10 @@ struct ContrastResult {
 [[nodiscard]] std::vector<ContrastResult> checkContrast(const Palette& palette, Scheme scheme,
                                                         const SchemeTones& tones);
 
+// Moves every text, icon and accent role that falls below WCAG AA against the glass it sits on to a readable
+// tone (hue kept). Used after a user theme overrode colours, when "Enforce readable contrast" is on.
+[[nodiscard]] Palette enforceReadable(const Palette& palette, Scheme scheme, const SchemeTones& tones);
+
 inline constexpr double kContrastText = 4.5;
 inline constexpr double kContrastGraphic = 3.0;
 

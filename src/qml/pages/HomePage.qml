@@ -1,9 +1,10 @@
 import QtQuick
+import QtQuick.Window
 import Noctara
 import "../components"
 
-// Home: date and greeting, the now-playing card and recently played. Until an account is connected the
-// recently played cards show skeleton placeholders.
+// Home: date and greeting, the now-playing card, then recently played and the feed (signed in) or the current
+// charts (signed out), as rows of cards.
 Flickable {
     id: root
 
@@ -13,6 +14,20 @@ Flickable {
     ScrollBar.vertical: ScrollBar {}
 
     readonly property date now: new Date()
+
+    function load() {
+        if (Account.signedIn) {
+            Catalog.ensure("history")
+            Catalog.ensure("feed")
+        } else {
+            Catalog.ensure("charts")
+        }
+    }
+    Component.onCompleted: load()
+    Connections {
+        target: Account
+        function onChanged() { root.load() }
+    }
     readonly property int hour: now.getHours()
 
     Column {
@@ -110,32 +125,91 @@ Flickable {
             }
         }
 
-        Column {
-            width: column.width
-            spacing: Theme.space.md
-            Text {
-                text: qsTr("Recently played")
-                font: Theme.font.title
-                color: Theme.colors.textPrimary
+        CardRow {
+            visible: Account.signedIn
+            title: qsTr("Recently played")
+            model: Catalog.history
+            context: qsTr("History")
+            emptyText: qsTr("Nothing played yet.")
+        }
+        CardRow {
+            visible: Account.signedIn
+            title: qsTr("From your feed")
+            model: Catalog.feed
+            context: qsTr("Feed")
+            emptyText: qsTr("Follow people on SoundCloud and their new tracks and reposts appear here.")
+        }
+        CardRow {
+            visible: !Account.signedIn
+            title: qsTr("Top tracks right now")
+            model: Catalog.charts
+            context: qsTr("Charts")
+            emptyText: ""
+        }
+    }
+
+    // A titled, horizontally scrolling row of cards over the first page of a list.
+    component CardRow: Column {
+        id: cardRow
+        property string title
+        property CollectionModel model
+        property string context
+        property string emptyText
+        readonly property real cardWidth: (Layout.cardSize === "small" ? 140 : Layout.cardSize === "large" ? 220 : 172)
+                                          * Theme.scale
+        width: column.width
+        spacing: Theme.space.md
+        Text {
+            text: cardRow.title
+            font: Theme.font.title
+            color: Theme.colors.textPrimary
+            Accessible.role: Accessible.Heading
+        }
+        ListView {
+            id: cards
+            width: parent.width
+            height: cardRow.cardWidth + Theme.font.bodyStrong.pixelSize * 1.4 + Theme.font.caption.pixelSize * 1.4
+                    + Theme.space.lg
+            orientation: ListView.Horizontal
+            spacing: Theme.space.lg
+            clip: true
+            reuseItems: true
+            boundsBehavior: Flickable.StopAtBounds
+            model: cardRow.model
+            visible: cardRow.model.count > 0
+            delegate: Card {
+                width: cardRow.cardWidth
+                onActivated: {
+                    if (kind === "track")
+                        Player.playCollection(cardRow.model, index, cardRow.context)
+                    else if (kind === "playlist")
+                        Window.window.openPlaylist(itemId)
+                    else
+                        Window.window.openUser(itemId)
+                }
+                onPlayRequested: Player.playCollection(cardRow.model, index, cardRow.context)
+                onMenuRequested: point => Window.window.showCollectionMenu(cardRow.model, index, cardRow.context, this, point)
             }
-            Flow {
-                width: column.width
-                spacing: Theme.space.lg
-                Repeater {
-                    model: 6
-                    delegate: Column {
-                        spacing: Theme.space.sm
-                        Skeleton {
-                            width: 172 * Theme.scale
-                            height: width
-                            radius: Theme.coverShape === "circle" ? width / 2
-                                  : (Theme.coverShape === "square" ? 0 : Theme.radius.lg * 0.7)
-                        }
-                        Skeleton { width: 132 * Theme.scale; height: 12 * Theme.scale; radius: height / 2 }
-                        Skeleton { width: 90 * Theme.scale; height: 10 * Theme.scale; radius: height / 2 }
-                    }
+        }
+        Row {
+            visible: cardRow.model.count === 0 && cardRow.model.loading
+            spacing: Theme.space.lg
+            Repeater {
+                model: 5
+                delegate: Column {
+                    spacing: Theme.space.sm
+                    Skeleton { width: cardRow.cardWidth; height: width; radius: Theme.radius.md; loading: true }
+                    Skeleton { width: cardRow.cardWidth * 0.75; height: 12 * Theme.scale; radius: height / 2; loading: true }
                 }
             }
+        }
+        Text {
+            width: parent.width
+            visible: cardRow.model.count === 0 && !cardRow.model.loading && text.length > 0
+            text: cardRow.model.errorCode >= 0 ? Format.error(cardRow.model.errorCode) : cardRow.emptyText
+            font: Theme.font.body
+            color: Theme.colors.textSecondary
+            wrapMode: Text.Wrap
         }
     }
 }

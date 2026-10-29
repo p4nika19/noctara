@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <format>
+#include <tuple>
 
 // Entries rely on designated initializers leaving defaulted fields out; that is the intended idiom here.
 #pragma clang diagnostic ignored "-Wmissing-designated-field-initializers"
@@ -38,6 +39,50 @@ QVariant real(double value)
 Result<void> invalid(const QString& item, const char* expected)
 {
     return fail(ErrorCode::ConfigInvalidValue, std::format("'{}' is not {}", item.toStdString(), expected));
+}
+
+// Navigation pages: known ids, each at most once.
+Result<void> validateNavItems(const QVariant& value)
+{
+    static const QStringList known{QStringLiteral("home"),  QStringLiteral("search"),  QStringLiteral("library"),
+                                   QStringLiteral("likes"), QStringLiteral("history"), QStringLiteral("charts")};
+    QStringList seen;
+    for (const QString& item : value.toStringList()) {
+        if (!known.contains(item)) {
+            return invalid(item, "home, search, library, likes, history or charts");
+        }
+        if (seen.contains(item)) {
+            return invalid(item, "listed once");
+        }
+        seen.append(item);
+    }
+    return {};
+}
+
+// QKeySequence portable text of a single chord: modifiers then one key ("Ctrl+Shift+Q", "Space", "Ctrl+,"),
+// or empty for no shortcut. (QKeySequence itself lives in Qt GUI, which settings does not depend on.)
+Result<void> validateShortcut(const QVariant& value)
+{
+    const QString text = value.toString();
+    if (text.isEmpty()) {
+        return {};
+    }
+    static const QStringList modifiers{QStringLiteral("Ctrl"), QStringLiteral("Shift"), QStringLiteral("Alt"),
+                                       QStringLiteral("Meta")};
+    // The key may itself be "+" or ",": split the modifiers off the front.
+    QString rest = text;
+    while (true) {
+        const qsizetype plus = rest.indexOf(u'+');
+        if (plus <= 0 || plus == rest.size() - 1 || !modifiers.contains(rest.left(plus))) {
+            break;
+        }
+        rest = rest.mid(plus + 1);
+    }
+    if (rest.isEmpty() || (rest.size() > 1 && (rest.contains(u',') || rest.endsWith(u'+'))) ||
+        modifiers.contains(rest)) {
+        return invalid(text, "one key with optional Ctrl+, Shift+, Alt+ or Meta+ (e.g. Ctrl+Shift+Q)");
+    }
+    return {};
 }
 
 Result<void> validateHost(const QVariant& value)
@@ -165,6 +210,24 @@ std::vector<Section> builtinSections()
 
         {"layout.content", Layout, QT_TRANSLATE_NOOP("Settings", "Content"),
          QT_TRANSLATE_NOOP("Settings", "How densely pages are laid out.")},
+        {"layout.navigation", Layout, QT_TRANSLATE_NOOP("Settings", "Navigation"),
+         QT_TRANSLATE_NOOP("Settings", "Where the navigation sits and what it shows.")},
+        {"layout.player", Layout, QT_TRANSLATE_NOOP("Settings", "Player bar"),
+         QT_TRANSLATE_NOOP("Settings", "The bar with the current track.")},
+        {"layout.views", Layout, QT_TRANSLATE_NOOP("Settings", "Pages"),
+         QT_TRANSLATE_NOOP("Settings", "How each page shows its items.")},
+        {"layout.rows", Layout, QT_TRANSLATE_NOOP("Settings", "Track rows"),
+         QT_TRANSLATE_NOOP("Settings", "What a track row shows besides the title and artist.")},
+        {"layout.full_player", Layout, QT_TRANSLATE_NOOP("Settings", "Full-screen player"),
+         QT_TRANSLATE_NOOP("Settings", "The large player with the cover art.")},
+        {"layout.window", Layout, QT_TRANSLATE_NOOP("Settings", "Window"),
+         QT_TRANSLATE_NOOP("Settings", "The window frame, size and what happens at start and close.")},
+
+        {"keyboard.shortcuts", Keyboard, QT_TRANSLATE_NOOP("Settings", "Shortcuts"),
+         QT_TRANSLATE_NOOP("Settings", "Click a shortcut and press the new keys. Backspace removes it, Escape "
+                                       "cancels. Media keys always work.")},
+        {"keyboard.global", Keyboard, QT_TRANSLATE_NOOP("Settings", "Global shortcuts"),
+         QT_TRANSLATE_NOOP("Settings", "Shortcuts that work while Noctara is in the background.")},
 
         {"playback.stream", Playback, QT_TRANSLATE_NOOP("Settings", "Sound"),
          QT_TRANSLATE_NOOP("Settings", "Which of SoundCloud's streams is played.")},
@@ -261,6 +324,15 @@ std::vector<Definition> builtinDefinitions()
                     // Edited by the Auto / Midnight / Frost tiles at the top of the Appearance page.
                     .flags = flag::ConfigOnly,
                     .cliAlias = "theme"});
+    defs.push_back({.key = keys::CustomTheme,
+                    .type = Type::String,
+                    .defaultValue = str(""),
+                    .category = Appearance,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Custom theme"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "A theme file from the themes folder that overrides colors, shapes, fonts or "
+                                    "motion. Themes are data only and are reloaded when they change."),
+                    .flags = flag::Advanced});
     defs.push_back({.key = keys::EnforceContrast,
                     .type = Type::Bool,
                     .defaultValue = true,
@@ -351,14 +423,25 @@ std::vector<Definition> builtinDefinitions()
     defs.push_back({.key = keys::GlassStyle,
                     .type = Type::Enum,
                     .defaultValue = str("kawase"),
-                    .options = {{"kawase", QT_TRANSLATE_NOOP("Settings", "Dual Kawase blur")},
-                                {"gaussian", QT_TRANSLATE_NOOP("Settings", "Gaussian blur")},
-                                {"liquid", QT_TRANSLATE_NOOP("Settings", "Liquid Glass")},
-                                {"solid", QT_TRANSLATE_NOOP("Settings", "Solid (no blur)")}},
+                    .options = {{"kawase", QT_TRANSLATE_NOOP("Settings", "Dual Kawase")},
+                                {"gaussian", QT_TRANSLATE_NOOP("Settings", "Gaussian")},
+                                {"solid", QT_TRANSLATE_NOOP("Settings", "None (opaque)")}},
                     .category = Appearance,
-                    .label = QT_TRANSLATE_NOOP("Settings", "Glass style"),
+                    .label = QT_TRANSLATE_NOOP("Settings", "Backdrop blur"),
                     .description = QT_TRANSLATE_NOOP(
-                        "Settings", "Blur styles need hardware acceleration; Solid is the cheapest.")});
+                        "Settings", "How the backdrop behind surfaces is blurred. Blurs need hardware acceleration; "
+                                    "None is the cheapest. Works with every surface style.")});
+    defs.push_back({.key = keys::GlassSurface,
+                    .type = Type::Enum,
+                    .defaultValue = str("frosted"),
+                    .options = {{"frosted", QT_TRANSLATE_NOOP("Settings", "Frosted glass")},
+                                {"liquid", QT_TRANSLATE_NOOP("Settings", "Liquid Glass")},
+                                {"flat", QT_TRANSLATE_NOOP("Settings", "Flat")}},
+                    .category = Appearance,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Surface style"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Frosted: lit edges, sheen and depth. Liquid Glass: refractive edges (needs a "
+                                    "blur). Flat: the blurred backdrop and a tint, without highlights or shadows.")});
     defs.push_back({.key = keys::GlassBlurStrength,
                     .type = Type::Real,
                     .defaultValue = real(0.6),
@@ -368,7 +451,7 @@ std::vector<Definition> builtinDefinitions()
                     .category = Appearance,
                     .label = QT_TRANSLATE_NOOP("Settings", "Blur strength"),
                     .description = QT_TRANSLATE_NOOP("Settings", "How strongly the backdrop is blurred."),
-                    .visibleWhen = Condition{keys::GlassStyle, {"kawase", "gaussian", "liquid"}}});
+                    .visibleWhen = Condition{keys::GlassStyle, {"kawase", "gaussian"}}});
     defs.push_back({.key = keys::GlassOpacity,
                     .type = Type::Real,
                     .defaultValue = real(0.0),
@@ -405,13 +488,14 @@ std::vector<Definition> builtinDefinitions()
          .options = {{"frosted", QT_TRANSLATE_NOOP("Settings", "Frosted glass")},
                      {"liquid", QT_TRANSLATE_NOOP("Settings", "Liquid glass")},
                      {"tinted", QT_TRANSLATE_NOOP("Settings", "Tinted glass")},
+                     {"plain", QT_TRANSLATE_NOOP("Settings", "Plain")},
                      {"clear", QT_TRANSLATE_NOOP("Settings", "Clear")},
                      {"solid", QT_TRANSLATE_NOOP("Settings", "Solid")}},
          .category = Appearance,
          .label = QT_TRANSLATE_NOOP("Settings", "Button material"),
          .description = QT_TRANSLATE_NOOP(
              "Settings", "Frosted: milky blurred glass. Liquid: glossy glass with a bright rim. Tinted: glass coloured "
-                         "by the accent. Clear: outline only. Solid: opaque.")});
+                         "by the accent. Plain: a flat translucent fill. Clear: outline only. Solid: opaque.")});
     defs.push_back({.key = keys::ReduceTransparency,
                     .type = Type::Bool,
                     .defaultValue = false,
@@ -603,6 +687,13 @@ std::vector<Definition> builtinDefinitions()
                     .description = QT_TRANSLATE_NOOP(
                         "Settings", "When the queue ends, keep playing tracks related to the last one. Repeat "
                                     "takes precedence.")});
+    defs.push_back({.key = keys::RestoreQueue,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Playback,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Restore the queue"),
+                    .description = QT_TRANSLATE_NOOP("Settings",
+                                                     "Open with the queue, track and position of last time, paused.")});
     defs.push_back({.key = keys::MediaControls,
                     .type = Type::Bool,
                     .defaultValue = true,
@@ -626,6 +717,227 @@ std::vector<Definition> builtinDefinitions()
                     .description = QT_TRANSLATE_NOOP(
                         "Settings", "Shows a desktop notification with the next track while Noctara's window is "
                                     "not in front.")});
+
+    defs.push_back({.key = keys::NavPosition,
+                    .type = Type::Enum,
+                    .defaultValue = str("left"),
+                    .options = {{"left", QT_TRANSLATE_NOOP("Settings", "Left")},
+                                {"right", QT_TRANSLATE_NOOP("Settings", "Right")},
+                                {"bottom", QT_TRANSLATE_NOOP("Settings", "Bottom")}},
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Position"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Which edge of the window the navigation sits on.")});
+    defs.push_back({.key = keys::NavMode,
+                    .type = Type::Enum,
+                    .defaultValue = str("compact"),
+                    .options = {{"compact", QT_TRANSLATE_NOOP("Settings", "Icons")},
+                                {"expanded", QT_TRANSLATE_NOOP("Settings", "Icons and labels")},
+                                {"auto_hide", QT_TRANSLATE_NOOP("Settings", "Auto-hide")}},
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Style"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Auto-hide shows the navigation when the pointer reaches its edge.")});
+    defs.push_back(
+        {.key = keys::NavItems,
+         .type = Type::StringList,
+         .defaultValue = QVariant::fromValue(QStringList{QStringLiteral("home"), QStringLiteral("search"),
+                                                         QStringLiteral("library"), QStringLiteral("likes"),
+                                                         QStringLiteral("history"), QStringLiteral("charts")}),
+         .category = Layout,
+         .label = QT_TRANSLATE_NOOP("Settings", "Pages in the navigation"),
+         .description = QT_TRANSLATE_NOOP("Settings", "Their order and which are shown. Settings is always there."),
+         .validator = validateNavItems});
+    defs.push_back({.key = keys::PlayerPosition,
+                    .type = Type::Enum,
+                    .defaultValue = str("bottom"),
+                    .options = {{"bottom", QT_TRANSLATE_NOOP("Settings", "Bottom")},
+                                {"top", QT_TRANSLATE_NOOP("Settings", "Top")}},
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Position"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Where the player bar floats.")});
+    defs.push_back({.key = keys::PlayerSize,
+                    .type = Type::Enum,
+                    .defaultValue = str("regular"),
+                    .options = {{"compact", QT_TRANSLATE_NOOP("Settings", "Compact")},
+                                {"regular", QT_TRANSLATE_NOOP("Settings", "Regular")},
+                                {"large", QT_TRANSLATE_NOOP("Settings", "Large")}},
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Size"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Height of the player bar and its cover.")});
+    defs.push_back({.key = keys::PlayerWaveform,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Waveform"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Off shows a plain progress line instead.")});
+    defs.push_back({.key = keys::PlayerTime,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Elapsed and total time"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Times on both sides of the waveform.")});
+    defs.push_back({.key = keys::PlayerVolume,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Volume"),
+                    .description = QT_TRANSLATE_NOOP("Settings",
+                                                     "The volume slider (narrow windows show only the mute button).")});
+    defs.push_back({.key = keys::PlayerQueueButton,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Queue button"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "The queue also opens with its shortcut.")});
+    for (const auto& [key, label, fallback] :
+         {std::tuple{keys::ViewLibrary, QT_TRANSLATE_NOOP("Settings", "Library"), "grid"},
+          std::tuple{keys::ViewLikes, QT_TRANSLATE_NOOP("Settings", "Likes"), "list"},
+          std::tuple{keys::ViewHistory, QT_TRANSLATE_NOOP("Settings", "History"), "list"},
+          std::tuple{keys::ViewCharts, QT_TRANSLATE_NOOP("Settings", "Charts"), "list"}}) {
+        defs.push_back({.key = key,
+                        .type = Type::Enum,
+                        .defaultValue = str(fallback),
+                        .options = {{"list", QT_TRANSLATE_NOOP("Settings", "List")},
+                                    {"grid", QT_TRANSLATE_NOOP("Settings", "Grid")}},
+                        .category = Layout,
+                        .label = label,
+                        .description = QT_TRANSLATE_NOOP("Settings", "How the page shows its items at first; the "
+                                                                     "page's own switch changes it too.")});
+    }
+    defs.push_back({.key = keys::CardSize,
+                    .type = Type::Enum,
+                    .defaultValue = str("medium"),
+                    .options = {{"small", QT_TRANSLATE_NOOP("Settings", "Small")},
+                                {"medium", QT_TRANSLATE_NOOP("Settings", "Medium")},
+                                {"large", QT_TRANSLATE_NOOP("Settings", "Large")}},
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Card size"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Grids fit as many cards of this size per row as the window allows.")});
+    for (const auto& [key, label, description, fallback] :
+         {std::tuple{keys::RowPlays, QT_TRANSLATE_NOOP("Settings", "Plays"),
+                     QT_TRANSLATE_NOOP("Settings", "How often a track was played."), true},
+          std::tuple{keys::RowLikes, QT_TRANSLATE_NOOP("Settings", "Likes"),
+                     QT_TRANSLATE_NOOP("Settings", "How many people liked a track."), false},
+          std::tuple{keys::RowReposts, QT_TRANSLATE_NOOP("Settings", "Reposts"),
+                     QT_TRANSLATE_NOOP("Settings", "How often a track was reposted."), false},
+          std::tuple{keys::RowDuration, QT_TRANSLATE_NOOP("Settings", "Duration"),
+                     QT_TRANSLATE_NOOP("Settings", "The length of a track or playlist."), true}}) {
+        defs.push_back({.key = key,
+                        .type = Type::Bool,
+                        .defaultValue = fallback,
+                        .category = Layout,
+                        .label = label,
+                        .description = description});
+    }
+    defs.push_back({.key = keys::FullPlayerArt,
+                    .type = Type::Enum,
+                    .defaultValue = str("large"),
+                    .options = {{"medium", QT_TRANSLATE_NOOP("Settings", "Medium")},
+                                {"large", QT_TRANSLATE_NOOP("Settings", "Large")}},
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Cover size"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "How much of the player the cover art takes.")});
+    defs.push_back({.key = keys::FullPlayerQueue,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Queue beside the cover"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "When the window is wide enough.")});
+    defs.push_back({.key = keys::FullPlayerWaveform,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Waveform"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "Off shows a plain progress line instead.")});
+    defs.push_back({.key = keys::WindowDecorations,
+                    .type = Type::Enum,
+                    .defaultValue = str("native"),
+                    .options = {{"native", QT_TRANSLATE_NOOP("Settings", "System")},
+                                {"custom", QT_TRANSLATE_NOOP("Settings", "Noctara")}},
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Window frame"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Noctara draws its own title bar and buttons in the glass style. Window "
+                                    "managers without decorations keep showing none."),
+                    .flags = flag::RequiresRestart});
+    defs.push_back({.key = keys::RememberGeometry,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Remember window size"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Open with the size (and, where the system allows, the position) of last "
+                                    "time.")});
+    defs.push_back({.key = keys::StartPage,
+                    .type = Type::Enum,
+                    .defaultValue = str("home"),
+                    .options = {{"home", QT_TRANSLATE_NOOP("Settings", "Home")},
+                                {"search", QT_TRANSLATE_NOOP("Settings", "Search")},
+                                {"library", QT_TRANSLATE_NOOP("Settings", "Library")},
+                                {"likes", QT_TRANSLATE_NOOP("Settings", "Likes")},
+                                {"history", QT_TRANSLATE_NOOP("Settings", "History")},
+                                {"charts", QT_TRANSLATE_NOOP("Settings", "Charts")},
+                                {"last", QT_TRANSLATE_NOOP("Settings", "Where I left off")}},
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Start page"),
+                    .description = QT_TRANSLATE_NOOP("Settings", "The page shown when Noctara opens.")});
+    defs.push_back(
+        {.key = keys::StartMinimized,
+         .type = Type::Bool,
+         .defaultValue = false,
+         .category = Layout,
+         .label = QT_TRANSLATE_NOOP("Settings", "Start minimized"),
+         .description = QT_TRANSLATE_NOOP("Settings", "Start in the tray when there is one, otherwise minimized.")});
+    defs.push_back({.key = keys::CloseToTray,
+                    .type = Type::Bool,
+                    .defaultValue = false,
+                    .category = Layout,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Keep playing when closed"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Closing the window hides it in the tray; Quit in the tray menu ends Noctara. "
+                                    "Needs the tray icon.")});
+
+    // --- Keyboard --------------------------------------------------------------------------------
+    // The action is the last part of the key (see ui::KeyboardController).
+    for (const auto& [key, label, sequence] :
+         {std::tuple{"keyboard.shortcuts.play_pause", QT_TRANSLATE_NOOP("Settings", "Play or pause"), "Space"},
+          std::tuple{"keyboard.shortcuts.next", QT_TRANSLATE_NOOP("Settings", "Next track"), "Ctrl+Right"},
+          std::tuple{"keyboard.shortcuts.previous", QT_TRANSLATE_NOOP("Settings", "Previous track"), "Ctrl+Left"},
+          std::tuple{"keyboard.shortcuts.seek_forward", QT_TRANSLATE_NOOP("Settings", "Forward 5 seconds"),
+                     "Shift+Right"},
+          std::tuple{"keyboard.shortcuts.seek_backward", QT_TRANSLATE_NOOP("Settings", "Back 5 seconds"), "Shift+Left"},
+          std::tuple{"keyboard.shortcuts.volume_up", QT_TRANSLATE_NOOP("Settings", "Volume up"), "Ctrl+Up"},
+          std::tuple{"keyboard.shortcuts.volume_down", QT_TRANSLATE_NOOP("Settings", "Volume down"), "Ctrl+Down"},
+          std::tuple{"keyboard.shortcuts.mute", QT_TRANSLATE_NOOP("Settings", "Mute"), "Ctrl+M"},
+          std::tuple{"keyboard.shortcuts.shuffle", QT_TRANSLATE_NOOP("Settings", "Shuffle"), "Ctrl+S"},
+          std::tuple{"keyboard.shortcuts.repeat", QT_TRANSLATE_NOOP("Settings", "Repeat"), "Ctrl+R"},
+          std::tuple{"keyboard.shortcuts.queue", QT_TRANSLATE_NOOP("Settings", "Show the queue"), "Ctrl+Shift+Q"},
+          std::tuple{"keyboard.shortcuts.full_player", QT_TRANSLATE_NOOP("Settings", "Full-screen player"),
+                     "Ctrl+Shift+F"},
+          std::tuple{"keyboard.shortcuts.search", QT_TRANSLATE_NOOP("Settings", "Search"), "Ctrl+K"},
+          std::tuple{"keyboard.shortcuts.back", QT_TRANSLATE_NOOP("Settings", "Back"), "Alt+Left"},
+          std::tuple{"keyboard.shortcuts.settings", QT_TRANSLATE_NOOP("Settings", "Settings"), "Ctrl+,"},
+          std::tuple{"keyboard.shortcuts.appearance", QT_TRANSLATE_NOOP("Settings", "Appearance panel"),
+                     "Ctrl+Shift+A"},
+          std::tuple{"keyboard.shortcuts.cheat_sheet", QT_TRANSLATE_NOOP("Settings", "Show all shortcuts"),
+                     "Ctrl+/"}}) {
+        defs.push_back({.key = key,
+                        .type = Type::Shortcut,
+                        .defaultValue = str(sequence),
+                        .category = Keyboard,
+                        .label = label,
+                        .validator = validateShortcut});
+    }
+    defs.push_back({.key = keys::GlobalShortcuts,
+                    .type = Type::Bool,
+                    .defaultValue = false,
+                    .category = Keyboard,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Global playback shortcuts"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Registers play/pause, next, previous and “show Noctara” with the desktop "
+                                    "(XDG global shortcuts portal), which asks you for the keys. Media keys work "
+                                    "without this.")});
 
     // --- Performance -----------------------------------------------------------------------------
     defs.push_back(

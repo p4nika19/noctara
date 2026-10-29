@@ -1,0 +1,17 @@
+# Compact: denser rows and controls for small screens; colours stay the built-in ones.
+[theme]
+name = "Compact"
+description = "Denser rows and smaller controls"
+author = "Noctara examples"
+
+[space]
+rowHeight = 48
+controlHeight = 34
+controlHeightSmall = 28
+nowPlayingHeight = 68
+md = 10
+lg = 13
+
+[motion]
+fast = 90
+normal = 150

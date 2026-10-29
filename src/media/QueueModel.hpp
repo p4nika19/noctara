@@ -23,6 +23,8 @@ public:
         PreviewRole,
         PendingRole,  // a track known only by id, fetched before it plays
         UidRole,
+        PermalinkRole,
+        ArtistIdRole,
     };
     Q_ENUM(Role)
 

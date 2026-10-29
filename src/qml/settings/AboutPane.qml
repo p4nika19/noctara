@@ -82,7 +82,7 @@ Flickable {
         }
         InfoRow {
             name: qsTr("Glass style")
-            info: Theme.glass.style
+            info: Theme.glass.style + " / " + Theme.glass.surface
         }
 
         Text {

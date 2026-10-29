@@ -16,8 +16,14 @@ Column {
         switch (style) {
         case "kawase": return qsTr("Dual Kawase blur")
         case "gaussian": return qsTr("Gaussian blur")
-        case "liquid": return qsTr("Liquid Glass")
         default: return qsTr("Solid (no blur)")
+        }
+    }
+    function surfaceName(surface) {
+        switch (surface) {
+        case "liquid": return qsTr("Liquid Glass")
+        case "flat": return qsTr("flat")
+        default: return qsTr("frosted")
         }
     }
     function qualityName(quality) {
@@ -62,8 +68,8 @@ Column {
     }
     InfoRow {
         name: qsTr("Glass")
-        info: Theme.glass.blurred ? root.styleName(Theme.glass.style) + " · " + root.qualityName(Theme.glass.quality)
-                                  : root.styleName(Theme.glass.style)
+        info: [root.styleName(Theme.glass.style), root.surfaceName(Theme.glass.surface)]
+              .concat(Theme.glass.blurred ? [root.qualityName(Theme.glass.quality)] : []).join(" · ")
     }
     InfoRow {
         name: qsTr("Frame rate")

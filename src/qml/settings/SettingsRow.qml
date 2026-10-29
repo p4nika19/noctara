@@ -43,7 +43,11 @@ Item {
                                       && options.reduce((n, o) => n + o.label.length, 0) <= (compact ? 30 : 46)
     // Ports and similar: too many steps for a slider, so a number field instead.
     readonly property bool numberField: type === "int" && (maximum - minimum) / Math.max(step, 1) > 300
-    readonly property bool inline: type === "bool" || (type === "enum" && !segmented) || numberField
+    // Settings edited by a dedicated control instead of the one for their type.
+    readonly property Component customControl: key === "layout.navigation.items" ? navItemsControl
+                                               : key === "appearance.theme.custom" ? themeControl : null
+    readonly property bool inline: customControl === null
+                                   && (type === "bool" || (type === "enum" && !segmented) || numberField || type === "shortcut")
     readonly property string valueText: {
         if ((type !== "int" && type !== "real") || numberField)
             return ""
@@ -222,6 +226,8 @@ Item {
                 enabled: row.editable
                 opacity: row.editable ? 1 : 0.5
                 sourceComponent: {
+                    if (row.customControl)
+                        return row.customControl
                     switch (row.type) {
                     case "bool": return boolControl
                     case "enum": return row.segmented ? segmentedControl : comboControl
@@ -229,6 +235,7 @@ Item {
                     case "real": return numberControl
                     case "color": return colorControl
                     case "list": return listControl
+                    case "shortcut": return shortcutControl
                     default: return textControl
                     }
                 }
@@ -309,6 +316,25 @@ Item {
             Accessible.name: row.label
             onEditingFinished: if (text !== row.value) row.commit(text)
         }
+    }
+    Component {
+        id: shortcutControl
+        ShortcutRecorder {
+            value: row.value
+            Accessible.name: row.label
+            onPicked: sequence => row.commit(sequence)
+        }
+    }
+    Component {
+        id: navItemsControl
+        NavItemsEditor {
+            value: row.value || []
+            onPicked: items => row.commit(items)
+        }
+    }
+    Component {
+        id: themeControl
+        ThemePicker {}
     }
     Component {
         id: listControl

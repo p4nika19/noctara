@@ -103,7 +103,7 @@ void Theme::onSettingChanged(const QString& key)
     } else if (is(keys::ReduceMotion) || is(keys::AnimationSpeed)) {
         updateMotion();
         updateGlass();
-    } else if (is(keys::GlassStyle) || is(keys::GlassBlurStrength) || is(keys::GlassGrain) ||
+    } else if (is(keys::GlassStyle) || is(keys::GlassSurface) || is(keys::GlassBlurStrength) || is(keys::GlassGrain) ||
                is(keys::ReduceTransparency) || is(keys::GlowCover) || is(keys::GlowControls) ||
                is(keys::GlowProgress) || is(keys::ButtonMaterial) || is(keys::BackdropStyle) ||
                is(keys::BackdropAnimate)) {
@@ -127,6 +127,8 @@ color::OkLch Theme::currentSeed() const
         if (m_artworkSeed) {
             return *m_artworkSeed;
         }
+    } else if (m_userTheme && m_userTheme->accent) {
+        return *m_userTheme->accent;  // the theme's accent stands in for the static accent colour
     } else {
         const QColor seed = QColor::fromString(m_settings.stringValue(keys::AccentColor));
         if (seed.isValid()) {
@@ -162,7 +164,13 @@ void Theme::updatePalette(int durationMs)
                                  .scheme = m_scheme,
                                  .glassOpacity = glassOpacity(),
                                  .glowIntensity = m_settings.realValue(keys::GlowIntensity)};
-    const Palette target = generatePalette(request);
+    Palette target = generatePalette(request);
+    if (m_userTheme) {
+        applyColors(*m_userTheme, m_scheme, target);
+        if (m_settings.boolValue(keys::EnforceContrast)) {
+            target = enforceReadable(target, m_scheme, defaultTones(m_scheme));
+        }
+    }
     const auto results = checkContrast(target, m_scheme, defaultTones(m_scheme));
     m_contrastOk = std::ranges::all_of(results, [](const ContrastResult& r) { return r.passes(); });
     if (!m_contrastOk) {
@@ -208,7 +216,11 @@ void Theme::updateMetrics()
     // Density scales the gaps between things, not the size of controls.
     const QString density = m_settings.stringValue(keys::Density);
     const double densityFactor = density == u"compact" ? 0.82 : (density == u"airy" ? 1.18 : 1.0);
-    SpacingTokens space = SpacingTokens{}.scaled(m_scale);
+    SpacingTokens baseSpace;
+    if (m_userTheme) {
+        applySpace(*m_userTheme, baseSpace);
+    }
+    SpacingTokens space = baseSpace.scaled(m_scale);
     for (qreal* gap : {&space.sm, &space.md, &space.lg, &space.xl, &space.xxl, &space.xxxl, &space.pageMargin}) {
         *gap *= densityFactor;
     }
@@ -227,6 +239,9 @@ void Theme::updateMetrics()
     RadiusTokens radius;
     const QString buttonShape = m_settings.stringValue(keys::ButtonShape);
     radius.button = buttonShape == u"soft" ? 14.0 : (buttonShape == u"sharp" ? 6.0 : radius.pill);
+    if (m_userTheme) {
+        applyRadius(*m_userTheme, radius);
+    }
     m_radius = radius.scaled(m_scale * radiusFactor);
 
     const QString weight = m_settings.stringValue(keys::IconWeight);
@@ -238,9 +253,15 @@ void Theme::updateMetrics()
 void Theme::updateFonts()
 {
     const double factor = m_scale * static_cast<double>(m_settings.intValue(keys::FontScale)) / 100.0;
-    const QString heading = FontLoader::resolve(m_settings.stringValue(keys::HeadingFont), m_bundledFonts.heading);
-    const QString body = FontLoader::resolve(m_settings.stringValue(keys::BodyFont), m_bundledFonts.body);
-    const QString mono = FontLoader::resolve(m_settings.stringValue(keys::MonoFont), m_bundledFonts.mono);
+    // A font chosen in the settings wins over the theme's, which wins over the bundled one.
+    const auto chosen = [this](std::string_view key, const QString UserTheme::* themeFont) {
+        const QString setting = m_settings.stringValue(key);
+        return setting.isEmpty() && m_userTheme ? (*m_userTheme).*themeFont : setting;
+    };
+    const QString heading =
+        FontLoader::resolve(chosen(keys::HeadingFont, &UserTheme::headingFont), m_bundledFonts.heading);
+    const QString body = FontLoader::resolve(chosen(keys::BodyFont, &UserTheme::bodyFont), m_bundledFonts.body);
+    const QString mono = FontLoader::resolve(chosen(keys::MonoFont, &UserTheme::monoFont), m_bundledFonts.mono);
     const QStringList headingChain = FontLoader::fallbackChain(heading, m_bundledFonts.heading);
     const QStringList bodyChain = FontLoader::fallbackChain(body, m_bundledFonts.body);
     const QStringList monoChain = FontLoader::fallbackChain(mono, m_bundledFonts.mono);
@@ -268,6 +289,9 @@ void Theme::updateMotion()
 {
     const double speed = m_settings.realValue(keys::AnimationSpeed);
     MotionTokens motion;
+    if (m_userTheme) {
+        applyMotion(*m_userTheme, motion);
+    }
     motion.reduced = m_settings.boolValue(keys::ReduceMotion);
     motion.enabled = speed > 0.0;
     const auto scaled = [&](int base) {
@@ -294,6 +318,9 @@ void Theme::updateMotion()
 void Theme::updateGlass()
 {
     GlassTokens glass = glassTokensFor(m_scheme);
+    if (m_userTheme) {
+        applyGlass(*m_userTheme, m_scheme, glass);
+    }
     glass.requestedStyle = m_settings.stringValue(keys::GlassStyle);
     glass.blurAvailable = m_blurAvailable;
     glass.blurStrength = m_settings.realValue(keys::GlassBlurStrength);
@@ -321,8 +348,20 @@ void Theme::updateGlass()
     glass.style = style;
     glass.translucent = style != u"solid";
     glass.blurred = styleCost(style) > 0;
+    // Liquid Glass bends the blurred backdrop, so it needs a blur; a "kawase" cap (the governor, energy saving)
+    // also rules it out. Flat and frosted work over any blur, and over opaque surfaces.
+    glass.requestedSurface = m_settings.stringValue(keys::GlassSurface);
+    QString surface = glass.requestedSurface;
+    if (surface == u"liquid" &&
+        (!glass.blurred || (!m_styleCap.isEmpty() && styleCost(m_styleCap) < styleCost(QStringLiteral("liquid"))))) {
+        surface = QStringLiteral("frosted");
+    }
+    glass.surface = surface;
+    glass.flat = surface == u"flat";
     glass.quality = m_quality;
-    const BlurPlan plan = blurPlan(style, glass.blurStrength, m_quality);
+    // Liquid surfaces keep the background clearer (the lens carries the look): its own Kawase plan.
+    const BlurPlan plan = blurPlan(surface == u"liquid" && style == u"kawase" ? QStringLiteral("liquid") : style,
+                                   glass.blurStrength, m_quality);
     glass.blurDownsample = plan.downsample;
     glass.blurIterations = plan.iterations;
     glass.blurOffset = plan.offset;
@@ -346,6 +385,19 @@ void Theme::setArtworkSeed(std::optional<color::OkLch> seed)
     if (m_settings.boolValue(keys::AccentAdaptive)) {
         updatePalette(m_motion.accent);
     }
+}
+
+void Theme::setUserTheme(std::shared_ptr<const UserTheme> theme)
+{
+    if (theme == m_userTheme) {
+        return;
+    }
+    m_userTheme = std::move(theme);
+    updateMetrics();
+    updateFonts();
+    updateMotion();
+    updateGlass();
+    updatePalette(m_motion.theme);
 }
 
 void Theme::setBlurAvailable(bool available)

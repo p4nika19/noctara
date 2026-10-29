@@ -170,25 +170,30 @@ task("smoke")
         for _, gpu in ipairs({"off", "auto"}) do
             for _, theme in ipairs({"dark", "light"}) do
                 for _, lang in ipairs({"en", "ru"}) do
-                    table.insert(runs, {gpu = gpu, theme = theme, lang = lang, style = "kawase"})
+                    table.insert(runs, {gpu = gpu, theme = theme, lang = lang, style = "kawase", surface = "frosted"})
                 end
             end
         end
-        for _, style in ipairs({"gaussian", "liquid"}) do
+        -- The blur and the surface style are independent: cover the other blur and every surface.
+        for _, combination in ipairs({{"gaussian", "frosted"}, {"kawase", "liquid"}, {"kawase", "flat"},
+                                      {"gaussian", "flat"}, {"solid", "flat"}}) do
             for _, theme in ipairs({"dark", "light"}) do
-                table.insert(runs, {gpu = "auto", theme = theme, lang = "en", style = style})
+                table.insert(runs, {gpu = "auto", theme = theme, lang = "en", style = combination[1],
+                                    surface = combination[2]})
             end
         end
         local failures = 0
         for _, run in ipairs(runs) do
             local log = os.tmpfile()
             local code = os.execv(binary, {"--smoke-test", "--gpu=" .. run.gpu, "--theme=" .. run.theme,
-                                           "--lang=" .. run.lang, "--set", "appearance.glass.style=" .. run.style},
+                                           "--lang=" .. run.lang, "--set", "appearance.glass.style=" .. run.style,
+                                           "--set", "appearance.glass.surface=" .. run.surface},
                                   {envs = {QT_QPA_PLATFORM = platform, XDG_CONFIG_HOME = scratch .. "/config",
                                            XDG_CACHE_HOME = scratch .. "/cache", XDG_STATE_HOME = scratch .. "/state"},
                                    try = true, stdout = log, stderr = log})
             local ok = code == 0
-            print("%s gpu=%s theme=%s lang=%s glass=%s", ok and "ok  " or "FAIL", run.gpu, run.theme, run.lang, run.style)
+            print("%s gpu=%s theme=%s lang=%s blur=%s surface=%s", ok and "ok  " or "FAIL", run.gpu, run.theme,
+                  run.lang, run.style, run.surface)
             if not ok then
                 -- The run's own log says which warning or error failed it.
                 io.write(io.readfile(log) or "")
@@ -219,7 +224,8 @@ task("test-tsan")
         -- Suites whose cases each create a few worker pools: run one case per process. A case that still hits the
         -- registry abort (it creates several pools in turn) is reported as skipped by name; a data race fails.
         local perCase = {["auth.browser-cookies"] = true, ["auth.encrypted-secret-store"] = true,
-                         ["auth.secret-chain"] = true}
+                         ["auth.secret-chain"] = true, ["media.controller"] = true, ["media.backend"] = true,
+                         ["theme.library"] = true}
         local envs = {TSAN_OPTIONS = "halt_on_error=1 suppressions=" .. path.join(os.projectdir(), "tools", "tsan.supp")}
         local function names(args)
             local result = {}

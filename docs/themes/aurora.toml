@@ -1,0 +1,27 @@
+# Aurora: cool greens over a deep teal night, softer corners, a slower, calmer motion.
+[theme]
+name = "Aurora"
+description = "Cool greens over a deep teal night"
+author = "Noctara examples"
+accent = "#3ddc97"          # seeds the palette when the cover art does not decide the accent
+
+[colors.dark]
+backdrop = "#06110d"
+backdropTop = "#0a2a22"
+backdropBottom = "#030806"
+
+[colors.light]
+backdrop = "#eef7f3"
+accent = "#0b6e4f"
+
+[radius]
+md = 18
+lg = 32
+
+[motion]
+normal = 240
+slow = 380
+
+[glass.dark]
+refraction = 20
+lightAngle = 120

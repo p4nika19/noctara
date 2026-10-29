@@ -352,8 +352,9 @@ struct Player {
     FakeBackend backend;
     std::unique_ptr<PlaybackController> controller;
 
-    explicit Player(const QString& statePath = {})
+    explicit Player(const QString& statePath = {}, std::map<api::Id, api::Track> known = {})
     {
+        client.known = std::move(known);
         controller = std::make_unique<PlaybackController>(PlaybackController::Dependencies{
             .settings = store, .api = client, .cache = nullptr, .native = backend, .statePath = statePath});
     }
@@ -979,6 +980,29 @@ TEST_SUITE("media.controller")
         CHECK(controller.volume() == doctest::Approx(0.4));
     }
 
+    TEST_CASE("the queue, the track and the position come back paused after a restart")
+    {
+        QTemporaryDir dir;
+        const QString path = dir.filePath(QStringLiteral("session.json"));
+        {
+            Player player(path);
+            player.controller->playTracks({apiTrack(1), apiTrack(2), apiTrack(3)}, 1, QStringLiteral("Mix"));
+            player.backend.setPosition(42'000);
+        }
+        // The tracks are looked up again (by id) when the next session starts.
+        Player restored(path, {{1, apiTrack(1)}, {2, apiTrack(2)}, {3, apiTrack(3)}});
+        REQUIRE(test::waitUntil([&] { return restored.controller->hasTrack(); }));
+        CHECK(restored.controller->trackId() == u"2");
+        CHECK(restored.controller->context() == u"Mix");
+        CHECK(restored.controller->queue().size() == 3);
+        CHECK(restored.controller->position() == 42'000);
+        CHECK_FALSE(restored.controller->playing());
+        CHECK(restored.backend.loads.empty());  // nothing plays until asked
+        restored.controller->play();
+        REQUIRE(restored.backend.loads.size() == 1);
+        CHECK(restored.backend.startPositions[0] == 42'000);
+    }
+
     TEST_CASE("the crossfade setting reaches the backend live")
     {
         Player player;
@@ -1016,8 +1040,17 @@ TEST_SUITE("media.session")
 {
     TEST_CASE("the player state round-trips; damaged content gives the defaults")
     {
-        const SessionState state{.volume = 0.3, .muted = true, .shuffle = true, .repeat = Repeat::One};
+        const SessionState state{.volume = 0.3,
+                                 .muted = true,
+                                 .shuffle = true,
+                                 .repeat = Repeat::One,
+                                 .queue = {5, 9, 2},
+                                 .current = 1,
+                                 .positionMs = 61000,
+                                 .context = QStringLiteral("Mix")};
         CHECK(SessionState::fromJson(state.toJson()) == state);
+        CHECK(SessionState::fromJson(R"({"version":1,"queue":[3,-1,"x",4],"current":9})").queue ==
+              std::vector<qint64>{3, 4});
         CHECK(SessionState::fromJson("{nonsense") == SessionState{});
         CHECK(SessionState::fromJson(R"({"version":1,"volume":7})").volume == doctest::Approx(1.0));
     }

@@ -83,6 +83,21 @@ void shiftedGlassTint(toml::table& root)
     }
 }
 
+// v6 -> v7: "Glass style" mixed the blur with the look of surfaces. It became the blur only
+// (`appearance.glass.style`: kawase | gaussian | solid) plus `appearance.glass.surface` (frosted | liquid | flat);
+// "liquid" was Liquid Glass surfaces over the Dual Kawase blur.
+void splitGlassStyle(toml::table& root)
+{
+    toml::table* glass = root.at_path("appearance.glass").as_table();
+    if (glass == nullptr) {
+        return;
+    }
+    if (const auto* style = glass->get_as<std::string>("style"); style != nullptr && style->get() == "liquid") {
+        glass->insert_or_assign("style", "kawase");
+        glass->insert_or_assign("surface", "liquid");
+    }
+}
+
 // Files without `config_version` are v0 (same format as v1). Append future migrations here.
 // clang-format off
 constexpr Migration kMigrations[] = {
@@ -92,6 +107,7 @@ constexpr Migration kMigrations[] = {
     {3, relativeGlassValues},
     {4, absoluteGlassValues},
     {5, shiftedGlassTint},
+    {6, splitGlassStyle},
 };
 // clang-format on
 

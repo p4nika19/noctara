@@ -3,12 +3,18 @@ import Noctara
 
 // One row of a CollectionModel: a track, playlist or user. Rows are plain items over the list's surface, never
 // glass panels. Protected (DRM) tracks are marked "Not cacheable"; previews are marked as such. A track that is
-// still being fetched (a playlist's later tracks) shows skeleton text.
+// still being fetched (a playlist's later tracks) shows skeleton text. Plays, likes, reposts and duration follow
+// the Layout → Track rows settings; hovering a track offers "Add to queue"; right-click asks for the menu.
 Item {
     id: root
 
     required property int index
     required property string kind
+    required property var itemId
+    required property var ownerId
+    required property string permalink
+    required property var likes
+    required property var reposts
     required property string title
     required property string subtitle
     required property string thumbnail
@@ -24,6 +30,9 @@ Item {
     required property bool pending
 
     signal activated()
+    // Right-click (or the menu key): `point` in this row's coordinates.
+    signal menuRequested(point point)
+    signal enqueueRequested()
 
     implicitHeight: Theme.space.rowHeight
     Accessible.role: Accessible.ListItem
@@ -65,8 +74,15 @@ Item {
         id: area
         anchors.fill: parent
         hoverEnabled: true
-        onClicked: root.activated()
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: mouse => {
+            if (mouse.button === Qt.RightButton)
+                root.menuRequested(Qt.point(mouse.x, mouse.y))
+            else
+                root.activated()
+        }
     }
+    Keys.onMenuPressed: root.menuRequested(Qt.point(width / 2, height / 2))
 
     CoverArt {
         id: cover
@@ -137,26 +153,50 @@ Item {
             text: qsTr("Preview")
             tooltip: qsTr("Only a 30-second preview is available to your account.")
         }
-        Row {
+        Repeater {
+            model: [
+                { icon: "play", value: root.plays, shown: Layout.rowPlays && root.kind === "track" },
+                { icon: "heart", value: root.likes, shown: Layout.rowLikes && root.kind !== "user" },
+                { icon: "repeat", value: root.reposts, shown: Layout.rowReposts && root.kind !== "user" }
+            ]
+            delegate: Row {
+                required property var modelData
+                anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+                spacing: Theme.space.xs
+                visible: modelData.shown && modelData.value !== undefined
+                Icon {
+                    anchors.verticalCenter: parent.verticalCenter
+                    name: parent.modelData.icon
+                    size: Theme.space.iconSizeSmall
+                    color: Theme.targetColors.iconSecondary
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Format.revision >= 0 && parent.modelData.value !== undefined
+                          ? Format.count(parent.modelData.value) : ""
+                    font: Theme.font.numeric
+                    color: Theme.colors.textTertiary
+                }
+            }
+        }
+        IconButton {
             anchors.verticalCenter: parent.verticalCenter
-            spacing: Theme.space.xs
-            visible: root.kind === "track" && root.plays !== undefined
-            Icon {
-                anchors.verticalCenter: parent.verticalCenter
-                name: "play"
-                size: Theme.space.iconSizeSmall
-                color: Theme.targetColors.iconSecondary
-            }
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: Format.revision >= 0 && root.plays !== undefined ? Format.count(root.plays) : ""
-                font: Theme.font.numeric
-                color: Theme.colors.textTertiary
-            }
+            width: Theme.space.controlHeightSmall
+            height: width
+            // Keeps its place when hidden, so the columns do not move under the pointer.
+            readonly property bool shown: area.containsMouse || hovered || activeFocus
+            visible: root.kind === "track" && !root.protectedMedia
+            opacity: shown ? 1 : 0
+            enabled: shown
+            material: "flat"
+            iconName: "list-plus"
+            iconSize: Theme.space.iconSizeSmall
+            text: qsTr("Add to queue")
+            onClicked: root.enqueueRequested()
         }
         Text {
             anchors.verticalCenter: parent.verticalCenter
-            visible: root.kind !== "user" && root.duration > 0
+            visible: Layout.rowDuration && root.kind !== "user" && root.duration > 0
             text: Format.revision >= 0 ? Format.duration(root.duration) : ""
             font: Theme.font.numeric
             color: Theme.colors.textSecondary

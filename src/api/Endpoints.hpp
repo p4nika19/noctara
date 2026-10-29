@@ -50,7 +50,6 @@ inline constexpr const char* kApiBase = "https://api-v2.soundcloud.com";
 namespace endpoints {
 
 enum class SearchKind : std::uint8_t { All, Tracks, Users, Playlists, Albums };
-enum class ChartKind : std::uint8_t { Top, Trending };
 
 [[nodiscard]] Endpoint<Item> resolve(const QUrl& permalink);
 [[nodiscard]] Endpoint<Track> track(Id id);
@@ -67,11 +66,17 @@ inline constexpr std::size_t kMaxTrackIds = 50;
 [[nodiscard]] Endpoint<Page<Entry>> userTracks(Id user, int limit);
 [[nodiscard]] Endpoint<Page<Entry>> userPlaylists(Id user, int limit);
 [[nodiscard]] Endpoint<Page<Entry>> userLikes(Id user, int limit);
+// The people a user follows.
+[[nodiscard]] Endpoint<Page<Entry>> followings(Id user, int limit);
+// The signed-in user's library: their own and liked playlists and albums.
+[[nodiscard]] Endpoint<Page<Entry>> library(int limit);
 [[nodiscard]] Endpoint<Page<Entry>> related(Id track, int limit);
 [[nodiscard]] Endpoint<Page<Entry>> stream(int limit);   // the signed-in user's feed
 [[nodiscard]] Endpoint<Page<Entry>> history(int limit);  // recently played tracks
-// genre: "soundcloud:genres:all-music", "soundcloud:genres:electronic", …
-[[nodiscard]] Endpoint<Page<Entry>> charts(ChartKind kind, const QString& genre, int limit);
+// SoundCloud's trending tracks by genre (its former /charts became these system playlists, Oct 2026). genre: the
+// last part of "soundcloud:system-playlists:trending-by-genre:<genre>" ("all-genres", "electronic", "hip-hop", …).
+// One page of up to 50 tracks; later tracks arrive as ids and are hydrated by the list.
+[[nodiscard]] Endpoint<Page<Entry>> trending(const QString& genre);
 // The page after `page`, from its next_href, with the same auth and freshness as the first request. A next_href
 // that does not point at an API host yields a request the client refuses.
 [[nodiscard]] Endpoint<Page<Entry>> next(const Endpoint<Page<Entry>>& first, const QString& href);

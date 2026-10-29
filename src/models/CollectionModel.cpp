@@ -45,6 +45,7 @@ QVariant trackData(const api::Track& track, int role)
     case Role::PreviewRole: return track.previewOnly();
     case Role::VerifiedRole: return track.user.verified;
     case Role::PendingRole: return track.stub;
+    case Role::OwnerIdRole: return QVariant::fromValue(track.user.id);
     default: return {};
     }
 }
@@ -67,6 +68,7 @@ QVariant playlistData(const api::Playlist& playlist, int role)
     case Role::CreatedRole: return playlist.publishedAt.isValid() ? playlist.publishedAt : playlist.createdAt;
     case Role::VerifiedRole: return playlist.user.verified;
     case Role::AlbumRole: return playlist.album;
+    case Role::OwnerIdRole: return QVariant::fromValue(playlist.user.id);
     default: return {};
     }
 }
@@ -84,6 +86,7 @@ QVariant userData(const api::User& user, int role)
     case Role::TrackCountRole: return count(user.trackCount);
     case Role::PermalinkRole: return user.permalinkUrl;
     case Role::VerifiedRole: return user.verified;
+    case Role::OwnerIdRole: return QVariant::fromValue(user.id);
     default: return {};
     }
 }
@@ -195,6 +198,7 @@ QHash<int, QByteArray> CollectionModel::roleNames() const
         {VerifiedRole, "verified"},
         {AlbumRole, "album"},
         {PendingRole, "pending"},
+        {OwnerIdRole, "ownerId"},
     };
 }
 

@@ -15,6 +15,7 @@ FocusScope {
     readonly property var keys: [
         "appearance.accent.adaptive", "appearance.accent.extraction", "appearance.accent.color",
         "appearance.backdrop.style",
+        "appearance.glass.style", "appearance.glass.surface",
         "appearance.glass.buttons", "appearance.glass.blur_strength", "appearance.glass.opacity", "appearance.glass.grain",
         "appearance.glow.intensity", "appearance.glow.cover", "appearance.glow.controls", "appearance.glow.progress",
         "appearance.shape.corner_radius", "appearance.shape.buttons", "layout.content.density",

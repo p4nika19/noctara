@@ -25,6 +25,8 @@ namespace noctara::api::parse {
 // tracks, likes, play history, the feed, charts. Wrapped items ({"track": …, "created_at": …}) are unwrapped.
 [[nodiscard]] Result<Page<Entry>> collection(const QByteArray& json);
 [[nodiscard]] Result<Waveform> waveform(const QByteArray& json);
+// The tracks of any playlist object (system playlists too, whose ids are text) as one page of entries.
+[[nodiscard]] Result<Page<Entry>> playlistTracks(const QByteArray& json);
 // A transcoding's resolution: {"url": "<signed media URL>"}.
 [[nodiscard]] Result<QUrl> streamUrl(const QByteArray& json);
 

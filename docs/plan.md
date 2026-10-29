@@ -77,6 +77,20 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
     image cache, so no other process fetches artwork from the network (bypassing DNS/proxy settings). The tray is a
     `QSystemTrayIcon` (StatusNotifierItem over D-Bus), which needs a `QApplication`; the UI stays Qt Quick.
 
+38. **Blur and surface style are separate settings** (user request in slice h): `appearance.glass.style` is the
+    backdrop blur (kawase / gaussian / solid) and `appearance.glass.surface` the look of panels (frosted / liquid /
+    flat), so flat panels can sit on a Dual Kawase blur. Config v7 migrates the old "liquid" style to Kawase + Liquid.
+39. **User themes are data, applied after generation**: the palette is generated as usual, then a theme's colors
+    replace roles, then contrast is enforced again (when on); radii, spacing and motion are base values that the
+    corner, zoom, density and speed settings still scale. Themes cannot touch the glass tint and grain sliders.
+40. **Shortcuts are settings** (`keyboard.shortcuts.<action>`, type Shortcut): the generated rows get a key
+    recorder, conflicts show as row status lines, and QML binds `Shortcut.sequence` to them. Global shortcuts go
+    through the XDG GlobalShortcuts portal (the desktop asks for the keys) rather than grabbing keys.
+41. **Charts are SoundCloud's "trending by genre" system playlists**: `/charts` answers 404 since 2026; the system
+    playlists are what the web player shows. Their tracks arrive as ids and are hydrated as the list shows them.
+42. **Shuffle draws fresh system-seeded randomness every time** (user request): a uniform `std::shuffle` over
+    `QRandomGenerator::global()`, no stored seed; shuffle-play picks its first track the same way.
+
 ## Slices
 
 (a) build system, skeleton, settings schema/store/TOML, graphics bootstrap, Theme tokens (Midnight and Frost), fonts, LanguageManager (en/ru), generated settings UI
@@ -90,7 +104,7 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 (i) DRM helper
 (j) polish and performance measurements
 
-Done: (a), (b), (c), (d), (e), (f), (g).
+Done: (a), (b), (c), (d), (e), (f), (g), (h).
 
 ## Slice (f) status (auth / secret store / session)
 
@@ -134,6 +148,23 @@ Windows DPAPI/app-bound cookies and macOS Keychain remain platform-specific foll
 - Not done: loudness normalization (no loudness data from SoundCloud), output device selection, the DRM backend
   (slice i). The full-screen player, queue restore and remappable shortcuts belong to slice (h).
 
+## Slice (h) status (pages, customization, user themes)
+
+- Pages: Home (now playing, recently played and feed when signed in, trending charts otherwise), Search, Library
+  (playlists and albums, following), Likes, History, Charts (trending by genre), playlist and user pages with a
+  Back stack, list or grid per page (switch on the page or in Layout), card sizes, track-row details.
+- Full-screen player with a shared-element cover transition and window full screen (F11); one context menu (RMB)
+  for tracks, playlists, people, queue items, the player bar and the waveform.
+- Layout settings: navigation position (left, right, bottom), style (icons, icons and labels, auto-hide), its pages
+  and their order; player bar position, size and parts; page views and card size; track-row details; full-screen
+  player options; window frame (system or Noctara's own, restart), remembered size, start page (including "where
+  I left off"), start minimized, keep playing in the tray when closed.
+- Keyboard: 17 remappable shortcuts with a recorder, conflict warnings, per-row and section reset, a cheat sheet
+  (Ctrl+/), fixed media keys and F11, global play/pause/next/previous/show through the XDG portal (opt-in).
+- User themes: TOML token overrides in `<config>/themes`, validated (line-numbered problems), hot-reloaded,
+  import/export, contrast enforcement or a warning; three examples in `docs/themes/` (parsed by a test).
+- Glass split into backdrop blur and surface style (with a migration), the *Plain* button material; queue restore.
+
 ## Open items flagged for verification
 - Chromium-family import is verified against fixture databases built from Chromium's own format description
   (`os_crypt_linux`, cookie DB version 24), not against installed browsers; the KWallet D-Bus path has not run
@@ -144,6 +175,9 @@ Windows DPAPI/app-bound cookies and macOS Keychain remain platform-specific foll
 - Live api-v2 behaviour (client_id discovery, field names, transcodings, `/charts`) is covered by fixtures only; the
   live check (`noctara-tests --no-skip -tc="real api*"`) needs internet access and has not been run from the
   development sandbox. See [api.md](api.md#verification-status).
+- Global shortcuts were checked only for session creation on Hyprland's portal; binding keys is up to the desktop
+  (Hyprland: `bind = …, global, noctara:play_pause`). Custom window decorations depend on the compositor honouring
+  frameless windows; on tiling compositors the frame setting changes little.
 - The tray icon and notifications were checked on Hyprland (StatusNotifierItem through a bar); GNOME without the
   AppIndicator extension has no tray, and the setting then has no effect.
 - Glass GPU timings on a mainstream iGPU. The dev machine has a GTX 1070, so iGPU numbers need another machine; documented as such.

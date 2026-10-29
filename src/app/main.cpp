@@ -33,6 +33,7 @@
 #include "theme/AccentEngine.hpp"
 #include "theme/FontLoader.hpp"
 #include "theme/Theme.hpp"
+#include "theme/ThemeLibrary.hpp"
 #include "ui/AccountController.hpp"
 #include "ui/AppController.hpp"
 #include "ui/ArtworkProvider.hpp"
@@ -40,12 +41,15 @@
 #include "ui/CoverImageProvider.hpp"
 #include "ui/EffectsController.hpp"
 #include "ui/IconProvider.hpp"
+#include "ui/KeyboardController.hpp"
+#include "ui/LayoutController.hpp"
 #include "ui/NetworkController.hpp"
 #include "ui/NoiseProvider.hpp"
 #include "ui/PowerStatus.hpp"
 #include "ui/SettingsController.hpp"
 #include "ui/SettingsModel.hpp"
 #include "ui/StorageController.hpp"
+#include "ui/ThemesController.hpp"
 #include "ui/TrackNotifier.hpp"
 #include "ui/TrayIcon.hpp"
 #include "ui/WaveformItem.hpp"
@@ -189,12 +193,13 @@ ui::Availability availability(const gfx::GraphicsDecision& decision, const net::
         auto& glass = availability.disabledOptions[QStringLiteral("appearance.glass.style")];
         glass.insert(QStringLiteral("kawase"), reason);
         glass.insert(QStringLiteral("gaussian"), reason);
-        glass.insert(QStringLiteral("liquid"), reason);
+        availability.disabledOptions[QStringLiteral("appearance.glass.surface")].insert(QStringLiteral("liquid"),
+                                                                                        reason);
         availability.disabledSettings.insert(QStringLiteral("appearance.glass.blur_strength"), reason);
         availability.disabledSettings.insert(QStringLiteral("appearance.backdrop.animate"), reason);
         availability.disabledSettings.insert(QStringLiteral("appearance.glass.quality"), reason);
     } else if (!decision.liquidGlassAllowed) {
-        availability.disabledOptions[QStringLiteral("appearance.glass.style")].insert(
+        availability.disabledOptions[QStringLiteral("appearance.glass.surface")].insert(
             QStringLiteral("liquid"), QT_TRANSLATE_NOOP("Settings", "Not available on this graphics device."));
     }
     return availability;
@@ -215,6 +220,8 @@ void runSmokeTest(const QQmlApplicationEngine& engine, const ui::SettingsControl
     // The player bar and the queue drawer appear without a track, so their software and GPU paths render too.
     root->setProperty("playerPreview", true);
     steps.append(QStringLiteral("queue"));
+    steps.append(QStringLiteral("cheat-sheet"));
+    steps.append(QStringLiteral("full-player"));
     const auto index = std::make_shared<qsizetype>(0);
     auto* timer = new QTimer(root);  // NOLINT(cppcoreguidelines-owning-memory): owned by its QObject parent
     timer->setInterval(150);
@@ -231,6 +238,15 @@ void runSmokeTest(const QQmlApplicationEngine& engine, const ui::SettingsControl
         const QString& step = steps.at((*index)++);
         if (step == u"queue") {
             root->setProperty("queuePanel", true);
+            return;
+        }
+        if (step == u"cheat-sheet") {
+            root->setProperty("cheatSheet", true);
+            return;
+        }
+        if (step == u"full-player") {
+            root->setProperty("cheatSheet", false);
+            root->setProperty("fullPlayer", true);
             return;
         }
         root->setProperty("page", step.section(u'/', 0, 0));
@@ -318,6 +334,11 @@ int main(int argc, char** argv)
     theme.setBlurAvailable(decision.hardware);
     QGuiApplication::setFont(theme.font().body);
 
+    // User themes (<config>/themes/*.toml): data only, hot-reloaded; the selected one overrides tokens.
+    theme::ThemeLibrary themeLibrary(store, paths.themesDir());
+    QObject::connect(&themeLibrary, &theme::ThemeLibrary::activeChanged, &theme,
+                     [&theme, &themeLibrary] { theme.setUserTheme(themeLibrary.active()); });
+
     theme::AccentEngine accent(store);
     QObject::connect(&accent, &theme::AccentEngine::seedChanged, &theme,
                      [&theme](std::optional<color::OkLch> seed) { theme.setArtworkSeed(seed); });
@@ -330,6 +351,12 @@ int main(int argc, char** argv)
     gfx::FrameMonitor frames;
     ui::EffectsController effects(store, theme, power, frames, graphics, languages, settingsUi);
     ui::AppController appController(store, graphics, relaunch, languages);
+    ui::ThemesController themesUi(themeLibrary, store, languages);
+    QObject::connect(
+        &themesUi, &ui::ThemesController::notice, &appController,
+        [&appController](const QString& kind, const QString& message) { appController.showToast(kind, message); });
+    ui::KeyboardController keyboard(store, languages, settingsUi);
+    ui::LayoutController layout(store, paths.stateDir + QStringLiteral("/window.json"));
     // All HTTP goes through this service; it runs on its own thread and follows the network settings live.
     net::NetworkService network(store, net::processEnvironment(), true);
     net::NetworkMonitor networkMonitor;
@@ -347,10 +374,10 @@ int main(int argc, char** argv)
     // SoundCloud's api-v2 on its own thread, over the caching transport. The session token comes from auth/ (f).
     api::Session session;
     api::ApiService soundcloud(store, cache.transport(), session, paths.stateDir);
-    ui::CatalogController catalog(soundcloud);
     auth::BrowserCookieSource browserCookies;
     // Browser discovery never reads cookies; Account asks for consent before importing the selected profile.
     ui::AccountController account(soundcloud.client(), session, secrets, &browserCookies);
+    ui::CatalogController catalog(soundcloud, account);
     QObject::connect(&account, &ui::AccountController::notice, &appController, &ui::AppController::showToast);
 
     // Native playback: the audio cache feeds FFmpeg, the mixer feeds the default output device (opened on the
@@ -402,6 +429,18 @@ int main(int argc, char** argv)
     QObject::connect(&mpris, &media::MprisService::raiseRequested, &mpris, showWindow);
     ui::TrayIcon tray(player, store, languages);
     QObject::connect(&tray, &ui::TrayIcon::showRequested, &tray, showWindow);
+    QObject::connect(&keyboard, &ui::KeyboardController::globalActivated, &player,
+                     [&player, showWindow](const QString& action) {
+                         if (action == u"play_pause") {
+                             player.playPause();
+                         } else if (action == u"next") {
+                             player.next();
+                         } else if (action == u"previous") {
+                             player.previous();
+                         } else if (action == u"show") {
+                             showWindow();
+                         }
+                     });
     const ui::TrackNotifier notifier(player, store, &coverFiles,
                                      [&mainWindow] { return mainWindow && mainWindow->isActive(); });
     QObject::connect(&config, &settings::ConfigFile::reloadIssues, &appController,
@@ -430,6 +469,14 @@ int main(int argc, char** argv)
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Catalog", &catalog);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Account", &account);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Player", &player);
+    qmlRegisterSingletonInstance("Noctara", 1, 0, "Themes", &themesUi);
+    qmlRegisterSingletonInstance("Noctara", 1, 0, "Shortcuts", &keyboard);
+    qmlRegisterSingletonInstance("Noctara", 1, 0, "Layout", &layout);
+    qmlRegisterSingletonInstance("Noctara", 1, 0, "Tray", &tray);
+    qmlRegisterUncreatableType<models::PlaylistDetail>("Noctara", 1, 0, "PlaylistDetail",
+                                                       QStringLiteral("Provided by Catalog"));
+    qmlRegisterUncreatableType<models::UserDetail>("Noctara", 1, 0, "UserDetail",
+                                                   QStringLiteral("Provided by Catalog"));
     qmlRegisterUncreatableType<media::QueueModel>("Noctara", 1, 0, "QueueModel", QStringLiteral("Provided by Player"));
     qmlRegisterType<ui::WaveformItem>("Noctara", 1, 0, "WaveformItem");
     qmlRegisterUncreatableType<models::CollectionModel>("Noctara", 1, 0, "CollectionModel",
@@ -442,11 +489,14 @@ int main(int argc, char** argv)
                                                       QStringLiteral("Provided by Account"));
     QObject::connect(&languages, &i18n::LanguageManager::languageChanged, &engine, &QQmlEngine::retranslate);
 
-    if (!cli.page.isEmpty()) {
+    // Scripted runs (smoke tests, screenshots) start the same way every time.
+    const bool scripted = cli.smokeTest || !cli.screenshot.isEmpty();
+    {
         // "settings/appearance" opens a settings category directly.
-        QVariantMap initial{{QStringLiteral("page"), cli.page.section(u'/', 0, 0)}};
-        if (cli.page.contains(u'/')) {
-            initial.insert(QStringLiteral("settingsCategory"), cli.page.section(u'/', 1, 1));
+        const QString start = cli.page.isEmpty() ? (scripted ? QStringLiteral("home") : layout.startPage()) : cli.page;
+        QVariantMap initial{{QStringLiteral("page"), start.section(u'/', 0, 0)}};
+        if (start.contains(u'/')) {
+            initial.insert(QStringLiteral("settingsCategory"), start.section(u'/', 1, 1));
         }
         engine.setInitialProperties(initial);
     }
@@ -460,7 +510,22 @@ int main(int argc, char** argv)
         // Main.qml starts hidden so GPU timestamps can be enabled before the scene graph initialises.
         gfx::configureWindow(*window, decision, paths.cacheDir);
         frames.attach(window);
-        window->setVisible(true);
+        if (!scripted) {
+            layout.restore(*window);
+        }
+        if (!scripted && layout.startMinimized()) {
+            // In the tray when there is one (the window stays hidden), otherwise minimized.
+            if (!tray.active()) {
+                window->showMinimized();
+            }
+        } else {
+            window->setVisible(true);
+        }
+        QObject::connect(app.get(), &QCoreApplication::aboutToQuit, window, [window, &layout, scripted] {
+            if (!scripted) {
+                layout.remember(*window, window->property("page").toString());
+            }
+        });
         // --navigate a,b,c switches every 500 ms (exercises transitions and returning to earlier pages).
         const QStringList steps = cli.navigate.split(u',', Qt::SkipEmptyParts);
         for (qsizetype i = 0; i < steps.size(); ++i) {
@@ -471,6 +536,10 @@ int main(int argc, char** argv)
                 }
                 if (target == u"queue-panel") {
                     window->setProperty("queuePanel", true);
+                    return;
+                }
+                if (target == u"full-player" || target == u"cheat-sheet") {
+                    window->setProperty(target == u"full-player" ? "fullPlayer" : "cheatSheet", true);
                     return;
                 }
                 window->setProperty("page", target.section(u'/', 0, 0));

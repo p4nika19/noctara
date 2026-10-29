@@ -72,6 +72,11 @@ so queue edits and stops do not download tracks that never play. Further items a
 through coalesced `/tracks?ids=` lookups before they play. When the queue ends, *Autoplay related tracks* appends
 tracks related to the last one.
 
+With *Restore the queue* (on by default) the queue (up to 500 track ids around the current one), the current item,
+its position and the context are saved too: on track changes, queue edits, pause and quit. At the next start the
+tracks are looked up again by id and the queue comes back paused at that position; nothing is fetched or played
+until Play. A shuffled queue comes back in its shuffled order.
+
 Volume, mute, shuffle and repeat live in `<state>/session.json` (written debounced, off the GUI thread). The volume
 slider maps to gain with a cubic curve, like the system's own slider.
 
@@ -88,6 +93,21 @@ slider maps to gain with a cubic curve, like the system's own slider.
   front, replacing the previous one.
 - In-window keys: Space (play/pause), Ctrl+←/→ (previous/next), Shift+←/→ (seek 5 s), Ctrl+↑/↓ (volume), Ctrl+M
   (mute), Ctrl+Shift+Q (queue), and the media keys while the window has focus. Remapping arrives with slice (h).
+
+## Full-screen player and context menus
+
+Clicking the bar's cover (or the *Full-screen player* shortcut) opens the current track large: the cover flies from
+the bar into place (a shared-element transition driven by one progress value), over the track's own pre-blurred
+artwork; title, artist (a link to their page), the waveform or a plain progress line, transport, volume, and the
+queue beside it when the window is wide enough (*Layout → Full-screen player*). F11 or the corner button also puts
+the window into full screen; Escape leaves both.
+
+Right-click (or the menu key) opens one shared glass menu with what fits the element: tracks (play, play next, add
+to queue, go to artist, open on SoundCloud, copy link), playlists (open, play, queue, go to owner, links), people
+(open profile, links), queue items (play, play next, remove, go to artist, links, clear upcoming), the player bar
+and the full-screen cover (play/pause, next, previous, shuffle, repeat, full-screen player, queue, go to artist,
+links, link at the current time), and the waveform (play from here, copy a link that starts there). Links open only
+`http(s)` URLs.
 
 ## Waveform
 
@@ -110,4 +130,5 @@ nothing plays.
 - Loudness normalization: SoundCloud publishes no loudness data for its streams, and measuring it would mean
   decoding a track before it plays. Left out rather than faked.
 - Output device selection: Noctara follows the system's default output.
-- Restoring the last queue at startup, the full-screen player and remappable shortcuts belong to slice (h).
+- (Slice h added queue restore, the full-screen player and remappable shortcuts; see above and
+  [architecture.md](architecture.md).)

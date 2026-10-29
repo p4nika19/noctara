@@ -1,0 +1,31 @@
+# Paper: flat and quiet. Small corners, no lift on glass, a serif heading font if installed.
+# Pair it with Appearance → Surface style → Flat and Button material → Plain.
+[theme]
+name = "Paper"
+description = "Flat, quiet and square-ish"
+author = "Noctara examples"
+accent = "#c2410c"
+
+[colors.light]
+backdrop = "#f6f3ee"
+backdropTop = "#f8f6f2"
+backdropBottom = "#efeae2"
+textPrimary = "#1c1917"
+
+[colors.dark]
+backdrop = "#171513"
+textPrimary = "#f5f2ec"
+
+[radius]
+xs = 3
+sm = 5
+md = 8
+lg = 12
+button = 6
+
+[fonts]
+heading = "Source Serif 4"   # falls back to the bundled Manrope when missing
+
+[glass.light]
+saturationLift = 0
+brightnessLift = 0

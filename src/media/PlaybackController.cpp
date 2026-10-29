@@ -9,6 +9,7 @@
 #include "settings/SettingsStore.hpp"
 
 #include <QCoreApplication>
+#include <QRandomGenerator>
 #include <QSet>
 
 #include <cmath>
@@ -114,10 +115,48 @@ PlaybackController::PlaybackController(Dependencies dependencies, QObject* paren
     });
     applySettings();
     applyGain();
+    if (m_settings.boolValue(keys::RestoreQueue) && !m_session.queue.empty()) {
+        restoreQueue(m_session);
+    }
+}
+
+void PlaybackController::restoreQueue(const SessionState& saved)
+{
+    (void)m_api.lookupTracks(std::vector<api::Id>(saved.queue.begin(), saved.queue.end()), &m_requests,
+                             [this, saved](Result<std::vector<api::Track>> tracks) {
+                                 if (!tracks || !m_queue.empty()) {
+                                     return;  // offline, or something started playing meanwhile
+                                 }
+                                 QHash<api::Id, api::Track> byId;
+                                 for (api::Track& track : *tracks) {
+                                     byId.insert(track.id, std::move(track));
+                                 }
+                                 std::vector<QueueItem> items;
+                                 int current = 0;
+                                 for (std::size_t i = 0; i < saved.queue.size(); ++i) {
+                                     if (const auto it = byId.constFind(saved.queue[i]); it != byId.constEnd()) {
+                                         if (std::cmp_less_equal(i, saved.current)) {
+                                             current = static_cast<int>(items.size());
+                                         }
+                                         items.push_back({.track = *it, .context = saved.context, .uid = 0});
+                                     }
+                                 }
+                                 if (items.empty()) {
+                                     return;
+                                 }
+                                 const bool sameTrack = items[static_cast<std::size_t>(current)].track.id ==
+                                                        saved.queue[static_cast<std::size_t>(saved.current)];
+                                 m_queue.restore(std::move(items), current, m_queue.shuffle());
+                                 m_resumeAt = sameTrack ? saved.positionMs : 0;
+                                 m_queueModel.reload();
+                                 publishCurrent();
+                                 Q_EMIT stateChanged();
+                             });
 }
 
 PlaybackController::~PlaybackController()
 {
+    saveSession();  // with the position as it is now
     m_resolver->disable();
     if (m_prefetcher) {
         m_prefetcher->cancel();
@@ -138,7 +177,7 @@ std::vector<QueueItem> PlaybackController::itemsFrom(std::vector<api::Track> tra
     return items;
 }
 
-void PlaybackController::playCollection(models::CollectionModel* model, int row)
+void PlaybackController::playCollection(models::CollectionModel* model, int row, const QString& context)
 {
     if (model == nullptr || row < 0 || row >= model->count()) {
         return;
@@ -163,7 +202,26 @@ void PlaybackController::playCollection(models::CollectionModel* model, int row)
             tracks.push_back(*track);
         }
     }
-    playTracks(std::move(tracks), start, {});
+    playTracks(std::move(tracks), start, context);
+}
+
+void PlaybackController::shufflePlay(models::CollectionModel* model, const QString& context)
+{
+    if (model == nullptr) {
+        return;
+    }
+    std::vector<int> rows;
+    for (int row = 0; row < model->count(); ++row) {
+        if (std::holds_alternative<api::Track>(model->entries()[static_cast<std::size_t>(row)].item)) {
+            rows.push_back(row);
+        }
+    }
+    if (rows.empty()) {
+        return;
+    }
+    setShuffle(true);
+    const auto pick = QRandomGenerator::global()->bounded(static_cast<quint32>(rows.size()));
+    playCollection(model, rows[pick], context);
 }
 
 void PlaybackController::enqueueCollection(models::CollectionModel* model, int row, bool next)
@@ -316,6 +374,7 @@ std::optional<PlaybackSource> PlaybackController::sourceFor(const QueueItem& ite
 
 void PlaybackController::startCurrent(std::int64_t startMs, bool paused)
 {
+    m_resumeAt = 0;
     ++m_trackSerial;
     m_ended = false;
     m_started = false;
@@ -361,6 +420,7 @@ void PlaybackController::startCurrent(std::int64_t startMs, bool paused)
 
 void PlaybackController::publishCurrent()
 {
+    saveSession();
     m_error = -1;
     m_nextPrepared = false;
     const api::Track* track = currentTrack();
@@ -547,6 +607,7 @@ void PlaybackController::pause()
 {
     m_pendingPlay = false;
     m_native.pause();
+    saveSession();
     Q_EMIT stateChanged();
 }
 
@@ -660,6 +721,7 @@ void PlaybackController::clearUpcoming()
 
 void PlaybackController::queueEdited()
 {
+    saveSession();
     m_queueModel.reload();
     Q_EMIT queueChanged();
     if (m_nextPrepared) {
@@ -797,6 +859,12 @@ QString PlaybackController::permalink() const
     return track != nullptr ? track->permalinkUrl : QString();
 }
 
+qint64 PlaybackController::artistId() const
+{
+    const api::Track* track = currentTrack();
+    return track != nullptr ? track->user.id : 0;
+}
+
 QString PlaybackController::context() const
 {
     const QueueItem* item = m_queue.currentItem();
@@ -814,7 +882,7 @@ qint64 PlaybackController::position() const
     if (m_ended) {
         return m_duration;
     }
-    return m_started ? m_native.position() : 0;
+    return m_started ? m_native.position() : m_resumeAt;
 }
 
 bool PlaybackController::playing() const noexcept
@@ -854,6 +922,15 @@ void PlaybackController::saveSession()
 {
     m_session.shuffle = m_queue.shuffle();
     m_session.repeat = m_queue.repeat();
+    m_session.queue.clear();
+    // Around the current item when the queue is long.
+    const int first = std::max(0, m_queue.current() - static_cast<int>(SessionState::kMaxQueue / 2));
+    for (int i = first; i < m_queue.size() && m_session.queue.size() < SessionState::kMaxQueue; ++i) {
+        m_session.queue.push_back(m_queue.items()[static_cast<std::size_t>(i)].track.id);
+    }
+    m_session.current = m_queue.current() - first;
+    m_session.positionMs = position();
+    m_session.context = context();
     m_store.save(m_session);
 }
 

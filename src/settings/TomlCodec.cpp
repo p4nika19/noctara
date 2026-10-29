@@ -280,8 +280,9 @@ QByteArray serializeConfig(const Schema& schema, const ValueMap& userValues, std
                 continue;
             }
             out += u'\n';
-            appendComment(out,
-                          QString::fromUtf8(def.label) + QStringLiteral(": ") + QString::fromUtf8(def.description));
+            appendComment(out, def.description == nullptr ? QString::fromUtf8(def.label)
+                                                          : QString::fromUtf8(def.label) + QStringLiteral(": ") +
+                                                                QString::fromUtf8(def.description));
             appendComment(out, describeConstraints(def));
             const QString leaf = latin(def.leafName());
             if (user[i] != nullptr) {

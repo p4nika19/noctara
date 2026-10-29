@@ -1,6 +1,6 @@
 # Architecture
 
-This document grows with each slice. It currently covers slices (a) to (g).
+This document grows with each slice. It currently covers slices (a) to (h).
 
 ```
             ┌──────────────── app/main.cpp (composition root) ────────────────┐
@@ -35,6 +35,13 @@ Slice (g) adds `media` (depends on `core`, `settings`, `cache`, `api` and `model
 `Decoder`, per-track `Voice` threads, the `Mixer` in the audio callback, `NativeBackend` behind `IPlaybackBackend`,
 the pure `PlaybackQueue`, `PlaybackController` (the QML `Player` singleton) and MPRIS. `ui` adds the waveform item,
 the tray icon and track notifications. See [playback.md](playback.md).
+Slice (h) adds no module. `theme` gains user themes (`UserTheme`: pure parsing, validation and application;
+`ThemeLibrary`: the watched `<config>/themes` folder). `ui` gains `ThemesController` (QML `Themes`),
+`KeyboardController` (QML `Shortcuts`: remappable shortcuts, conflicts, the cheat sheet, global shortcuts through the
+XDG portal), `LayoutController` (QML `Layout`: the layout settings and the remembered window state) and the
+catalog's page models (feed, likes, history, library, following, trending charts) and detail pages
+(`models::PlaylistDetail`, `models::UserDetail`). The pages, the full-screen player, the context menu and the
+settings editors (shortcut recorder, navigation items, theme picker) are QML. See [themes.md](themes.md).
 
 Static libraries per module (`noctara_<module>`); the executable only wires them together. Dependencies point downward only: `ui` may use everything, and `core` uses nothing but Qt Core.
 

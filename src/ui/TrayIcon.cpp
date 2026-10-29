@@ -40,9 +40,11 @@ void TrayIcon::apply()
     const bool wanted = possible && m_settings.boolValue(settings::keys::TrayIcon);
     if (wanted && !m_icon) {
         create();
+        Q_EMIT activeChanged();
     } else if (!wanted && m_icon) {
         m_icon.reset();
         m_menu.reset();
+        Q_EMIT activeChanged();
     }
 }
 

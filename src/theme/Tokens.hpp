@@ -235,6 +235,9 @@ class GlassTokens {
     // Effective style after fallbacks: kawase | gaussian | liquid | solid.
     Q_PROPERTY(QString style MEMBER style CONSTANT)
     Q_PROPERTY(QString requestedStyle MEMBER requestedStyle CONSTANT)
+    Q_PROPERTY(QString surface MEMBER surface CONSTANT)
+    Q_PROPERTY(QString requestedSurface MEMBER requestedSurface CONSTANT)
+    Q_PROPERTY(bool flat MEMBER flat CONSTANT)
     Q_PROPERTY(bool blurred MEMBER blurred CONSTANT)  // the shared backdrop blur pipeline is in use
     Q_PROPERTY(int quality MEMBER quality CONSTANT)   // 0 low, 1 medium, 2 high (after the governor)
     Q_PROPERTY(qreal blurDownsample MEMBER blurDownsample CONSTANT)
@@ -267,6 +270,10 @@ class GlassTokens {
 public:
     QString style = QStringLiteral("kawase");
     QString requestedStyle = QStringLiteral("kawase");
+    // Look of panels, independent of the blur: frosted | liquid | flat (effective, after fallbacks).
+    QString surface = QStringLiteral("frosted");
+    QString requestedSurface = QStringLiteral("frosted");
+    bool flat = false;
     bool blurred = true;
     int quality = 2;
     // Shared blur pipeline parameters, see blurPlan().

@@ -1,0 +1,38 @@
+{
+ "urn": "soundcloud:system-playlists:trending-by-genre:all-genres",
+ "permalink": "trending-by-genre:all-genres",
+ "permalink_url": "https://soundcloud.com/discover/sets/trending-by-genre:all-genres",
+ "title": "All Genres",
+ "short_title": "All Genres",
+ "playlist_type": "PLAYLIST",
+ "last_updated": null,
+ "likes_count": 5879,
+ "tracks": [
+  {
+   "id": 2422820481,
+   "kind": "track",
+   "monetization_model": "BLACKBOX",
+   "policy": "MONETIZE"
+  },
+  {
+   "id": 2424368472,
+   "kind": "track",
+   "monetization_model": "BLACKBOX",
+   "policy": "MONETIZE"
+  },
+  {
+   "id": 2416007286,
+   "kind": "track",
+   "monetization_model": "AD_SUPPORTED",
+   "policy": "MONETIZE"
+  }
+ ],
+ "is_public": true,
+ "user": {
+  "id": 1,
+  "username": "SoundCloud",
+  "kind": "user"
+ },
+ "kind": "system-playlist",
+ "id": "soundcloud:system-playlists:trending-by-genre:all-genres"
+}

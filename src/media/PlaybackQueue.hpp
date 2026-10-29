@@ -27,6 +27,8 @@ class PlaybackQueue {
 public:
     // Replaces the queue; `start` becomes current. With shuffle on, the others are shuffled around it.
     void replace(std::vector<QueueItem> items, int start);
+    // Puts back a queue exactly as it was saved (already in playing order: nothing is shuffled again).
+    void restore(std::vector<QueueItem> items, int current, bool shuffle);
     void append(std::vector<QueueItem> items);
     // After the current item.
     void insertNext(std::vector<QueueItem> items);

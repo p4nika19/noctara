@@ -78,7 +78,7 @@ FocusScope {
             }
         }
 
-        ListView {
+        QueueList {
             id: list
             anchors.top: head.bottom
             anchors.topMargin: Theme.space.md
@@ -88,24 +88,8 @@ FocusScope {
             anchors.leftMargin: Math.max(Theme.space.sm, panel.cornerInset)
             anchors.right: parent.right
             anchors.rightMargin: Math.max(Theme.space.sm, panel.cornerInset)
-            clip: true
-            reuseItems: true
-            boundsBehavior: Flickable.StopAtBounds
-            model: root.open || panel.opacity > 0 ? root.queue : null
-            currentIndex: root.queue.currentIndex
-            highlightFollowsCurrentItem: false
-            ScrollBar.vertical: ScrollBar {}
-            delegate: QueueRow {
-                width: ListView.view.width
-            }
-            onCountChanged: if (root.open) positionViewAtIndex(Math.max(0, currentIndex), ListView.Contain)
-            Connections {
-                target: root
-                function onOpenChanged() {
-                    if (root.open)
-                        list.positionViewAtIndex(Math.max(0, root.queue.currentIndex), ListView.Center)
-                }
-            }
+            active: root.open || panel.opacity > 0
+            onActiveChanged: if (root.open) centerOnCurrent()
         }
 
         Text {
@@ -117,103 +101,6 @@ FocusScope {
             text: qsTr("Nothing queued. Play a track or a playlist and it shows up here.")
             font: Theme.font.body
             color: Theme.colors.textSecondary
-        }
-    }
-
-    component QueueRow: Item {
-        id: row
-        required property int index
-        required property string title
-        required property string subtitle
-        required property string thumbnail
-        required property var duration
-        required property bool current
-        required property bool protectedMedia
-        required property bool pending
-
-        implicitHeight: Theme.space.rowHeight
-        Accessible.role: Accessible.ListItem
-        Accessible.name: pending ? qsTr("Loading") : qsTr("%1, %2").arg(title).arg(subtitle)
-
-        StateLayer {
-            radius: Theme.radius.sm
-            hovered: area.containsMouse
-            pressed: area.pressed
-        }
-        Rectangle {
-            anchors.fill: parent
-            radius: Theme.radius.sm
-            visible: row.current
-            color: Qt.rgba(Theme.colors.accent.r, Theme.colors.accent.g, Theme.colors.accent.b, 0.16)
-        }
-        MouseArea {
-            id: area
-            anchors.fill: parent
-            hoverEnabled: true
-            onClicked: Player.playQueueItem(row.index)
-        }
-        CoverArt {
-            id: art
-            anchors.left: parent.left
-            anchors.leftMargin: Theme.space.sm
-            anchors.verticalCenter: parent.verticalCenter
-            width: row.height - Theme.space.sm * 2
-            height: width
-            source: row.thumbnail
-        }
-        Column {
-            anchors.left: art.right
-            anchors.leftMargin: Theme.space.md
-            anchors.right: trailing.left
-            anchors.rightMargin: Theme.space.sm
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: Theme.space.xxs
-            Text {
-                width: parent.width
-                text: row.pending ? qsTr("Loading…") : row.title
-                font: row.current ? Theme.font.bodyStrong : Theme.font.body
-                color: row.current ? Theme.colors.accent : Theme.colors.textPrimary
-                elide: Text.ElideRight
-                textFormat: Text.PlainText
-            }
-            Text {
-                width: parent.width
-                text: row.protectedMedia ? qsTr("%1 · Protected").arg(row.subtitle) : row.subtitle
-                font: Theme.font.caption
-                color: Theme.colors.textSecondary
-                elide: Text.ElideRight
-                textFormat: Text.PlainText
-            }
-        }
-        Item {
-            id: trailing
-            anchors.right: parent.right
-            anchors.rightMargin: Theme.space.xs
-            anchors.verticalCenter: parent.verticalCenter
-            width: Math.max(time.implicitWidth, remove.width)
-            height: remove.height
-            Text {
-                id: time
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                visible: !area.containsMouse && !remove.hovered && row.duration > 0
-                text: Format.revision >= 0 ? Format.duration(row.duration) : ""
-                font: Theme.font.numeric
-                color: Theme.colors.textTertiary
-            }
-            IconButton {
-                id: remove
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                width: Theme.space.controlHeightSmall
-                height: width
-                material: "flat"
-                iconName: "x"
-                iconSize: Theme.space.iconSizeSmall
-                visible: area.containsMouse || hovered || activeFocus
-                text: qsTr("Remove from queue")
-                onClicked: Player.removeQueueItem(row.index)
-            }
         }
     }
 }

@@ -308,6 +308,7 @@ void AccountController::onRejected()
 void AccountController::applyUser(const api::User& user)
 {
     m_username = user.username;
+    m_userId = user.id;
     m_displayName = user.fullName.isEmpty() ? user.username : user.fullName;
     m_permalinkUrl = user.permalinkUrl;
     m_avatarUrl = QUrl(user.avatarUrl);
@@ -316,6 +317,7 @@ void AccountController::applyUser(const api::User& user)
 void AccountController::clearAccount()
 {
     m_username.clear();
+    m_userId = 0;
     m_displayName.clear();
     m_permalinkUrl.clear();
     m_avatarUrl.clear();

@@ -25,6 +25,8 @@ namespace noctara::ui {
 // the language live. Needs a QApplication (the menu is a QMenu).
 class TrayIcon : public QObject {
     Q_OBJECT
+    // The icon is in the tray right now (closing the window can then hide it there).
+    Q_PROPERTY(bool active READ active NOTIFY activeChanged)
 
 public:
     TrayIcon(media::PlaybackController& player, settings::SettingsStore& settings, i18n::LanguageManager& languages,
@@ -35,9 +37,12 @@ public:
     TrayIcon(TrayIcon&&) = delete;
     TrayIcon& operator=(TrayIcon&&) = delete;
 
+    [[nodiscard]] bool active() const noexcept { return m_icon != nullptr; }
+
 Q_SIGNALS:
     // The icon was clicked or "Show Noctara" chosen.
     void showRequested();
+    void activeChanged();
 
 private:
     void apply();

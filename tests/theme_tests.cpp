@@ -161,17 +161,40 @@ TEST_SUITE("theme.object")
         CHECK(theme.glass().style == QStringLiteral("solid"));
         CHECK_FALSE(theme.glass().translucent);
 
-        REQUIRE(store.setUserValue(keys::GlassStyle, QStringLiteral("liquid")).has_value());
+        REQUIRE(store.setUserValue(keys::GlassStyle, QStringLiteral("gaussian")).has_value());
+        REQUIRE(store.setUserValue(keys::GlassSurface, QStringLiteral("liquid")).has_value());
         theme.setGlassLimits(1, QStringLiteral("kawase"), false);
         CHECK(theme.glass().style == QStringLiteral("kawase"));
-        CHECK(theme.glass().requestedStyle == QStringLiteral("liquid"));
+        CHECK(theme.glass().requestedStyle == QStringLiteral("gaussian"));
+        CHECK(theme.glass().surface == QStringLiteral("frosted"));  // the cap rules out Liquid Glass
+        CHECK(theme.glass().requestedSurface == QStringLiteral("liquid"));
         CHECK(theme.glass().quality == 1);
         CHECK_FALSE(theme.glass().backdropAnimated);
         theme.setGlassLimits(2, QString(), true);
-        CHECK(theme.glass().style == QStringLiteral("liquid"));
+        CHECK(theme.glass().style == QStringLiteral("gaussian"));
+        CHECK(theme.glass().surface == QStringLiteral("liquid"));
         CHECK(theme.glass().backdropAnimated);
         REQUIRE(store.setUserValue(keys::ReduceTransparency, true).has_value());
         CHECK(theme.glass().style == QStringLiteral("solid"));
+        CHECK(theme.glass().surface == QStringLiteral("frosted"));  // nothing to bend without a blur
+    }
+
+    TEST_CASE("The surface style is independent of the blur: flat surfaces over a Dual Kawase blur")
+    {
+        settings::SettingsStore store(settings::Schema::builtin());
+        Theme theme(store,
+                    FontFamilies{QStringLiteral("Manrope"), QStringLiteral("Inter"), QStringLiteral("JetBrains Mono")});
+        REQUIRE(store.setUserValue(keys::GlassStyle, QStringLiteral("kawase")).has_value());
+        REQUIRE(store.setUserValue(keys::GlassSurface, QStringLiteral("flat")).has_value());
+        CHECK(theme.glass().style == QStringLiteral("kawase"));
+        CHECK(theme.glass().blurred);
+        CHECK(theme.glass().flat);
+        CHECK(theme.glass().surface == QStringLiteral("flat"));
+        // The blur is the plain Kawase plan, not the softer one used under Liquid Glass.
+        CHECK(theme.glass().blurIterations == blurPlan(u"kawase", theme.glass().blurStrength, 2).iterations);
+        REQUIRE(store.setUserValue(keys::GlassStyle, QStringLiteral("solid")).has_value());
+        CHECK(theme.glass().flat);  // flat opaque surfaces
+        CHECK_FALSE(theme.glass().blurred);
     }
 
     TEST_CASE("UI zoom scales metrics and fonts; zero animation speed disables motion")

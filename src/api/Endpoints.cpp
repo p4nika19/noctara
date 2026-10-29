@@ -143,6 +143,16 @@ Endpoint<Page<Entry>> userLikes(Id user, int limit)
     return list(idPath("/users/", user, "/track_likes"), limit, kVolatile);
 }
 
+Endpoint<Page<Entry>> followings(Id user, int limit)
+{
+    return list(idPath("/users/", user, "/followings"), limit, kListing);
+}
+
+Endpoint<Page<Entry>> library(int limit)
+{
+    return list(QStringLiteral("/me/library/all"), limit, kVolatile, Auth::Required);
+}
+
 Endpoint<Page<Entry>> related(Id track, int limit)
 {
     return list(idPath("/tracks/", track, "/related"), limit, kListing);
@@ -158,11 +168,14 @@ Endpoint<Page<Entry>> history(int limit)
     return list(QStringLiteral("/me/play-history/tracks"), limit, kVolatile, Auth::Required);
 }
 
-Endpoint<Page<Entry>> charts(ChartKind kind, const QString& genre, int limit)
+Endpoint<Page<Entry>> trending(const QString& genre)
 {
-    return list(QStringLiteral("/charts"), limit, kListing, Auth::Optional,
-                {{QStringLiteral("kind"), kind == ChartKind::Top ? QStringLiteral("top") : QStringLiteral("trending")},
-                 {QStringLiteral("genre"), genre}});
+    // Only safe characters reach the path: genres are fixed ids, but never trust a string in a URL.
+    QString id = genre;
+    id.removeIf([](QChar c) { return !(c.isLetterOrNumber() || c == u'-'); });
+    return get<Page<Entry>>(
+        apiUrl(QStringLiteral("/system-playlists/soundcloud:system-playlists:trending-by-genre:") + id),
+        parse::playlistTracks, kListing);
 }
 
 Endpoint<Page<Entry>> next(const Endpoint<Page<Entry>>& first, const QString& href)

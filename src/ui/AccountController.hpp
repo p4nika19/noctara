@@ -1,5 +1,7 @@
 #pragma once
 
+#include "api/Types.hpp"
+
 #include "auth/BrowserCookieSource.hpp"
 #include "net/Transport.hpp"
 
@@ -66,6 +68,8 @@ public:
     [[nodiscard]] QVariantList browserProfiles() const;
     [[nodiscard]] bool browserBusy() const noexcept { return m_browserBusy; }
     [[nodiscard]] const QString& username() const noexcept { return m_username; }
+    // The signed-in user's SoundCloud id, 0 while nobody is signed in (or before /me answered).
+    [[nodiscard]] api::Id userId() const noexcept { return m_userId; }
     [[nodiscard]] const QString& displayName() const noexcept { return m_displayName; }
     [[nodiscard]] const QString& permalinkUrl() const noexcept { return m_permalinkUrl; }
     [[nodiscard]] const QUrl& avatarUrl() const noexcept { return m_avatarUrl; }
@@ -115,6 +119,7 @@ private:
     bool m_busy = false;
     bool m_browserBusy = false;
     QString m_username;
+    api::Id m_userId = 0;
     QString m_displayName;
     QString m_permalinkUrl;
     QUrl m_avatarUrl;

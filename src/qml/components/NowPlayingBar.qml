@@ -1,14 +1,18 @@
 import QtQuick
+import QtQuick.Window
 import Noctara
 
 // The floating "now playing" bar: cover and title, transport, the waveform scrubber with times, volume and the
-// queue. Liquid Glass applies here (one of the few surfaces that bend light). Narrow windows drop the volume slider
-// first (the mute button stays).
+// queue. Liquid Glass applies here (one of the few surfaces that bend light). What it shows and its size follow
+// Layout → Player bar; narrow windows drop the volume slider first (the mute button stays). Clicking the cover
+// opens the full-screen player; right-click opens the player menu.
 GlassPanel {
     id: bar
 
     property bool queueOpen: false
     signal queueRequested()
+    signal fullPlayerRequested()
+    readonly property Item coverItem: cover
 
     readonly property real inset: Math.max(Theme.space.md, cornerInset)
     readonly property bool roomy: width > 900 * Theme.scale
@@ -17,9 +21,16 @@ GlassPanel {
     level: 1
     liquid: true
     radius: Theme.radius.lg
-    implicitHeight: Theme.space.nowPlayingHeight
+    implicitHeight: Theme.space.nowPlayingHeight * (Layout.playerSize === "compact" ? 0.8
+                                                    : Layout.playerSize === "large" ? 1.3 : 1)
     Accessible.role: Accessible.Pane
     Accessible.name: qsTr("Now playing")
+
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.RightButton
+        onClicked: mouse => Window.window.showPlayerMenu(bar, Qt.point(mouse.x, mouse.y))
+    }
 
     CoverArt {
         id: cover
@@ -29,6 +40,12 @@ GlassPanel {
         height: bar.height - Theme.space.md * 2
         width: height
         source: Player.coverUrl
+        MouseArea {
+            anchors.fill: parent
+            enabled: Player.hasTrack
+            cursorShape: Qt.PointingHandCursor
+            onClicked: bar.fullPlayerRequested()
+        }
     }
 
     Column {
@@ -137,7 +154,7 @@ GlassPanel {
         anchors.left: transport.right
         anchors.leftMargin: Theme.space.lg
         anchors.verticalCenter: parent.verticalCenter
-        text: Format.revision >= 0 ? Format.duration(waveform.dragging ? waveform.shownProgress * Player.duration
+        text: Layout.playerTime && Format.revision >= 0 ? Format.duration(waveform.dragging ? waveform.shownProgress * Player.duration
                                                                        : Player.position) : ""
         font: Theme.font.numeric
         color: Theme.colors.textSecondary
@@ -149,19 +166,24 @@ GlassPanel {
         anchors.right: total.left
         anchors.rightMargin: Theme.space.md
         anchors.verticalCenter: parent.verticalCenter
-        samples: Player.waveform
+        // Off: a plain line (no peaks, thin bars) instead of the waveform.
+        implicitHeight: (Layout.playerWaveform ? 32 : 10) * Theme.scale
+        barWidth: (Layout.playerWaveform ? 2.5 : 1) * Theme.scale
+        barGap: (Layout.playerWaveform ? 1.5 : 0) * Theme.scale
+        samples: Layout.playerWaveform ? Player.waveform : []
         progress: bar.progress
         storedRanges: Player.cachedRanges
         duration: Player.duration
         enabled: Player.hasTrack
         onSeekRequested: fraction => Player.seek(fraction * Player.duration)
+        onMenuRequested: (fraction, point) => Window.window.showWaveformMenu(fraction, waveform, point)
     }
     Text {
         id: total
         anchors.right: volume.left
         anchors.rightMargin: Theme.space.lg
         anchors.verticalCenter: parent.verticalCenter
-        text: Format.revision >= 0 ? Format.duration(Player.duration) : ""
+        text: Layout.playerTime && Format.revision >= 0 ? Format.duration(Player.duration) : ""
         font: Theme.font.numeric
         color: Theme.colors.textTertiary
     }
@@ -185,7 +207,7 @@ GlassPanel {
         }
         Slider {
             anchors.verticalCenter: parent.verticalCenter
-            visible: bar.roomy
+            visible: bar.roomy && Layout.playerVolume
             width: 96 * Theme.scale
             from: 0
             to: 1
@@ -202,6 +224,8 @@ GlassPanel {
         anchors.right: parent.right
         anchors.rightMargin: bar.inset
         anchors.verticalCenter: parent.verticalCenter
+        visible: Layout.playerQueueButton
+        width: visible ? implicitWidth : 0
         iconName: "list-music"
         checked: bar.queueOpen
         text: qsTr("Queue")

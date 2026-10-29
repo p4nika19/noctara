@@ -259,7 +259,7 @@ void SettingsController::rebuildSearch()
             }
             const auto* section = m_store.schema().section(def.sectionId());
             if (matches(QCoreApplication::translate("Settings", def.label)) ||
-                matches(QCoreApplication::translate("Settings", def.description)) ||
+                (def.description != nullptr && matches(QCoreApplication::translate("Settings", def.description))) ||
                 (section != nullptr && matches(QCoreApplication::translate("Settings", section->label))) ||
                 matches(latin(def.key))) {
                 rows.push_back(i);

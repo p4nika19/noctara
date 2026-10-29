@@ -69,6 +69,7 @@ public:
 
     void setAvailability(Availability availability);
     void setRowStatus(const QString& key, const QString& status);
+    [[nodiscard]] QString rowStatus(const QString& key) const { return m_availability.statuses.value(key); }
 
 Q_SIGNALS:
     void categoriesChanged();

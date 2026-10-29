@@ -12,9 +12,13 @@ Item {
     property var storedRanges: []
     property real duration: 0  // ms, for the time under the pointer
     signal seekRequested(real fraction)
+    // Right-click: the fraction under the pointer and the point in this item.
+    signal menuRequested(real fraction, point point)
+    property alias barWidth: bars.barWidth
+    property alias barGap: bars.barGap
 
-    readonly property bool dragging: area.pressed
-    readonly property real shownProgress: area.pressed ? area.fraction : progress
+    readonly property bool dragging: area.pressed && area.pressedButtons === Qt.LeftButton
+    readonly property real shownProgress: dragging ? area.fraction : progress
     // The software renderer repaints images on colour changes: follow the target palette, not the crossfade.
     readonly property var tones: Graphics.hardware ? Theme.colors : Theme.targetColors
 
@@ -32,6 +36,7 @@ Item {
     Keys.onRightPressed: step(5000)
 
     WaveformItem {
+        id: bars
         anchors.fill: parent
         samples: root.samples
         progress: root.shownProgress
@@ -42,7 +47,7 @@ Item {
         storedColor: root.tones.waveformBuffered
         hoverColor: Qt.rgba(root.tones.waveformPlayed.r, root.tones.waveformPlayed.g,
                             root.tones.waveformPlayed.b, 0.5)
-        barWidth: 2.5 * Theme.scale
+        barWidth: 2.5 * Theme.scale  // replaced when the user of WaveformView sets barWidth/barGap
         barGap: 1.5 * Theme.scale
     }
 
@@ -52,12 +57,22 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onPressed: mouse => fraction = Math.max(0, Math.min(1, mouse.x / width))
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onPressed: mouse => {
+            if (mouse.button === Qt.RightButton) {
+                root.menuRequested(Math.max(0, Math.min(1, mouse.x / width)), Qt.point(mouse.x, mouse.y))
+                return
+            }
+            fraction = Math.max(0, Math.min(1, mouse.x / width))
+        }
         onPositionChanged: mouse => {
             if (pressed)
                 fraction = Math.max(0, Math.min(1, mouse.x / width))
         }
-        onReleased: root.seekRequested(fraction)
+        onReleased: mouse => {
+            if (mouse.button === Qt.LeftButton)
+                root.seekRequested(fraction)
+        }
     }
 
     // Time under the pointer.

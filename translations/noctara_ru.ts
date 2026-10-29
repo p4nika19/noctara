@@ -219,7 +219,7 @@
 <context>
     <name>AppearanceDrawer</name>
     <message>
-        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+44"/>
+        <location filename="../src/qml/settings/AppearanceDrawer.qml" line="+45"/>
         <location line="+17"/>
         <source>Appearance</source>
         <translation>Оформление</translation>
@@ -270,9 +270,32 @@
     </message>
 </context>
 <context>
+    <name>Card</name>
+    <message>
+        <location filename="../src/qml/components/Card.qml" line="+29"/>
+        <source>Loading</source>
+        <translation>Загрузка</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1, %2</source>
+        <translation>%1, %2</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>Play</source>
+        <translation>Воспроизвести</translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>Album · %1</source>
+        <translation>Альбом · %1</translation>
+    </message>
+</context>
+<context>
     <name>CatalogRow</name>
     <message>
-        <location filename="../src/qml/components/CatalogRow.qml" line="+30"/>
+        <location filename="../src/qml/components/CatalogRow.qml" line="+39"/>
         <source>Loading</source>
         <translation>Загрузка</translation>
     </message>
@@ -306,7 +329,7 @@
         <translation>Альбом</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+84"/>
         <source>Not cacheable</source>
         <translation>Не кэшируется</translation>
     </message>
@@ -324,6 +347,67 @@
         <location line="+1"/>
         <source>Only a 30-second preview is available to your account.</source>
         <translation>Вашей учётной записи доступен только 30-секундный фрагмент.</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Add to queue</source>
+        <translation>Добавить в очередь</translation>
+    </message>
+</context>
+<context>
+    <name>ChartsPage</name>
+    <message>
+        <location filename="../src/qml/pages/ChartsPage.qml" line="+14"/>
+        <location line="+19"/>
+        <source>Charts</source>
+        <translation>Чарты</translation>
+    </message>
+    <message>
+        <location line="-18"/>
+        <source>Trending on SoundCloud right now</source>
+        <translation>Популярное на SoundCloud сейчас</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Genre</source>
+        <translation>Жанр</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>This chart is empty right now.</source>
+        <translation>Этот чарт сейчас пуст.</translation>
+    </message>
+</context>
+<context>
+    <name>CheatSheet</name>
+    <message>
+        <location filename="../src/qml/components/CheatSheet.qml" line="+39"/>
+        <location line="+15"/>
+        <source>Keyboard shortcuts</source>
+        <translation>Сочетания клавиш</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Close</source>
+        <translation>Закрыть</translation>
+    </message>
+    <message>
+        <location line="+49"/>
+        <source>Change them under Settings → Keyboard. Media keys always work.</source>
+        <translation>Их можно изменить в разделе «Настройки → Клавиатура». Медиаклавиши работают всегда.</translation>
+    </message>
+</context>
+<context>
+    <name>CollectionView</name>
+    <message>
+        <location filename="../src/qml/components/CollectionView.qml" line="+161"/>
+        <source>Try again</source>
+        <translation>Повторить</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Offline: showing saved results</source>
+        <translation>Нет сети: показаны сохранённые результаты</translation>
     </message>
 </context>
 <context>
@@ -391,14 +475,9 @@
         <translation>Размытие по Гауссу</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Liquid Glass</source>
-        <translation>Жидкое стекло</translation>
-    </message>
-    <message>
         <location line="+2"/>
-        <source>Solid</source>
-        <translation>Сплошной</translation>
+        <source>no blur</source>
+        <translation>без размытия</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -431,12 +510,27 @@
         <translation>Включено «Уменьшить прозрачность», поэтому поверхности непрозрачные.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
+        <source>Liquid Glass needs a blur: frosted glass is used.</source>
+        <translation>Liquid Glass нужно размытие: используется матовое стекло.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Energy saving is active: frosted glass is used for now.</source>
+        <translation>Включена экономия энергии: пока используется матовое стекло.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Switched to frosted glass automatically to keep animations smooth.</source>
+        <translation>Автоматически переключено на матовое стекло, чтобы анимации оставались плавными.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Energy saving is active: effects run at %1 quality.</source>
         <translation>Включено энергосбережение: качество эффектов — %1.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Lowered automatically to %1 because frames took too long. It is raised again when there is headroom.</source>
         <translation>Автоматически снижено (%1): кадры отрисовывались слишком долго. Качество снова повысится, когда появится запас.</translation>
     </message>
@@ -819,9 +913,240 @@
     </message>
 </context>
 <context>
+    <name>FullPlayer</name>
+    <message>
+        <location filename="../src/qml/components/FullPlayer.qml" line="+33"/>
+        <location line="+65"/>
+        <source>Now playing</source>
+        <translation>Сейчас играет</translation>
+    </message>
+    <message>
+        <location line="-20"/>
+        <source>Queue</source>
+        <translation>Очередь</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Leave full screen</source>
+        <translation>Выйти из полноэкранного режима</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Full screen</source>
+        <translation>Во весь экран</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Close the player</source>
+        <translation>Закрыть плеер</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Playing from %1</source>
+        <translation>Играет из «%1»</translation>
+    </message>
+    <message>
+        <location line="+125"/>
+        <source>Shuffle: on</source>
+        <translation>Перемешивание: вкл.</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Shuffle: off</source>
+        <translation>Перемешивание: выкл.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Previous</source>
+        <translation>Предыдущий</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Pause</source>
+        <translation>Пауза</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Play</source>
+        <translation>Воспроизвести</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Next</source>
+        <translation>Следующий</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Repeat: this track</source>
+        <translation>Повтор: этот трек</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Repeat: all</source>
+        <translation>Повтор: все</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Repeat: off</source>
+        <translation>Повтор: выкл.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Unmute</source>
+        <translation>Включить звук</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Mute</source>
+        <translation>Выключить звук</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Volume</source>
+        <translation>Громкость</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Up next</source>
+        <translation>Далее</translation>
+    </message>
+</context>
+<context>
+    <name>Genres</name>
+    <message>
+        <location filename="../src/ui/CatalogController.cpp" line="+42"/>
+        <source>All genres</source>
+        <translation>Все жанры</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Afrobeat</source>
+        <translation>Афробит</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Alternative Hip-hop</source>
+        <translation>Альтернативный хип-хоп</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Alternative Rock</source>
+        <translation>Альтернативный рок</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ambient</source>
+        <translation>Эмбиент</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Dancehall</source>
+        <translation>Дэнсхолл</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Dubstep</source>
+        <translation>Дабстеп</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Electronic</source>
+        <translation>Электроника</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Folk</source>
+        <translation>Фолк</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hardcore</source>
+        <translation>Хардкор</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hip-hop</source>
+        <translation>Хип-хоп</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>House</source>
+        <translation>Хаус</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Indie</source>
+        <translation>Инди</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Latin</source>
+        <translation>Латина</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Metal</source>
+        <translation>Метал</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pop</source>
+        <translation>Поп</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>R&amp;B</source>
+        <translation>R&amp;B</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Reggae</source>
+        <translation>Регги</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Rock</source>
+        <translation>Рок</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Trap</source>
+        <translation>Трэп</translation>
+    </message>
+</context>
+<context>
+    <name>HistoryPage</name>
+    <message>
+        <location filename="../src/qml/pages/HistoryPage.qml" line="+18"/>
+        <location line="+19"/>
+        <source>History</source>
+        <translation>История</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>Refresh</source>
+        <translation>Обновить</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Nothing played yet.</source>
+        <translation>Пока ничего не прослушано.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Listening history</source>
+        <translation>История прослушивания</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Sign in to your SoundCloud account (Settings → Accounts) to see what you played recently.</source>
+        <translation>Войдите в аккаунт SoundCloud («Настройки → Аккаунты»), чтобы видеть, что вы недавно слушали.</translation>
+    </message>
+</context>
+<context>
     <name>HomePage</name>
     <message>
-        <location filename="../src/qml/pages/HomePage.qml" line="+31"/>
+        <location filename="../src/qml/pages/HomePage.qml" line="+46"/>
         <source>Good night</source>
         <translation>Доброй ночи</translation>
     </message>
@@ -856,12 +1181,47 @@
         <translation>Подключите аккаунт SoundCloud, чтобы видеть ленту, лайки и плейлисты.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+12"/>
         <source>Recently played</source>
         <translation>Недавно прослушанное</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="+2"/>
+        <source>History</source>
+        <translation>История</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing played yet.</source>
+        <translation>Пока ничего не прослушано.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>From your feed</source>
+        <translation>Из вашей ленты</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Feed</source>
+        <translation>Лента</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Follow people on SoundCloud and their new tracks and reposts appear here.</source>
+        <translation>Подпишитесь на людей в SoundCloud — их новые треки и репосты появятся здесь.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Top tracks right now</source>
+        <translation>Популярные треки сейчас</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Charts</source>
+        <translation>Чарты</translation>
+    </message>
+    <message>
+        <location line="-48"/>
         <source>Now playing</source>
         <translation>Сейчас играет</translation>
     </message>
@@ -872,14 +1232,97 @@
     </message>
 </context>
 <context>
+    <name>LibraryPage</name>
+    <message>
+        <location filename="../src/qml/pages/LibraryPage.qml" line="+25"/>
+        <source>Library</source>
+        <translation>Медиатека</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Playlists &amp; albums</source>
+        <translation>Плейлисты и альбомы</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Following</source>
+        <translation>Подписки</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>You do not follow anyone yet.</source>
+        <translation>Вы пока ни на кого не подписаны.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No playlists or albums yet. Create or like some on SoundCloud.</source>
+        <translation>Плейлистов и альбомов пока нет. Создайте их или отметьте понравившиеся в SoundCloud.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Your library</source>
+        <translation>Ваша медиатека</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Sign in to your SoundCloud account (Settings → Accounts) to see your playlists, albums and the people you follow.</source>
+        <translation>Войдите в аккаунт SoundCloud («Настройки → Аккаунты»), чтобы видеть свои плейлисты, альбомы и подписки.</translation>
+    </message>
+</context>
+<context>
+    <name>LikesPage</name>
+    <message>
+        <location filename="../src/qml/pages/LikesPage.qml" line="+18"/>
+        <location line="+9"/>
+        <location line="+7"/>
+        <location line="+12"/>
+        <source>Likes</source>
+        <translation>Лайки</translation>
+    </message>
+    <message numerus="yes">
+        <location line="-27"/>
+        <source>%n track(s)</source>
+        <translation>
+            <numerusform>%n трек</numerusform>
+            <numerusform>%n трека</numerusform>
+            <numerusform>%n треков</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Play</source>
+        <translation>Воспроизвести</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Shuffle</source>
+        <translation>Перемешать</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>No liked tracks yet. Like tracks on SoundCloud and they appear here.</source>
+        <translation>Лайкнутых треков пока нет. Отмечайте треки в SoundCloud — они появятся здесь.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Liked tracks</source>
+        <translation>Понравившиеся треки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Sign in to your SoundCloud account (Settings → Accounts) to see the tracks you liked.</source>
+        <translation>Войдите в аккаунт SoundCloud («Настройки → Аккаунты»), чтобы видеть понравившиеся треки.</translation>
+    </message>
+</context>
+<context>
     <name>Main</name>
     <message>
-        <location filename="../src/qml/Main.qml" line="+37"/>
+        <location filename="../src/qml/Main.qml" line="+55"/>
         <source>Noctara</source>
         <translation>Noctara</translation>
     </message>
     <message>
-        <location line="-15"/>
+        <location line="-28"/>
         <source>Home</source>
         <translation>Главная</translation>
     </message>
@@ -905,60 +1348,215 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+185"/>
         <source>Charts</source>
         <translation>Чарты</translation>
     </message>
     <message>
-        <location line="-183"/>
+        <location line="+3"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
-        <location line="+127"/>
+        <location line="+70"/>
+        <source>Link copied.</source>
+        <translation>Ссылка скопирована.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Open on SoundCloud</source>
+        <translation>Открыть в SoundCloud</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Copy link</source>
+        <translation>Копировать ссылку</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <location line="+10"/>
+        <location line="+18"/>
+        <location line="+16"/>
+        <source>Play</source>
+        <translation>Воспроизвести</translation>
+    </message>
+    <message>
+        <location line="-43"/>
+        <location line="+10"/>
+        <location line="+18"/>
+        <source>Play next</source>
+        <translation>Играть следующим</translation>
+    </message>
+    <message>
+        <location line="-27"/>
+        <location line="+10"/>
+        <source>Add to queue</source>
+        <translation>Добавить в очередь</translation>
+    </message>
+    <message>
+        <location line="-8"/>
+        <location line="+29"/>
+        <location line="+27"/>
+        <source>Go to artist</source>
+        <translation>Перейти к исполнителю</translation>
+    </message>
+    <message>
+        <location line="-51"/>
+        <source>Open</source>
+        <translation>Открыть</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Go to owner</source>
+        <translation>Перейти к автору</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Open profile</source>
+        <translation>Открыть профиль</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Remove from queue</source>
+        <translation>Убрать из очереди</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Clear upcoming tracks</source>
+        <translation>Очистить следующие треки</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Pause</source>
+        <translation>Пауза</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Next track</source>
+        <translation>Следующий трек</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Previous track</source>
+        <translation>Предыдущий трек</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Shuffle</source>
+        <translation>Перемешать</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Repeat: this track</source>
+        <translation>Повтор: этот трек</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Repeat: all</source>
+        <translation>Повтор: все</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Repeat: off</source>
+        <translation>Повтор: выкл.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Close the full-screen player</source>
+        <translation>Закрыть полноэкранный плеер</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Full-screen player</source>
+        <translation>Полноэкранный плеер</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hide the queue</source>
+        <translation>Скрыть очередь</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show the queue</source>
+        <translation>Показать очередь</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Copy link at the current time</source>
+        <translation>Копировать ссылку на текущий момент</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Play from %1</source>
+        <translation>Играть с %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Copy link at %1</source>
+        <translation>Копировать ссылку на %1</translation>
+    </message>
+    <message>
+        <location line="+162"/>
         <source>Got it</source>
         <translation>Понятно</translation>
     </message>
     <message>
-        <location line="+32"/>
-        <source>Your library</source>
-        <translation>Ваша медиатека</translation>
+        <location line="+62"/>
+        <source>Back</source>
+        <translation>Назад</translation>
+    </message>
+</context>
+<context>
+    <name>NavItemsEditor</name>
+    <message>
+        <location filename="../src/qml/settings/NavItemsEditor.qml" line="+13"/>
+        <source>Home</source>
+        <translation>Главная</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Playlists, albums and followed artists will appear here.</source>
-        <translation>Здесь появятся плейлисты, альбомы и исполнители, на которых вы подписаны.</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Liked tracks</source>
-        <translation>Понравившиеся треки</translation>
+        <source>Search</source>
+        <translation>Поиск</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Tracks you like on SoundCloud will appear here.</source>
-        <translation>Здесь появятся треки, которые вы лайкнули в SoundCloud.</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Listening history</source>
-        <translation>История прослушивания</translation>
+        <source>Library</source>
+        <translation>Медиатека</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Recently played tracks will appear here.</source>
-        <translation>Здесь появятся недавно прослушанные треки.</translation>
+        <source>Likes</source>
+        <translation>Лайки</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>Top and trending tracks by genre will appear here.</source>
-        <translation>Здесь появятся популярные и набирающие популярность треки по жанрам.</translation>
+        <location line="+1"/>
+        <source>History</source>
+        <translation>История</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Charts</source>
+        <translation>Чарты</translation>
+    </message>
+    <message>
+        <location line="+64"/>
+        <source>Move up</source>
+        <translation>Выше</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Move down</source>
+        <translation>Ниже</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Show %1</source>
+        <translation>Показывать «%1»</translation>
     </message>
 </context>
 <context>
     <name>NavRail</name>
     <message>
-        <location filename="../src/qml/components/NavRail.qml" line="+56"/>
+        <location filename="../src/qml/components/NavRail.qml" line="+66"/>
         <source>Navigation</source>
         <translation>Навигация</translation>
     </message>
@@ -1053,12 +1651,12 @@
 <context>
     <name>NowPlayingBar</name>
     <message>
-        <location filename="../src/qml/components/NowPlayingBar.qml" line="+22"/>
+        <location filename="../src/qml/components/NowPlayingBar.qml" line="+27"/>
         <source>Now playing</source>
         <translation>Сейчас играет</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+43"/>
         <source>Preview · %1</source>
         <translation>Фрагмент · %1</translation>
     </message>
@@ -1108,7 +1706,7 @@
         <translation>Повтор: выкл.</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+58"/>
         <source>Unmute</source>
         <translation>Включить звук</translation>
     </message>
@@ -1123,9 +1721,22 @@
         <translation>Громкость</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+16"/>
         <source>Queue</source>
         <translation>Очередь</translation>
+    </message>
+</context>
+<context>
+    <name>PageHeader</name>
+    <message>
+        <location filename="../src/qml/components/PageHeader.qml" line="+50"/>
+        <source>List</source>
+        <translation>Список</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Grid</source>
+        <translation>Сетка</translation>
     </message>
 </context>
 <context>
@@ -1167,14 +1778,24 @@
         <translation>Размытие по Гауссу</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+6"/>
         <source>Liquid Glass</source>
         <translation>Жидкое стекло</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-5"/>
         <source>Solid (no blur)</source>
         <translation>Сплошной (без размытия)</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>flat</source>
+        <translation>плоский</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>frosted</source>
+        <translation>матовое стекло</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1268,6 +1889,78 @@
         <location line="+10"/>
         <source>Restore full quality</source>
         <translation>Вернуть полное качество</translation>
+    </message>
+</context>
+<context>
+    <name>PlaylistPage</name>
+    <message>
+        <location filename="../src/qml/pages/PlaylistPage.qml" line="+12"/>
+        <source>EP</source>
+        <translation>EP</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Single</source>
+        <translation>Сингл</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Compilation</source>
+        <translation>Сборник</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Album</source>
+        <translation>Альбом</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Playlist</source>
+        <translation>Плейлист</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>This playlist has no tracks.</source>
+        <translation>В этом плейлисте нет треков.</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+66"/>
+        <source>%n track(s)</source>
+        <translation>
+            <numerusform>%n трек</numerusform>
+            <numerusform>%n трека</numerusform>
+            <numerusform>%n треков</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>%1 likes</source>
+        <translation>%1 лайков</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Play</source>
+        <translation>Воспроизвести</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Shuffle</source>
+        <translation>Перемешать</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Open on SoundCloud</source>
+        <translation>Открыть в SoundCloud</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Copy link</source>
+        <translation>Копировать ссылку</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Link copied.</source>
+        <translation>Ссылка скопирована.</translation>
     </message>
 </context>
 <context>
@@ -1387,12 +2080,15 @@
         <translation>Закрыть очередь</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+26"/>
         <source>Nothing queued. Play a track or a playlist and it shows up here.</source>
         <translation>Очередь пуста. Включите трек или плейлист — он появится здесь.</translation>
     </message>
+</context>
+<context>
+    <name>QueueList</name>
     <message>
-        <location line="+19"/>
+        <location filename="../src/qml/components/QueueList.qml" line="+40"/>
         <source>Loading</source>
         <translation>Загрузка</translation>
     </message>
@@ -1402,7 +2098,7 @@
         <translation>%1, %2</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+43"/>
         <source>Loading…</source>
         <translation>Загрузка…</translation>
     </message>
@@ -1420,12 +2116,13 @@
 <context>
     <name>SearchPage</name>
     <message>
-        <location filename="../src/qml/pages/SearchPage.qml" line="+20"/>
+        <location filename="../src/qml/pages/SearchPage.qml" line="+25"/>
+        <location line="+45"/>
         <source>Search</source>
         <translation>Поиск</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="-35"/>
         <source>Tracks, playlists, albums and people</source>
         <translation>Треки, плейлисты, альбомы и люди</translation>
     </message>
@@ -1455,22 +2152,12 @@
         <translation>Люди</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+21"/>
         <source>Nothing found for “%1”.</source>
         <translation>По запросу «%1» ничего не найдено.</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <source>Try again</source>
-        <translation>Повторить</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>Offline: showing saved results</source>
-        <translation>Нет сети: показаны сохранённые результаты</translation>
-    </message>
-    <message>
-        <location line="+12"/>
+        <location line="+11"/>
         <source>Search SoundCloud</source>
         <translation>Поиск в SoundCloud</translation>
     </message>
@@ -1483,7 +2170,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+184"/>
+        <location filename="../src/app/main.cpp" line="+188"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation>Установленная libcurl собрана без поддержки HTTP/3.</translation>
     </message>
@@ -1493,18 +2180,18 @@
         <translation>Нужно аппаратное ускорение, а оно сейчас выключено.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Not available on this graphics device.</source>
         <translation>Недоступно на этом графическом устройстве.</translation>
     </message>
     <message>
-        <location filename="../src/settings/BuiltinSchema.cpp" line="+142"/>
-        <location line="+90"/>
+        <location filename="../src/settings/BuiltinSchema.cpp" line="+187"/>
+        <location line="+108"/>
         <source>Language</source>
         <translation>Язык</translation>
     </message>
     <message>
-        <location line="-89"/>
+        <location line="-107"/>
         <source>Interface language.</source>
         <translation>Язык интерфейса.</translation>
     </message>
@@ -1520,23 +2207,23 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+112"/>
+        <location line="+130"/>
         <source>Theme</source>
         <translation>Тема</translation>
     </message>
     <message>
-        <location line="-111"/>
+        <location line="-129"/>
         <source>Midnight (dark), Frost (light) or follow the system.</source>
         <translation>Midnight (тёмная), Frost (светлая) или как в системе.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+135"/>
+        <location line="+162"/>
         <source>Accent color</source>
         <translation>Акцентный цвет</translation>
     </message>
     <message>
-        <location line="-134"/>
+        <location line="-161"/>
         <source>The whole palette is generated from a single accent color.</source>
         <translation>Вся палитра строится из одного акцентного цвета.</translation>
     </message>
@@ -1587,16 +2274,17 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+525"/>
         <source>Icons</source>
         <translation>Значки</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-524"/>
         <source>Icon appearance.</source>
         <translation>Внешний вид значков.</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+34"/>
         <source>Graphics</source>
         <translation>Графика</translation>
     </message>
@@ -1672,12 +2360,13 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+633"/>
+        <location line="+538"/>
+        <location line="+344"/>
         <source>System</source>
         <translation>Как в системе</translation>
     </message>
     <message>
-        <location line="-632"/>
+        <location line="-881"/>
         <source>Midnight (dark)</source>
         <translation>Midnight (тёмная)</translation>
     </message>
@@ -1692,7 +2381,7 @@
         <translation>Режим «Как в системе» сразу следует за цветовой схемой рабочего стола.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+17"/>
         <source>Enforce readable contrast</source>
         <translation>Гарантировать читаемый контраст</translation>
     </message>
@@ -1717,7 +2406,7 @@
         <translation>Базовый цвет всей палитры, когда подбор по обложке выключен.</translation>
     </message>
     <message>
-        <location line="-133"/>
+        <location line="-160"/>
         <source>The light behind the interface.</source>
         <translation>Свет за интерфейсом.</translation>
     </message>
@@ -1742,7 +2431,7 @@
         <translation>Насколько плотно расположены элементы на страницах.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+20"/>
         <source>Sound</source>
         <translation>Звук</translation>
     </message>
@@ -1763,11 +2452,12 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+547"/>
         <source>Volume</source>
         <translation>Громкость</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-546"/>
         <source>Volume when Noctara starts.</source>
         <translation>Громкость при запуске Noctara.</translation>
     </message>
@@ -1902,7 +2592,7 @@
         <translation>Как Noctara обращается к веб-API SoundCloud.</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+84"/>
         <source>Vivid</source>
         <translation>Яркие</translation>
     </message>
@@ -1913,12 +2603,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+185"/>
+        <location line="+197"/>
         <source>Soft</source>
         <translation>Мягкие</translation>
     </message>
     <message>
-        <location line="-183"/>
+        <location line="-195"/>
         <source>Palette extraction</source>
         <translation>Извлечение палитры</translation>
     </message>
@@ -2003,37 +2693,12 @@
         <translation>Подсвечивает проигранную часть полосы прогресса и волны.</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Dual Kawase blur</source>
-        <translation>Размытие Dual Kawase</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Gaussian blur</source>
-        <translation>Размытие по Гауссу</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+18"/>
         <source>Liquid Glass</source>
         <translation>Жидкое стекло</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Solid (no blur)</source>
-        <translation>Сплошной (без размытия)</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Glass style</source>
-        <translation>Стиль стекла</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Blur styles need hardware acceleration; Solid is the cheapest.</source>
-        <translation>Стилям с размытием нужно аппаратное ускорение; «Сплошной» — самый экономный.</translation>
-    </message>
-    <message>
-        <location line="+9"/>
+        <location line="+14"/>
         <source>Blur strength</source>
         <translation>Сила размытия</translation>
     </message>
@@ -2064,8 +2729,8 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+168"/>
-        <location line="+74"/>
+        <location line="+169"/>
+        <location line="+302"/>
         <location line="+13"/>
         <location line="+12"/>
         <location line="+57"/>
@@ -2075,17 +2740,19 @@
         <translation>Авто</translation>
     </message>
     <message>
-        <location line="-559"/>
+        <location line="-788"/>
         <source>Low</source>
         <translation>Низкое</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location line="+333"/>
+        <location line="+25"/>
         <source>Medium</source>
         <translation>Среднее</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-357"/>
         <source>High</source>
         <translation>Высокое</translation>
     </message>
@@ -2100,7 +2767,8 @@
         <translation>В режиме «Авто» качество снижается, если кадры рисуются слишком долго, и потом снова повышается.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="-45"/>
+        <location line="+51"/>
         <source>Frosted glass</source>
         <translation>Матовое стекло</translation>
     </message>
@@ -2115,7 +2783,7 @@
         <translation>Тонированное стекло</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Clear</source>
         <translation>Прозрачные</translation>
     </message>
@@ -2130,12 +2798,7 @@
         <translation>Материал кнопок</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Frosted: milky blurred glass. Liquid: glossy glass with a bright rim. Tinted: glass coloured by the accent. Clear: outline only. Solid: opaque.</source>
-        <translation>Матовое — молочное размытое стекло. Жидкое — глянцевое стекло с яркой кромкой. Тонированное — стекло в цвете акцента. Прозрачные — только контур. Сплошные — непрозрачные.</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Reduce transparency</source>
         <translation>Уменьшить прозрачность</translation>
     </message>
@@ -2213,13 +2876,13 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+299"/>
+        <location line="+527"/>
         <location line="+23"/>
         <source>Custom</source>
         <translation>Свои</translation>
     </message>
     <message>
-        <location line="-320"/>
+        <location line="-548"/>
         <source>Corner radius</source>
         <translation>Скругление углов</translation>
     </message>
@@ -2342,11 +3005,12 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+138"/>
         <source>Regular</source>
         <translation>Обычные</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-137"/>
         <source>Bold</source>
         <translation>Жирные</translation>
     </message>
@@ -2362,11 +3026,12 @@
     </message>
     <message>
         <location line="+6"/>
+        <location line="+127"/>
         <source>Compact</source>
         <translation>Плотно</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-126"/>
         <source>Comfortable</source>
         <translation>Обычно</translation>
     </message>
@@ -2447,6 +3112,16 @@
     </message>
     <message>
         <location line="+7"/>
+        <source>Restore the queue</source>
+        <translation>Восстанавливать очередь</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Open with the queue, track and position of last time, paused.</source>
+        <translation>Открываться с прошлой очередью, треком и позицией, на паузе.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Media keys and system controls</source>
         <translation>Медиаклавиши и системное управление</translation>
     </message>
@@ -2476,7 +3151,394 @@
         <translation>Показывает уведомление о новом треке, когда окно Noctara не на переднем плане.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+7"/>
+        <source>Left</source>
+        <translation>Слева</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Right</source>
+        <translation>Справа</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+27"/>
+        <source>Bottom</source>
+        <translation>Снизу</translation>
+    </message>
+    <message>
+        <location line="-25"/>
+        <location line="+28"/>
+        <source>Position</source>
+        <translation>Положение</translation>
+    </message>
+    <message>
+        <location line="-27"/>
+        <source>Which edge of the window the navigation sits on.</source>
+        <translation>У какого края окна находится навигация.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Icons and labels</source>
+        <translation>Значки и подписи</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Auto-hide</source>
+        <translation>Автоскрытие</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Style</source>
+        <translation>Вид</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Auto-hide shows the navigation when the pointer reaches its edge.</source>
+        <translation>При автоскрытии навигация появляется, когда указатель доходит до её края.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Pages in the navigation</source>
+        <translation>Страницы в навигации</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Their order and which are shown. Settings is always there.</source>
+        <translation>Их порядок и какие показываются. «Настройки» есть всегда.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Top</source>
+        <translation>Сверху</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Where the player bar floats.</source>
+        <translation>Где находится панель плеера.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+49"/>
+        <location line="+25"/>
+        <source>Large</source>
+        <translation>Большой</translation>
+    </message>
+    <message>
+        <location line="-72"/>
+        <source>Size</source>
+        <translation>Размер</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Height of the player bar and its cover.</source>
+        <translation>Высота панели плеера и обложки.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+80"/>
+        <source>Waveform</source>
+        <translation>Волновая форма</translation>
+    </message>
+    <message>
+        <location line="-79"/>
+        <location line="+80"/>
+        <source>Off shows a plain progress line instead.</source>
+        <translation>Если выключено, показывается простая полоса прогресса.</translation>
+    </message>
+    <message>
+        <location line="-75"/>
+        <source>Elapsed and total time</source>
+        <translation>Прошедшее и общее время</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Times on both sides of the waveform.</source>
+        <translation>Время по обе стороны от волновой формы.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>The volume slider (narrow windows show only the mute button).</source>
+        <translation>Ползунок громкости (в узком окне — только кнопка выключения звука).</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Queue button</source>
+        <translation>Кнопка очереди</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The queue also opens with its shortcut.</source>
+        <translation>Очередь также открывается сочетанием клавиш.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <location line="+84"/>
+        <source>Library</source>
+        <translation>Медиатека</translation>
+    </message>
+    <message>
+        <location line="-83"/>
+        <location line="+26"/>
+        <location line="+58"/>
+        <source>Likes</source>
+        <translation>Лайки</translation>
+    </message>
+    <message>
+        <location line="-83"/>
+        <location line="+84"/>
+        <source>History</source>
+        <translation>История</translation>
+    </message>
+    <message>
+        <location line="-83"/>
+        <location line="+84"/>
+        <source>Charts</source>
+        <translation>Чарты</translation>
+    </message>
+    <message>
+        <location line="-80"/>
+        <source>List</source>
+        <translation>Список</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Grid</source>
+        <translation>Сетка</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>How the page shows its items at first; the page&apos;s own switch changes it too.</source>
+        <translation>Как страница показывает элементы; переключатель на самой странице тоже меняет это.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Small</source>
+        <translation>Маленький</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Card size</source>
+        <translation>Размер карточек</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Grids fit as many cards of this size per row as the window allows.</source>
+        <translation>В сетке помещается столько карточек этого размера в ряд, сколько позволяет окно.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Plays</source>
+        <translation>Прослушивания</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How often a track was played.</source>
+        <translation>Сколько раз трек прослушали.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>How many people liked a track.</source>
+        <translation>Сколько людей лайкнули трек.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Reposts</source>
+        <translation>Репосты</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How often a track was reposted.</source>
+        <translation>Сколько раз трек репостнули.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Duration</source>
+        <translation>Длительность</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The length of a track or playlist.</source>
+        <translation>Длина трека или плейлиста.</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Cover size</source>
+        <translation>Размер обложки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How much of the player the cover art takes.</source>
+        <translation>Какую часть плеера занимает обложка.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Queue beside the cover</source>
+        <translation>Очередь рядом с обложкой</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>When the window is wide enough.</source>
+        <translation>Когда окно достаточно широкое.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Noctara</source>
+        <translation>Noctara</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Window frame</source>
+        <translation>Рамка окна</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Noctara draws its own title bar and buttons in the glass style. Window managers without decorations keep showing none.</source>
+        <translation>Noctara рисует собственный заголовок и кнопки в стиле стекла. Оконные менеджеры без рамок по-прежнему их не показывают.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Remember window size</source>
+        <translation>Запоминать размер окна</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Open with the size (and, where the system allows, the position) of last time.</source>
+        <translation>Открываться с прошлым размером (и, где система позволяет, положением).</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Home</source>
+        <translation>Главная</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+42"/>
+        <source>Search</source>
+        <translation>Поиск</translation>
+    </message>
+    <message>
+        <location line="-37"/>
+        <source>Where I left off</source>
+        <translation>Там, где я остановился</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Start page</source>
+        <translation>Начальная страница</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The page shown when Noctara opens.</source>
+        <translation>Страница, которая открывается при запуске Noctara.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Start minimized</source>
+        <translation>Запускать свёрнутым</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Start in the tray when there is one, otherwise minimized.</source>
+        <translation>Запускаться в трее, если он есть, иначе свёрнутым.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Keep playing when closed</source>
+        <translation>Продолжать играть после закрытия</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Closing the window hides it in the tray; Quit in the tray menu ends Noctara. Needs the tray icon.</source>
+        <translation>Закрытие окна прячет его в трей; «Выйти» в меню трея завершает Noctara. Нужен значок в трее.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Play or pause</source>
+        <translation>Воспроизведение или пауза</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Next track</source>
+        <translation>Следующий трек</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Previous track</source>
+        <translation>Предыдущий трек</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Forward 5 seconds</source>
+        <translation>Вперёд на 5 секунд</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Back 5 seconds</source>
+        <translation>Назад на 5 секунд</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Volume up</source>
+        <translation>Громче</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Volume down</source>
+        <translation>Тише</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mute</source>
+        <translation>Выключить звук</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Shuffle</source>
+        <translation>Перемешивание</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Repeat</source>
+        <translation>Повтор</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the queue</source>
+        <translation>Показать очередь</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Back</source>
+        <translation>Назад</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Settings</source>
+        <translation>Настройки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Appearance panel</source>
+        <translation>Панель оформления</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Show all shortcuts</source>
+        <translation>Показать все сочетания</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Global playback shortcuts</source>
+        <translation>Глобальные сочетания для воспроизведения</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Registers play/pause, next, previous and “show Noctara” with the desktop (XDG global shortcuts portal), which asks you for the keys. Media keys work without this.</source>
+        <translation>Регистрирует «воспроизведение/пауза», «следующий», «предыдущий» и «показать Noctara» в рабочем столе (портал глобальных сочетаний XDG), который спросит у вас клавиши. Медиаклавиши работают и без этого.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>On</source>
         <translation>Вкл.</translation>
     </message>
@@ -2768,8 +3830,8 @@
         <translation>Ответы хранятся не меньше этого времени.</translation>
     </message>
     <message>
-        <location line="-276"/>
-        <location line="+277"/>
+        <location line="-504"/>
+        <location line="+505"/>
         <location line="+11"/>
         <location line="+12"/>
         <location line="+94"/>
@@ -2778,7 +3840,148 @@
         <translation>с</translation>
     </message>
     <message>
-        <location line="-119"/>
+        <location line="-1084"/>
+        <source>Navigation</source>
+        <translation>Навигация</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Where the navigation sits and what it shows.</source>
+        <translation>Где находится навигация и что она показывает.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Player bar</source>
+        <translation>Панель плеера</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The bar with the current track.</source>
+        <translation>Панель с текущим треком.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pages</source>
+        <translation>Страницы</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How each page shows its items.</source>
+        <translation>Как каждая страница показывает элементы.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Track rows</source>
+        <translation>Строки треков</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What a track row shows besides the title and artist.</source>
+        <translation>Что показывает строка трека, кроме названия и исполнителя.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+695"/>
+        <source>Full-screen player</source>
+        <translation>Полноэкранный плеер</translation>
+    </message>
+    <message>
+        <location line="-694"/>
+        <source>The large player with the cover art.</source>
+        <translation>Большой плеер с обложкой.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Window</source>
+        <translation>Окно</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The window frame, size and what happens at start and close.</source>
+        <translation>Рамка окна, размер и поведение при запуске и закрытии.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Shortcuts</source>
+        <translation>Сочетания клавиш</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Click a shortcut and press the new keys. Backspace removes it, Escape cancels. Media keys always work.</source>
+        <translation>Нажмите на сочетание и введите новые клавиши. Backspace удаляет его, Escape отменяет. Медиаклавиши работают всегда.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Global shortcuts</source>
+        <translation>Глобальные сочетания</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Shortcuts that work while Noctara is in the background.</source>
+        <translation>Сочетания, которые работают, пока Noctara в фоне.</translation>
+    </message>
+    <message>
+        <location line="+101"/>
+        <source>Custom theme</source>
+        <translation>Своя тема</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>A theme file from the themes folder that overrides colors, shapes, fonts or motion. Themes are data only and are reloaded when they change.</source>
+        <translation>Файл темы из папки тем, который переопределяет цвета, формы, шрифты или анимацию. Темы — только данные, они перечитываются при изменении.</translation>
+    </message>
+    <message>
+        <location line="+94"/>
+        <source>Dual Kawase</source>
+        <translation>Dual Kawase</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Gaussian</source>
+        <translation>Гауссово</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>None (opaque)</source>
+        <translation>Нет (непрозрачно)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Backdrop blur</source>
+        <translation>Размытие фона</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>How the backdrop behind surfaces is blurred. Blurs need hardware acceleration; None is the cheapest. Works with every surface style.</source>
+        <translation>Как размывается фон за поверхностями. Размытию нужно аппаратное ускорение; «Нет» — самый дешёвый вариант. Сочетается с любым стилем поверхностей.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Flat</source>
+        <translation>Плоский</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Surface style</source>
+        <translation>Стиль поверхностей</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Frosted: lit edges, sheen and depth. Liquid Glass: refractive edges (needs a blur). Flat: the blurred backdrop and a tint, without highlights or shadows.</source>
+        <translation>Матовое стекло: освещённые края, блеск и глубина. Liquid Glass: преломляющие края (нужно размытие). Плоский: размытый фон и оттенок, без бликов и теней.</translation>
+    </message>
+    <message>
+        <location line="+49"/>
+        <source>Plain</source>
+        <translation>Простой</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Frosted: milky blurred glass. Liquid: glossy glass with a bright rim. Tinted: glass coloured by the accent. Plain: a flat translucent fill. Clear: outline only. Solid: opaque.</source>
+        <translation>Матовое: молочное размытое стекло. Жидкое: глянцевое стекло с яркой кромкой. Тонированное: стекло цвета акцента. Простой: плоская полупрозрачная заливка. Прозрачное: только контур. Сплошное: непрозрачное.</translation>
+    </message>
+    <message>
+        <location line="+682"/>
         <source>Maximum lifetime</source>
         <translation>Максимальное время жизни</translation>
     </message>
@@ -3182,7 +4385,7 @@
 <context>
     <name>SettingsRow</name>
     <message>
-        <location filename="../src/qml/settings/SettingsRow.qml" line="+112"/>
+        <location filename="../src/qml/settings/SettingsRow.qml" line="+116"/>
         <source>Reset section</source>
         <translation>Сбросить раздел</translation>
     </message>
@@ -3197,12 +4400,12 @@
         <translation>Сбросить по умолчанию</translation>
     </message>
     <message>
-        <location line="+141"/>
+        <location line="+144"/>
         <source>Default</source>
         <translation>По умолчанию</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+28"/>
         <source>Comma-separated values</source>
         <translation>Значения через запятую</translation>
     </message>
@@ -3249,6 +4452,24 @@
         <location line="+67"/>
         <source>No settings match “%1”.</source>
         <translation>Нет настроек, подходящих под «%1».</translation>
+    </message>
+</context>
+<context>
+    <name>ShortcutRecorder</name>
+    <message>
+        <location filename="../src/qml/components/ShortcutRecorder.qml" line="+19"/>
+        <source>Press the new shortcut</source>
+        <translation>Нажмите новое сочетание</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Press keys…</source>
+        <translation>Нажмите клавиши…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>None</source>
+        <translation>Нет</translation>
     </message>
 </context>
 <context>
@@ -3423,6 +4644,88 @@
     </message>
 </context>
 <context>
+    <name>ThemePicker</name>
+    <message>
+        <location filename="../src/qml/settings/ThemePicker.qml" line="+18"/>
+        <source>None (built-in)</source>
+        <translation>Нет (встроенная)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 (unusable)</source>
+        <translation>%1 (не работает)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Custom theme</source>
+        <translation>Своя тема</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Import a theme file</source>
+        <translation>Импортировать файл темы</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Export the selected theme</source>
+        <translation>Экспортировать выбранную тему</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Open the themes folder</source>
+        <translation>Открыть папку тем</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>No theme files yet. Put .toml files into the themes folder or import one; see docs/themes.md for the format and examples.</source>
+        <translation>Файлов тем пока нет. Положите .toml-файлы в папку тем или импортируйте; формат и примеры — в docs/themes.md.</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Some colors of this theme fall below WCAG AA contrast. Turn on “Enforce readable contrast” to correct them.</source>
+        <translation>Некоторые цвета этой темы не дотягивают до контраста WCAG AA. Включите «Обеспечивать читаемый контраст», чтобы исправить их.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Import a theme</source>
+        <translation>Импорт темы</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+8"/>
+        <source>Theme files (*.toml)</source>
+        <translation>Файлы тем (*.toml)</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>Export the theme</source>
+        <translation>Экспорт темы</translation>
+    </message>
+</context>
+<context>
+    <name>TitleBar</name>
+    <message>
+        <location filename="../src/qml/components/TitleBar.qml" line="+42"/>
+        <source>Minimize</source>
+        <translation>Свернуть</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Restore</source>
+        <translation>Восстановить</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Maximize</source>
+        <translation>Развернуть</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Close</source>
+        <translation>Закрыть</translation>
+    </message>
+</context>
+<context>
     <name>Toast</name>
     <message>
         <location filename="../src/qml/components/Toast.qml" line="+62"/>
@@ -3431,9 +4734,61 @@
     </message>
 </context>
 <context>
+    <name>UserPage</name>
+    <message>
+        <location filename="../src/qml/pages/UserPage.qml" line="+18"/>
+        <source>No playlists.</source>
+        <translation>Нет плейлистов.</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No tracks.</source>
+        <translation>Нет треков.</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>%1 followers</source>
+        <translation>%1 подписчиков</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n track(s)</source>
+        <translation>
+            <numerusform>%n трек</numerusform>
+            <numerusform>%n трека</numerusform>
+            <numerusform>%n треков</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Play</source>
+        <translation>Воспроизвести</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Shuffle</source>
+        <translation>Перемешать</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Open on SoundCloud</source>
+        <translation>Открыть в SoundCloud</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Tracks</source>
+        <translation>Треки</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Playlists</source>
+        <translation>Плейлисты</translation>
+    </message>
+</context>
+<context>
     <name>WaveformView</name>
     <message>
-        <location filename="../src/qml/components/WaveformView.qml" line="+24"/>
+        <location filename="../src/qml/components/WaveformView.qml" line="+28"/>
         <source>Position</source>
         <translation>Позиция</translation>
     </message>
@@ -3547,7 +4902,7 @@
 <context>
     <name>noctara::ui::AppController</name>
     <message>
-        <location filename="../src/ui/AppController.cpp" line="+48"/>
+        <location filename="../src/ui/AppController.cpp" line="+52"/>
         <source>Safe Mode: hardware acceleration and glass effects are off for this session. Start Noctara without --safe-mode to return to normal.</source>
         <translation>Безопасный режим: аппаратное ускорение и эффекты стекла отключены в этом сеансе. Запустите Noctara без --safe-mode, чтобы вернуться к обычному режиму.</translation>
     </message>
@@ -3577,7 +4932,7 @@
         <translation>Не удалось запустить выбранный графический API; вместо него используется другой.</translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+72"/>
         <source>More configuration problems were found. See the log for details.</source>
         <translation>Найдены и другие проблемы в настройках. Подробности — в журнале.</translation>
     </message>
@@ -3590,6 +4945,34 @@
         <location line="+2"/>
         <source>Restart now</source>
         <translation>Перезапустить</translation>
+    </message>
+</context>
+<context>
+    <name>noctara::ui::KeyboardController</name>
+    <message>
+        <location filename="../src/ui/KeyboardController.cpp" line="+113"/>
+        <source>Also used by: %1. Only one of them works.</source>
+        <translation>Также используется для: %1. Работает только одно из них.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Play or pause</source>
+        <translation>Воспроизведение или пауза</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Next track</source>
+        <translation>Следующий трек</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Previous track</source>
+        <translation>Предыдущий трек</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show Noctara</source>
+        <translation>Показать Noctara</translation>
     </message>
 </context>
 <context>
@@ -3888,9 +5271,47 @@
     </message>
 </context>
 <context>
+    <name>noctara::ui::ThemesController</name>
+    <message>
+        <location filename="../src/ui/ThemesController.cpp" line="+22"/>
+        <source>Line %1: the file is not valid TOML, so none of it applies.</source>
+        <translation>Строка %1: файл не является корректным TOML, поэтому ничего из него не применяется.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Line %1: “%2” is not a theme token and was skipped.</source>
+        <translation>Строка %1: «%2» — не токен темы, пропущено.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Line %1: “%2” has an invalid value and was skipped.</source>
+        <translation>Строка %1: у «%2» неверное значение, пропущено.</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>The theme “%1” is not in the themes folder; the built-in look is used.</source>
+        <translation>Темы «%1» нет в папке тем; используется встроенное оформление.</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>That file is not a valid theme (TOML syntax error).</source>
+        <translation>Этот файл — не корректная тема (синтаксическая ошибка TOML).</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Theme imported and applied.</source>
+        <translation>Тема импортирована и применена.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Theme exported.</source>
+        <translation>Тема экспортирована.</translation>
+    </message>
+</context>
+<context>
     <name>noctara::ui::TrayIcon</name>
     <message>
-        <location filename="../src/ui/TrayIcon.cpp" line="+83"/>
+        <location filename="../src/ui/TrayIcon.cpp" line="+85"/>
         <source>Previous</source>
         <translation>Предыдущий</translation>
     </message>

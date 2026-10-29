@@ -290,6 +290,37 @@ Palette generatePalette(const PaletteRequest& request)
     return p;
 }
 
+Palette enforceReadable(const Palette& palette, Scheme scheme, const SchemeTones& tones)
+{
+    Palette p = palette;
+    const std::vector<Srgb> backgrounds = worstBackgrounds(p, tones);
+    const auto fix = [&](Rgba& role, double required) {
+        if (minContrast(role.rgb, backgrounds) + 1e-9 < required) {
+            role.rgb = color::toSrgbGamutMapped(enforce(color::toOkLch(role.rgb), backgrounds, required, scheme));
+        }
+    };
+    fix(p.textPrimary, kContrastText);
+    fix(p.textSecondary, kContrastText);
+    fix(p.textTertiary, kContrastText);
+    fix(p.iconPrimary, kContrastGraphic);
+    fix(p.iconSecondary, kContrastGraphic);
+    fix(p.accent, kContrastGraphic);
+    fix(p.accentText, kContrastText);
+    fix(p.focusRing, kContrastGraphic);
+    fix(p.waveformPlayed, kContrastGraphic);
+    fix(p.danger, kContrastText);
+    fix(p.warning, kContrastText);
+    fix(p.success, kContrastText);
+    // Text on the accent: away from the accent states, towards whichever end reads better.
+    const Srgb accentStates[] = {p.accent.rgb, p.accentHover.rgb, p.accentPressed.rgb};
+    if (minContrast(p.onAccent.rgb, accentStates) + 1e-9 < kContrastText) {
+        const Scheme away = color::relativeLuminance(p.accent.rgb) > 0.18 ? Scheme::Light : Scheme::Dark;
+        p.onAccent.rgb =
+            color::toSrgbGamutMapped(enforce(color::toOkLch(p.onAccent.rgb), accentStates, kContrastText, away));
+    }
+    return p;
+}
+
 std::vector<ContrastResult> checkContrast(const Palette& p, Scheme /*scheme*/, const SchemeTones& tones)
 {
     const std::vector<Srgb> backgrounds = worstBackgrounds(p, tones);

@@ -36,6 +36,7 @@ Midnight (dark), Frost (light) or follow the system.
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
 | `mode` | enum | `"system"` | `system`, `dark`, `light` | **Theme.** System follows the desktop color scheme live. (env `NOCTARA_APPEARANCE_THEME_MODE`, CLI `--theme=`) |
+| `custom` | string | `""` | — | **Custom theme.** A theme file from the themes folder that overrides colors, shapes, fonts or motion. Themes are data only and are reloaded when they change. (*advanced*, env `NOCTARA_APPEARANCE_THEME_CUSTOM`) |
 | `enforce_contrast` | bool | `true` | — | **Enforce readable contrast.** Adjust colors that would fall below WCAG AA contrast against glass. (env `NOCTARA_APPEARANCE_THEME_ENFORCE_CONTRAST`) |
 
 ### `[appearance.accent]` Accent color
@@ -74,12 +75,13 @@ How translucent surfaces are rendered.
 
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
-| `style` | enum | `"kawase"` | `kawase`, `gaussian`, `liquid`, `solid` | **Glass style.** Blur styles need hardware acceleration; Solid is the cheapest. (env `NOCTARA_APPEARANCE_GLASS_STYLE`) |
+| `style` | enum | `"kawase"` | `kawase`, `gaussian`, `solid` | **Backdrop blur.** How the backdrop behind surfaces is blurred. Blurs need hardware acceleration; None is the cheapest. Works with every surface style. (env `NOCTARA_APPEARANCE_GLASS_STYLE`) |
+| `surface` | enum | `"frosted"` | `frosted`, `liquid`, `flat` | **Surface style.** Frosted: lit edges, sheen and depth. Liquid Glass: refractive edges (needs a blur). Flat: the blurred backdrop and a tint, without highlights or shadows. (env `NOCTARA_APPEARANCE_GLASS_SURFACE`) |
 | `blur_strength` | number | `0.6` | 0 … 1 | **Blur strength.** How strongly the backdrop is blurred. (env `NOCTARA_APPEARANCE_GLASS_BLUR_STRENGTH`) |
 | `opacity` | number | `0.0` | 0 … 1 | **Glass tint.** Opacity of the tint applied to glass surfaces. (env `NOCTARA_APPEARANCE_GLASS_OPACITY`) |
 | `grain` | number | `0.0` | 0 … 1 | **Grain.** Fine noise that prevents banding in gradients. (env `NOCTARA_APPEARANCE_GLASS_GRAIN`) |
 | `quality` | enum | `"auto"` | `auto`, `low`, `medium`, `high` | **Effects quality.** Auto lowers quality when frames take too long and raises it again later. (env `NOCTARA_APPEARANCE_GLASS_QUALITY`) |
-| `buttons` | enum | `"frosted"` | `frosted`, `liquid`, `tinted`, `clear`, `solid` | **Button material.** Frosted: milky blurred glass. Liquid: glossy glass with a bright rim. Tinted: glass coloured by the accent. Clear: outline only. Solid: opaque. (env `NOCTARA_APPEARANCE_GLASS_BUTTONS`) |
+| `buttons` | enum | `"frosted"` | `frosted`, `liquid`, `tinted`, `plain`, `clear`, `solid` | **Button material.** Frosted: milky blurred glass. Liquid: glossy glass with a bright rim. Tinted: glass coloured by the accent. Plain: a flat translucent fill. Clear: outline only. Solid: opaque. (env `NOCTARA_APPEARANCE_GLASS_BUTTONS`) |
 | `reduce_transparency` | bool | `false` | — | **Reduce transparency.** Use opaque surfaces everywhere. (env `NOCTARA_APPEARANCE_GLASS_REDUCE_TRANSPARENCY`) |
 
 ### `[appearance.motion]` Motion
@@ -133,6 +135,74 @@ How densely pages are laid out.
 |---|---|---|---|---|
 | `density` | enum | `"cozy"` | `compact`, `cozy`, `airy` | **Density.** Spacing between sections, cards and rows. (env `NOCTARA_LAYOUT_CONTENT_DENSITY`) |
 
+### `[layout.navigation]` Navigation
+
+Where the navigation sits and what it shows.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `position` | enum | `"left"` | `left`, `right`, `bottom` | **Position.** Which edge of the window the navigation sits on. (env `NOCTARA_LAYOUT_NAVIGATION_POSITION`) |
+| `mode` | enum | `"compact"` | `compact`, `expanded`, `auto_hide` | **Style.** Auto-hide shows the navigation when the pointer reaches its edge. (env `NOCTARA_LAYOUT_NAVIGATION_MODE`) |
+| `items` | string list | `["home", "search", "library", "likes", "history", "charts"]` | — | **Pages in the navigation.** Their order and which are shown. Settings is always there. (env `NOCTARA_LAYOUT_NAVIGATION_ITEMS`) |
+
+### `[layout.player]` Player bar
+
+The bar with the current track.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `position` | enum | `"bottom"` | `bottom`, `top` | **Position.** Where the player bar floats. (env `NOCTARA_LAYOUT_PLAYER_POSITION`) |
+| `size` | enum | `"regular"` | `compact`, `regular`, `large` | **Size.** Height of the player bar and its cover. (env `NOCTARA_LAYOUT_PLAYER_SIZE`) |
+| `waveform` | bool | `true` | — | **Waveform.** Off shows a plain progress line instead. (env `NOCTARA_LAYOUT_PLAYER_WAVEFORM`) |
+| `time` | bool | `true` | — | **Elapsed and total time.** Times on both sides of the waveform. (env `NOCTARA_LAYOUT_PLAYER_TIME`) |
+| `volume` | bool | `true` | — | **Volume.** The volume slider (narrow windows show only the mute button). (env `NOCTARA_LAYOUT_PLAYER_VOLUME`) |
+| `queue_button` | bool | `true` | — | **Queue button.** The queue also opens with its shortcut. (env `NOCTARA_LAYOUT_PLAYER_QUEUE_BUTTON`) |
+
+### `[layout.views]` Pages
+
+How each page shows its items.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `library` | enum | `"grid"` | `list`, `grid` | **Library.** How the page shows its items at first; the page's own switch changes it too. (env `NOCTARA_LAYOUT_VIEWS_LIBRARY`) |
+| `likes` | enum | `"list"` | `list`, `grid` | **Likes.** How the page shows its items at first; the page's own switch changes it too. (env `NOCTARA_LAYOUT_VIEWS_LIKES`) |
+| `history` | enum | `"list"` | `list`, `grid` | **History.** How the page shows its items at first; the page's own switch changes it too. (env `NOCTARA_LAYOUT_VIEWS_HISTORY`) |
+| `charts` | enum | `"list"` | `list`, `grid` | **Charts.** How the page shows its items at first; the page's own switch changes it too. (env `NOCTARA_LAYOUT_VIEWS_CHARTS`) |
+| `card_size` | enum | `"medium"` | `small`, `medium`, `large` | **Card size.** Grids fit as many cards of this size per row as the window allows. (env `NOCTARA_LAYOUT_VIEWS_CARD_SIZE`) |
+
+### `[layout.rows]` Track rows
+
+What a track row shows besides the title and artist.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `plays` | bool | `true` | — | **Plays.** How often a track was played. (env `NOCTARA_LAYOUT_ROWS_PLAYS`) |
+| `likes` | bool | `false` | — | **Likes.** How many people liked a track. (env `NOCTARA_LAYOUT_ROWS_LIKES`) |
+| `reposts` | bool | `false` | — | **Reposts.** How often a track was reposted. (env `NOCTARA_LAYOUT_ROWS_REPOSTS`) |
+| `duration` | bool | `true` | — | **Duration.** The length of a track or playlist. (env `NOCTARA_LAYOUT_ROWS_DURATION`) |
+
+### `[layout.full_player]` Full-screen player
+
+The large player with the cover art.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `art_size` | enum | `"large"` | `medium`, `large` | **Cover size.** How much of the player the cover art takes. (env `NOCTARA_LAYOUT_FULL_PLAYER_ART_SIZE`) |
+| `queue` | bool | `true` | — | **Queue beside the cover.** When the window is wide enough. (env `NOCTARA_LAYOUT_FULL_PLAYER_QUEUE`) |
+| `waveform` | bool | `true` | — | **Waveform.** Off shows a plain progress line instead. (env `NOCTARA_LAYOUT_FULL_PLAYER_WAVEFORM`) |
+
+### `[layout.window]` Window
+
+The window frame, size and what happens at start and close.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `decorations` | enum | `"native"` | `native`, `custom` | **Window frame.** Noctara draws its own title bar and buttons in the glass style. Window managers without decorations keep showing none. (*restart*, env `NOCTARA_LAYOUT_WINDOW_DECORATIONS`) |
+| `remember_geometry` | bool | `true` | — | **Remember window size.** Open with the size (and, where the system allows, the position) of last time. (env `NOCTARA_LAYOUT_WINDOW_REMEMBER_GEOMETRY`) |
+| `start_page` | enum | `"home"` | `home`, `search`, `library`, `likes`, `history`, `charts`, `last` | **Start page.** The page shown when Noctara opens. (env `NOCTARA_LAYOUT_WINDOW_START_PAGE`) |
+| `start_minimized` | bool | `false` | — | **Start minimized.** Start in the tray when there is one, otherwise minimized. (env `NOCTARA_LAYOUT_WINDOW_START_MINIMIZED`) |
+| `close_to_tray` | bool | `false` | — | **Keep playing when closed.** Closing the window hides it in the tray; Quit in the tray menu ends Noctara. Needs the tray icon. (env `NOCTARA_LAYOUT_WINDOW_CLOSE_TO_TRAY`) |
+
 ## Playback
 
 ### `[playback.stream]` Sound
@@ -167,6 +237,7 @@ What happens when the queue runs out.
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
 | `autoplay` | bool | `true` | — | **Autoplay related tracks.** When the queue ends, keep playing tracks related to the last one. Repeat takes precedence. (env `NOCTARA_PLAYBACK_QUEUE_AUTOPLAY`) |
+| `restore` | bool | `true` | — | **Restore the queue.** Open with the queue, track and position of last time, paused. (env `NOCTARA_PLAYBACK_QUEUE_RESTORE`) |
 
 ### `[playback.desktop]` Desktop integration
 
@@ -187,6 +258,40 @@ How lists of tracks, playlists and people are fetched from SoundCloud.
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
 | `page_size` | integer | `50` | 10 … 200 | **Items per request.** Lists load more as you scroll. Larger requests mean fewer pauses but more data up front. (*advanced*, env `NOCTARA_LIBRARY_LOADING_PAGE_SIZE`) |
+
+## Keyboard
+
+### `[keyboard.shortcuts]` Shortcuts
+
+Click a shortcut and press the new keys. Backspace removes it, Escape cancels. Media keys always work.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `play_pause` | shortcut | `"Space"` | — | **Play or pause.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_PLAY_PAUSE`) |
+| `next` | shortcut | `"Ctrl+Right"` | — | **Next track.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_NEXT`) |
+| `previous` | shortcut | `"Ctrl+Left"` | — | **Previous track.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_PREVIOUS`) |
+| `seek_forward` | shortcut | `"Shift+Right"` | — | **Forward 5 seconds.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_SEEK_FORWARD`) |
+| `seek_backward` | shortcut | `"Shift+Left"` | — | **Back 5 seconds.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_SEEK_BACKWARD`) |
+| `volume_up` | shortcut | `"Ctrl+Up"` | — | **Volume up.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_VOLUME_UP`) |
+| `volume_down` | shortcut | `"Ctrl+Down"` | — | **Volume down.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_VOLUME_DOWN`) |
+| `mute` | shortcut | `"Ctrl+M"` | — | **Mute.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_MUTE`) |
+| `shuffle` | shortcut | `"Ctrl+S"` | — | **Shuffle.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_SHUFFLE`) |
+| `repeat` | shortcut | `"Ctrl+R"` | — | **Repeat.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_REPEAT`) |
+| `queue` | shortcut | `"Ctrl+Shift+Q"` | — | **Show the queue.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_QUEUE`) |
+| `full_player` | shortcut | `"Ctrl+Shift+F"` | — | **Full-screen player.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_FULL_PLAYER`) |
+| `search` | shortcut | `"Ctrl+K"` | — | **Search.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_SEARCH`) |
+| `back` | shortcut | `"Alt+Left"` | — | **Back.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_BACK`) |
+| `settings` | shortcut | `"Ctrl+,"` | — | **Settings.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_SETTINGS`) |
+| `appearance` | shortcut | `"Ctrl+Shift+A"` | — | **Appearance panel.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_APPEARANCE`) |
+| `cheat_sheet` | shortcut | `"Ctrl+/"` | — | **Show all shortcuts.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_CHEAT_SHEET`) |
+
+### `[keyboard.global]` Global shortcuts
+
+Shortcuts that work while Noctara is in the background.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `enabled` | bool | `false` | — | **Global playback shortcuts.** Registers play/pause, next, previous and “show Noctara” with the desktop (XDG global shortcuts portal), which asks you for the keys. Media keys work without this. (env `NOCTARA_KEYBOARD_GLOBAL_ENABLED`) |
 
 ## Performance
 
