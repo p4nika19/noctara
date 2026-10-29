@@ -84,7 +84,9 @@ The look of panels is two independent settings (split in slice h, config v7):
   backdrop, the tint and a hairline in the divider color: no lift, sheen, lit edge or shadow).
 
 So flat panels over a Dual Kawase blur, or frosted glass over a Gaussian one, are both possible. The *Plain* button
-material (a flat translucent fill and a hairline) goes with flat surfaces. The quality governor and energy saving
+material (a flat translucent fill and a hairline) goes with flat surfaces. Main actions (the play button and primary buttons) have their own setting,
+*Main buttons* (`appearance.glass.primary_buttons`): a flat accent fill (default), the button material with an
+accent edge and icon, an accent outline, or the glossy accent gradient of earlier versions. The quality governor and energy saving
 still step down in the same order: Liquid Glass surfaces become frosted first (the "kawase" cap), then the blur
 goes. `Theme.glass.style` is the effective blur, `Theme.glass.surface`/`flat` the effective surface style.
 

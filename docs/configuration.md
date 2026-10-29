@@ -82,6 +82,7 @@ How translucent surfaces are rendered.
 | `grain` | number | `0.0` | 0 … 1 | **Grain.** Fine noise that prevents banding in gradients. (env `NOCTARA_APPEARANCE_GLASS_GRAIN`) |
 | `quality` | enum | `"auto"` | `auto`, `low`, `medium`, `high` | **Effects quality.** Auto lowers quality when frames take too long and raises it again later. (env `NOCTARA_APPEARANCE_GLASS_QUALITY`) |
 | `buttons` | enum | `"frosted"` | `frosted`, `liquid`, `tinted`, `plain`, `clear`, `solid` | **Button material.** Frosted: milky blurred glass. Liquid: glossy glass with a bright rim. Tinted: glass coloured by the accent. Plain: a flat translucent fill. Clear: outline only. Solid: opaque. (env `NOCTARA_APPEARANCE_GLASS_BUTTONS`) |
+| `primary_buttons` | enum | `"filled"` | `filled`, `material`, `outline`, `gradient` | **Main buttons.** Play and other main actions. Filled: a flat accent shape. Like other buttons: the button material with an accent icon. Outline: an accent ring. Gradient: glossy accent glass. (env `NOCTARA_APPEARANCE_GLASS_PRIMARY_BUTTONS`) |
 | `reduce_transparency` | bool | `false` | — | **Reduce transparency.** Use opaque surfaces everywhere. (env `NOCTARA_APPEARANCE_GLASS_REDUCE_TRANSPARENCY`) |
 
 ### `[appearance.motion]` Motion

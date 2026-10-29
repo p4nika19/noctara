@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Templates as T
 import Noctara
 
-// Text button. variant: "primary" (accent gradient + glow) | "secondary" (button material) |
+// Text button. variant: "primary" (main action, styled by the "Main buttons" setting) | "secondary" (button material) |
 // "ghost" (flat, accent text) | "danger".
 T.Button {
     id: control
@@ -11,7 +11,8 @@ T.Button {
     property string iconName
     property bool small: false  // compact size for secondary actions inside headers
 
-    readonly property color labelColor: variant === "primary" ? Theme.colors.onAccent
+    readonly property color labelColor: variant === "primary" ? (Theme.glass.primaryOnAccent ? Theme.colors.onAccent
+                                                                                             : Theme.colors.accentText)
                                        : variant === "danger" ? Theme.colors.danger
                                        : variant === "ghost" ? Theme.colors.accentText
                                        : Theme.colors.textPrimary

@@ -9,7 +9,8 @@ import Noctara
 //   clear    outline only
 //   solid    opaque surface
 //   flat     invisible until hovered (toolbar/icon buttons)
-//   primary  accent gradient with a glow (main actions)
+//   primary  main actions (play, primary buttons), drawn as the "Main buttons" setting says: a flat accent fill,
+//            the button material with an accent edge, an accent outline, or the glossy accent gradient
 Item {
     id: root
 
@@ -22,13 +23,20 @@ Item {
 
     readonly property bool primary: material === "primary"
     readonly property bool dark: Theme.dark
+    // The look actually drawn: a main action "like other buttons" uses the button material.
+    readonly property string drawn: !primary ? material
+                                   : Theme.glass.primary === "material" ? Theme.glass.buttons : Theme.glass.primary
+    readonly property bool accentFill: drawn === "filled" || drawn === "gradient"
+    readonly property bool glassy: drawn === "frosted" || drawn === "liquid" || drawn === "gradient"
 
     function alpha(c, a) { return Qt.rgba(c.r, c.g, c.b, a) }
     function white(a) { return Qt.rgba(1, 1, 1, a) }
 
     readonly property color fillColor: {
-        switch (material) {
-        case "primary": return accent
+        switch (drawn) {
+        case "filled": return hovered ? Qt.tint(accent, white(dark ? 0.12 : 0.1)) : accent
+        case "gradient": return accent
+        case "outline": return alpha(accent, hovered || pressed ? 0.14 : 0.04)
         case "tinted": return alpha(accent, hovered ? 0.30 : 0.18)
         case "plain": return dark ? white(hovered ? 0.12 : 0.07) : Qt.rgba(0, 0, 0, hovered ? 0.08 : 0.045)
         case "solid": return dark ? Qt.tint(Theme.colors.solidRaised, white(hovered ? 0.12 : 0.08))
@@ -40,8 +48,11 @@ Item {
         }
     }
     readonly property color edgeColor: {
-        switch (material) {
-        case "primary":
+        if (primary && !accentFill)
+            return alpha(accent, drawn === "outline" ? 1 : 0.7)
+        switch (drawn) {
+        case "filled":
+        case "gradient":
         case "flat": return "transparent"
         case "tinted": return alpha(accent, 0.5)
         case "solid": return Theme.colors.outline
@@ -59,10 +70,12 @@ Item {
         radius: root.radius
         blur: 26 * Theme.scale
         spread: -4 * Theme.scale
-        offsetY: root.primary ? 8 * Theme.scale : 0
+        offsetY: root.accentFill ? 6 * Theme.scale : 0
+        // Flat surfaces and outlines keep the halo for hover only: a constant glow would read as a shadow.
         color: root.alpha(root.accent, !Theme.glass.glowControls ? 0
-                                       : Theme.glass.glow * (root.primary ? 0.9
-                                                                     : root.active || (root.hovered && root.material !== "flat") ? 0.7 : 0))
+                                       : Theme.glass.glow * (root.accentFill ? (Theme.glass.flat ? 0.55 : 0.85)
+                                                             : root.primary ? (root.hovered ? 0.7 : 0.35)
+                                                             : root.active || (root.hovered && root.material !== "flat") ? 0.7 : 0))
         Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
     }
 
@@ -71,9 +84,9 @@ Item {
         anchors.fill: parent
         radius: root.radius
         color: root.fillColor
-        border.width: Theme.space.hairline
+        border.width: root.drawn === "outline" ? 1.5 * Theme.scale : Theme.space.hairline
         border.color: root.edgeColor
-        gradient: root.primary ? primaryGradient : null
+        gradient: root.drawn === "gradient" ? primaryGradient : null
         Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
     }
     Gradient {
@@ -83,22 +96,22 @@ Item {
         GradientStop { position: 1.0; color: Qt.tint(root.accent, root.alpha(Theme.colors.accentLight, 0.7)) }
     }
 
-    // Sheen falling from the top (frosted, liquid, primary).
+    // Sheen falling from the top (frosted, liquid, gradient).
     Rectangle {
         anchors.fill: parent
         anchors.margins: Theme.space.hairline
         radius: root.radius
-        visible: root.material === "frosted" || root.material === "liquid" || root.primary
+        visible: root.glassy
         gradient: Gradient {
             GradientStop {
                 position: 0.0
-                color: root.white(root.material === "liquid" ? (root.dark ? 0.26 : 0.7) : (root.primary ? 0.28 : 0.08))
+                color: root.white(root.drawn === "liquid" ? (root.dark ? 0.26 : 0.7) : (root.drawn === "gradient" ? 0.28 : 0.08))
             }
-            GradientStop { position: root.material === "liquid" ? 0.45 : 0.4; color: "transparent" }
+            GradientStop { position: root.drawn === "liquid" ? 0.45 : 0.4; color: "transparent" }
             // Liquid glass catches light at its lower edge, as a thick lens does.
             GradientStop {
                 position: 1.0
-                color: root.material !== "liquid" ? "transparent"
+                color: root.drawn !== "liquid" ? "transparent"
                      : (root.dark ? root.alpha(Theme.colors.accentLight, 0.16) : root.white(0.6))
             }
         }
@@ -107,14 +120,14 @@ Item {
     RimLight {
         anchors.fill: parent
         radius: root.radius
-        visible: root.material === "frosted" || root.material === "liquid" || root.primary
-        color: root.white(root.primary ? 0.45 : (root.material === "liquid" ? (root.dark ? 0.4 : 0.9) : (root.dark ? 0.16 : 0.8)))
+        visible: root.glassy
+        color: root.white(root.drawn === "gradient" ? 0.45 : (root.drawn === "liquid" ? (root.dark ? 0.4 : 0.9) : (root.dark ? 0.16 : 0.8)))
     }
     // Liquid glass: the rim darkens toward the lower edge, as light bends through a thick lens.
     Rectangle {
         anchors.fill: parent
         radius: root.radius
-        visible: root.material === "liquid"
+        visible: root.drawn === "liquid"
         color: "transparent"
         gradient: Gradient {
             GradientStop { position: 0.55; color: "transparent" }

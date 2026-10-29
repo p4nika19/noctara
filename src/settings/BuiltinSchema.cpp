@@ -496,6 +496,19 @@ std::vector<Definition> builtinDefinitions()
          .description = QT_TRANSLATE_NOOP(
              "Settings", "Frosted: milky blurred glass. Liquid: glossy glass with a bright rim. Tinted: glass coloured "
                          "by the accent. Plain: a flat translucent fill. Clear: outline only. Solid: opaque.")});
+    defs.push_back({.key = keys::PrimaryButtons,
+                    .type = Type::Enum,
+                    .defaultValue = str("filled"),
+                    .options = {{"filled", QT_TRANSLATE_NOOP("Settings", "Filled accent")},
+                                {"material", QT_TRANSLATE_NOOP("Settings", "Like other buttons")},
+                                {"outline", QT_TRANSLATE_NOOP("Settings", "Accent outline")},
+                                {"gradient", QT_TRANSLATE_NOOP("Settings", "Gradient glass")}},
+                    .category = Appearance,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Main buttons"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Play and other main actions. Filled: a flat accent shape. Like other buttons: "
+                                    "the button material with an accent icon. Outline: an accent ring. Gradient: "
+                                    "glossy accent glass.")});
     defs.push_back({.key = keys::ReduceTransparency,
                     .type = Type::Bool,
                     .defaultValue = false,

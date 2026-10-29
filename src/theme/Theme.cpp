@@ -105,8 +105,8 @@ void Theme::onSettingChanged(const QString& key)
         updateGlass();
     } else if (is(keys::GlassStyle) || is(keys::GlassSurface) || is(keys::GlassBlurStrength) || is(keys::GlassGrain) ||
                is(keys::ReduceTransparency) || is(keys::GlowCover) || is(keys::GlowControls) ||
-               is(keys::GlowProgress) || is(keys::ButtonMaterial) || is(keys::BackdropStyle) ||
-               is(keys::BackdropAnimate)) {
+               is(keys::GlowProgress) || is(keys::ButtonMaterial) || is(keys::PrimaryButtons) ||
+               is(keys::BackdropStyle) || is(keys::BackdropAnimate)) {
         updateGlass();
     }
 }
@@ -328,6 +328,8 @@ void Theme::updateGlass()
     // Frost uses less grain than Midnight at the same setting.
     glass.grain = m_settings.realValue(keys::GlassGrain) * (m_scheme == Scheme::Dark ? 1.0 : 0.6);
     glass.buttons = m_settings.stringValue(keys::ButtonMaterial);
+    glass.primary = m_settings.stringValue(keys::PrimaryButtons);
+    glass.primaryOnAccent = glass.primary == u"filled" || glass.primary == u"gradient";
     glass.backdrop = m_settings.stringValue(keys::BackdropStyle);
     glass.backdropAnimated = m_settings.boolValue(keys::BackdropAnimate) && m_blurAvailable &&
                              !m_settings.boolValue(keys::ReduceMotion) && m_backdropAnimationAllowed;

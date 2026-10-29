@@ -21,6 +21,7 @@ inline constexpr std::string_view GlowCover = "appearance.glow.cover";
 inline constexpr std::string_view GlowControls = "appearance.glow.controls";
 inline constexpr std::string_view GlowProgress = "appearance.glow.progress";
 inline constexpr std::string_view ButtonMaterial = "appearance.glass.buttons";
+inline constexpr std::string_view PrimaryButtons = "appearance.glass.primary_buttons";
 inline constexpr std::string_view ButtonShape = "appearance.shape.buttons";
 inline constexpr std::string_view ColorTransition = "appearance.motion.color_transition";
 inline constexpr std::string_view Density = "layout.content.density";

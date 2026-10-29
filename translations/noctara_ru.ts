@@ -2274,12 +2274,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+525"/>
+        <location line="+538"/>
         <source>Icons</source>
         <translation>Значки</translation>
     </message>
     <message>
-        <location line="-524"/>
+        <location line="-537"/>
         <source>Icon appearance.</source>
         <translation>Внешний вид значков.</translation>
     </message>
@@ -2360,13 +2360,13 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+538"/>
+        <location line="+551"/>
         <location line="+344"/>
         <source>System</source>
         <translation>Как в системе</translation>
     </message>
     <message>
-        <location line="-881"/>
+        <location line="-894"/>
         <source>Midnight (dark)</source>
         <translation>Midnight (тёмная)</translation>
     </message>
@@ -2452,12 +2452,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+547"/>
+        <location line="+560"/>
         <source>Volume</source>
         <translation>Громкость</translation>
     </message>
     <message>
-        <location line="-546"/>
+        <location line="-559"/>
         <source>Volume when Noctara starts.</source>
         <translation>Громкость при запуске Noctara.</translation>
     </message>
@@ -2603,12 +2603,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+197"/>
+        <location line="+210"/>
         <source>Soft</source>
         <translation>Мягкие</translation>
     </message>
     <message>
-        <location line="-195"/>
+        <location line="-208"/>
         <source>Palette extraction</source>
         <translation>Извлечение палитры</translation>
     </message>
@@ -2729,7 +2729,7 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+169"/>
+        <location line="+182"/>
         <location line="+302"/>
         <location line="+13"/>
         <location line="+12"/>
@@ -2740,19 +2740,19 @@
         <translation>Авто</translation>
     </message>
     <message>
-        <location line="-788"/>
+        <location line="-801"/>
         <source>Low</source>
         <translation>Низкое</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+333"/>
+        <location line="+346"/>
         <location line="+25"/>
         <source>Medium</source>
         <translation>Среднее</translation>
     </message>
     <message>
-        <location line="-357"/>
+        <location line="-370"/>
         <source>High</source>
         <translation>Высокое</translation>
     </message>
@@ -2796,6 +2796,36 @@
         <location line="+2"/>
         <source>Button material</source>
         <translation>Материал кнопок</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Filled accent</source>
+        <translation>Заливка акцентом</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Like other buttons</source>
+        <translation>Как остальные кнопки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Accent outline</source>
+        <translation>Акцентный контур</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Gradient glass</source>
+        <translation>Градиентное стекло</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Main buttons</source>
+        <translation>Главные кнопки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Play and other main actions. Filled: a flat accent shape. Like other buttons: the button material with an accent icon. Outline: an accent ring. Gradient: glossy accent glass.</source>
+        <translation>Воспроизведение и другие главные действия. Заливка: плоская форма цвета акцента. Как остальные кнопки: материал кнопок с акцентным значком. Контур: акцентное кольцо. Градиент: глянцевое акцентное стекло.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -3840,7 +3870,7 @@
         <translation>с</translation>
     </message>
     <message>
-        <location line="-1084"/>
+        <location line="-1097"/>
         <source>Navigation</source>
         <translation>Навигация</translation>
     </message>
@@ -3881,12 +3911,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+695"/>
+        <location line="+708"/>
         <source>Full-screen player</source>
         <translation>Полноэкранный плеер</translation>
     </message>
     <message>
-        <location line="-694"/>
+        <location line="-707"/>
         <source>The large player with the cover art.</source>
         <translation>Большой плеер с обложкой.</translation>
     </message>
@@ -3981,7 +4011,7 @@
         <translation>Матовое: молочное размытое стекло. Жидкое: глянцевое стекло с яркой кромкой. Тонированное: стекло цвета акцента. Простой: плоская полупрозрачная заливка. Прозрачное: только контур. Сплошное: непрозрачное.</translation>
     </message>
     <message>
-        <location line="+682"/>
+        <location line="+695"/>
         <source>Maximum lifetime</source>
         <translation>Максимальное время жизни</translation>
     </message>

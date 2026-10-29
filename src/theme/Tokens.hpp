@@ -259,8 +259,10 @@ class GlassTokens {
     Q_PROPERTY(qreal saturationLift MEMBER saturationLift CONSTANT)
     Q_PROPERTY(qreal brightnessLift MEMBER brightnessLift CONSTANT)
     Q_PROPERTY(qreal lightAngle MEMBER lightAngle CONSTANT)
-    Q_PROPERTY(QString buttons MEMBER buttons CONSTANT)    // frosted | liquid | tinted | clear | solid
-    Q_PROPERTY(QString backdrop MEMBER backdrop CONSTANT)  // aurora | cover | dark
+    Q_PROPERTY(QString buttons MEMBER buttons CONSTANT)
+    Q_PROPERTY(QString primary MEMBER primary CONSTANT)
+    Q_PROPERTY(bool primaryOnAccent MEMBER primaryOnAccent CONSTANT)  // frosted | liquid | tinted | clear | solid
+    Q_PROPERTY(QString backdrop MEMBER backdrop CONSTANT)             // aurora | cover | dark
     Q_PROPERTY(bool backdropAnimated MEMBER backdropAnimated CONSTANT)
     Q_PROPERTY(qreal glow MEMBER glow CONSTANT)  // glow intensity 0..1
     Q_PROPERTY(bool glowCover MEMBER glowCover CONSTANT)
@@ -298,6 +300,10 @@ public:
     qreal brightnessLift = 0.0;
     qreal lightAngle = 135.0;  // degrees; light from the top-left
     QString buttons = QStringLiteral("frosted");
+    // Main actions (play, primary buttons): filled | material | outline | gradient.
+    QString primary = QStringLiteral("filled");
+    // Their content sits on a solid accent (filled, gradient), so it uses onAccent; otherwise the accent itself.
+    bool primaryOnAccent = true;
     QString backdrop = QStringLiteral("aurora");
     bool backdropAnimated = true;
     qreal glow = 0.3;

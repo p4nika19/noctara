@@ -2264,12 +2264,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+525"/>
+        <location line="+538"/>
         <source>Icons</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-524"/>
+        <location line="-537"/>
         <source>Icon appearance.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2350,13 +2350,13 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+538"/>
+        <location line="+551"/>
         <location line="+344"/>
         <source>System</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-881"/>
+        <location line="-894"/>
         <source>Midnight (dark)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2442,12 +2442,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+547"/>
+        <location line="+560"/>
         <source>Volume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-546"/>
+        <location line="-559"/>
         <source>Volume when Noctara starts.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2593,12 +2593,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+197"/>
+        <location line="+210"/>
         <source>Soft</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-195"/>
+        <location line="-208"/>
         <source>Palette extraction</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2719,7 +2719,7 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+169"/>
+        <location line="+182"/>
         <location line="+302"/>
         <location line="+13"/>
         <location line="+12"/>
@@ -2730,19 +2730,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-788"/>
+        <location line="-801"/>
         <source>Low</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+333"/>
+        <location line="+346"/>
         <location line="+25"/>
         <source>Medium</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-357"/>
+        <location line="-370"/>
         <source>High</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2785,6 +2785,36 @@
     <message>
         <location line="+2"/>
         <source>Button material</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Filled accent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Like other buttons</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Accent outline</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Gradient glass</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Main buttons</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Play and other main actions. Filled: a flat accent shape. Like other buttons: the button material with an accent icon. Outline: an accent ring. Gradient: glossy accent glass.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3830,7 +3860,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1084"/>
+        <location line="-1097"/>
         <source>Navigation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3871,12 +3901,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+695"/>
+        <location line="+708"/>
         <source>Full-screen player</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-694"/>
+        <location line="-707"/>
         <source>The large player with the cover art.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3971,7 +4001,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+682"/>
+        <location line="+695"/>
         <source>Maximum lifetime</source>
         <translation type="unfinished"></translation>
     </message>

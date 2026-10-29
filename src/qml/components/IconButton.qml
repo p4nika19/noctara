@@ -14,7 +14,8 @@ T.AbstractButton {
     property bool highlighted: false
     // False: no hover/press surface or halo (the owner draws its own selection, e.g. the navigation pill).
     property bool surface: true
-    property color iconColor: material === "primary" ? Theme.targetColors.onAccent
+    property color iconColor: material === "primary" ? (Theme.glass.primaryOnAccent ? Theme.targetColors.onAccent
+                                                                                    : Theme.targetColors.accent)
                             : (checked || highlighted ? Theme.targetColors.accent : Theme.targetColors.iconPrimary)
 
     implicitWidth: Theme.space.controlHeight
