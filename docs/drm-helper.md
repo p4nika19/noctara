@@ -44,11 +44,14 @@ no way to save protected content, and none may be added.
   admit only its own files, `blob:`/`data:` and `https://*.media-streaming.soundcloud.cloud` (media playlists and
   segments on `playback.`, licenses on `license.`). Only the `mediaKeySystem` permission is granted.
 - **No persistent cache:** the player uses an in-memory session partition (`noctara-drm`, no `persist:`) with the
-  HTTP cache disabled, plus `--disk-cache-size=0 --media-cache-size=0`. Chromium buffers media in memory only.
+  HTTP cache disabled; the default session's disk cache is limited to one byte (`--disk-cache-size=1
+  --media-cache-size=1`: Chromium reads 0 as "default size"). Chromium buffers media in memory only. Spell checking
+  is off in every session from its creation and the dictionary URL points nowhere: otherwise Chromium fetches a
+  dictionary for the system language from Google at start (seen with a Russian locale).
   Licenses are requested with `persistentState: 'not-allowed'` and `distinctiveIdentifier: 'not-allowed'`.
 - userData is `<cache>/electron` (`--noctara-user-data`): Chromium's profile files and the Widevine CDM component
   (about 21 MB, downloaded by Chromium's component updater on first start). Checked after playing a protected
-  track: `Cache/`, `Code Cache/` and `blob_storage/` stay empty. *Storage → Clear all* stops an idle helper and
+  track in the app: `Cache/` holds only its empty index, `blob_storage/` and `Dictionaries/` are empty. *Storage → Clear all* stops an idle helper and
   empties the folder except `WidevineCdm/` (which would only be downloaded again). Uninstalling: remove
   `~/.cache/noctara` as a whole.
 
@@ -107,6 +110,9 @@ xmake drm-helper          # downloads, verifies, assembles build/drm-helper/{ele
   helper) and the controller routing protected tracks (never prefetched, warmed up, turned off).
 - `noctara-tests --no-skip -tc="real drm*"` starts the real helper from `build/drm-helper` and waits for Widevine.
 - Manually (2026-10-29): driving `build/drm-helper` directly over the protocol with a real `ctr-encrypted-hls`
-  stream played audibly, reported the duration (323 788 ms), positions every 250 ms, and seeked; nothing was written
-  to the profile's caches. Playing a protected track inside the app (`build/noctara --play <link>`) is the remaining
-  end-to-end check (it needs a signed-in account and an audio device).
+  stream played audibly, reported the duration (323 788 ms), positions every 250 ms, and seeked.
+- In the app (2026-10-31, release build, signed in): `build/noctara --play <protected link>` started the helper
+  (ready 2.6 s after the start on a fresh profile, CDM download included), and PulseAudio showed an active,
+  uncorked stream from `noctara-drm-helper` while it played. After exit no helper process remained, and the
+  profile held no media, cache entries or dictionaries. Note that `build/noctara` (not the binary under
+  `build/linux/…`) is the one that finds `build/drm-helper` next to it.

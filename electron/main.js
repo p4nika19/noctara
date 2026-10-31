@@ -41,8 +41,10 @@ if (userData) {
 if (!process.argv.includes('--noctara-gpu')) {
   app.disableHardwareAcceleration();
 }
-app.commandLine.appendSwitch('disk-cache-size', '0');
-app.commandLine.appendSwitch('media-cache-size', '0');
+// 0 would mean "the default size" to Chromium: 1 byte leaves the default session's disk cache unusable (the
+// player's session is in memory anyway).
+app.commandLine.appendSwitch('disk-cache-size', '1');
+app.commandLine.appendSwitch('media-cache-size', '1');
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
@@ -131,6 +133,13 @@ app.on('login', (event, _webContents, _details, authInfo, callback) => {
   });
 });
 
+// Spell checking is off in every session from its creation: otherwise Chromium downloads a dictionary for the
+// system language from Google right away. The page has no text input.
+app.on('session-created', (created) => {
+  created.setSpellCheckerEnabled(false);
+  created.setSpellCheckerDictionaryDownloadURL('http://127.0.0.1:9/');  // never Google's CDN
+});
+
 app.on('window-all-closed', () => app.quit());
 // Nothing may open windows, navigate or attach devtools.
 app.on('web-contents-created', (_event, contents) => {
@@ -151,9 +160,6 @@ app.whenReady().then(async () => {
   }
   // In-memory partition (no "persist:" prefix): no HTTP cache, cookies or storage on disk.
   drmSession = session.fromPartition('noctara-drm', { cache: false });
-  // No spell-check dictionaries are downloaded for a page that has no text input.
-  session.defaultSession.setSpellCheckerEnabled(false);
-  drmSession.setSpellCheckerEnabled(false);
   drmSession.webRequest.onBeforeRequest((details, callback) => {
     const url = new URL(details.url);
     // Local: the helper's own page (file), Media Source buffers (blob), key data in playlists (data).

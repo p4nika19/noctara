@@ -183,7 +183,7 @@ Windows DPAPI/app-bound cookies and macOS Keychain remain platform-specific foll
 - Tests: `drm.protocol`, `drm.network`, `drm.host`, `drm.backend` against `noctara-mock-drm-helper`, controller
   routing in `media.controller`; `--no-skip -tc="real drm*"` checks the real helper starts with Widevine.
 - Verified by hand: the real helper played a protected track (Widevine license accepted, position and seek work,
-  no cache files). Not yet run: the full app path with a signed-in account (`build/noctara --play <protected link>`).
+  no cache files), on its own and inside the app (`build/noctara --play <protected link>`, signed in).
 
 ## Open items flagged for verification
 - Chromium-family import is verified against fixture databases built from Chromium's own format description
@@ -191,8 +191,6 @@ Windows DPAPI/app-bound cookies and macOS Keychain remain platform-specific foll
   against a real wallet, and the Brave/Vivaldi/Opera Snap paths follow the Snap `$HOME` convention unchecked. Check
   with `noctara-tests --no-skip -tc="real browser profile import"` on a desktop with those browsers signed in.
 - DoH over HTTP/2 against a local server is not covered by automated tests (the mock speaks HTTP/1.1); real providers negotiate HTTP/2 through ALPN.
-- Protected playback inside the app end-to-end (signed-in account, real audio device): the helper alone was
-  verified with a real Widevine stream, the app path only against the mock helper.
 - The helper's DNS/proxy behaviour is derived from Chromium's switches and Electron's API (castlabs 44.9.3 has
   `configureHostResolver` with secure DNS) and the order in which they apply, not from a packet capture; the CDM
   component check at startup is covered by the startup switches.
