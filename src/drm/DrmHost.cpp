@@ -1,6 +1,7 @@
 #include "drm/DrmHost.hpp"
 
 #include "core/Log.hpp"
+#include "core/Trace.hpp"
 #include "drm/Protocol.hpp"
 
 #include <QDir>
@@ -230,6 +231,7 @@ bool DrmHost::start()
     m_stopping = false;
     m_stdout.clear();
     m_stderr.clear();
+    NOCTARA_TRACE_INSTANT("drm: helper started");
     qCInfo(lcDrm) << "protected player started, pid" << m_pid;
     setStatus(Status::Starting);
     m_lastPong.start();
@@ -330,6 +332,7 @@ void DrmHost::onMessage(const QJsonObject& message)
         }
         m_electronVersion = message.value(u"electron").toString();
         m_error = Error{};
+        NOCTARA_TRACE_INSTANT("drm: helper ready");
         qCInfo(lcDrm).noquote() << "protected player ready, Electron" << m_electronVersion;
         m_lastPong.restart();
         setStatus(Status::Ready);

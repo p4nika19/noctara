@@ -1,6 +1,7 @@
 #include "media/Decoder.hpp"
 
 #include "core/Log.hpp"
+#include "core/Trace.hpp"
 #include "media/StreamSource.hpp"
 
 extern "C" {
@@ -171,6 +172,7 @@ void installFfmpegLogging()
 
 Result<std::unique_ptr<Decoder>> Decoder::open(StreamSource& source, AudioFormat output, DecoderStart start)
 {
+    NOCTARA_TRACE_SCOPE("media: open decoder");
     installFfmpegLogging();
     auto impl = std::make_unique<Impl>(source);
     if (!impl->packet || !impl->frame) {

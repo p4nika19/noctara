@@ -47,6 +47,9 @@ Slice (i) adds `drm` (depends on `core`, `settings`, `i18n`, `net`, `cache`, `ap
 (settings, live network configuration, status) and `planNetwork`. The helper app itself lives in `electron/`. See
 [drm-helper.md](drm-helper.md) and [ipc.md](ipc.md).
 
+Slice (j) adds `bench/` (`noctara-bench`, hot-path timings) and `core/Trace.hpp`, a trace layer that compiles to
+nothing unless `xmake f --trace=y`. See [performance.md](performance.md).
+
 Static libraries per module (`noctara_<module>`); the executable only wires them together. Dependencies point downward only: `ui` may use everything, and `core` uses nothing but Qt Core.
 
 ## Settings flow

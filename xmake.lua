@@ -40,6 +40,9 @@ add_defines("QT_NO_KEYWORDS", "QT_NO_CAST_FROM_ASCII", "QT_NO_CAST_TO_ASCII",
             "QT_NO_URL_CAST_FROM_STRING", "QT_USE_QSTRINGBUILDER")
 add_defines("NOCTARA_VERSION=\"$(version)\"")
 add_includedirs("src")
+if has_config("trace") then
+    add_defines("NOCTARA_TRACE=1")
+end
 
 if is_mode("release", "releasedbg") then
     set_optimize("fastest")
@@ -177,6 +180,16 @@ target("noctara-schema-doc")
     add_frameworks("QtCore")
     add_deps("noctara_settings")
     add_files("tools/schema_doc.cpp", {cxxflags = STRICT_WARNINGS})
+
+-- Timings of the hot paths for docs/performance.md (run a release build).
+target("noctara-bench")
+    set_kind("binary")
+    set_default(false)
+    add_rules("qt.quickapp", "noctara.qtfix")
+    add_frameworks("QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus", "QtMultimedia", "QtWidgets")
+    add_deps("noctara_ui")
+    add_files("bench/*.cpp", {cxxflags = STRICT_WARNINGS})
+target_end()
 
 -- The protected-player helper's stand-in for the drm tests (QtCore only, so it starts fast under sanitizers).
 target("noctara-mock-drm-helper")

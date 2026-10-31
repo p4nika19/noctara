@@ -31,7 +31,8 @@ GPU times come from QRhi timestamps (`QT_LOGGING_RULES="noctara.gfx.debug=true"`
 
 Frost costs the same as Midnight: the pipeline and shaders are identical, and only uniform values differ. The ≤ 1 ms budget for blur plus glass on a mainstream iGPU at 1440p is still **unverified**, because it needs other hardware. On the GTX 1070, glass costs about 0.1 ms at roughly 1 MP.
 
-Not yet measured (scheduled for slice j): cold start to first frame, idle RSS, idle CPU, glass GPU cost per mode and theme, software-mode CPU.
+Cold start, idle RSS and CPU, and software-mode CPU are measured in slice (j) below. Glass GPU cost per mode is the
+table above; the themes cost the same.
 
 ## Slice (c): network
 
@@ -114,6 +115,63 @@ drift off gives 0.2 %. Whether the drift should stay on by default is an open qu
 Idle cost of playback when paused: none. The backend suspends the device once the fade-out has played, and its
 100 ms check stops; the decoder threads wait on a condition variable.
 
+## Slice (j): benchmarks, tracing, whole-app numbers
+
+### Hot paths: `noctara-bench`
+
+`xmake f -m release && xmake build noctara-bench`, then `build/linux/x86_64/release/noctara-bench [filter]`. Each
+benchmark runs a warm-up and seven batches; the median per operation is printed. Release build, dev machine:
+
+| Benchmark | Median |
+|---|---|
+| API: parse a 50-track page (simdjson → structs) | 172 µs |
+| Models: replace 500 rows and read every role once (what a list view does on first show) | 0.99 ms |
+| Cache: RAM tier hit (64 KiB piece) / insert with eviction | 37 ns / 71 ns |
+| Net: DNS cache hit (1000 names cached) | 83 ns |
+| Theme: palette generation, dark + light (contrast enforcement included) | 0.60 ms |
+| Accent: analyse a 600 px cover (k-means, worker thread) | 0.95 ms |
+| Software path: CPU-blurred 256 px cover backdrop | 1.55 ms |
+| Settings: parse and validate the complete documented config file | 0.63 ms |
+| Protected player: decode and validate one helper message (4 per second while playing) | 1.5 µs |
+
+The skipped `noctara-tests` cases `api parse benchmark`, `cache benchmark` (disk-tier hit latency) and
+`transport spike measurements` remain for the comparisons that need the test fixtures and mock servers.
+
+### Tracing
+
+`xmake f --trace=y` compiles in `core/Trace.hpp`: `NOCTARA_TRACE_SCOPE("name")` and `NOCTARA_TRACE_INSTANT("name")`
+record into a mutex-protected buffer, written at exit as Chrome trace JSON (`$NOCTARA_TRACE_FILE`, default
+`noctara-trace.json`; open in Perfetto or `chrome://tracing`). Without the option the macros compile to nothing.
+Instrumented: the graphics bootstrap, loading `Main.qml`, the first frame, API page parsing, artwork analysis and
+the blurred backdrop, opening a decoder, and the protected player's start and handshake. The first frame is also
+logged without tracing (`noctara.gfx`: "first frame N ms after start").
+
+### The whole app
+
+Release build, offscreen platform (OpenGL on the GTX 1070, or the software renderer), signed in, network up, a fresh
+isolated profile per run, the Home page; CPU averaged over 10 s after 30 s of settling (`/proc/<pid>/stat`), two runs
+each.
+
+| Configuration | First frame after start | Idle RSS | Idle CPU |
+|---|---|---|---|
+| GPU, backdrop drift off | 184–200 ms | 167 MiB | 0 % (no frames) |
+| GPU, backdrop drift on (default) | 197–252 ms | 167 MiB | 16.5–17 % at 12–13 frames/s |
+| Software, drift off | 252 ms | 166 MiB | 0 % |
+| Software, drift on | 322 ms | 166 MiB | 0 % (the software path never drifts) |
+
+The offscreen platform renders without vsync and reads every frame back, so the drift figure is higher than on a
+real display (6.7 % on Wayland in slice g); the static scene costs nothing either way. The drift's cost is the open
+item for the optimisation pass (see the slice g notes). Time to first audio is in the slice (g) table.
+
+Protected player (castlabs Electron 44.9.3, `--disable-gpu`, idle after `ready`):
+
+| Measurement | Result |
+|---|---|
+| First start on a fresh profile (includes downloading the 21 MB Widevine CDM) | 2.6–3.9 s to `ready` |
+| Later starts | 0.45–0.63 s to `ready` |
+| Memory of its process group (8 processes), PSS | 210–237 MiB |
+| Idle cost when not playing | none: it starts on the first protected track and closes after 5 minutes without one |
+
 ## Design choices that affect cost
 
 - Colors cross-fade by updating one gadget per frame for 400–500 ms. Icons do not re-rasterize per frame: they bind to `targetColors` and crossfade two cached images.
@@ -125,3 +183,15 @@ Idle cost of playback when paused: none. The backend suspends the device once th
 - Debug builds run ASan + UBSan. LSan suppressions (`src/core/LsanSuppressions.hpp`) cover third-party GPU-driver allocations only; our code is never suppressed.
 - TSan (`xmake test-tsan`): the distro Qt isn't instrumented, so Qt-internal synchronization is suppressed (`tools/tsan.supp`). TSan's thread registry aborts (`CHECK live_.try_emplace`) on thread-ID reuse once a process has started and stopped many threads, so `test-tsan` runs every suite in its own process, and the suites that start and stop `QThread`s or QML loader threads repeatedly (`settings.file`, `ui.settings`, `ui.presets`, `ui.icons`, `cache.service`) are excluded. The audio cache's multi-threaded readers, tagging and image decoding run under TSan (`cache.audio`, `cache.image`, `cache.integration`). Cross-thread hand-overs in `net` go through `core/Handoff.hpp`, which in TSan builds makes Qt's event-queue ordering visible with one extra mutex, so the network suites run without suppressions for our own code. **Known gap:** full TSan coverage needs a TSan-instrumented Qt build. Under TSan threads occasionally stall for several seconds (seen in the theme library's folder scan, normally under 1 ms, and in cache tagging) without any race being reported, and every test process also spends seconds in the NVIDIA GL driver's start-up; `test::waitUntil` therefore allows 10× its timeouts in TSan builds.
 - Before each commit: `xmake format --check`, a debug build with `--werror=y`, unit tests, `xmake smoke`, `xmake i18n-check`, `xmake docs-config --check`, `xmake lint`.
+
+### Regression checklist (before a release, or after touching a hot path)
+
+1. `noctara-bench` in release: no row more than 20 % above the table above.
+2. First frame (`noctara.gfx` "first frame") under 0.5 s with a warm GPU-probe cache; idle RSS within 10 % of 167 MiB.
+3. Static scene (drift off, nothing loading): 0 frames per second and 0 % CPU (`QT_LOGGING_RULES="noctara.gfx.debug=true"`
+   prints frames per second).
+4. Playing a regular track: CPU in line with the slice (g) table; a second play and a backward seek make no requests.
+5. Protected track: the helper starts only for it, closes after the idle timeout, leaves no process after exit and no
+   media, cache entries or dictionaries in `<cache>/electron`.
+6. Glass GPU times per mode (slice b table) with `noctara.gfx.debug`, both themes, on a real display.
+7. Sanitizers: debug (ASan/UBSan) tests and `xmake test-tsan` clean.

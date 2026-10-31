@@ -1,6 +1,7 @@
 #include "theme/AccentEngine.hpp"
 
 #include "core/Log.hpp"
+#include "core/Trace.hpp"
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
 
@@ -209,6 +210,7 @@ Extraction parseExtraction(const QString& text) noexcept
 
 ArtworkAnalysis analyseArtwork(const QImage& image, Extraction mode)
 {
+    NOCTARA_TRACE_SCOPE("accent: analyse artwork");
     ArtworkAnalysis analysis;
     if (image.isNull()) {
         return analysis;
@@ -255,6 +257,7 @@ ArtworkAnalysis analyseArtwork(const QImage& image, Extraction mode)
 
 QImage blurredBackdrop(const QImage& image, Scheme scheme, int size)
 {
+    NOCTARA_TRACE_SCOPE("accent: blurred backdrop");
     if (image.isNull() || size <= 0) {
         return {};
     }

@@ -1,5 +1,7 @@
 #include "api/Parse.hpp"
 
+#include "core/Trace.hpp"
+
 #include <QTimeZone>
 
 #include <format>
@@ -464,6 +466,7 @@ Result<Page<Entry>> playlistTracks(const QByteArray& json)
 
 Result<Page<Entry>> collection(const QByteArray& json)
 {
+    NOCTARA_TRACE_SCOPE("api: parse page");
     Result<element> root = document(json);
     if (!root) {
         return std::unexpected(root.error());

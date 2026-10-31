@@ -116,7 +116,7 @@ task("lint")
     set_menu {usage = "xmake lint", description = "Run clang-tidy (curated checks in .clang-tidy) over project sources"}
     on_run(function ()
         local files = {}
-        for _, pattern in ipairs({"src/**.cpp", "tools/**.cpp"}) do
+        for _, pattern in ipairs({"src/**.cpp", "tools/**.cpp", "bench/**.cpp"}) do
             table.join2(files, os.files(path.join(os.projectdir(), pattern)))
         end
         assert(os.isfile(path.join(os.projectdir(), "compile_commands.json")), "build once to generate compile_commands.json")

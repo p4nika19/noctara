@@ -47,6 +47,8 @@ Useful options: `--werror=y` (always on in release and CI), `--march=native`, `-
 | `xmake i18n-update`, `xmake i18n-release`, `xmake i18n-check` | Qt Linguist workflow and CI completeness gate |
 | `xmake docs-config [--check]` | regenerate or verify `docs/configuration.md` from the settings schema |
 | `xmake drm-helper` | download (pinned, SHA-256 verified) and assemble the protected-playback helper in `build/drm-helper` |
+| `xmake build noctara-bench` | hot-path benchmarks (run the release build; see [performance](docs/performance.md)) |
+| `xmake f --trace=y` | compile in the trace layer: a Chrome trace JSON (`$NOCTARA_TRACE_FILE`) is written at exit |
 | `xmake pgo`, `xmake package` | profile-guided build, release tarball |
 
 ## Command line

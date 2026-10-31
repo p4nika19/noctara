@@ -7,6 +7,7 @@
 #include "core/Log.hpp"
 #include "core/LsanSuppressions.hpp"
 #include "core/Paths.hpp"
+#include "core/Trace.hpp"
 #include "drm/DrmService.hpp"
 #include "gfx/CrashSentinel.hpp"
 #include "gfx/FrameMonitor.hpp"
@@ -57,6 +58,7 @@
 
 #include <QApplication>
 #include <QCommandLineParser>
+#include <QElapsedTimer>
 #include <QIcon>
 #include <QImage>
 #include <QPointer>
@@ -262,6 +264,9 @@ void runSmokeTest(const QQmlApplicationEngine& engine, const ui::SettingsControl
 
 int main(int argc, char** argv)
 {
+    QElapsedTimer sinceStart;  // for the "first frame" log line (docs/performance.md)
+    sinceStart.start();
+    NOCTARA_TRACE_INSTANT("main");
     gfx::RelaunchGuard relaunch;  // destroyed last: performs a requested self-exec after full shutdown
     // A peer closing a connection must surface as a write error, never terminate the process.
     (void)std::signal(SIGPIPE, SIG_IGN);
@@ -324,8 +329,10 @@ int main(int argc, char** argv)
     QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/app/noctara.svg")));
 
     gfx::CrashSentinel sentinel(paths.stateDir + QStringLiteral("/graphics-init.sentinel"));
-    const gfx::GraphicsDecision decision =
-        gfx::bootstrapGraphics(store, sentinel, {.cacheDir = paths.cacheDir, .safeModeFlag = cli.safeMode});
+    const gfx::GraphicsDecision decision = [&] {
+        NOCTARA_TRACE_SCOPE("startup: graphics bootstrap");
+        return gfx::bootstrapGraphics(store, sentinel, {.cacheDir = paths.cacheDir, .safeModeFlag = cli.safeMode});
+    }();
     gfx::GraphicsInfo graphics(decision);
 
     i18n::LanguageManager languages(store);
@@ -522,7 +529,10 @@ int main(int argc, char** argv)
         }
         engine.setInitialProperties(initial);
     }
-    engine.load(QUrl(QStringLiteral("qrc:/qml/Main.qml")));
+    {
+        NOCTARA_TRACE_SCOPE("startup: load Main.qml");
+        engine.load(QUrl(QStringLiteral("qrc:/qml/Main.qml")));
+    }
     if (engine.rootObjects().isEmpty()) {
         return 1;
     }
@@ -581,7 +591,12 @@ int main(int argc, char** argv)
         }
         // frameSwapped comes from the render thread; disarm on the GUI thread after the first frame.
         QObject::connect(
-            window, &QQuickWindow::frameSwapped, &graphics, [&sentinel] { sentinel.disarm(); },
+            window, &QQuickWindow::frameSwapped, &graphics,
+            [&sentinel, sinceStart] {
+                NOCTARA_TRACE_INSTANT("first frame");
+                qCInfo(lcGfx) << "first frame" << sinceStart.elapsed() << "ms after start";
+                sentinel.disarm();
+            },
             static_cast<Qt::ConnectionType>(Qt::QueuedConnection | Qt::SingleShotConnection));
     }
     QTimer::singleShot(0, &appController, [&appController, issues] { appController.reportConfigIssues(issues); });

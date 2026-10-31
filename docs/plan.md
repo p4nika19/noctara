@@ -105,7 +105,7 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 (i) DRM helper
 (j) polish and performance measurements
 
-Done: (a), (b), (c), (d), (e), (f), (g), (h), (i).
+Done: (a), (b), (c), (d), (e), (f), (g), (h), (i), (j).
 
 ## Slice (f) status (auth / secret store / session)
 
@@ -184,6 +184,19 @@ Windows DPAPI/app-bound cookies and macOS Keychain remain platform-specific foll
   routing in `media.controller`; `--no-skip -tc="real drm*"` checks the real helper starts with Widevine.
 - Verified by hand: the real helper played a protected track (Widevine license accepted, position and seek work,
   no cache files), on its own and inside the app (`build/noctara --play <protected link>`, signed in).
+
+## Slice (j) status (polish and performance)
+
+- `noctara-bench` (`bench/`): the spec's hot paths (JSON parsing, model updates, memory tier, DNS cache, palette,
+  AccentEngine, the software path's CPU backdrop, settings load, helper messages) with median timings.
+- Trace layer (`core/Trace.hpp`, `xmake f --trace=y`): Chrome trace JSON; startup phases, parsing, accent work,
+  decoder opening and the helper are instrumented. The first frame is logged in every build.
+- Whole-app numbers (first frame, idle RSS and CPU on the GPU and software paths) and the helper's start-up and memory
+  in [performance.md](performance.md), with a regression checklist.
+- Found and fixed on the way: the helper downloaded a spell-check dictionary and kept an HTTP cache entry; TSan
+  timing failures (scaled waits) and two Qt-internal TSan reports.
+- **Pending, by agreement:** the optimisation pass (backdrop drift cost, playing-state repaints, RSS) is left for the
+  user to direct.
 
 ## Open items flagged for verification
 - Chromium-family import is verified against fixture databases built from Chromium's own format description
