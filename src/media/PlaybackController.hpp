@@ -36,10 +36,10 @@ namespace noctara::media {
 class StreamUrlResolver;
 
 // The QML "Player" singleton: the queue, the current track and its state, whichever backend plays it. Regular
-// tracks play natively (decoded from the audio cache); protected tracks belong to the DRM backend, which arrives
-// with slice (i) and until then they are reported and skipped. Stream URLs are resolved through the API client
-// only when the cache needs them; the next item is prepared for a gapless start and the following ones are
-// prefetched. GUI thread.
+// tracks play natively (decoded from the audio cache); protected tracks play in the DRM backend (the helper) and
+// are never cached or prefetched. Stream URLs are resolved through the API client only when a backend needs them;
+// the next item is prepared for a gapless start (or, for a protected one, the helper is warmed up) and the
+// following regular ones are prefetched. GUI thread.
 class PlaybackController : public QObject {
     Q_OBJECT
     Q_PROPERTY(bool hasTrack READ hasTrack NOTIFY trackChanged)
@@ -77,8 +77,9 @@ public:
         api::IApiClient& api;
         cache::CacheService* cache = nullptr;  // prefetching; optional (tests)
         IPlaybackBackend& native;
-        std::function<bool()> metered;  // the connection is metered right now
-        QString statePath;              // session.json; empty: not persisted
+        IPlaybackBackend* protectedBackend = nullptr;  // protected tracks; null: they are reported and skipped
+        std::function<bool()> metered;                 // the connection is metered right now
+        QString statePath;                             // session.json; empty: not persisted
     };
 
     explicit PlaybackController(Dependencies dependencies, QObject* parent = nullptr);
@@ -193,6 +194,10 @@ private:
     void updateCachedRanges(bool force);
     void applyGain();
     void applySettings();
+    void connectBackend(IPlaybackBackend& backend);
+    // The backend for a source; switching stops the other one.
+    void activate(IPlaybackBackend& backend);
+    [[nodiscard]] IPlaybackBackend& backendFor(const PlaybackSource& source) noexcept;
     void saveSession();
     void queueEdited();
     [[nodiscard]] static std::vector<QueueItem> itemsFrom(std::vector<api::Track> tracks, const QString& context);
@@ -201,6 +206,8 @@ private:
     api::IApiClient& m_api;
     cache::CacheService* m_cache;
     IPlaybackBackend& m_native;
+    IPlaybackBackend* m_protected;
+    IPlaybackBackend* m_active;  // the backend of the current item
     std::function<bool()> m_metered;
     SessionStore m_store;
     SessionState m_session;

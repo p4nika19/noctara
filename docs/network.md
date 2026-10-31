@@ -188,4 +188,32 @@ are responses, not errors; the API client (slice e) interprets 401/403/429.
 - `getaddrinfo` cannot be interrupted. Shutting down while a system lookup hangs waits for the OS resolver's own
   timeout.
 - The custom CA bundle replaces the system store rather than adding to it, matching curl's `CURLOPT_CAINFO`.
-- The DRM helper (slice i) will receive the same proxy and secure-DNS configuration; that part is not done yet.
+- The protected player follows most, not all, of these settings; see below.
+
+## The protected player
+
+The DRM helper (castlabs Electron, [drm-helper.md](drm-helper.md)) is Chromium with its own network stack, so it
+cannot use Noctara's transport. `drm::planNetwork` (pure, unit-tested) turns the settings into Chromium switches
+given at start, because Chromium's first request (the Widevine component check) happens before any message, and a
+`configure` message for the player's session that also carries the proxy credentials. A change of the switches
+restarts the helper (a protected track resumes where it was); other changes apply live.
+
+| Setting | In the helper |
+|---|---|
+| Proxy: none / system | `--no-proxy-server` / Chromium's own system detection (environment, GNOME/KDE settings) |
+| Proxy: manual HTTP/HTTPS | `--proxy-server`, `--proxy-bypass-list` (`<local>` for *Bypass local*); credentials answer Chromium's proxy authentication only |
+| Proxy: SOCKS5 / SOCKS5h | `socks5://` — Chromium always resolves names on the proxy, like SOCKS5h |
+| Proxy: SOCKS4 / SOCKS4a | `socks4://`; for SOCKS4a names are resolved locally (warned) |
+| SOCKS credentials | not supported by Chromium (warned; the connection fails if the proxy insists) |
+| DNS: system | Chromium's resolver |
+| DNS over HTTPS | `app.configureHostResolver` (`secure` when strict, `automatic` with fallback), at start and live; the DoH host maps to its bootstrap address (`--host-resolver-rules`) so its name is never looked up |
+| DNS: custom servers | Chromium cannot use them: the system resolver answers (warned); **strict** custom DNS blocks protected playback (`ProtectedNetworkUnsupported`) unless a manual proxy given by address resolves all names |
+| DNS overrides | `--host-resolver-rules=MAP host address` |
+| TLS 1.3 only, HTTP version | `--ssl-version-min=tls1.3`; `--disable-http2`/`--disable-quic`/`--enable-quic` |
+| CA bundle, bandwidth limit, IPv4/IPv6-only | not followed (warned) |
+| Offline | protected tracks are not started |
+
+Warnings appear in *Settings → Playback → Protected tracks* and once per session as a toast when the helper starts.
+Verified against castlabs Electron 44.9.3: `configureHostResolver` with `secureDnsMode`/`secureDnsServers` exists and
+is applied; the leak-free claims above follow from Chromium's documented behaviour and the switch ordering, not from
+a packet capture (flagged in [plan.md](plan.md)).

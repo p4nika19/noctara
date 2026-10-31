@@ -84,6 +84,11 @@ inline constexpr std::size_t kMaxTrackIds = 50;
 [[nodiscard]] Endpoint<Waveform> waveform(const QString& url);
 // The signed, short-lived media URL of a transcoding. Never cached: the signature expires.
 [[nodiscard]] Endpoint<QUrl> streamUrl(const Transcoding& transcoding, const QString& trackAuthorization);
+// An encrypted transcoding (ctr-encrypted-hls) for the protected player: playlist URL and license token.
+[[nodiscard]] Endpoint<ProtectedStream> protectedStream(const Transcoding& transcoding,
+                                                        const QString& trackAuthorization);
+// SoundCloud's Widevine license server; the protected player adds the license token to every request.
+[[nodiscard]] QUrl widevineLicense();
 
 }  // namespace endpoints
 

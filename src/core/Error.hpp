@@ -72,7 +72,13 @@ enum class ErrorCode : std::uint16_t {
     NotPlayable,        // SoundCloud offers no stream this account may play (blocked, removed, not streamable)
     DecodeFailed,       // the audio could not be demuxed or decoded
     AudioOutputFailed,  // no usable audio device, or the device failed
-    ProtectedPlayback,  // a protected (DRM) track; it needs the protected player (DRM helper)
+    ProtectedPlayback,  // a protected (DRM) track while protected playback is turned off
+
+    // protected playback (the DRM helper)
+    ProtectedPlayerMissing,       // the helper (castlabs Electron + app) is not installed where Noctara looks
+    ProtectedPlayerFailed,        // the helper would not start, kept crashing, or has no working Widevine
+    ProtectedNetworkUnsupported,  // the network settings cannot be honoured by the helper without leaking
+    LicenseDenied,                // SoundCloud's license server refused to play the track here
 };
 
 // Stable English identifier, used in logs and diagnostics.

@@ -2,7 +2,7 @@
 
 Noctara is a native SoundCloud desktop client written in C++23 and Qt 6 Quick. It uses glass surfaces over a backdrop taken from the cover art, comes with two themes (Midnight and Frost), and runs with GPU acceleration or a full software fallback. The UI is localized in English and Russian.
 
-> Status: slices (a)–(f) of the plan are done (foundations, glass pipeline, network stack, caches, SoundCloud api-v2 models, and authentication). Sign-in supports consented cookie import from popular browsers and manual OAuth tokens, with keyring or encrypted-local secret storage. See [docs/plan.md](docs/plan.md).
+> Status: slices (a)–(i) of the plan are done (foundations, glass pipeline, network stack, caches, SoundCloud api-v2 models, authentication, native playback, pages and customization, and protected playback through a castlabs Electron helper). See [docs/plan.md](docs/plan.md).
 
 ## Dependencies
 
@@ -22,7 +22,9 @@ Noctara is a native SoundCloud desktop client written in C++23 and Qt 6 Quick. I
 
 Arch: `pacman -S curl libproxy libsecret openssl sqlite simdjson taglib xxhash`; Debian/Ubuntu: `libcurl4-openssl-dev
 libproxy-dev libsecret-1-dev libssl-dev libsqlite3-dev libsimdjson-dev libtag-dev libxxhash-dev`. The build fails early
-if libcurl lacks SSL, HTTP2 or IPv6. Later slices add FFmpeg.
+if libcurl lacks SSL, HTTP2 or IPv6. Native playback needs FFmpeg (libavformat, libavcodec, libavutil, libswresample)
+and Qt Multimedia. Protected (DRM) tracks need the helper from `xmake drm-helper` (castlabs Electron with Widevine and
+hls.js, downloaded at pinned versions and verified; needs `curl` and `unzip`), see [docs/drm-helper.md](docs/drm-helper.md).
 
 ## Build and run
 
@@ -44,6 +46,7 @@ Useful options: `--werror=y` (always on in release and CI), `--march=native`, `-
 | `xmake format [--check]`, `xmake lint` | clang-format, clang-tidy |
 | `xmake i18n-update`, `xmake i18n-release`, `xmake i18n-check` | Qt Linguist workflow and CI completeness gate |
 | `xmake docs-config [--check]` | regenerate or verify `docs/configuration.md` from the settings schema |
+| `xmake drm-helper` | download (pinned, SHA-256 verified) and assemble the protected-playback helper in `build/drm-helper` |
 | `xmake pgo`, `xmake package` | profile-guided build, release tarball |
 
 ## Command line
@@ -58,8 +61,8 @@ Settings are layered with this precedence: defaults < `/etc/xdg/noctara/config.t
 
 ## Documentation
 
-[architecture](docs/architecture.md) · [design and tokens](docs/design.md) · [configuration](docs/configuration.md) · [GPU and fallbacks](docs/gpu.md) · [network](docs/network.md) · [caching](docs/caching.md) · [SoundCloud API](docs/api.md) · [authentication](docs/auth.md) · [localization](docs/localization.md) · [performance](docs/performance.md)
+[architecture](docs/architecture.md) · [design and tokens](docs/design.md) · [configuration](docs/configuration.md) · [GPU and fallbacks](docs/gpu.md) · [network](docs/network.md) · [caching](docs/caching.md) · [SoundCloud API](docs/api.md) · [authentication](docs/auth.md) · [playback](docs/playback.md) · [protected playback](docs/drm-helper.md) · [helper IPC](docs/ipc.md) · [themes](docs/themes.md) · [localization](docs/localization.md) · [performance](docs/performance.md)
 
 ## Licenses
 
-The bundled fonts (Manrope, Inter, JetBrains Mono) are under the SIL Open Font License 1.1, and the icons (Lucide) under the ISC License. The license texts are in `resources/` and in the app's About page.
+The bundled fonts (Manrope, Inter, JetBrains Mono) are under the SIL Open Font License 1.1, and the icons (Lucide) under the ISC License. The license texts are in `resources/` and in the app's About page. The protected-playback helper is castlabs Electron (MIT, with Chromium's licenses in its zip) and hls.js (Apache-2.0), downloaded by `xmake drm-helper`, not part of this repository.

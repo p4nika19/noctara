@@ -462,6 +462,61 @@
     </message>
 </context>
 <context>
+    <name>Drm</name>
+    <message>
+        <location filename="../src/drm/DrmService.cpp" line="+25"/>
+        <source>custom DNS servers (it uses the system resolver)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>SOCKS4a (it resolves names itself and connects over SOCKS4)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>SOCKS proxy sign-in</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>the CA bundle (it trusts the system&apos;s certificates)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>the bandwidth limit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>IPv4-only or IPv6-only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+59"/>
+        <source>Protected tracks do not follow: %1.</source>
+        <extracomment>%1 = list of network settings, e.g. &quot;custom DNS servers (…); the bandwidth limit&quot;</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Running: castlabs Electron %1 with Widevine.</source>
+        <extracomment>%1 = Electron version</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Starting…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Installed. It starts when a protected track plays.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Effects</name>
     <message>
         <location filename="../src/ui/EffectsController.cpp" line="+29"/>
@@ -538,12 +593,12 @@
     <name>Errors</name>
     <message>
         <location filename="../src/i18n/ErrorMessages.cpp" line="+11"/>
-        <location line="+95"/>
+        <location line="+109"/>
         <source>Something went wrong.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-94"/>
+        <location line="-108"/>
         <source>The operation was cancelled.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -784,11 +839,31 @@
     </message>
     <message>
         <location line="+3"/>
-        <source>This track is protected and needs the protected player, which is not set up yet.</source>
+        <source>This track is protected. Turn on protected tracks in Settings → Playback to play it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+3"/>
+        <source>The protected player is not installed, so protected tracks are skipped. See Settings → Playback → Protected tracks.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>The protected player stopped working. Protected tracks are skipped for now.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The protected player cannot use your custom DNS servers without leaking requests, so protected tracks are skipped. Allow the system resolver as a fallback, use DNS over HTTPS, or use a proxy that resolves names.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>SoundCloud did not allow this protected track to play here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>%1 (%2 in %3, line %4)</source>
         <extracomment>%1 = explanation, %2 = setting key, %3 = file name, %4 = line number</extracomment>
         <translation type="unfinished"></translation>
@@ -2160,7 +2235,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+188"/>
+        <location filename="../src/app/main.cpp" line="+189"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2176,12 +2251,12 @@
     </message>
     <message>
         <location filename="../src/settings/BuiltinSchema.cpp" line="+187"/>
-        <location line="+108"/>
+        <location line="+111"/>
         <source>Language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-110"/>
         <source>Interface language.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2197,23 +2272,23 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+130"/>
+        <location line="+133"/>
         <source>Theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-129"/>
+        <location line="-132"/>
         <source>Midnight (dark), Frost (light) or follow the system.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+162"/>
+        <location line="+165"/>
         <source>Accent color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-161"/>
+        <location line="-164"/>
         <source>The whole palette is generated from a single accent color.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2264,17 +2339,17 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+538"/>
+        <location line="+582"/>
         <source>Icons</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-537"/>
+        <location line="-581"/>
         <source>Icon appearance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+37"/>
         <source>Graphics</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2350,13 +2425,13 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+551"/>
+        <location line="+592"/>
         <location line="+344"/>
         <source>System</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-894"/>
+        <location line="-935"/>
         <source>Midnight (dark)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2396,7 +2471,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-160"/>
+        <location line="-163"/>
         <source>The light behind the interface.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2442,12 +2517,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+560"/>
+        <location line="+604"/>
         <source>Volume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-559"/>
+        <location line="-603"/>
         <source>Volume when Noctara starts.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2472,7 +2547,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+13"/>
         <source>Data usage</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2720,7 +2795,7 @@
     <message>
         <location line="+4"/>
         <location line="+182"/>
-        <location line="+302"/>
+        <location line="+343"/>
         <location line="+13"/>
         <location line="+12"/>
         <location line="+57"/>
@@ -2730,19 +2805,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-801"/>
+        <location line="-842"/>
         <source>Low</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+346"/>
+        <location line="+387"/>
         <location line="+25"/>
         <source>Medium</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-370"/>
+        <location line="-411"/>
         <source>High</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2763,7 +2838,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="-249"/>
+        <source>Protected tracks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <source>Tracks SoundCloud streams only encrypted (DRM). They play in a small background player with Widevine and are never stored on this computer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+249"/>
         <source>Liquid glass</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2896,13 +2981,13 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+527"/>
+        <location line="+568"/>
         <location line="+23"/>
         <source>Custom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-548"/>
+        <location line="-589"/>
         <source>Corner radius</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3025,12 +3110,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+138"/>
+        <location line="+179"/>
         <source>Regular</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-137"/>
+        <location line="-178"/>
         <source>Bold</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3046,12 +3131,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+127"/>
+        <location line="+168"/>
         <source>Compact</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-126"/>
+        <location line="-167"/>
         <source>Comfortable</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3172,6 +3257,51 @@
     </message>
     <message>
         <location line="+7"/>
+        <source>Play protected tracks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Plays encrypted tracks through the protected player, which starts only when one plays. Off skips them.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Protected player folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Folder with the protected player (made by `xmake drm-helper`). Empty looks next to Noctara and in its install directory.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Close the protected player after</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Frees its memory when no protected track has played for this long. A paused track resumes where it was.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Protected player uses the GPU</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>It only plays audio and never needs the GPU. Applies when it next starts.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Left</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3850,8 +3980,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-504"/>
-        <location line="+505"/>
+        <location line="-545"/>
+        <location line="+546"/>
         <location line="+11"/>
         <location line="+12"/>
         <location line="+94"/>
@@ -3860,7 +3990,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1097"/>
+        <location line="-1141"/>
         <source>Navigation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3901,12 +4031,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+708"/>
+        <location line="+752"/>
         <source>Full-screen player</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-707"/>
+        <location line="-751"/>
         <source>The large player with the cover art.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3941,7 +4071,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+101"/>
+        <location line="+104"/>
         <source>Custom theme</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4001,7 +4131,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+695"/>
+        <location line="+736"/>
         <source>Maximum lifetime</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5257,7 +5387,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+28"/>
         <source>Cached tracks removed.</source>
         <translation type="unfinished"></translation>
     </message>

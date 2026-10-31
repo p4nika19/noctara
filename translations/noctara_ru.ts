@@ -463,6 +463,61 @@
     </message>
 </context>
 <context>
+    <name>Drm</name>
+    <message>
+        <location filename="../src/drm/DrmService.cpp" line="+25"/>
+        <source>custom DNS servers (it uses the system resolver)</source>
+        <translation>собственные DNS-серверы (он использует системный резолвер)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>SOCKS4a (it resolves names itself and connects over SOCKS4)</source>
+        <translation>SOCKS4a (он сам разрешает имена и подключается по SOCKS4)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>SOCKS proxy sign-in</source>
+        <translation>вход на SOCKS-прокси</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>the CA bundle (it trusts the system&apos;s certificates)</source>
+        <translation>набор сертификатов УЦ (он доверяет системным сертификатам)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>the bandwidth limit</source>
+        <translation>ограничение скорости</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>IPv4-only or IPv6-only</source>
+        <translation>только IPv4 или только IPv6</translation>
+    </message>
+    <message>
+        <location line="+59"/>
+        <source>Protected tracks do not follow: %1.</source>
+        <extracomment>%1 = list of network settings, e.g. &quot;custom DNS servers (…); the bandwidth limit&quot;</extracomment>
+        <translation>Защищённые треки не учитывают: %1.</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Running: castlabs Electron %1 with Widevine.</source>
+        <extracomment>%1 = Electron version</extracomment>
+        <translation>Работает: castlabs Electron %1 с Widevine.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Starting…</source>
+        <translation>Запускается…</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Installed. It starts when a protected track plays.</source>
+        <translation>Установлен. Запускается, когда играет защищённый трек.</translation>
+    </message>
+</context>
+<context>
     <name>Effects</name>
     <message>
         <location filename="../src/ui/EffectsController.cpp" line="+29"/>
@@ -539,12 +594,12 @@
     <name>Errors</name>
     <message>
         <location filename="../src/i18n/ErrorMessages.cpp" line="+11"/>
-        <location line="+95"/>
+        <location line="+109"/>
         <source>Something went wrong.</source>
         <translation>Что-то пошло не так.</translation>
     </message>
     <message>
-        <location line="-94"/>
+        <location line="-108"/>
         <source>The operation was cancelled.</source>
         <translation>Операция отменена.</translation>
     </message>
@@ -785,11 +840,31 @@
     </message>
     <message>
         <location line="+3"/>
-        <source>This track is protected and needs the protected player, which is not set up yet.</source>
-        <translation>Этот трек защищён: для него нужен защищённый плеер, который ещё не настроен.</translation>
+        <source>This track is protected. Turn on protected tracks in Settings → Playback to play it.</source>
+        <translation>Это защищённый трек. Чтобы его слушать, включите защищённые треки в разделе «Настройки → Воспроизведение».</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+3"/>
+        <source>The protected player is not installed, so protected tracks are skipped. See Settings → Playback → Protected tracks.</source>
+        <translation>Защищённый плеер не установлен, поэтому защищённые треки пропускаются. См. «Настройки → Воспроизведение → Защищённые треки».</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>The protected player stopped working. Protected tracks are skipped for now.</source>
+        <translation>Защищённый плеер перестал работать. Пока защищённые треки пропускаются.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The protected player cannot use your custom DNS servers without leaking requests, so protected tracks are skipped. Allow the system resolver as a fallback, use DNS over HTTPS, or use a proxy that resolves names.</source>
+        <translation>Защищённый плеер не может использовать ваши DNS-серверы без утечки запросов, поэтому защищённые треки пропускаются. Разрешите запасной системный резолвер, используйте DNS через HTTPS или прокси, который сам разрешает имена.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>SoundCloud did not allow this protected track to play here.</source>
+        <translation>SoundCloud не разрешил воспроизвести здесь этот защищённый трек.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>%1 (%2 in %3, line %4)</source>
         <extracomment>%1 = explanation, %2 = setting key, %3 = file name, %4 = line number</extracomment>
         <translation>%1 (%2 в файле %3, строка %4)</translation>
@@ -2170,7 +2245,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+188"/>
+        <location filename="../src/app/main.cpp" line="+189"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation>Установленная libcurl собрана без поддержки HTTP/3.</translation>
     </message>
@@ -2186,12 +2261,12 @@
     </message>
     <message>
         <location filename="../src/settings/BuiltinSchema.cpp" line="+187"/>
-        <location line="+108"/>
+        <location line="+111"/>
         <source>Language</source>
         <translation>Язык</translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-110"/>
         <source>Interface language.</source>
         <translation>Язык интерфейса.</translation>
     </message>
@@ -2207,23 +2282,23 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+130"/>
+        <location line="+133"/>
         <source>Theme</source>
         <translation>Тема</translation>
     </message>
     <message>
-        <location line="-129"/>
+        <location line="-132"/>
         <source>Midnight (dark), Frost (light) or follow the system.</source>
         <translation>Midnight (тёмная), Frost (светлая) или как в системе.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+162"/>
+        <location line="+165"/>
         <source>Accent color</source>
         <translation>Акцентный цвет</translation>
     </message>
     <message>
-        <location line="-161"/>
+        <location line="-164"/>
         <source>The whole palette is generated from a single accent color.</source>
         <translation>Вся палитра строится из одного акцентного цвета.</translation>
     </message>
@@ -2274,17 +2349,17 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+538"/>
+        <location line="+582"/>
         <source>Icons</source>
         <translation>Значки</translation>
     </message>
     <message>
-        <location line="-537"/>
+        <location line="-581"/>
         <source>Icon appearance.</source>
         <translation>Внешний вид значков.</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+37"/>
         <source>Graphics</source>
         <translation>Графика</translation>
     </message>
@@ -2360,13 +2435,13 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+551"/>
+        <location line="+592"/>
         <location line="+344"/>
         <source>System</source>
         <translation>Как в системе</translation>
     </message>
     <message>
-        <location line="-894"/>
+        <location line="-935"/>
         <source>Midnight (dark)</source>
         <translation>Midnight (тёмная)</translation>
     </message>
@@ -2406,7 +2481,7 @@
         <translation>Базовый цвет всей палитры, когда подбор по обложке выключен.</translation>
     </message>
     <message>
-        <location line="-160"/>
+        <location line="-163"/>
         <source>The light behind the interface.</source>
         <translation>Свет за интерфейсом.</translation>
     </message>
@@ -2452,12 +2527,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+560"/>
+        <location line="+604"/>
         <source>Volume</source>
         <translation>Громкость</translation>
     </message>
     <message>
-        <location line="-559"/>
+        <location line="-603"/>
         <source>Volume when Noctara starts.</source>
         <translation>Громкость при запуске Noctara.</translation>
     </message>
@@ -2482,7 +2557,7 @@
         <translation>Управление воспроизведением вне окна.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+13"/>
         <source>Data usage</source>
         <translation>Трафик</translation>
     </message>
@@ -2730,7 +2805,7 @@
     <message>
         <location line="+4"/>
         <location line="+182"/>
-        <location line="+302"/>
+        <location line="+343"/>
         <location line="+13"/>
         <location line="+12"/>
         <location line="+57"/>
@@ -2740,19 +2815,19 @@
         <translation>Авто</translation>
     </message>
     <message>
-        <location line="-801"/>
+        <location line="-842"/>
         <source>Low</source>
         <translation>Низкое</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+346"/>
+        <location line="+387"/>
         <location line="+25"/>
         <source>Medium</source>
         <translation>Среднее</translation>
     </message>
     <message>
-        <location line="-370"/>
+        <location line="-411"/>
         <source>High</source>
         <translation>Высокое</translation>
     </message>
@@ -2773,7 +2848,17 @@
         <translation>Матовое стекло</translation>
     </message>
     <message>
+        <location line="-249"/>
+        <source>Protected tracks</source>
+        <translation>Защищённые треки</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <source>Tracks SoundCloud streams only encrypted (DRM). They play in a small background player with Widevine and are never stored on this computer.</source>
+        <translation>Треки, которые SoundCloud передаёт только в зашифрованном виде (DRM). Они играют в небольшом фоновом плеере с Widevine и никогда не сохраняются на этом компьютере.</translation>
+    </message>
+    <message>
+        <location line="+249"/>
         <source>Liquid glass</source>
         <translation>Жидкое стекло</translation>
     </message>
@@ -2906,13 +2991,13 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+527"/>
+        <location line="+568"/>
         <location line="+23"/>
         <source>Custom</source>
         <translation>Свои</translation>
     </message>
     <message>
-        <location line="-548"/>
+        <location line="-589"/>
         <source>Corner radius</source>
         <translation>Скругление углов</translation>
     </message>
@@ -3035,12 +3120,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+138"/>
+        <location line="+179"/>
         <source>Regular</source>
         <translation>Обычные</translation>
     </message>
     <message>
-        <location line="-137"/>
+        <location line="-178"/>
         <source>Bold</source>
         <translation>Жирные</translation>
     </message>
@@ -3056,12 +3141,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+127"/>
+        <location line="+168"/>
         <source>Compact</source>
         <translation>Плотно</translation>
     </message>
     <message>
-        <location line="-126"/>
+        <location line="-167"/>
         <source>Comfortable</source>
         <translation>Обычно</translation>
     </message>
@@ -3182,6 +3267,51 @@
     </message>
     <message>
         <location line="+7"/>
+        <source>Play protected tracks</source>
+        <translation>Воспроизводить защищённые треки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Plays encrypted tracks through the protected player, which starts only when one plays. Off skips them.</source>
+        <translation>Зашифрованные треки играют через защищённый плеер, который запускается только для них. Если выключено, они пропускаются.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Protected player folder</source>
+        <translation>Папка защищённого плеера</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Folder with the protected player (made by `xmake drm-helper`). Empty looks next to Noctara and in its install directory.</source>
+        <translation>Папка с защищённым плеером (создаётся командой `xmake drm-helper`). Если пусто, он ищется рядом с Noctara и в её каталоге установки.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Close the protected player after</source>
+        <translation>Закрывать защищённый плеер через</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Frees its memory when no protected track has played for this long. A paused track resumes where it was.</source>
+        <translation>Освобождает память, если столько времени не играл ни один защищённый трек. Трек на паузе продолжится с того же места.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>min</source>
+        <translation>мин</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Protected player uses the GPU</source>
+        <translation>Защищённый плеер использует GPU</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>It only plays audio and never needs the GPU. Applies when it next starts.</source>
+        <translation>Он только воспроизводит звук, и GPU ему не нужен. Применяется при следующем запуске.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Left</source>
         <translation>Слева</translation>
     </message>
@@ -3860,8 +3990,8 @@
         <translation>Ответы хранятся не меньше этого времени.</translation>
     </message>
     <message>
-        <location line="-504"/>
-        <location line="+505"/>
+        <location line="-545"/>
+        <location line="+546"/>
         <location line="+11"/>
         <location line="+12"/>
         <location line="+94"/>
@@ -3870,7 +4000,7 @@
         <translation>с</translation>
     </message>
     <message>
-        <location line="-1097"/>
+        <location line="-1141"/>
         <source>Navigation</source>
         <translation>Навигация</translation>
     </message>
@@ -3911,12 +4041,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+708"/>
+        <location line="+752"/>
         <source>Full-screen player</source>
         <translation>Полноэкранный плеер</translation>
     </message>
     <message>
-        <location line="-707"/>
+        <location line="-751"/>
         <source>The large player with the cover art.</source>
         <translation>Большой плеер с обложкой.</translation>
     </message>
@@ -3951,7 +4081,7 @@
         <translation>Сочетания, которые работают, пока Noctara в фоне.</translation>
     </message>
     <message>
-        <location line="+101"/>
+        <location line="+104"/>
         <source>Custom theme</source>
         <translation>Своя тема</translation>
     </message>
@@ -4011,7 +4141,7 @@
         <translation>Матовое: молочное размытое стекло. Жидкое: глянцевое стекло с яркой кромкой. Тонированное: стекло цвета акцента. Простой: плоская полупрозрачная заливка. Прозрачное: только контур. Сплошное: непрозрачное.</translation>
     </message>
     <message>
-        <location line="+695"/>
+        <location line="+736"/>
         <source>Maximum lifetime</source>
         <translation>Максимальное время жизни</translation>
     </message>
@@ -5269,7 +5399,7 @@
         <translation>Выбранное расположение кэша нельзя использовать, поэтому вместо него используется стандартная папка.</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+28"/>
         <source>Cached tracks removed.</source>
         <translation>Кэшированные треки удалены.</translation>
     </message>

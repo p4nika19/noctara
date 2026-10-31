@@ -250,6 +250,17 @@ Controlling playback from outside the window.
 | `tray` | bool | `true` | — | **Tray icon.** Playback controls in the system tray, where the desktop provides one. (env `NOCTARA_PLAYBACK_DESKTOP_TRAY`) |
 | `notifications` | bool | `false` | — | **Notify on track change.** Shows a desktop notification with the next track while Noctara's window is not in front. (env `NOCTARA_PLAYBACK_DESKTOP_NOTIFICATIONS`) |
 
+### `[playback.protected]` Protected tracks
+
+Tracks SoundCloud streams only encrypted (DRM). They play in a small background player with Widevine and are never stored on this computer.
+
+| Key | Type | Default | Allowed | Description |
+|---|---|---|---|---|
+| `enabled` | bool | `true` | — | **Play protected tracks.** Plays encrypted tracks through the protected player, which starts only when one plays. Off skips them. (env `NOCTARA_PLAYBACK_PROTECTED_ENABLED`) |
+| `helper` | path | `""` | — | **Protected player folder.** Folder with the protected player (made by `xmake drm-helper`). Empty looks next to Noctara and in its install directory. (*advanced*, env `NOCTARA_PLAYBACK_PROTECTED_HELPER`) |
+| `idle_shutdown` | integer | `5` | 1 … 60 | **Close the protected player after.** Frees its memory when no protected track has played for this long. A paused track resumes where it was. (*advanced*, env `NOCTARA_PLAYBACK_PROTECTED_IDLE_SHUTDOWN`) |
+| `gpu` | bool | `false` | — | **Protected player uses the GPU.** It only plays audio and never needs the GPU. Applies when it next starts. (*advanced*, env `NOCTARA_PLAYBACK_PROTECTED_GPU`) |
+
 ## Library & Content
 
 ### `[library.loading]` Loading

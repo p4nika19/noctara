@@ -7,7 +7,7 @@
 
 namespace noctara::cache {
 
-// <root>/audio, images, http, electron (DRM helper profile, slice i), plus a layout version marker and a
+// <root>/audio, images, http, electron (the DRM helper's profile), plus a layout version marker and a
 // CACHEDIR.TAG so backup tools skip the directory. Directories are created 0700.
 struct CacheLayout {
     static constexpr int kVersion = 1;

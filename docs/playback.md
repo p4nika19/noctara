@@ -11,7 +11,7 @@ item, the tray icon and notifications; QML shows the now-playing bar and the que
    queue · shuffle/repeat · autoplay · stream choice · waveform · prefetch · session state
         │ load / setNext / seek / gain
         ▼
- IPlaybackBackend ── NativeBackend (GUI thread) ─────────────── DrmBackend (slice i, Electron helper)
+ IPlaybackBackend ── NativeBackend (GUI thread) ─────────────── drm::DrmBackend (protected tracks, Electron helper)
         │ one Voice per source (current + next)
         ▼
  Voice thread:  AudioCache::open → AudioReader ─► StreamSource ─► Decoder (FFmpeg) ─► PcmRing
@@ -53,9 +53,12 @@ item, the tray icon and notifications; QML shows the now-playing bar and the que
 - Stream URLs are resolved only when the cache asks for one (first byte, or a refused, expired signature), through
   the API client with the track's authorization. The cache entry is keyed by track and transcoding, never by the
   signed URL.
-- **Protected (DRM) tracks** belong to the DRM backend (slice i). Until it exists they are reported ("needs the
-  protected player") and skipped. The cache refuses them anyway (`NotCacheable`), and the backend test checks that
-  no entry appears.
+- **Protected (DRM) tracks** play in `drm::DrmBackend`, the castlabs Electron helper ([drm-helper.md](drm-helper.md)).
+  The controller picks the backend per track and stops the other one when it switches; only the current backend's
+  signals count. A protected item that follows a regular one is not prepared gaplessly: the regular backend ends,
+  and the helper (warmed up when the next item came near) starts it. Protected tracks are never prefetched, and the
+  cache refuses them anyway (`NotCacheable`; a backend test checks that no entry appears). With *Play protected
+  tracks* off, or without a protected backend, they are reported and skipped.
 
 ## Queue
 

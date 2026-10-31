@@ -42,6 +42,10 @@ XDG portal), `LayoutController` (QML `Layout`: the layout settings and the remem
 catalog's page models (feed, likes, history, library, following, trending charts) and detail pages
 (`models::PlaylistDetail`, `models::UserDetail`). The pages, the full-screen player, the context menu and the
 settings editors (shortcut recorder, navigation items, theme picker) are QML. See [themes.md](themes.md).
+Slice (i) adds `drm` (depends on `core`, `settings`, `i18n`, `net`, `cache`, `api`, `media`): the helper protocol,
+`DrmHost` (the castlabs Electron process), `DrmBackend` (the protected tracks' `IPlaybackBackend`), `DrmService`
+(settings, live network configuration, status) and `planNetwork`. The helper app itself lives in `electron/`. See
+[drm-helper.md](drm-helper.md) and [ipc.md](ipc.md).
 
 Static libraries per module (`noctara_<module>`); the executable only wires them together. Dependencies point downward only: `ui` may use everything, and `core` uses nothing but Qt Core.
 
@@ -137,8 +141,8 @@ for details.
                        Decoder (FFmpeg demux + decode + resample) ──► PcmRing ──► Mixer (audio thread) ──► QAudioSink
 ```
 
-DRM tracks never enter this path: `AudioCache::open` refuses them before anything is created, and the DRM backend
-(slice i) plays them in the Electron helper. See [caching.md](caching.md).
+DRM tracks never enter this path: `AudioCache::open` refuses them before anything is created, and
+`drm::DrmBackend` plays them in the Electron helper. See [caching.md](caching.md).
 
 ## Ownership and threading
 

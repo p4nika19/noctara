@@ -7,6 +7,7 @@
 #include "core/Log.hpp"
 #include "core/LsanSuppressions.hpp"
 #include "core/Paths.hpp"
+#include "drm/DrmService.hpp"
 #include "gfx/CrashSentinel.hpp"
 #include "gfx/FrameMonitor.hpp"
 #include "gfx/GraphicsBootstrap.hpp"
@@ -381,13 +382,34 @@ int main(int argc, char** argv)
     QObject::connect(&account, &ui::AccountController::notice, &appController, &ui::AppController::showToast);
 
     // Native playback: the audio cache feeds FFmpeg, the mixer feeds the default output device (opened on the
-    // first track). Protected tracks wait for the DRM helper (slice i).
+    // first track). Protected tracks play in the castlabs Electron helper, started on the first one.
     media::QtAudioOutput audioOutput;
     media::NativeBackend nativePlayback(cache.audio(), audioOutput);
+    const QString cacheRoot = cache.status().root.isEmpty() ? paths.cacheDir : cache.status().root;
+    drm::DrmService protectedPlayback(store, network, cacheRoot + QStringLiteral("/electron"),
+                                      QCoreApplication::applicationDirPath());
+    const auto showProtectedStatus = [&settingsUi, &protectedPlayback] {
+        settingsUi.setRowStatus(QString::fromLatin1(settings::keys::ProtectedEnabled), protectedPlayback.statusText());
+    };
+    showProtectedStatus();
+    QObject::connect(&protectedPlayback, &drm::DrmService::statusChanged, &settingsUi, showProtectedStatus);
+    QObject::connect(&languages, &i18n::LanguageManager::languageChanged, &settingsUi, showProtectedStatus);
+    QObject::connect(&storageUi, &ui::StorageController::clearingAll, &protectedPlayback,
+                     &drm::DrmService::clearProfile);
+    // Once per session: protected tracks play although some network settings do not apply to them.
+    QObject::connect(&protectedPlayback.host(), &drm::DrmHost::ready, &appController,
+                     [&appController, &protectedPlayback, warned = false] mutable {
+                         if (const QString warning = protectedPlayback.networkWarning();
+                             !warning.isEmpty() && !warned) {
+                             warned = true;
+                             appController.showToast(QStringLiteral("warning"), warning);
+                         }
+                     });
     media::PlaybackController player({.settings = store,
                                       .api = soundcloud.client(),
                                       .cache = &cache,
                                       .native = nativePlayback,
+                                      .protectedBackend = &protectedPlayback.backend(),
                                       .metered = [&network] { return network.meteredActive(); },
                                       .statePath = paths.stateDir + QStringLiteral("/session.json")});
     QObject::connect(&player, &media::PlaybackController::problem, &appController, [&appController](int code) {

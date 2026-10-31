@@ -239,6 +239,9 @@ std::vector<Section> builtinSections()
          QT_TRANSLATE_NOOP("Settings", "What happens when the queue runs out.")},
         {"playback.desktop", Playback, QT_TRANSLATE_NOOP("Settings", "Desktop integration"),
          QT_TRANSLATE_NOOP("Settings", "Controlling playback from outside the window.")},
+        {"playback.protected", Playback, QT_TRANSLATE_NOOP("Settings", "Protected tracks"),
+         QT_TRANSLATE_NOOP("Settings", "Tracks SoundCloud streams only encrypted (DRM). They play in a small "
+                                       "background player with Widevine and are never stored on this computer.")},
 
         {"performance.gpu", Performance, QT_TRANSLATE_NOOP("Settings", "Graphics"),
          QT_TRANSLATE_NOOP("Settings", "GPU acceleration. Changes take effect after a restart.")},
@@ -730,6 +733,47 @@ std::vector<Definition> builtinDefinitions()
                     .description = QT_TRANSLATE_NOOP(
                         "Settings", "Shows a desktop notification with the next track while Noctara's window is "
                                     "not in front.")});
+    defs.push_back({.key = keys::ProtectedEnabled,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Playback,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Play protected tracks"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Plays encrypted tracks through the protected player, which starts only when "
+                                    "one plays. Off skips them.")});
+    defs.push_back({.key = keys::ProtectedHelper,
+                    .type = Type::Path,
+                    .defaultValue = str(""),
+                    .category = Playback,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Protected player folder"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Folder with the protected player (made by `xmake drm-helper`). Empty looks "
+                                    "next to Noctara and in its install directory."),
+                    .flags = flag::Advanced,
+                    .visibleWhen = Condition{keys::ProtectedEnabled, {"true"}}});
+    defs.push_back({.key = keys::ProtectedIdle,
+                    .type = Type::Int,
+                    .defaultValue = integer(5),
+                    .min = 1,
+                    .max = 60,
+                    .step = 1,
+                    .category = Playback,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Close the protected player after"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Frees its memory when no protected track has played for this long. A paused "
+                                    "track resumes where it was."),
+                    .unit = QT_TRANSLATE_NOOP("Settings", "min"),
+                    .flags = flag::Advanced,
+                    .visibleWhen = Condition{keys::ProtectedEnabled, {"true"}}});
+    defs.push_back({.key = keys::ProtectedGpu,
+                    .type = Type::Bool,
+                    .defaultValue = false,
+                    .category = Playback,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Protected player uses the GPU"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "It only plays audio and never needs the GPU. Applies when it next starts."),
+                    .flags = flag::Advanced,
+                    .visibleWhen = Condition{keys::ProtectedEnabled, {"true"}}});
 
     defs.push_back({.key = keys::NavPosition,
                     .type = Type::Enum,

@@ -29,5 +29,7 @@ namespace noctara::api::parse {
 [[nodiscard]] Result<Page<Entry>> playlistTracks(const QByteArray& json);
 // A transcoding's resolution: {"url": "<signed media URL>"}.
 [[nodiscard]] Result<QUrl> streamUrl(const QByteArray& json);
+// An encrypted transcoding's resolution: {"url": …, "licenseAuthToken": …}.
+[[nodiscard]] Result<ProtectedStream> protectedStream(const QByteArray& json);
 
 }  // namespace noctara::api::parse

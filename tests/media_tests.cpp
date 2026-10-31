@@ -352,11 +352,18 @@ struct Player {
     FakeBackend backend;
     std::unique_ptr<PlaybackController> controller;
 
-    explicit Player(const QString& statePath = {}, std::map<api::Id, api::Track> known = {})
+    FakeBackend protectedBackend;
+
+    explicit Player(const QString& statePath = {}, std::map<api::Id, api::Track> known = {}, bool withProtected = false)
     {
         client.known = std::move(known);
-        controller = std::make_unique<PlaybackController>(PlaybackController::Dependencies{
-            .settings = store, .api = client, .cache = nullptr, .native = backend, .statePath = statePath});
+        controller = std::make_unique<PlaybackController>(
+            PlaybackController::Dependencies{.settings = store,
+                                             .api = client,
+                                             .cache = nullptr,
+                                             .native = backend,
+                                             .protectedBackend = withProtected ? &protectedBackend : nullptr,
+                                             .statePath = statePath});
     }
     [[nodiscard]] QString loadedId(std::size_t index) const { return backend.loads.at(index).info.key.trackId; }
 };
@@ -864,7 +871,7 @@ TEST_SUITE("media.backend")
 
 TEST_SUITE("media.controller")
 {
-    TEST_CASE("a list plays from the chosen track; protected tracks are reported and skipped")
+    TEST_CASE("a list plays from the chosen track; without a protected player protected tracks are skipped")
     {
         Player player;
         QSignalSpy problems(player.controller.get(), &PlaybackController::problem);
@@ -884,6 +891,57 @@ TEST_SUITE("media.controller")
         CHECK(player.loadedId(1) == u"3");
         REQUIRE(problems.size() == 1);
         CHECK(problems.first().first().toInt() == static_cast<int>(ErrorCode::ProtectedPlayback));
+    }
+
+    TEST_CASE("protected tracks play in the protected backend, resolved afresh and never prefetched")
+    {
+        Player player({}, {}, true);
+        player.client.handler = [](const api::ApiRequest& request) -> Result<QByteArray> {
+            CHECK(request.cache == net::CacheMode::Bypass);
+            CHECK(request.url.query().contains(u"track_authorization=auth-2"));
+            return QByteArray(R"({"url":"https://playback.media-streaming.soundcloud.cloud/cenc/x/playlist.m3u8",)"
+                              R"("licenseAuthToken":"token-2"})");
+        };
+        player.controller->playTracks({apiTrack(1), apiTrack(2, true), apiTrack(3)}, 0, {});
+        REQUIRE(player.backend.loads.size() == 1);
+        CHECK(player.protectedBackend.loads.empty());
+
+        // Near the end the protected item is handed to its backend only to warm up; the native one gets nothing.
+        player.backend.setPosition(190'000);
+        CHECK_FALSE(player.backend.next.has_value());
+        REQUIRE(player.protectedBackend.next.has_value());
+        CHECK(player.protectedBackend.next->info.drm);
+
+        Q_EMIT player.backend.ended();
+        REQUIRE(player.protectedBackend.loads.size() == 1);
+        CHECK(player.backend.state() == BackendState::Idle);  // the other backend was stopped
+        const PlaybackSource& source = player.protectedBackend.loads[0];
+        CHECK(source.info.drm);
+        CHECK_FALSE(source.urls);
+        REQUIRE(source.protectedStream);
+        std::optional<Result<api::ProtectedStream>> stream;
+        QObject context;
+        source.protectedStream(&context, [&](Result<api::ProtectedStream> answer) { stream = std::move(answer); });
+        REQUIRE(test::waitUntil([&] { return stream.has_value(); }));
+        REQUIRE(stream->has_value());
+        CHECK((*stream)->licenseToken == u"token-2");
+
+        // Its events speak for the current track; the native backend's no longer do.
+        player.protectedBackend.setPosition(5000);
+        CHECK(player.controller->position() == 5000);
+        player.backend.setPosition(99'000);
+        CHECK(player.controller->position() == 5000);
+        Q_EMIT player.protectedBackend.ended();
+        REQUIRE(player.backend.loads.size() == 2);
+        CHECK(player.loadedId(1) == u"3");
+
+        // Turned off: reported and skipped.
+        REQUIRE(player.store.setUserValue(settings::keys::ProtectedEnabled, false));
+        QSignalSpy problems(player.controller.get(), &PlaybackController::problem);
+        player.controller->playTracks({apiTrack(4, true), apiTrack(5)}, 0, {});
+        REQUIRE(problems.size() == 1);
+        CHECK(problems.first().first().toInt() == static_cast<int>(ErrorCode::ProtectedPlayback));
+        CHECK(player.loadedId(2) == u"5");
     }
 
     TEST_CASE("the backend's gapless advance moves the queue without loading again")

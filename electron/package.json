@@ -1,0 +1,7 @@
+{
+  "name": "noctara-drm-helper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Noctara's headless protected-playback helper (castlabs Electron with Widevine). Plays DRM-protected SoundCloud tracks through the standard EME path; it never stores media, keys or licenses.",
+  "main": "main.js"
+}

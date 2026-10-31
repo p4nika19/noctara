@@ -12,7 +12,8 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 | FFmpeg | 9.0 (libavformat 63) | used by the native backend |
 | TagLib / libsecret / sqlite / libproxy / c-ares / toml++ / simdjson | system | found through pkg-config |
 | doctest | xrepo | |
-| castlabs Electron | not installed | downloaded in slice (i) |
+| castlabs Electron | v44.9.3+wvcus (linux-x64, Widevine CDM 4.10.3112.0 via the component updater) | `xmake drm-helper`, pinned and SHA-256 verified; hls.js 1.6.15 alongside |
+| Node.js | 26.12 (system) | only for `node --check` on the helper sources; the helper runs on Electron's own Node |
 
 ## Decisions (made without blocking; revisit if wrong)
 
@@ -104,7 +105,7 @@ Noctara is a native SoundCloud desktop client written in C++23 with Qt 6 Quick, 
 (i) DRM helper
 (j) polish and performance measurements
 
-Done: (a), (b), (c), (d), (e), (f), (g), (h).
+Done: (a), (b), (c), (d), (e), (f), (g), (h), (i).
 
 ## Slice (f) status (auth / secret store / session)
 
@@ -165,13 +166,36 @@ Windows DPAPI/app-bound cookies and macOS Keychain remain platform-specific foll
   import/export, contrast enforcement or a warning; three examples in `docs/themes/` (parsed by a test).
 - Glass split into backdrop blur and surface style (with a migration), the *Plain* button material; queue restore.
 
+## Slice (i) status (protected playback)
+
+- `drm` module: the protocol (one definition, `electron/protocol.json`, embedded with `#embed` and loaded by the
+  helper; validated both ways), `DrmHost` (lazy start, handshake, heartbeat, crash restarts with backoff and a
+  give-up, idle shutdown, own process group, `PR_SET_PDEATHSIG`, no orphans), `DrmBackend` (`IPlaybackBackend`;
+  fresh protected stream per load, resume after crash/restart/idle shutdown), `DrmService` (settings, live network,
+  status line, *Clear all* of the helper profile), `planNetwork` (proxy, DoH, host mappings, TLS/HTTP switches,
+  limits and blocking for strict custom DNS).
+- `electron/`: headless castlabs Electron, sandboxed page with hls.js → MSE → `<audio>`, Widevine through EME with
+  SoundCloud's license server (`license_token`), in-memory session, host allowlist, no GPU, no disk caches.
+- API: `endpoints::protectedStream` (`ctr-encrypted-hls`: Widevine/PlayReady; the cbc variant is FairPlay-only),
+  `pickProtectedTranscoding`, `widevineLicense`. The controller routes per track, never prefetches protected tracks
+  and warms the helper up.
+- Settings: *Play protected tracks*, helper folder, idle timeout, GPU (advanced); en/ru strings; new error codes.
+- Tests: `drm.protocol`, `drm.network`, `drm.host`, `drm.backend` against `noctara-mock-drm-helper`, controller
+  routing in `media.controller`; `--no-skip -tc="real drm*"` checks the real helper starts with Widevine.
+- Verified by hand: the real helper played a protected track (Widevine license accepted, position and seek work,
+  no cache files). Not yet run: the full app path with a signed-in account (`build/noctara --play <protected link>`).
+
 ## Open items flagged for verification
 - Chromium-family import is verified against fixture databases built from Chromium's own format description
   (`os_crypt_linux`, cookie DB version 24), not against installed browsers; the KWallet D-Bus path has not run
   against a real wallet, and the Brave/Vivaldi/Opera Snap paths follow the Snap `$HOME` convention unchecked. Check
   with `noctara-tests --no-skip -tc="real browser profile import"` on a desktop with those browsers signed in.
 - DoH over HTTP/2 against a local server is not covered by automated tests (the mock speaks HTTP/1.1); real providers negotiate HTTP/2 through ALPN.
-- castlabs Electron version and the `configureHostResolver` secure-DNS support (slice i).
+- Protected playback inside the app end-to-end (signed-in account, real audio device): the helper alone was
+  verified with a real Widevine stream, the app path only against the mock helper.
+- The helper's DNS/proxy behaviour is derived from Chromium's switches and Electron's API (castlabs 44.9.3 has
+  `configureHostResolver` with secure DNS) and the order in which they apply, not from a packet capture; the CDM
+  component check at startup is covered by the startup switches.
 - Live api-v2 behaviour (client_id discovery, field names, transcodings, `/charts`) is covered by fixtures only; the
   live check (`noctara-tests --no-skip -tc="real api*"`) needs internet access and has not been run from the
   development sandbox. See [api.md](api.md#verification-status).

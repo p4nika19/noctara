@@ -42,6 +42,24 @@ std::optional<Transcoding> pickTranscoding(const Track& track, StreamPreference 
     return best;
 }
 
+std::optional<Transcoding> pickProtectedTranscoding(const Track& track, StreamPreference preference)
+{
+    std::optional<Transcoding> best;
+    const auto rate = [preference](const Transcoding& t) {
+        return preference == StreamPreference::Best ? estimatedBitrateKbps(t) : -estimatedBitrateKbps(t);
+    };
+    for (const Transcoding& candidate : track.transcodings) {
+        if (!candidate.encrypted || candidate.protocolName != u"ctr-encrypted-hls" || candidate.url.isEmpty() ||
+            candidate.snipped || candidate.preset.startsWith(u"abr")) {
+            continue;
+        }
+        if (!best || rate(candidate) > rate(*best)) {
+            best = candidate;
+        }
+    }
+    return best;
+}
+
 cache::TrackInfo toTrackInfo(const Track& track, const Transcoding& transcoding, const QString& context)
 {
     cache::TrackInfo info;

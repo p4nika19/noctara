@@ -19,6 +19,10 @@ enum class StreamPreference : std::uint8_t {
 // progressive beats HLS (simpler to cache by range).
 [[nodiscard]] std::optional<Transcoding> pickTranscoding(const Track& track, StreamPreference preference);
 
+// The transcoding for the protected player: Widevine-encrypted HLS ("ctr-encrypted-hls"; the cbc variant carries
+// only FairPlay keys), the whole track, no adaptive master playlist. nullopt when there is none.
+[[nodiscard]] std::optional<Transcoding> pickProtectedTranscoding(const Track& track, StreamPreference preference);
+
 // Rough bitrate of a preset ("aac_160k" → 160; "mp3_*" → 128; "opus_*" → 64), for ordering only.
 [[nodiscard]] int estimatedBitrateKbps(const Transcoding& transcoding);
 

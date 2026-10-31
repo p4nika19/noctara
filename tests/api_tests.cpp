@@ -230,6 +230,12 @@ TEST_SUITE("api.parse")
         CHECK(parse::streamUrl(R"({"url":"https://cf-media.sndcdn.com/a.mp3?Policy=x"})").value().host() ==
               u"cf-media.sndcdn.com");
         CHECK(test::errorOf(parse::streamUrl(R"({"url":"http://plain.example/a.mp3"})")) == ErrorCode::InvalidResponse);
+        const Result<ProtectedStream> secured = parse::protectedStream(
+            R"({"url":"https://playback.media-streaming.soundcloud.cloud/cenc/x","licenseAuthToken":"tok"})");
+        REQUIRE(secured);
+        CHECK(secured->licenseToken == u"tok");
+        CHECK(test::errorOf(parse::protectedStream(R"({"url":"https://playback.example/x"})")) ==
+              ErrorCode::InvalidResponse);
     }
 
     TEST_CASE("artwork sizes")
@@ -567,6 +573,36 @@ TEST_SUITE("api.streams")
         CHECK(saver->preset == u"opus_0_0");
         track->transcodings.erase(track->transcodings.begin());  // without aac: mp3 progressive vs opus
         CHECK(pickTranscoding(*track, StreamPreference::Best)->protocol == cache::StreamProtocol::Progressive);
+    }
+
+    TEST_CASE("protected playback takes the Widevine (ctr) transcoding, never cbc, abr or a preview")
+    {
+        Track track;
+        const auto add = [&track](const char* protocol, const char* preset, bool encrypted, bool snipped = false) {
+            Transcoding t;
+            t.url = QStringLiteral("https://api-v2.soundcloud.com/media/x/%1").arg(QString::fromLatin1(preset));
+            t.protocolName = QString::fromLatin1(protocol);
+            t.preset = QString::fromLatin1(preset);
+            t.encrypted = encrypted;
+            t.snipped = snipped;
+            track.transcodings.push_back(t);
+        };
+        add("cbc-encrypted-hls", "aac_160k", true);
+        add("ctr-encrypted-hls", "abr_sq", true);
+        add("ctr-encrypted-hls", "aac_96k", true);
+        add("ctr-encrypted-hls", "aac_160k", true);
+        add("hls", "mp3_0_0", false, true);
+        CHECK(track.drm());
+        CHECK_FALSE(pickTranscoding(track, StreamPreference::Best)->encrypted);  // natively: the preview only
+        const auto best = pickProtectedTranscoding(track, StreamPreference::Best);
+        REQUIRE(best);
+        CHECK(best->protocolName == u"ctr-encrypted-hls");
+        CHECK(best->preset == u"aac_160k");
+        CHECK(pickProtectedTranscoding(track, StreamPreference::DataSaver)->preset == u"aac_96k");
+        const auto endpoint = endpoints::protectedStream(*best, QStringLiteral("auth"));
+        CHECK(endpoint.request.cache == net::CacheMode::Bypass);
+        CHECK(endpoint.request.url.query().contains(u"track_authorization=auth"));
+        CHECK(endpoints::widevineLicense().host() == u"license.media-streaming.soundcloud.cloud");
     }
 
     TEST_CASE("the cache record carries the API metadata")

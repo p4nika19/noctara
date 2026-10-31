@@ -140,11 +140,14 @@ noctara_module("models", {qt = {"QtCore"}, deps = {"noctara_core", "noctara_api"
 noctara_module("media", {qt = {"QtCore", "QtGui", "QtMultimedia", "QtDBus"},
     deps = {"noctara_core", "noctara_settings", "noctara_cache", "noctara_api", "noctara_models"},
     packages = {"avformat", "avcodec", "avutil", "swresample"}})
+-- Protected playback: the castlabs Electron helper's host process, IPC and playback backend.
+noctara_module("drm", {qt = {"QtCore"}, deps = {"noctara_core", "noctara_settings", "noctara_i18n", "noctara_net",
+    "noctara_cache", "noctara_api", "noctara_media"}})
 noctara_module("auth", {qt = {"QtCore", "QtConcurrent", "QtDBus"}, deps = {"noctara_core"},
     packages = {"libsecret", "openssl", "sqlite3"}})
 noctara_module("ui", {qt = {"QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus", "QtMultimedia", "QtWidgets"},
     deps = {"noctara_core", "noctara_settings", "noctara_i18n", "noctara_theme", "noctara_gfx", "noctara_net",
-            "noctara_cache", "noctara_api", "noctara_models", "noctara_media", "noctara_auth"}})
+            "noctara_cache", "noctara_api", "noctara_models", "noctara_media", "noctara_drm", "noctara_auth"}})
 
 target("noctara")
     set_kind("binary")
@@ -175,14 +178,23 @@ target("noctara-schema-doc")
     add_deps("noctara_settings")
     add_files("tools/schema_doc.cpp", {cxxflags = STRICT_WARNINGS})
 
+-- The protected-player helper's stand-in for the drm tests (QtCore only, so it starts fast under sanitizers).
+target("noctara-mock-drm-helper")
+    set_kind("binary")
+    set_default(false)
+    add_rules("qt.console", "noctara.qtfix")
+    add_frameworks("QtCore")
+    add_files("tests/mock-drm-helper/main.cpp", "src/drm/Protocol.cpp", {cxxflags = STRICT_WARNINGS})
+target_end()
+
 target("noctara-tests")
     set_kind("binary")
     set_default(false)
     add_rules("qt.quickapp", "noctara.qtfix", "noctara.lrelease")
     add_frameworks("QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus", "QtMultimedia", "QtWidgets", "QtTest")
-    add_deps("noctara_ui")
+    add_deps("noctara_ui", "noctara-mock-drm-helper")
     add_packages("doctest", "openssl")
-    add_files("tests/**.cpp", {cxxflags = STRICT_WARNINGS})
+    add_files("tests/**.cpp|mock-drm-helper/*.cpp", {cxxflags = STRICT_WARNINGS})
     add_defines("NOCTARA_SOURCE_DIR=\"$(projectdir)\"")
     add_files("translations/*.ts", {rules = {"noctara.lrelease", override = true}})
     add_tests("all", {runargs = {}})

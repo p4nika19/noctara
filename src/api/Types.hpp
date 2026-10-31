@@ -49,6 +49,13 @@ struct Transcoding {
     [[nodiscard]] QString cacheName() const;
 };
 
+// A resolved encrypted transcoding: the signed media playlist and the token the license server wants with it.
+// Both go only to the protected player (the DRM helper); neither is logged, cached or stored.
+struct ProtectedStream {
+    QUrl url;
+    QString licenseToken;
+};
+
 struct Track {
     Id id = 0;
     bool stub = false;  // only the id is known (later tracks of a playlist); hydrate with IApiClient::lookupTracks

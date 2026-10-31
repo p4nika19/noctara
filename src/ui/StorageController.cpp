@@ -109,6 +109,9 @@ void StorageController::clear(const QString& part)
                                              : Part::All;
     ++m_clearing;
     Q_EMIT clearingChanged();
+    if (which == Part::All) {
+        Q_EMIT clearingAll();
+    }
     m_service.clear(which, this, [this, which] {
         --m_clearing;
         Q_EMIT clearingChanged();

@@ -1,0 +1,34 @@
+{
+  "name": "noctara-drm",
+  "version": 1,
+  "comment": "Messages between Noctara and its protected-playback helper: one JSON object per line on the helper's stdin (toHelper) and stdout (fromHelper), each with a \"type\". Field types: string, number, boolean, object; a trailing ? marks an optional field. Both sides validate every message against this file. See docs/ipc.md.",
+  "toHelper": {
+    "hello": { "version": "number" },
+    "configure": { "proxy": "object", "dns": "object" },
+    "load": {
+      "id": "string",
+      "url": "string",
+      "licenseUrl": "string",
+      "licenseToken": "string",
+      "startMs": "number",
+      "volume": "number",
+      "autoplay": "boolean"
+    },
+    "play": {},
+    "pause": {},
+    "seek": { "ms": "number" },
+    "volume": { "value": "number" },
+    "stop": {},
+    "ping": { "seq": "number" },
+    "shutdown": {}
+  },
+  "fromHelper": {
+    "ready": { "version": "number", "widevine": "boolean", "electron": "string", "detail": "string?" },
+    "configured": { "proxy": "string", "dns": "string" },
+    "state": { "id": "string", "state": "string" },
+    "position": { "id": "string", "ms": "number", "durationMs": "number" },
+    "error": { "id": "string", "code": "string", "detail": "string" },
+    "pong": { "seq": "number" },
+    "log": { "level": "string", "message": "string" }
+  }
+}

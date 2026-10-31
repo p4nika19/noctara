@@ -80,6 +80,10 @@ inline constexpr std::string_view RestoreQueue = "playback.queue.restore";
 inline constexpr std::string_view MediaControls = "playback.desktop.media_controls";
 inline constexpr std::string_view TrayIcon = "playback.desktop.tray";
 inline constexpr std::string_view TrackNotifications = "playback.desktop.notifications";
+inline constexpr std::string_view ProtectedEnabled = "playback.protected.enabled";
+inline constexpr std::string_view ProtectedHelper = "playback.protected.helper";
+inline constexpr std::string_view ProtectedIdle = "playback.protected.idle_shutdown";
+inline constexpr std::string_view ProtectedGpu = "playback.protected.gpu";
 
 // One per keyboard action: "keyboard.shortcuts.<action>" (see ui/KeyboardController).
 inline constexpr std::string_view ShortcutPrefix = "keyboard.shortcuts.";

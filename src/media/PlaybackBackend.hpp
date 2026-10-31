@@ -1,5 +1,7 @@
 #pragma once
 
+#include "api/Types.hpp"
+
 #include "cache/AudioCache.hpp"
 #include "cache/TrackInfo.hpp"
 #include "core/Error.hpp"
@@ -7,17 +9,24 @@
 #include <QObject>
 
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <utility>
 #include <vector>
 
 namespace noctara::media {
 
+// Resolves a protected track's stream (signed playlist and license token) whenever the DRM backend needs a fresh
+// one. The answer arrives on `context`'s thread and is dropped when `context` is gone.
+using ProtectedStreamProvider =
+    std::function<void(QObject* context, std::function<void(Result<api::ProtectedStream>)> done)>;
+
 // What a backend plays: the cache's self-describing record of the track (key, protocol, DRM flag, metadata) and
-// where its stream URL comes from.
+// where its stream comes from: `urls` for the native backend, `protectedStream` for protected tracks (info.drm).
 struct PlaybackSource {
     cache::TrackInfo info;
     cache::UrlProvider urls;
+    ProtectedStreamProvider protectedStream;
 };
 
 enum class BackendState : std::uint8_t {
@@ -30,7 +39,7 @@ enum class BackendState : std::uint8_t {
 };
 
 // A way to play tracks. The native backend decodes regular tracks from the audio cache; protected tracks belong
-// to the DRM backend (the Electron helper, slice i). Lives on the GUI thread.
+// to the DRM backend (drm::DrmBackend, the Electron helper). Lives on the GUI thread.
 class IPlaybackBackend : public QObject {
     Q_OBJECT
 

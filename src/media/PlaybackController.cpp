@@ -58,6 +58,8 @@ PlaybackController::PlaybackController(Dependencies dependencies, QObject* paren
     , m_api(dependencies.api)
     , m_cache(dependencies.cache)
     , m_native(dependencies.native)
+    , m_protected(dependencies.protectedBackend)
+    , m_active(&m_native)
     , m_metered(dependencies.metered ? std::move(dependencies.metered) : [] { return false; })
     , m_store(dependencies.statePath)
     , m_queueModel(m_queue)
@@ -74,8 +76,33 @@ PlaybackController::PlaybackController(Dependencies dependencies, QObject* paren
         m_prefetcher = std::make_unique<cache::Prefetcher>(m_cache->audio());
     }
 
-    connect(&m_native, &IPlaybackBackend::stateChanged, this, [this] {
-        if (m_native.state() == BackendState::Playing) {
+    connectBackend(m_native);
+    if (m_protected != nullptr) {
+        connectBackend(*m_protected);
+    }
+    connect(&m_settings, &settings::SettingsStore::valueChanged, this, [this](const QString& key) {
+        if (key == QLatin1StringView(keys::Crossfade)) {
+            applySettings();
+        }
+    });
+    applySettings();
+    applyGain();
+    if (m_settings.boolValue(keys::RestoreQueue) && !m_session.queue.empty()) {
+        restoreQueue(m_session);
+    }
+}
+
+void PlaybackController::connectBackend(IPlaybackBackend& backend)
+{
+    // Only the backend of the current item speaks for it.
+    const auto active = [this, &backend] {
+        return &backend == m_active;
+    };
+    connect(&backend, &IPlaybackBackend::stateChanged, this, [this, active] {
+        if (!active()) {
+            return;
+        }
+        if (m_active->state() == BackendState::Playing) {
             m_failuresInRow = 0;
             if (m_error >= 0) {
                 m_error = -1;
@@ -83,8 +110,15 @@ PlaybackController::PlaybackController(Dependencies dependencies, QObject* paren
         }
         Q_EMIT stateChanged();
     });
-    connect(&m_native, &IPlaybackBackend::bufferingChanged, this, &PlaybackController::stateChanged);
-    connect(&m_native, &IPlaybackBackend::positionChanged, this, [this] {
+    connect(&backend, &IPlaybackBackend::bufferingChanged, this, [this, active] {
+        if (active()) {
+            Q_EMIT stateChanged();
+        }
+    });
+    connect(&backend, &IPlaybackBackend::positionChanged, this, [this, active] {
+        if (!active()) {
+            return;
+        }
         // Every update repaints the window; a few per second keep the waveform and the clock exact to the pixel
         // and the second. Seeks and track changes notify at once.
         if (!m_positionAge.isValid() || m_positionAge.elapsed() >= kPositionIntervalMs ||
@@ -99,25 +133,42 @@ PlaybackController::PlaybackController(Dependencies dependencies, QObject* paren
             prepareFollowing();
         }
     });
-    connect(&m_native, &IPlaybackBackend::durationKnown, this, [this](std::int64_t ms) {
-        if (m_duration <= 0 && ms > 0) {
+    connect(&backend, &IPlaybackBackend::durationKnown, this, [this, active](std::int64_t ms) {
+        if (active() && m_duration <= 0 && ms > 0) {
             m_duration = ms;
             Q_EMIT durationChanged();
         }
     });
-    connect(&m_native, &IPlaybackBackend::advanced, this, &PlaybackController::onAdvanced);
-    connect(&m_native, &IPlaybackBackend::ended, this, &PlaybackController::onEnded);
-    connect(&m_native, &IPlaybackBackend::failed, this, &PlaybackController::onFailed);
-    connect(&m_settings, &settings::SettingsStore::valueChanged, this, [this](const QString& key) {
-        if (key == QLatin1StringView(keys::Crossfade)) {
-            applySettings();
+    connect(&backend, &IPlaybackBackend::advanced, this, [this, active] {
+        if (active()) {
+            onAdvanced();
         }
     });
-    applySettings();
-    applyGain();
-    if (m_settings.boolValue(keys::RestoreQueue) && !m_session.queue.empty()) {
-        restoreQueue(m_session);
+    connect(&backend, &IPlaybackBackend::ended, this, [this, active] {
+        if (active()) {
+            onEnded();
+        }
+    });
+    connect(&backend, &IPlaybackBackend::failed, this, [this, active](const Error& error) {
+        if (active()) {
+            onFailed(error);
+        }
+    });
+}
+
+IPlaybackBackend& PlaybackController::backendFor(const PlaybackSource& source) noexcept
+{
+    return source.info.drm && m_protected != nullptr ? *m_protected : m_native;
+}
+
+void PlaybackController::activate(IPlaybackBackend& backend)
+{
+    if (&backend == m_active) {
+        return;
     }
+    m_active->setNext(std::nullopt);
+    m_active->stop();
+    m_active = &backend;
 }
 
 void PlaybackController::restoreQueue(const SessionState& saved)
@@ -162,6 +213,9 @@ PlaybackController::~PlaybackController()
         m_prefetcher->cancel();
     }
     m_native.stop();
+    if (m_protected != nullptr) {
+        m_protected->stop();
+    }
     m_store.flush();
 }
 
@@ -352,11 +406,26 @@ std::optional<PlaybackSource> PlaybackController::sourceFor(const QueueItem& ite
         }
         return std::nullopt;
     };
-    if (track.drm()) {
-        return refuse(ErrorCode::ProtectedPlayback);
-    }
     if (!track.streamable || track.policy == api::Policy::Block) {
         return refuse(ErrorCode::NotPlayable);
+    }
+    if (track.drm()) {
+        if (m_protected == nullptr || !m_settings.boolValue(keys::ProtectedEnabled)) {
+            return refuse(ErrorCode::ProtectedPlayback);
+        }
+        const std::optional<api::Transcoding> transcoding = api::pickProtectedTranscoding(track, preference());
+        if (!transcoding) {
+            return refuse(ErrorCode::NotPlayable);
+        }
+        PlaybackSource source;
+        source.info = api::toTrackInfo(track, *transcoding, item.context);
+        // Resolved afresh for every load: the signed URL and the license token are never kept.
+        source.protectedStream = [api = &m_api, transcoding = *transcoding, authorization = track.trackAuthorization](
+                                     QObject* context, std::function<void(Result<api::ProtectedStream>)> done) {
+            (void)api::fetch(*api, api::endpoints::protectedStream(transcoding, authorization), context,
+                             std::move(done));
+        };
+        return source;
     }
     const std::optional<api::Transcoding> transcoding = api::pickTranscoding(track, preference());
     if (!transcoding) {
@@ -413,7 +482,10 @@ void PlaybackController::startCurrent(std::int64_t startMs, bool paused)
         return;
     }
     m_started = true;
-    m_native.load(*source, startMs, paused);
+    IPlaybackBackend& backend = backendFor(*source);
+    activate(backend);
+    applyGain();
+    backend.load(*source, startMs, paused);
     prefetchUpcoming();
     Q_EMIT stateChanged();
 }
@@ -441,7 +513,7 @@ void PlaybackController::prepareFollowing()
     m_nextPrepared = true;
     const std::optional<int> following = m_queue.following();
     if (!following) {
-        m_native.setNext(std::nullopt);
+        m_active->setNext(std::nullopt);
         return;
     }
     const QueueItem& item = m_queue.items()[static_cast<std::size_t>(*following)];
@@ -454,8 +526,15 @@ void PlaybackController::prepareFollowing()
         });
         return;
     }
-    // Protected or unplayable items are left to onEnded(), which reports and skips them.
-    m_native.setNext(sourceFor(item));
+    // Unplayable items are left to onEnded(), which reports and skips them. An item for the other backend starts
+    // when this one ends; that backend gets it early only to warm up (the helper starts ahead of a protected one).
+    std::optional<PlaybackSource> source = sourceFor(item);
+    if (source && &backendFor(*source) != m_active) {
+        m_active->setNext(std::nullopt);
+        backendFor(*source).setNext(source);
+        return;
+    }
+    m_active->setNext(source);
 }
 
 void PlaybackController::prefetchUpcoming()
@@ -470,7 +549,8 @@ void PlaybackController::prefetchUpcoming()
         if (item.track.stub) {
             continue;
         }
-        if (std::optional<PlaybackSource> source = sourceFor(item)) {
+        // Protected tracks are never prefetched (or cached).
+        if (std::optional<PlaybackSource> source = sourceFor(item); source && !source->info.drm) {
             upcoming.push_back({.info = std::move(source->info), .urls = std::move(source->urls)});
         }
     }
@@ -517,7 +597,12 @@ void PlaybackController::onFailed(const Error& error)
     case ErrorCode::NotCacheable:
     case ErrorCode::NotFound:
     case ErrorCode::Forbidden:
-    case ErrorCode::Unsupported: skipAfterError(error.code); return;
+    case ErrorCode::Unsupported:
+    case ErrorCode::LicenseDenied:
+    case ErrorCode::ProtectedPlayback:
+    case ErrorCode::ProtectedPlayerMissing:
+    case ErrorCode::ProtectedPlayerFailed:
+    case ErrorCode::ProtectedNetworkUnsupported: skipAfterError(error.code); return;
     default:
         // A network problem: the track stays; playing again retries from where it stopped.
         m_error = static_cast<int>(error.code);
@@ -535,7 +620,7 @@ void PlaybackController::skipAfterError(ErrorCode code)
     Q_EMIT stateChanged();
     // Keep going, but never in circles through a queue where nothing plays.
     if (++m_failuresInRow >= std::max(m_queue.size(), 1)) {
-        m_native.stop();
+        m_active->stop();
         return;
     }
     const int previous = m_queue.current();
@@ -543,7 +628,7 @@ void PlaybackController::skipAfterError(ErrorCode code)
         m_queueModel.currentMoved(previous);
         startCurrent(0, false);
     } else {
-        m_native.stop();
+        m_active->stop();
     }
 }
 
@@ -600,13 +685,13 @@ void PlaybackController::play()
         startCurrent(position(), false);
         return;
     }
-    m_native.play();
+    m_active->play();
 }
 
 void PlaybackController::pause()
 {
     m_pendingPlay = false;
-    m_native.pause();
+    m_active->pause();
     saveSession();
     Q_EMIT stateChanged();
 }
@@ -622,7 +707,7 @@ void PlaybackController::playPause()
 
 void PlaybackController::stop()
 {
-    m_native.stop();
+    m_active->stop();
     m_started = false;
     m_pendingPlay = false;
     Q_EMIT stateChanged();
@@ -667,7 +752,7 @@ void PlaybackController::seek(qint64 ms)
     } else if (!m_started) {
         startCurrent(ms, !m_pendingPlay);
     } else {
-        m_native.seek(ms);
+        m_active->seek(ms);
     }
     Q_EMIT positionChanged();
     Q_EMIT seeked(ms);
@@ -882,7 +967,7 @@ qint64 PlaybackController::position() const
     if (m_ended) {
         return m_duration;
     }
-    return m_started ? m_native.position() : m_resumeAt;
+    return m_started ? m_active->position() : m_resumeAt;
 }
 
 bool PlaybackController::playing() const noexcept
@@ -890,7 +975,7 @@ bool PlaybackController::playing() const noexcept
     if (!m_started) {
         return m_pendingPlay;
     }
-    const BackendState state = m_native.state();
+    const BackendState state = m_active->state();
     return !m_ended && (state == BackendState::Playing || state == BackendState::Loading);
 }
 
@@ -899,7 +984,7 @@ bool PlaybackController::loading() const noexcept
     if (!m_started) {
         return m_pendingPlay && hasTrack();
     }
-    return m_native.state() == BackendState::Loading || m_native.buffering();
+    return m_active->state() == BackendState::Loading || m_active->buffering();
 }
 
 double PlaybackController::gainFor(double volume, bool muted) noexcept
@@ -910,7 +995,11 @@ double PlaybackController::gainFor(double volume, bool muted) noexcept
 
 void PlaybackController::applyGain()
 {
-    m_native.setGain(gainFor(m_session.volume, m_session.muted));
+    const double gain = gainFor(m_session.volume, m_session.muted);
+    m_native.setGain(gain);
+    if (m_protected != nullptr) {
+        m_protected->setGain(gain);
+    }
 }
 
 void PlaybackController::applySettings()
@@ -963,7 +1052,7 @@ void PlaybackController::updateCachedRanges(bool force)
     m_rangesAge.restart();
     QList<qreal> ranges;
     if (m_started) {
-        for (const auto& [from, to] : m_native.cachedRanges()) {
+        for (const auto& [from, to] : m_active->cachedRanges()) {
             ranges << from << to;
         }
     }

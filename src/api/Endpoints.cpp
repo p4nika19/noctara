@@ -193,7 +193,9 @@ Endpoint<Waveform> waveform(const QString& url)
     return endpoint;
 }
 
-Endpoint<QUrl> streamUrl(const Transcoding& transcoding, const QString& trackAuthorization)
+namespace {
+
+QUrl transcodingUrl(const Transcoding& transcoding, const QString& trackAuthorization)
 {
     QUrl url(transcoding.url);
     if (!trackAuthorization.isEmpty()) {
@@ -203,9 +205,30 @@ Endpoint<QUrl> streamUrl(const Transcoding& transcoding, const QString& trackAut
                            QString::fromUtf8(QUrl::toPercentEncoding(trackAuthorization)));
         url.setQuery(query);
     }
-    Endpoint<QUrl> endpoint = get<QUrl>(isApiHost(url) ? url : QUrl(), parse::streamUrl, std::chrono::seconds(0));
+    return isApiHost(url) ? url : QUrl();
+}
+
+}  // namespace
+
+Endpoint<QUrl> streamUrl(const Transcoding& transcoding, const QString& trackAuthorization)
+{
+    Endpoint<QUrl> endpoint =
+        get<QUrl>(transcodingUrl(transcoding, trackAuthorization), parse::streamUrl, std::chrono::seconds(0));
     endpoint.request.cache = net::CacheMode::Bypass;
     return endpoint;
+}
+
+Endpoint<ProtectedStream> protectedStream(const Transcoding& transcoding, const QString& trackAuthorization)
+{
+    Endpoint<ProtectedStream> endpoint = get<ProtectedStream>(transcodingUrl(transcoding, trackAuthorization),
+                                                              parse::protectedStream, std::chrono::seconds(0));
+    endpoint.request.cache = net::CacheMode::Bypass;  // signed and short-lived: never stored
+    return endpoint;
+}
+
+QUrl widevineLicense()
+{
+    return QUrl(QStringLiteral("https://license.media-streaming.soundcloud.cloud/playback/widevine"));
 }
 
 }  // namespace endpoints

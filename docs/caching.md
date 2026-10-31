@@ -23,7 +23,7 @@ Noctara keeps three caches: audio of regular tracks, images, and API responses. 
       seg/00000…     # HLS: init segment (if any) and media segments
   images/<aa>/<hash> # encoded images (DiskLru), index alongside
   http/<aa>/<hash>   # stored API responses (DiskLru), index alongside
-  electron/          # DRM helper profile (slice i): non-media data only
+  electron/          # protected-playback helper profile: non-media data and the Widevine CDM
 ```
 
 All directories are created with mode 0700 and files with 0600. A second instance cannot take the lock. It then runs with the RAM tiers only and the page explains why. The GPU probe and the pipeline cache from `gfx` also live in the cache root, and they are kept when the cache layout changes.
@@ -69,7 +69,7 @@ This is an integrity and metadata feature of an internal cache. The layout stays
 
 ## DRM-protected tracks
 
-They are never cached, in any tier. `AudioCache::open` refuses `TrackInfo::drm` with `ErrorCode::NotCacheable` before anything is created: no directory, no sidecar, no URL request, no tags. An HLS playlist with `EXT-X-KEY` other than `NONE` is treated the same way, even when the track was not flagged; the entry made for it is deleted. The prefetcher skips such tracks. The Electron helper (slice i) uses no persistent media or HTTP cache; its profile under `electron/` holds non-media data only and is removed by Clear all. Tests cover all of this, including at the integration level over the real network stack.
+They are never cached, in any tier. `AudioCache::open` refuses `TrackInfo::drm` with `ErrorCode::NotCacheable` before anything is created: no directory, no sidecar, no URL request, no tags. An HLS playlist with `EXT-X-KEY` other than `NONE` is treated the same way, even when the track was not flagged; the entry made for it is deleted. The prefetcher skips such tracks. The protected-playback helper uses no persistent media or HTTP cache (an in-memory session with the HTTP cache off, `--disk-cache-size=0`, `--media-cache-size=0`); its profile under `electron/` holds Chromium's non-media profile files and the Widevine CDM component, and *Clear all* empties it except the CDM (see [drm-helper.md](drm-helper.md)). Protected tracks are never prefetched; the controller only warms the helper up. Tests cover all of this, including at the integration level over the real network stack.
 
 ## Images
 

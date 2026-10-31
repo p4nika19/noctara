@@ -527,4 +527,20 @@ Result<QUrl> streamUrl(const QByteArray& json)
     return url;
 }
 
+Result<ProtectedStream> protectedStream(const QByteArray& json)
+{
+    Result<element> root = document(json);
+    if (!root) {
+        return std::unexpected(root.error());
+    }
+    if (root->type() != element_type::OBJECT) {
+        return fail(ErrorCode::InvalidResponse, "protected stream resolution is not an object");
+    }
+    ProtectedStream stream{.url = QUrl(link(*root, "url")), .licenseToken = text(*root, "licenseAuthToken")};
+    if (!stream.url.isValid() || stream.url.scheme() != u"https" || stream.licenseToken.isEmpty()) {
+        return fail(ErrorCode::InvalidResponse, "protected stream without an https URL or a license token");
+    }
+    return stream;
+}
+
 }  // namespace noctara::api::parse

@@ -101,7 +101,21 @@ QString errorMessage(ErrorCode code)
                                            "No sound device is available. Check your system's audio settings.");
     case ErrorCode::ProtectedPlayback:
         return QCoreApplication::translate(
-            "Errors", "This track is protected and needs the protected player, which is not set up yet.");
+            "Errors", "This track is protected. Turn on protected tracks in Settings → Playback to play it.");
+    case ErrorCode::ProtectedPlayerMissing:
+        return QCoreApplication::translate(
+            "Errors", "The protected player is not installed, so protected tracks are skipped. See Settings → "
+                      "Playback → Protected tracks.");
+    case ErrorCode::ProtectedPlayerFailed:
+        return QCoreApplication::translate("Errors", "The protected player stopped working. Protected tracks are "
+                                                     "skipped for now.");
+    case ErrorCode::ProtectedNetworkUnsupported:
+        return QCoreApplication::translate(
+            "Errors", "The protected player cannot use your custom DNS servers without leaking requests, so "
+                      "protected tracks are skipped. Allow the system resolver as a fallback, use DNS over HTTPS, "
+                      "or use a proxy that resolves names.");
+    case ErrorCode::LicenseDenied:
+        return QCoreApplication::translate("Errors", "SoundCloud did not allow this protected track to play here.");
     }
     return QCoreApplication::translate("Errors", "Something went wrong.");
 }

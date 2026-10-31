@@ -276,3 +276,52 @@ task("test-tsan")
         print("ThreadSanitizer: all suites passed")
     end)
 task_end()
+
+-- The protected-playback helper (slice i): castlabs Electron (Widevine) and hls.js at pinned versions, verified by
+-- SHA-256, plus the helper app from electron/, assembled into build/drm-helper/{electron,app}. Downloads are cached
+-- in build/downloads. See docs/drm-helper.md.
+task("drm-helper")
+    set_category("plugin")
+    set_menu {usage = "xmake drm-helper", description = "Download castlabs Electron + hls.js (pinned, verified) and assemble build/drm-helper"}
+    on_run(function ()
+        local downloads = {
+            {name = "electron-v44.9.3+wvcus-linux-x64.zip",
+             url = "https://github.com/castlabs/electron-releases/releases/download/v44.9.3%2Bwvcus/electron-v44.9.3%2Bwvcus-linux-x64.zip",
+             sha256 = "80cb5218ab814597282ebe41d16fb5a98abb0c75370e9195914e40e097359fad"},
+            {name = "hls.js-1.6.15.min.js",
+             url = "https://cdn.jsdelivr.net/npm/hls.js@1.6.15/dist/hls.min.js",
+             sha256 = "413a83e2bb0c77ed0bf0be105d539d17ef45dfd984a0b13ecd3b14a901383938"},
+        }
+        local cache = path.join(os.projectdir(), "build", "downloads")
+        local root = path.join(os.projectdir(), "build", "drm-helper")
+        os.mkdir(cache)
+        for _, item in ipairs(downloads) do
+            local file = path.join(cache, item.name)
+            if not os.isfile(file) or hash.sha256(file) ~= item.sha256 then
+                print("downloading %s", item.name)
+                os.vrunv("curl", {"-fL", "--retry", "3", "-o", file .. ".part", item.url})
+                os.mv(file .. ".part", file)
+            end
+            local actual = hash.sha256(file)
+            if actual ~= item.sha256 then
+                os.rm(file)
+                raise("%s: SHA-256 %s does not match the pinned %s", item.name, actual, item.sha256)
+            end
+            item.file = file
+        end
+        -- Electron runtime.
+        local electron = path.join(root, "electron")
+        os.tryrm(electron)
+        os.mkdir(electron)
+        os.vrunv("unzip", {"-q", downloads[1].file, "-d", electron})
+        -- The helper app: our sources, protocol and the vendored player library.
+        local app = path.join(root, "app")
+        os.tryrm(app)
+        os.mkdir(path.join(app, "vendor"))
+        for _, file in ipairs({"package.json", "protocol.json", "protocol.js", "main.js", "preload.js", "player.html", "player.js"}) do
+            os.cp(path.join(os.projectdir(), "electron", file), path.join(app, file))
+        end
+        os.cp(downloads[2].file, path.join(app, "vendor", "hls.min.js"))
+        print("protected-playback helper ready in %s", root)
+    end)
+task_end()

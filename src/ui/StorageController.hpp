@@ -60,6 +60,8 @@ Q_SIGNALS:
     void clearingChanged();
     // kind: "success" | "warning" | "error"; for the page's toasts.
     void notice(const QString& kind, const QString& message);
+    // "Clear all" was asked for: caches outside the cache service (the protected player's profile) follow.
+    void clearingAll();
 
 private:
     void updateRowStatuses();
