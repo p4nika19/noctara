@@ -43,10 +43,24 @@ template <class T> std::optional<ErrorCode> errorOf(const Result<T>& result)
     return result ? std::nullopt : std::optional(result.error().code);
 }
 
-// Spins the event loop until `predicate` holds or the timeout elapses.
+#if defined(__has_feature)
+#if __has_feature(thread_sanitizer)
+#define NOCTARA_TEST_TSAN 1
+#endif
+#endif
+
+// ThreadSanitizer slows everything down several times and now and then stalls a thread for seconds: waits for
+// asynchronous results get this much more time there. Other builds keep the stated timeouts.
+#ifdef NOCTARA_TEST_TSAN
+inline constexpr int kTimeoutScale = 10;
+#else
+inline constexpr int kTimeoutScale = 1;
+#endif
+
+// Spins the event loop until `predicate` holds or the timeout (scaled by kTimeoutScale) elapses.
 template <class Predicate> bool waitUntil(Predicate predicate, int timeoutMs = 3000)
 {
-    QDeadlineTimer deadline(timeoutMs);
+    QDeadlineTimer deadline(static_cast<qint64>(timeoutMs) * kTimeoutScale);
     while (!predicate()) {
         if (deadline.hasExpired()) {
             return false;

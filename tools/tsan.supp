@@ -2,6 +2,12 @@
 # happens entirely inside Qt (QThreadPool, QWaitCondition, QMutex fast paths) is invisible to TSan
 # and reported as races. Only Qt-internal frames are suppressed; races involving our code still fail.
 called_from_lib:libQt6Core.so.6
+# The QML engine allocates on the GUI thread and frees on its type-loader thread, synchronised inside Qt Qml.
+called_from_lib:libQt6Qml.so.6
+# Qt Quick's pixmap reader thread receives its jobs (URL, requested size) from the GUI thread through Qt's own
+# locking; an image provider reading them on that thread is reported. Its frames carry no symbols, so the module
+# is matched: reports with a Qt Quick frame on either side are hidden, races between our own threads still fail.
+race:libQt6Quick.so.6
 race:QWaitCondition
 race:QThreadPoolPrivate
 race:QThreadPoolThread
