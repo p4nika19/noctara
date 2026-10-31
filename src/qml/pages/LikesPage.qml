@@ -16,7 +16,9 @@ Item {
         id: header
         width: parent.width
         title: qsTr("Likes")
-        subtitle: Catalog.likes.count > 0 ? qsTr("%n track(s)", "", Catalog.likes.count) : ""
+        subtitle: Catalog.likes.count === 0 ? ""
+                  : Catalog.likes.loading ? qsTr("%n track(s) · updating…", "", Catalog.likes.count)
+                  : qsTr("%n track(s)", "", Catalog.likes.count)
         viewPage: "likes"
         Button {
             anchors.verticalCenter: parent.verticalCenter

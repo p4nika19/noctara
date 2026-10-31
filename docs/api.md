@@ -118,6 +118,12 @@ coalesced lookup, and tracks SoundCloud no longer has are removed. Roles: `kind`
 `artwork` (300 px), `thumbnail` (67 px), `duration`, `plays`, `likes`, `reposts`, `followers`, `trackCount`,
 `genre`, `permalink`, `created`, `at`, `repostedBy`, `protectedMedia`, `preview`, `verified`, `album`, `pending`.
 
+A synced model (`setSyncedSource`: likes, the library) loads every page by itself, shows its saved snapshot
+meanwhile and applies the fresh list row by row (see [caching.md](caching.md#saved-lists-likes-library-playlists)).
+Playlists that a list carries without artwork or tracks (`/me/library/all`) get their first track's cover: the rows a
+view shows fetch `/playlists/{id}` (cached, four at a time, each once), and `Playlist::artwork()` never falls back
+to the owner's avatar.
+
 `Catalog` (`ui::CatalogController`) owns the search model. Typing searches after a 350 ms pause, and Enter or a
 change of kind searches at once.
 

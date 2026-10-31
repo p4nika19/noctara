@@ -198,6 +198,17 @@ Windows DPAPI/app-bound cookies and macOS Keychain remain platform-specific foll
 - **Pending, by agreement:** the optimisation pass (backdrop drift cost, playing-state repaints, RSS) is left for the
   user to direct.
 
+## After slice (j): review requests (2026-10-31)
+
+- Likes and the library load completely and are saved per account between runs (`api::SnapshotStore`): shown at
+  once, synced in the background, corrected row by row; playlists keep their fully loaded tracks while unchanged.
+  Verified on a real account: 1 767 likes synced and saved, the library shown from its snapshot at start.
+- A queue started from a list follows it, so *Shuffle* on Likes covers every like; stale tracks from a snapshot are
+  looked up again before they play.
+- Playlists without artwork show their first track's cover instead of the owner's avatar (verified: 19 of 19).
+- The protected player sets itself up (download through Noctara's network stack with resume and SHA-256 checks,
+  libarchive unpacking, app files from the binary). Verified: installed in about 10 s and started with Widevine.
+
 ## Open items flagged for verification
 - Chromium-family import is verified against fixture databases built from Chromium's own format description
   (`os_crypt_linux`, cookie DB version 24), not against installed browsers; the KWallet D-Bus path has not run

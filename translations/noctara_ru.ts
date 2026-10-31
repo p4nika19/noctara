@@ -495,13 +495,39 @@
         <translation>только IPv4 или только IPv6</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+35"/>
+        <source>The protected player is set up: protected tracks play now.</source>
+        <translation>Защищённый плеер установлен: защищённые треки теперь воспроизводятся.</translation>
+    </message>
+    <message>
+        <location line="+61"/>
         <source>Protected tracks do not follow: %1.</source>
         <extracomment>%1 = list of network settings, e.g. &quot;custom DNS servers (…); the bandwidth limit&quot;</extracomment>
         <translation>Защищённые треки не учитывают: %1.</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+42"/>
+        <source>Setting up the protected player: downloading, %1 % of %2 MB…</source>
+        <extracomment>%1 = percent done, %2 = total size in MB</extracomment>
+        <translation>Установка защищённого плеера: загрузка, %1 % из %2 МБ…</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Setting up the protected player: unpacking…</source>
+        <translation>Установка защищённого плеера: распаковка…</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>The protected player is set up once the connection is not metered.</source>
+        <translation>Защищённый плеер будет установлен, когда подключение перестанет быть лимитным.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Could not set up the protected player: %1 It is tried again when a protected track plays.</source>
+        <translation>Не удалось установить защищённый плеер: %1 Попытка повторится, когда заиграет защищённый трек.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Running: castlabs Electron %1 with Widevine.</source>
         <extracomment>%1 = Electron version</extracomment>
         <translation>Работает: castlabs Electron %1 с Widevine.</translation>
@@ -594,12 +620,12 @@
     <name>Errors</name>
     <message>
         <location filename="../src/i18n/ErrorMessages.cpp" line="+11"/>
-        <location line="+109"/>
+        <location line="+112"/>
         <source>Something went wrong.</source>
         <translation>Что-то пошло не так.</translation>
     </message>
     <message>
-        <location line="-108"/>
+        <location line="-111"/>
         <source>The operation was cancelled.</source>
         <translation>Операция отменена.</translation>
     </message>
@@ -850,6 +876,11 @@
     </message>
     <message>
         <location line="+4"/>
+        <source>The protected player is being set up. Protected tracks play once it is ready.</source>
+        <translation>Защищённый плеер устанавливается. Защищённые треки заиграют, когда он будет готов.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>The protected player stopped working. Protected tracks are skipped for now.</source>
         <translation>Защищённый плеер перестал работать. Пока защищённые треки пропускаются.</translation>
     </message>
@@ -1348,14 +1379,23 @@
     <name>LikesPage</name>
     <message>
         <location filename="../src/qml/pages/LikesPage.qml" line="+18"/>
-        <location line="+9"/>
+        <location line="+11"/>
         <location line="+7"/>
         <location line="+12"/>
         <source>Likes</source>
         <translation>Лайки</translation>
     </message>
     <message numerus="yes">
-        <location line="-27"/>
+        <location line="-28"/>
+        <source>%n track(s) · updating…</source>
+        <translation>
+            <numerusform>%n трек · обновляется…</numerusform>
+            <numerusform>%n трека · обновляется…</numerusform>
+            <numerusform>%n треков · обновляется…</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
         <source>%n track(s)</source>
         <translation>
             <numerusform>%n трек</numerusform>
@@ -2245,7 +2285,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+189"/>
+        <location filename="../src/app/main.cpp" line="+192"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation>Установленная libcurl собрана без поддержки HTTP/3.</translation>
     </message>
@@ -2349,12 +2389,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+582"/>
+        <location line="+593"/>
         <source>Icons</source>
         <translation>Значки</translation>
     </message>
     <message>
-        <location line="-581"/>
+        <location line="-592"/>
         <source>Icon appearance.</source>
         <translation>Внешний вид значков.</translation>
     </message>
@@ -2435,13 +2475,13 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+592"/>
+        <location line="+603"/>
         <location line="+344"/>
         <source>System</source>
         <translation>Как в системе</translation>
     </message>
     <message>
-        <location line="-935"/>
+        <location line="-946"/>
         <source>Midnight (dark)</source>
         <translation>Midnight (тёмная)</translation>
     </message>
@@ -2527,12 +2567,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+604"/>
+        <location line="+615"/>
         <source>Volume</source>
         <translation>Громкость</translation>
     </message>
     <message>
-        <location line="-603"/>
+        <location line="-614"/>
         <source>Volume when Noctara starts.</source>
         <translation>Громкость при запуске Noctara.</translation>
     </message>
@@ -2805,7 +2845,7 @@
     <message>
         <location line="+4"/>
         <location line="+182"/>
-        <location line="+343"/>
+        <location line="+354"/>
         <location line="+13"/>
         <location line="+12"/>
         <location line="+57"/>
@@ -2815,19 +2855,19 @@
         <translation>Авто</translation>
     </message>
     <message>
-        <location line="-842"/>
+        <location line="-853"/>
         <source>Low</source>
         <translation>Низкое</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+387"/>
+        <location line="+398"/>
         <location line="+25"/>
         <source>Medium</source>
         <translation>Среднее</translation>
     </message>
     <message>
-        <location line="-411"/>
+        <location line="-422"/>
         <source>High</source>
         <translation>Высокое</translation>
     </message>
@@ -2991,13 +3031,13 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+568"/>
+        <location line="+579"/>
         <location line="+23"/>
         <source>Custom</source>
         <translation>Свои</translation>
     </message>
     <message>
-        <location line="-589"/>
+        <location line="-600"/>
         <source>Corner radius</source>
         <translation>Скругление углов</translation>
     </message>
@@ -3120,12 +3160,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+179"/>
+        <location line="+190"/>
         <source>Regular</source>
         <translation>Обычные</translation>
     </message>
     <message>
-        <location line="-178"/>
+        <location line="-189"/>
         <source>Bold</source>
         <translation>Жирные</translation>
     </message>
@@ -3141,12 +3181,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+168"/>
+        <location line="+179"/>
         <source>Compact</source>
         <translation>Плотно</translation>
     </message>
     <message>
-        <location line="-167"/>
+        <location line="-178"/>
         <source>Comfortable</source>
         <translation>Обычно</translation>
     </message>
@@ -3276,17 +3316,12 @@
         <translation>Зашифрованные треки играют через защищённый плеер, который запускается только для них. Если выключено, они пропускаются.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+17"/>
         <source>Protected player folder</source>
         <translation>Папка защищённого плеера</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Folder with the protected player (made by `xmake drm-helper`). Empty looks next to Noctara and in its install directory.</source>
-        <translation>Папка с защищённым плеером (создаётся командой `xmake drm-helper`). Если пусто, он ищется рядом с Noctara и в её каталоге установки.</translation>
-    </message>
-    <message>
-        <location line="+12"/>
+        <location line="+14"/>
         <source>Close the protected player after</source>
         <translation>Закрывать защищённый плеер через</translation>
     </message>
@@ -3990,8 +4025,8 @@
         <translation>Ответы хранятся не меньше этого времени.</translation>
     </message>
     <message>
-        <location line="-545"/>
-        <location line="+546"/>
+        <location line="-556"/>
+        <location line="+557"/>
         <location line="+11"/>
         <location line="+12"/>
         <location line="+94"/>
@@ -4000,7 +4035,7 @@
         <translation>с</translation>
     </message>
     <message>
-        <location line="-1141"/>
+        <location line="-1152"/>
         <source>Navigation</source>
         <translation>Навигация</translation>
     </message>
@@ -4041,12 +4076,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+752"/>
+        <location line="+763"/>
         <source>Full-screen player</source>
         <translation>Полноэкранный плеер</translation>
     </message>
     <message>
-        <location line="-751"/>
+        <location line="-762"/>
         <source>The large player with the cover art.</source>
         <translation>Большой плеер с обложкой.</translation>
     </message>
@@ -4141,7 +4176,22 @@
         <translation>Матовое: молочное размытое стекло. Жидкое: глянцевое стекло с яркой кромкой. Тонированное: стекло цвета акцента. Простой: плоская полупрозрачная заливка. Прозрачное: только контур. Сплошное: непрозрачное.</translation>
     </message>
     <message>
-        <location line="+736"/>
+        <location line="+249"/>
+        <source>Set up the protected player automatically</source>
+        <translation>Устанавливать защищённый плеер автоматически</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Downloads it once (castlabs Electron with Widevine, about 125 MB) when it is missing, in the background and not on a metered connection.</source>
+        <translation>Загружает его один раз (castlabs Electron с Widevine, около 125 МБ), если его нет, — в фоне и не через лимитное подключение.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Folder with a protected player of your own (as made by `xmake drm-helper`). Empty uses one next to Noctara, in its install directory, or the one Noctara set up.</source>
+        <translation>Папка с вашим собственным защищённым плеером (как создаёт `xmake drm-helper`). Если пусто, используется плеер рядом с Noctara, в её каталоге установки или установленный самой Noctara.</translation>
+    </message>
+    <message>
+        <location line="+487"/>
         <source>Maximum lifetime</source>
         <translation>Максимальное время жизни</translation>
     </message>

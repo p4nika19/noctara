@@ -40,7 +40,9 @@ class CatalogController : public QObject {
     Q_PROPERTY(QVariantList genres READ genres NOTIFY genresChanged)
 
 public:
-    CatalogController(api::ApiService& api, AccountController& account, QObject* parent = nullptr);
+    // `snapshots` keeps the account's likes, library and playlists between runs.
+    CatalogController(api::ApiService& api, AccountController& account, api::SnapshotStore& snapshots,
+                      QObject* parent = nullptr);
 
     [[nodiscard]] models::CollectionModel* searchResults() noexcept { return &m_search; }
     [[nodiscard]] models::CollectionModel* feed() noexcept { return &m_feed; }
@@ -79,10 +81,12 @@ private:
     void start();
     void accountChanged();
     void load(const QString& list);
+    [[nodiscard]] api::Id accountId();
     template <class Detail> void keep(QHash<qint64, std::shared_ptr<Detail>>& cache, qint64 id);
 
     api::ApiService& m_api;
     AccountController& m_account;
+    api::SnapshotStore& m_snapshots;
     models::CollectionModel m_search;
     models::CollectionModel m_feed;
     models::CollectionModel m_likes;

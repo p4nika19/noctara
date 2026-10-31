@@ -70,6 +70,8 @@ public:
 
     // Settings changes; they apply from the next start (the network applies live, see setNetwork()).
     void setCommand(std::optional<HelperCommand> command);
+    // What a start without a command reports (ProtectedPlayerMissing, or ProtectedPlayerInstalling meanwhile).
+    void setMissingReason(Error reason) { m_missingReason = std::move(reason); }
     void setGpu(bool gpu);
     void setIdleTimeout(std::chrono::milliseconds timeout);
     // Applies live through "configure"; a change of the startup switches restarts a running helper (stopped(true)
@@ -107,6 +109,8 @@ Q_SIGNALS:
     // It cannot run (not installed, failed to start, no Widevine, protocol mismatch, kept crashing).
     void failed(const noctara::Error& error);
     void statusChanged();
+    // A start found no helper: a chance to set one up (or to change the reason reported) before it fails.
+    void helperMissing();
 
 private:
     bool start();
@@ -133,6 +137,7 @@ private:
     qint64 m_pid = 0;
     Status m_status = Status::Stopped;
     Error m_error;
+    Error m_missingReason{ErrorCode::ProtectedPlayerMissing, "no helper installed"};
     QString m_electronVersion;
     QByteArray m_stdout;
     QByteArray m_stderr;

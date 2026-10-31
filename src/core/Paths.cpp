@@ -11,6 +11,7 @@ AppPaths AppPaths::standard()
     paths.configDir = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
     paths.cacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
     paths.stateDir = QStandardPaths::writableLocation(QStandardPaths::StateLocation);
+    paths.dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 
     // The system layer is the first non-user entry of the config search path.
     const QStringList configDirs = QStandardPaths::standardLocations(QStandardPaths::AppConfigLocation);

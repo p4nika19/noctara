@@ -8,6 +8,7 @@
 #include "api/Endpoints.hpp"
 #include "api/Parse.hpp"
 #include "api/Session.hpp"
+#include "api/Snapshot.hpp"
 #include "api/Streams.hpp"
 #include "mock/FakeApi.hpp"
 
@@ -19,6 +20,7 @@
 
 #include <QAbstractItemModelTester>
 #include <QElapsedTimer>
+#include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -756,4 +758,285 @@ TEST_CASE("api parse benchmark" * doctest::skip())
     const double qt = static_cast<double>(clock.nsecsElapsed()) / kRounds / 1000.0;
     MESSAGE(json.size() << " bytes: simdjson → structs " << simd << " µs, QJsonDocument (tree only) " << qt << " µs ("
                         << parsed << ")");
+}
+
+namespace {
+
+QByteArray playlistJson(Id id, const QList<QByteArray>& tracks, const char* artwork = nullptr)
+{
+    QByteArray json = "{\"kind\":\"playlist\",\"id\":" + QByteArray::number(id) +
+                      ",\"title\":\"Mix\",\"track_count\":" + QByteArray::number(tracks.size() + 1) +
+                      ",\"last_modified\":\"2024-01-01T00:00:00Z\",\"user\":{\"id\":42,\"username\":\"me\","
+                      "\"avatar_url\":\"https://i1.sndcdn.com/avatars-me-large.jpg\"}";
+    if (artwork != nullptr) {
+        json += ",\"artwork_url\":\"" + QByteArray(artwork) + "\"";
+    }
+    if (!tracks.isEmpty()) {
+        json += ",\"tracks\":[" + tracks.join(',') + "]";
+    }
+    return json + "}";
+}
+
+std::vector<Id> idsOf(const models::CollectionModel& model)
+{
+    std::vector<Id> ids;
+    for (const Entry& entry : model.entries()) {
+        ids.push_back(itemId(entry.item));
+    }
+    return ids;
+}
+
+// Answers a paged list from `pages` (offset → ids), each page linking the next.
+FakeApi::Handler pagedTracks(std::shared_ptr<std::vector<std::vector<Id>>> pages)
+{
+    return [pages](const net::Request& request) -> Result<net::Response> {
+        const int index = FakeApi::query(request, QStringLiteral("offset")).toInt();
+        if (index >= std::ssize(*pages)) {
+            return FakeApi::reply(404, {});
+        }
+        QList<QByteArray> items;
+        for (const Id id : (*pages)[static_cast<std::size_t>(index)]) {
+            items.append(trackJson(id, QStringLiteral("T%1").arg(id)));
+        }
+        const QString next =
+            index + 1 < std::ssize(*pages)
+                ? QStringLiteral("https://api-v2.soundcloud.com/users/42/track_likes?offset=%1").arg(index + 1)
+                : QString();
+        return FakeApi::reply(200, page(items, next));
+    };
+}
+
+}  // namespace
+
+TEST_SUITE("api.snapshot")
+{
+    TEST_CASE("a snapshot round-trips tracks, stubs, playlists, users and reposts; tracks come back stale")
+    {
+        Snapshot saved;
+        Result<Track> full = parse::track(trackJson(1));
+        REQUIRE(full);
+        saved.entries.push_back({.item = *full,
+                                 .at = QDateTime(QDate(2024, 5, 6), QTime(7, 8, 9), QTimeZone::UTC),
+                                 .repostedBy = std::nullopt});
+        Track stub;
+        stub.id = 2;
+        stub.stub = true;
+        saved.entries.push_back({.item = stub, .at = {}, .repostedBy = std::nullopt});
+        Result<Playlist> playlist = parse::playlist(playlistJson(10, {trackJson(3), "{\"id\":4,\"kind\":\"track\"}"}));
+        REQUIRE(playlist);
+        saved.entries.push_back({.item = *playlist, .at = {}, .repostedBy = std::nullopt});
+        User user;
+        user.id = 20;
+        user.username = QStringLiteral("someone");
+        user.city = QStringLiteral("Tbilisi");
+        user.followersCount = 12;
+        saved.entries.push_back({.item = user, .at = {}, .repostedBy = std::nullopt});
+        UserRef reposter;
+        reposter.id = 30;
+        reposter.username = QStringLiteral("reposter");
+        saved.entries.push_back({.item = *full, .at = {}, .repostedBy = reposter});
+        saved.tag = QStringLiteral("2024-01-01T00:00:00Z");
+        saved.complete = false;
+
+        const Result<Snapshot> loaded = decodeSnapshot(encodeSnapshot(saved));
+        REQUIRE_MESSAGE(loaded, test::describe(loaded));
+        CHECK(loaded->tag == saved.tag);
+        CHECK_FALSE(loaded->complete);
+        REQUIRE(loaded->entries.size() == 5);
+        const auto& track = std::get<Track>(loaded->entries[0].item);
+        CHECK(track.stale);
+        CHECK(track.title == full->title);
+        CHECK(track.artist() == full->artist());
+        CHECK(track.trackAuthorization == full->trackAuthorization);
+        CHECK(track.createdAt == full->createdAt);
+        CHECK(track.likesCount == full->likesCount);
+        CHECK(track.commentCount == full->commentCount);
+        REQUIRE(track.transcodings.size() == full->transcodings.size());
+        CHECK(track.transcodings[1].url == full->transcodings[1].url);
+        CHECK(track.transcodings[1].protocol == full->transcodings[1].protocol);
+        CHECK(track.transcodings[0].mimeType == full->transcodings[0].mimeType);
+        CHECK(loaded->entries[0].at == saved.entries[0].at);
+        const auto& reloadedStub = std::get<Track>(loaded->entries[1].item);
+        CHECK(reloadedStub.stub);
+        CHECK_FALSE(reloadedStub.stale);
+        const auto& reloadedPlaylist = std::get<Playlist>(loaded->entries[2].item);
+        CHECK(reloadedPlaylist.lastModified == playlist->lastModified);
+        CHECK(reloadedPlaylist.trackCount == playlist->trackCount);
+        REQUIRE(reloadedPlaylist.tracks.size() == 2);
+        CHECK(reloadedPlaylist.tracks[0].stale);
+        CHECK(reloadedPlaylist.tracks[1].stub);
+        const auto& reloadedUser = std::get<User>(loaded->entries[3].item);
+        CHECK(reloadedUser.city == u"Tbilisi");
+        CHECK(reloadedUser.followersCount == 12);
+        CHECK(reloadedUser.trackCount == -1);
+        REQUIRE(loaded->entries[4].repostedBy.has_value());
+        CHECK(loaded->entries[4].repostedBy->username == u"reposter");
+    }
+
+    TEST_CASE("the store keeps lists per account, ignores damaged files and forgets on sign-out")
+    {
+        QTemporaryDir dir;
+        SnapshotStore store(dir.path());
+        QObject context;
+        std::optional<std::optional<Snapshot>> got;
+        const auto load = [&](const QString& key) {
+            got.reset();
+            store.load(key, &context, [&](std::optional<Snapshot> snapshot) { got = std::move(snapshot); });
+            REQUIRE(test::waitUntil([&] { return got.has_value(); }));
+            return std::move(*got);
+        };
+        Snapshot snapshot;
+        Track track;
+        track.id = 5;
+        track.stub = true;
+        snapshot.entries.push_back({.item = track, .at = {}, .repostedBy = std::nullopt});
+
+        store.save(QStringLiteral("likes"), snapshot);  // signed out: nothing is written
+        store.flush();
+        CHECK(QDir(dir.path()).isEmpty());
+        CHECK_FALSE(load(QStringLiteral("likes")).has_value());
+
+        store.setAccount(7);
+        store.save(QStringLiteral("likes"), snapshot);
+        store.flush();
+        const QString file = dir.filePath(QStringLiteral("7/likes.json"));
+        CHECK(QFile::exists(file));
+        const std::optional<Snapshot> loaded = load(QStringLiteral("likes"));
+        REQUIRE(loaded.has_value());
+        CHECK(loaded->entries.size() == 1);
+
+        store.setAccount(8);
+        CHECK_FALSE(load(QStringLiteral("likes")).has_value());
+
+        store.setAccount(7);
+        QFile damaged(file);
+        REQUIRE(damaged.open(QIODevice::WriteOnly | QIODevice::Truncate));
+        damaged.write("{\"collection\": [");
+        damaged.close();
+        CHECK_FALSE(load(QStringLiteral("likes")).has_value());
+
+        // The account is remembered for the next start, until it is forgotten.
+        store.flush();
+        CHECK(SnapshotStore(dir.path()).lastAccount() == 7);  // the last one set (7, 8, then 7 again)
+        store.forget(8);
+        CHECK(SnapshotStore(dir.path()).lastAccount() == 7);
+        store.forget(7);
+        CHECK(SnapshotStore(dir.path()).lastAccount() == 0);
+        CHECK_FALSE(QDir(dir.filePath(QStringLiteral("7"))).exists());
+        store.save(QStringLiteral("x"), snapshot);
+        store.clear();
+        CHECK_FALSE(QDir(dir.path()).exists());
+    }
+}
+
+TEST_SUITE("models.sync")
+{
+    TEST_CASE("a synced list loads every page by itself and saves it; next time the snapshot shows at once and only "
+              "what differs changes")
+    {
+        Harness h;
+        QTemporaryDir dir;
+        SnapshotStore store(dir.path());
+        store.setAccount(42);
+        auto pages = std::make_shared<std::vector<std::vector<Id>>>(std::vector<std::vector<Id>>{{1, 2}, {3, 4}, {5}});
+        h.transport.setHandler(pagedTracks(pages));
+        const auto likes = [](int limit) {
+            return endpoints::userLikes(42, limit);
+        };
+        {
+            models::CollectionModel model(h.client);
+            QAbstractItemModelTester tester(&model);
+            model.setSyncedSource(likes, &store, QStringLiteral("likes"));
+            REQUIRE(test::waitUntil([&] { return model.complete(); }));
+            CHECK(idsOf(model) == std::vector<Id>{1, 2, 3, 4, 5});
+            CHECK_FALSE(model.canFetchMore({}));
+            CHECK(FakeApi::query(h.transport.requests().front(), QStringLiteral("limit")) == u"200");
+            store.flush();
+        }
+        CHECK(QFile::exists(dir.filePath(QStringLiteral("42/likes.json"))));
+
+        // On SoundCloud meanwhile: track 6 liked, track 4 unliked.
+        *pages = {{6, 1, 2}, {3}, {5}};
+        models::CollectionModel model(h.client);
+        QAbstractItemModelTester tester(&model);
+        h.transport.reset();
+        // The first change is the snapshot, shown before any request has been answered.
+        std::optional<std::vector<Id>> firstShown;
+        bool firstStale = false;
+        int requestsWhenShown = -1;
+        QObject::connect(&model, &models::CollectionModel::listChanged, &model, [&] {
+            if (!firstShown) {
+                firstShown = idsOf(model);
+                firstStale = std::get<Track>(model.entries()[2].item).stale;
+                requestsWhenShown = h.transport.count();
+            }
+        });
+        QSignalSpy resets(&model, &QAbstractItemModel::modelReset);
+        QSignalSpy removed(&model, &QAbstractItemModel::rowsRemoved);
+        QSignalSpy inserted(&model, &QAbstractItemModel::rowsInserted);
+        model.setSyncedSource(likes, &store, QStringLiteral("likes"));
+        REQUIRE(test::waitUntil([&] { return model.complete(); }));
+        REQUIRE(firstShown.has_value());
+        CHECK(*firstShown == std::vector<Id>{1, 2, 3, 4, 5});
+        CHECK(firstStale);
+        CHECK(requestsWhenShown == 0);
+        CHECK(idsOf(model) == std::vector<Id>{6, 1, 2, 3, 5});
+        CHECK(resets.isEmpty());      // rows were inserted and removed, never reset: views keep their place
+        CHECK(removed.size() == 1);   // track 4
+        CHECK(inserted.size() == 2);  // the snapshot, then track 6 on top as soon as page one came
+        CHECK_FALSE(std::get<Track>(model.entries()[2].item).stale);
+    }
+
+    TEST_CASE("applying a list resets only when items moved, and a stub never replaces a known track")
+    {
+        Harness h;
+        models::CollectionModel model(h.client);
+        QAbstractItemModelTester tester(&model);
+        const auto entries = [](std::initializer_list<Id> ids, Id stubId = 0) {
+            std::vector<Entry> out;
+            for (const Id id : ids) {
+                Track track;
+                track.id = id;
+                track.title = QStringLiteral("T%1").arg(id);
+                track.stub = id == stubId;
+                out.push_back({.item = track, .at = {}, .repostedBy = std::nullopt});
+            }
+            return out;
+        };
+        model.setEntries(entries({1, 2, 3}));
+        QSignalSpy resets(&model, &QAbstractItemModel::modelReset);
+        model.applyEntries(entries({1, 3}));
+        CHECK(resets.isEmpty());
+        model.applyEntries(entries({3, 1}));
+        CHECK(resets.size() == 1);
+        CHECK(idsOf(model) == std::vector<Id>{3, 1});
+        model.applyEntries(entries({3, 1}, 3));
+        CHECK_FALSE(std::get<Track>(model.entries()[0].item).stub);
+    }
+
+    TEST_CASE("playlists listed without a cover show their first track's, never the owner's avatar")
+    {
+        Harness h;
+        h.transport.setHandler([](const net::Request& request) -> Result<net::Response> {
+            if (request.url.path() == u"/playlists/9") {
+                return FakeApi::reply(200, playlistJson(9, {trackJson(1), "{\"id\":2,\"kind\":\"track\"}"}));
+            }
+            return FakeApi::reply(404, {});
+        });
+        Result<Playlist> listed = parse::playlist(playlistJson(9, {}));
+        REQUIRE(listed);
+        CHECK(listed->artwork().isEmpty());
+        CHECK(listed->coverUnknown());
+        models::CollectionModel model(h.client);
+        model.setEntries({{.item = *listed, .at = {}, .repostedBy = std::nullopt}});
+        CHECK(model.data(model.index(0), models::CollectionModel::ArtworkRole).toString().isEmpty());
+        REQUIRE(test::waitUntil([&] {
+            return model.data(model.index(0), models::CollectionModel::ArtworkRole)
+                .toString()
+                .contains(u"artworks-abc");
+        }));
+        CHECK(h.transport.count() == 1);
+        (void)model.data(model.index(0), models::CollectionModel::ThumbnailRole);
+        CHECK(h.transport.count() == 1);  // asked once
+    }
 }

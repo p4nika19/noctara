@@ -257,7 +257,8 @@ Tracks SoundCloud streams only encrypted (DRM). They play in a small background 
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
 | `enabled` | bool | `true` | — | **Play protected tracks.** Plays encrypted tracks through the protected player, which starts only when one plays. Off skips them. (env `NOCTARA_PLAYBACK_PROTECTED_ENABLED`) |
-| `helper` | path | `""` | — | **Protected player folder.** Folder with the protected player (made by `xmake drm-helper`). Empty looks next to Noctara and in its install directory. (*advanced*, env `NOCTARA_PLAYBACK_PROTECTED_HELPER`) |
+| `auto_install` | bool | `true` | — | **Set up the protected player automatically.** Downloads it once (castlabs Electron with Widevine, about 125 MB) when it is missing, in the background and not on a metered connection. (*advanced*, env `NOCTARA_PLAYBACK_PROTECTED_AUTO_INSTALL`) |
+| `helper` | path | `""` | — | **Protected player folder.** Folder with a protected player of your own (as made by `xmake drm-helper`). Empty uses one next to Noctara, in its install directory, or the one Noctara set up. (*advanced*, env `NOCTARA_PLAYBACK_PROTECTED_HELPER`) |
 | `idle_shutdown` | integer | `5` | 1 … 60 | **Close the protected player after.** Frees its memory when no protected track has played for this long. A paused track resumes where it was. (*advanced*, env `NOCTARA_PLAYBACK_PROTECTED_IDLE_SHUTDOWN`) |
 | `gpu` | bool | `false` | — | **Protected player uses the GPU.** It only plays audio and never needs the GPU. Applies when it next starts. (*advanced*, env `NOCTARA_PLAYBACK_PROTECTED_GPU`) |
 

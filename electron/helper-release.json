@@ -1,0 +1,17 @@
+{
+  "comment": "What the protected-playback helper is built from, pinned and verified by SHA-256. Read by `xmake drm-helper` (xmake/tasks/tasks.lua) and by Noctara's own installer (src/drm/HelperInstaller.cpp, embedded at build time). See docs/drm-helper.md.",
+  "electron": {
+    "version": "44.9.3+wvcus",
+    "file": "electron-v44.9.3+wvcus-linux-x64.zip",
+    "url": "https://github.com/castlabs/electron-releases/releases/download/v44.9.3%2Bwvcus/electron-v44.9.3%2Bwvcus-linux-x64.zip",
+    "sha256": "80cb5218ab814597282ebe41d16fb5a98abb0c75370e9195914e40e097359fad",
+    "size": 123397658
+  },
+  "hlsjs": {
+    "version": "1.6.15",
+    "file": "hls.js-1.6.15.min.js",
+    "url": "https://cdn.jsdelivr.net/npm/hls.js@1.6.15/dist/hls.min.js",
+    "sha256": "413a83e2bb0c77ed0bf0be105d539d17ef45dfd984a0b13ecd3b14a901383938",
+    "size": 541870
+  }
+}

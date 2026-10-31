@@ -75,6 +75,13 @@ so queue edits and stops do not download tracks that never play. Further items a
 through coalesced `/tracks?ids=` lookups before they play. When the queue ends, *Autoplay related tracks* appends
 tracks related to the last one.
 
+A queue started from a list (`playCollection`, *Play*, *Shuffle*) **follows that list**: tracks it gains later (a
+synced list such as Likes still loading, or found new by a sync) join the queue, appended in order or, while
+shuffling, each at a uniformly random place among the upcoming items (the same distribution as shuffling the rest
+again together with them); tracks the list loses leave the queue, except the one playing. *Shuffle* on Likes
+therefore covers every like, even before all of them have loaded. Starting another queue or clearing the upcoming
+items stops following. Tracks from a saved snapshot are looked up again right before they play.
+
 With *Restore the queue* (on by default) the queue (up to 500 track ids around the current one), the current item,
 its position and the context are saved too: on track changes, queue edits, pause and quit. At the next start the
 tracks are looked up again by id and the queue comes back paused at that position; nothing is fetched or played

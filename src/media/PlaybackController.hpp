@@ -15,6 +15,7 @@
 #include <QList>
 #include <QObject>
 #include <QPointer>
+#include <QSet>
 
 #include <functional>
 #include <memory>
@@ -90,7 +91,9 @@ public:
     PlaybackController& operator=(PlaybackController&&) = delete;
 
     // Plays a row of a list: a track (the list's other tracks become the queue) or a playlist (its tracks).
-    // `context`: the playlist or page it plays from (shown in MPRIS and the queue).
+    // `context`: the playlist or page it plays from (shown in MPRIS and the queue). The queue then follows the
+    // list: tracks it gains later (a synced list still loading) join the queue, at random upcoming places when
+    // shuffling, and tracks it loses leave it (except the one playing).
     Q_INVOKABLE void playCollection(noctara::models::CollectionModel* model, int row, const QString& context = {});
     // Plays a list's tracks shuffled, starting at a random one (system-seeded randomness).
     Q_INVOKABLE void shufflePlay(noctara::models::CollectionModel* model, const QString& context = {});
@@ -200,6 +203,9 @@ private:
     [[nodiscard]] IPlaybackBackend& backendFor(const PlaybackSource& source) noexcept;
     void saveSession();
     void queueEdited();
+    void follow(models::CollectionModel* model);
+    void unfollow();
+    void reconcileFollowed();
     [[nodiscard]] static std::vector<QueueItem> itemsFrom(std::vector<api::Track> tracks, const QString& context);
 
     settings::SettingsStore& m_settings;
@@ -232,6 +238,13 @@ private:
     qint64 m_lastPosition = 0;
     net::RequestHandle m_waveformRequest;
     bool m_autoplaying = false;
+    // The list the queue follows (see playCollection()).
+    QPointer<models::CollectionModel> m_followed;
+    QMetaObject::Connection m_followConnection;
+    QString m_followContext;
+    QSet<api::Id> m_followKnown;       // tracks of the list already offered to the queue (removed ones stay out)
+    QSet<std::uint64_t> m_followUids;  // queue items that came from the list
+    bool m_reconcileQueued = false;
 };
 
 }  // namespace noctara::media

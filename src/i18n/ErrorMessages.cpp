@@ -106,6 +106,9 @@ QString errorMessage(ErrorCode code)
         return QCoreApplication::translate(
             "Errors", "The protected player is not installed, so protected tracks are skipped. See Settings → "
                       "Playback → Protected tracks.");
+    case ErrorCode::ProtectedPlayerInstalling:
+        return QCoreApplication::translate("Errors", "The protected player is being set up. Protected tracks play "
+                                                     "once it is ready.");
     case ErrorCode::ProtectedPlayerFailed:
         return QCoreApplication::translate("Errors", "The protected player stopped working. Protected tracks are "
                                                      "skipped for now.");

@@ -59,6 +59,9 @@ struct ProtectedStream {
 struct Track {
     Id id = 0;
     bool stub = false;  // only the id is known (later tracks of a playlist); hydrate with IApiClient::lookupTracks
+    // Read from a saved snapshot: shown as is, but fetched again before it plays (its track_authorization may have
+    // expired).
+    bool stale = false;
     QString title;
     UserRef user;
     QString genre;
@@ -119,7 +122,7 @@ struct Playlist {
     QString setType;  // "album", "ep", "single", "compilation" or empty for a plain playlist
     bool album = false;
     QString permalinkUrl;
-    QString artworkUrl;  // may be empty: artwork() falls back to the first track's
+    QString artworkUrl;  // may be empty: artwork() falls back to the first track's (never the owner's avatar)
     std::int64_t durationMs = 0;
     std::int64_t trackCount = 0;
     std::int64_t likesCount = -1;
@@ -129,7 +132,11 @@ struct Playlist {
     QString lastModified;
     std::vector<Track> tracks;  // the API returns the first few in full and the rest as stubs
 
+    // The playlist's own cover, else the first track's that has one, else empty (lists show a placeholder).
     [[nodiscard]] QString artwork() const;
+    // Lists such as /me/library/all carry neither artwork nor tracks: the cover is known only after fetching the
+    // playlist itself.
+    [[nodiscard]] bool coverUnknown() const;
 };
 
 using Item = std::variant<Track, Playlist, User>;

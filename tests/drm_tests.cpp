@@ -1,12 +1,15 @@
 #include "Doctest.hpp"
 #include "TestUtil.hpp"
+#include "mock/FakeOrigin.hpp"
 
 #include "drm/DrmBackend.hpp"
 #include "drm/DrmHost.hpp"
+#include "drm/HelperInstaller.hpp"
 #include "drm/HelperNetwork.hpp"
 #include "drm/Protocol.hpp"
 
 #include <QCoreApplication>
+#include <QCryptographicHash>
 #include <QDir>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -552,5 +555,131 @@ TEST_SUITE("drm.backend")
         backend.load(protectedSource([] { return Result<api::ProtectedStream>(stream()); }), 0, false);
         REQUIRE(test::waitUntil([&] { return failed.size() == 3; }));
         CHECK(failed.last().first().value<Error>().code == ErrorCode::ProtectedPlayerMissing);
+    }
+}
+
+namespace {
+
+test::FakeOrigin::Resource resource(QByteArray body)
+{
+    test::FakeOrigin::Resource served;
+    served.body = std::move(body);
+    return served;
+}
+
+QByteArray fixture(const char* name)
+{
+    QFile file(QStringLiteral(NOCTARA_SOURCE_DIR "/tests/fixtures/drm/") + QString::fromLatin1(name));
+    REQUIRE(file.open(QIODevice::ReadOnly));
+    return file.readAll();
+}
+
+Artifact artifactFor(const QString& file, const QByteArray& body)
+{
+    return Artifact{.version = QStringLiteral("1.0+test"),
+                    .file = file,
+                    .url = QUrl(QStringLiteral("https://downloads.test/") + file),
+                    .sha256 = QCryptographicHash::hash(body, QCryptographicHash::Sha256).toHex(),
+                    .size = body.size()};
+}
+
+}  // namespace
+
+TEST_SUITE("drm.installer")
+{
+    TEST_CASE("zips unpack with their permissions, and never outside their folder")
+    {
+        QTemporaryDir dir;
+        const QString runtime = dir.filePath(QStringLiteral("runtime"));
+        QFile zip(dir.filePath(QStringLiteral("runtime.zip")));
+        REQUIRE(zip.open(QIODevice::WriteOnly));
+        zip.write(fixture("runtime.zip"));
+        zip.close();
+        REQUIRE(extractZip(zip.fileName(), runtime));
+        CHECK(QFileInfo(runtime + QStringLiteral("/electron")).isExecutable());
+        CHECK(QFileInfo(runtime + QStringLiteral("/resources/default_app.asar")).size() == 100000);
+
+        QFile escape(dir.filePath(QStringLiteral("escape.zip")));
+        REQUIRE(escape.open(QIODevice::WriteOnly));
+        escape.write(fixture("escape.zip"));
+        escape.close();
+        const QString inside = dir.filePath(QStringLiteral("a/b"));
+        REQUIRE(QDir().mkpath(inside));
+        CHECK_FALSE(extractZip(escape.fileName(), inside));
+        CHECK_FALSE(QFile::exists(dir.filePath(QStringLiteral("a/escaped.txt"))));
+    }
+
+    TEST_CASE("real drm runtime: the castlabs zip unpacks" * doctest::skip())
+    {
+        const QString zip = QStringLiteral(NOCTARA_SOURCE_DIR "/build/downloads/") + helperRelease().electron.file;
+        REQUIRE_MESSAGE(QFile::exists(zip), "run `xmake drm-helper` first");
+        QTemporaryDir dir;
+        const Result<void> unpacked = extractZip(zip, dir.path());
+        REQUIRE_MESSAGE(unpacked, test::describe(unpacked));
+        CHECK(QFileInfo(dir.filePath(QStringLiteral("electron"))).isExecutable());
+    }
+
+    TEST_CASE("the player is downloaded through Noctara's transport, resumed after a cut, checked and installed")
+    {
+        QTemporaryDir dir;
+        test::FakeOrigin origin;
+        const QByteArray runtime = fixture("runtime.zip");
+        const QByteArray hls = "/* hls.js */";
+        const HelperRelease release{.electron = artifactFor(QStringLiteral("runtime.zip"), runtime),
+                                    .hlsjs = artifactFor(QStringLiteral("hls.min.js"), hls)};
+        origin.serve(release.electron.url.toString(), resource(runtime));
+        origin.serve(release.hlsjs.url.toString(), resource(hls));
+        HelperInstaller installer(origin, dir.path(), release);
+        QSignalSpy finished(&installer, &HelperInstaller::finished);
+        CHECK_FALSE(installer.installed());
+
+        origin.failAfter(40'000);  // the connection drops part-way
+        installer.install(false);
+        REQUIRE(test::waitUntil([&] { return finished.size() == 1; }, 10000));
+        CHECK_FALSE(finished.last().first().toBool());
+        CHECK(installer.phase() == HelperInstaller::Phase::Failed);
+        CHECK_FALSE(installer.installed());
+
+        origin.failAfter(std::nullopt);
+        installer.install(false);
+        REQUIRE(test::waitUntil([&] { return finished.size() == 2; }, 10000));
+        REQUIRE(finished.last().first().toBool());
+        bool resumed = false;
+        for (const net::Request& request : origin.requests()) {
+            resumed = resumed || (request.url == release.electron.url && request.range && request.range->first > 0);
+        }
+        CHECK(resumed);
+        const std::optional<HelperCommand> command = installer.installed();
+        REQUIRE(command.has_value());
+        CHECK(command->program.endsWith(u"/electron/electron"));
+        CHECK(QFileInfo(command->program).isExecutable());
+        REQUIRE(command->arguments.size() == 1);
+        const QString app = command->arguments.front();
+        for (const char* file : {"main.js", "preload.js", "player.html", "protocol.json", "package.json"}) {
+            CHECK(QFile::exists(app + u'/' + QString::fromLatin1(file)));
+        }
+        QFile vendored(app + QStringLiteral("/vendor/hls.min.js"));
+        REQUIRE(vendored.open(QIODevice::ReadOnly));
+        CHECK(vendored.readAll() == hls);
+        CHECK_FALSE(QDir(installer.root() + QStringLiteral("/downloads")).exists());
+    }
+
+    TEST_CASE("a download that does not match its pinned SHA-256 is refused and not kept")
+    {
+        QTemporaryDir dir;
+        test::FakeOrigin origin;
+        const QByteArray runtime = fixture("runtime.zip");
+        HelperRelease release{.electron = artifactFor(QStringLiteral("runtime.zip"), runtime),
+                              .hlsjs = artifactFor(QStringLiteral("hls.min.js"), "x")};
+        release.electron.sha256 = QByteArray(64, 'a');
+        origin.serve(release.electron.url.toString(), resource(runtime));
+        origin.serve(release.hlsjs.url.toString(), resource("x"));
+        HelperInstaller installer(origin, dir.path(), release);
+        QSignalSpy finished(&installer, &HelperInstaller::finished);
+        installer.install(false);
+        REQUIRE(test::waitUntil([&] { return finished.size() == 1; }, 10000));
+        CHECK_FALSE(finished.last().first().toBool());
+        CHECK(installer.error().code == ErrorCode::Corrupt);
+        CHECK(QDir(installer.root() + QStringLiteral("/downloads")).isEmpty());
     }
 }

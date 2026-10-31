@@ -13,6 +13,7 @@ struct AppPaths {
     QString systemConfigFile;  // lowest-precedence config layer (e.g. /etc/xdg/noctara/config.toml)
     QString cacheDir;
     QString stateDir;
+    QString dataDir;  // installed components, such as the protected player (~/.local/share/noctara)
 
     [[nodiscard]] QString userConfigFile() const { return configDir + QStringLiteral("/config.toml"); }
     [[nodiscard]] QString themesDir() const { return configDir + QStringLiteral("/themes"); }

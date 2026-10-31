@@ -82,6 +82,7 @@ inline constexpr std::string_view TrayIcon = "playback.desktop.tray";
 inline constexpr std::string_view TrackNotifications = "playback.desktop.notifications";
 inline constexpr std::string_view ProtectedEnabled = "playback.protected.enabled";
 inline constexpr std::string_view ProtectedHelper = "playback.protected.helper";
+inline constexpr std::string_view ProtectedAutoInstall = "playback.protected.auto_install";
 inline constexpr std::string_view ProtectedIdle = "playback.protected.idle_shutdown";
 inline constexpr std::string_view ProtectedGpu = "playback.protected.gpu";
 

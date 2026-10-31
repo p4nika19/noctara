@@ -97,20 +97,48 @@ CollectionModel::CollectionModel(api::IApiClient& client, QObject* parent)
     : QAbstractListModel(parent)
     , m_client(client)
 {
+    m_resave.setSingleShot(true);
+    m_resave.setInterval(2000);
+    connect(&m_resave, &QTimer::timeout, this, [this] {
+        if (m_synced) {
+            saveSnapshot(true);
+        }
+    });
 }
 
 void CollectionModel::setSource(FirstPage first, int pageSize)
 {
     m_first = std::move(first);
     m_pageSize = pageSize;
+    m_store = nullptr;
+    m_key.clear();
+    reload();
+}
+
+void CollectionModel::setSyncedSource(FirstPage first, api::SnapshotStore* store, QString key)
+{
+    m_first = std::move(first);
+    m_pageSize = kSyncPageSize;
+    m_store = store;
+    m_key = std::move(key);
     reload();
 }
 
 void CollectionModel::setEntries(std::vector<api::Entry> entries)
 {
     m_first = nullptr;
+    m_store = nullptr;
+    m_key.clear();
     clear();
     append(std::move(entries));
+}
+
+bool CollectionModel::complete() const noexcept
+{
+    if (m_store != nullptr) {
+        return m_synced;
+    }
+    return !m_loading && m_next.isEmpty();
 }
 
 void CollectionModel::clear()
@@ -120,6 +148,12 @@ void CollectionModel::clear()
     m_next.clear();
     m_requested.clear();
     m_wanted.clear();
+    m_coverQueue.clear();
+    m_coverAsked.clear();
+    m_fresh.clear();
+    m_freshSeen.clear();
+    m_showingSnapshot = false;
+    m_synced = false;
     const bool hadRows = !m_entries.empty();
     beginResetModel();
     m_entries.clear();
@@ -130,6 +164,7 @@ void CollectionModel::clear()
     setLoading(false);
     if (hadRows) {
         Q_EMIT countChanged();
+        Q_EMIT listChanged();
     }
 }
 
@@ -141,7 +176,244 @@ void CollectionModel::reload()
     // The old rows stay until the first page arrives, so a refresh does not flash an empty list.
     m_request.cancel();
     ++m_generation;
-    load(m_first(m_pageSize), true);
+    if (m_store == nullptr) {
+        load(m_first(m_pageSize), true);
+        return;
+    }
+    // Synced: whatever is shown (the snapshot, or the last sync) stays until the fresh list is complete.
+    m_fresh.clear();
+    m_freshSeen.clear();
+    m_syncPages = 0;
+    m_synced = false;
+    m_error = -1;
+    setLoading(true);
+    const int generation = m_generation;
+    if (!m_entries.empty()) {
+        m_showingSnapshot = true;
+        syncPage({}, generation);
+        return;
+    }
+    m_store->load(m_key, this, [this, generation](std::optional<api::Snapshot> snapshot) {
+        if (generation != m_generation) {
+            return;
+        }
+        m_showingSnapshot = snapshot && !snapshot->entries.empty();
+        if (m_showingSnapshot) {
+            applyEntries(std::move(snapshot->entries));
+        }
+        syncPage({}, generation);
+    });
+}
+
+void CollectionModel::syncPage(const QString& href, int generation)
+{
+    const api::Endpoint<api::Page<api::Entry>> first = m_first(kSyncPageSize);
+    m_request =
+        api::fetch(m_client, href.isEmpty() ? first : api::endpoints::next(first, href), this,
+                   [this, generation](Result<api::Page<api::Entry>> page) { onSyncPage(std::move(page), generation); });
+}
+
+void CollectionModel::onSyncPage(Result<api::Page<api::Entry>> page, int generation)
+{
+    if (generation != m_generation) {
+        return;
+    }
+    if (!page) {
+        if (page.error().code != ErrorCode::Cancelled) {
+            m_error = static_cast<int>(page.error().code);
+        }
+        if (!m_showingSnapshot && !m_entries.empty()) {
+            saveSnapshot(false);  // what arrived so far shows at once next time
+        }
+        setLoading(false);
+        Q_EMIT stateChanged();
+        return;
+    }
+    ++m_syncPages;
+    std::vector<api::Entry> added;
+    for (api::Entry& entry : page->items) {
+        const quint64 key = identity(entry);
+        if (!m_freshSeen.contains(key)) {
+            m_freshSeen.insert(key);
+            added.push_back(entry);
+            m_fresh.push_back(std::move(entry));
+        }
+    }
+    if (!m_showingSnapshot) {
+        append(std::move(added));
+        if (m_syncPages % kSaveEveryPages == 0) {
+            saveSnapshot(false);
+        }
+    } else if (m_syncPages == 1) {
+        // What is new at the top (recent likes) shows right away; the rest waits for the complete list.
+        std::vector<api::Entry> head;
+        for (api::Entry& entry : added) {
+            if (m_seen.contains(identity(entry))) {
+                break;
+            }
+            head.push_back(std::move(entry));
+        }
+        if (!head.empty()) {
+            beginInsertRows({}, 0, static_cast<int>(head.size()) - 1);
+            for (const api::Entry& entry : head) {
+                m_seen.insert(identity(entry));
+            }
+            m_entries.insert(m_entries.begin(), std::make_move_iterator(head.begin()),
+                             std::make_move_iterator(head.end()));
+            endInsertRows();
+            Q_EMIT countChanged();
+            Q_EMIT listChanged();
+        }
+    }
+    if (!page->next.isEmpty()) {
+        syncPage(page->next, generation);
+        return;
+    }
+    if (m_showingSnapshot) {
+        applyEntries(std::exchange(m_fresh, {}));
+    }
+    m_fresh.clear();
+    m_freshSeen.clear();
+    m_showingSnapshot = false;
+    m_synced = true;
+    saveSnapshot(true);
+    setLoading(false);
+    Q_EMIT stateChanged();
+}
+
+void CollectionModel::saveSnapshot(bool complete)
+{
+    if (m_store != nullptr) {
+        m_store->save(m_key, {.entries = m_entries, .tag = {}, .complete = complete});
+    }
+}
+
+void CollectionModel::applyEntries(std::vector<api::Entry> fresh)
+{
+    QSet<quint64> keys;
+    std::erase_if(fresh, [&keys](const api::Entry& entry) {
+        const quint64 key = identity(entry);
+        if (keys.contains(key)) {
+            return true;
+        }
+        keys.insert(key);
+        return false;
+    });
+    // Covers fetched for playlists listed without one carry over while the playlist is unchanged.
+    QHash<quint64, const api::Playlist*> oldPlaylists;
+    for (const api::Entry& entry : m_entries) {
+        if (const auto* playlist = std::get_if<api::Playlist>(&entry.item);
+            playlist && !playlist->artworkUrl.isEmpty()) {
+            oldPlaylists.insert(identity(entry), playlist);
+        }
+    }
+    for (api::Entry& entry : fresh) {
+        if (auto* playlist = std::get_if<api::Playlist>(&entry.item); playlist && playlist->coverUnknown()) {
+            if (const api::Playlist* old = oldPlaylists.value(identity(entry));
+                old != nullptr && old->lastModified == playlist->lastModified) {
+                playlist->artworkUrl = old->artworkUrl;
+            }
+        }
+    }
+    const int before = count();
+    // 1. Rows that are gone, in contiguous blocks from the bottom.
+    for (int row = count() - 1; row >= 0;) {
+        if (keys.contains(identity(m_entries[static_cast<std::size_t>(row)]))) {
+            --row;
+            continue;
+        }
+        int first = row;
+        while (first > 0 && !keys.contains(identity(m_entries[static_cast<std::size_t>(first - 1)]))) {
+            --first;
+        }
+        beginRemoveRows({}, first, row);
+        m_entries.erase(m_entries.begin() + first, m_entries.begin() + row + 1);
+        endRemoveRows();
+        row = first - 1;
+    }
+    // 2. The rows left must keep their relative order; otherwise (a reordered playlist) start over.
+    QHash<quint64, qsizetype> position;
+    for (qsizetype i = 0; i < std::ssize(fresh); ++i) {
+        position.insert(identity(fresh[static_cast<std::size_t>(i)]), i);
+    }
+    qsizetype last = -1;
+    bool ordered = true;
+    for (const api::Entry& entry : m_entries) {
+        const qsizetype at = position.value(identity(entry));
+        ordered = ordered && at > last;
+        last = at;
+    }
+    if (!ordered) {
+        beginResetModel();
+        m_entries = std::move(fresh);
+        m_seen = std::move(keys);
+        endResetModel();
+    } else {
+        // 3. Walk the fresh list: matching rows take the fresh data, missing ones are inserted in runs.
+        std::size_t row = 0;
+        for (std::size_t i = 0; i < fresh.size();) {
+            if (row < m_entries.size() && identity(m_entries[row]) == identity(fresh[i])) {
+                // A stub never replaces a track already known in full (a playlist's later tracks).
+                const auto* incoming = std::get_if<api::Track>(&fresh[i].item);
+                const auto* known = std::get_if<api::Track>(&m_entries[row].item);
+                if (incoming == nullptr || !incoming->stub || known == nullptr || known->stub) {
+                    m_entries[row] = std::move(fresh[i]);
+                }
+                ++row;
+                ++i;
+                continue;
+            }
+            std::size_t end = i;
+            while (end < fresh.size() &&
+                   (row >= m_entries.size() || identity(m_entries[row]) != identity(fresh[end]))) {
+                ++end;
+            }
+            const auto first = static_cast<int>(row);
+            beginInsertRows({}, first, first + static_cast<int>(end - i) - 1);
+            m_entries.insert(m_entries.begin() + static_cast<std::ptrdiff_t>(row),
+                             std::make_move_iterator(fresh.begin() + static_cast<std::ptrdiff_t>(i)),
+                             std::make_move_iterator(fresh.begin() + static_cast<std::ptrdiff_t>(end)));
+            endInsertRows();
+            row += end - i;
+            i = end;
+        }
+        m_seen = std::move(keys);
+        if (!m_entries.empty()) {
+            Q_EMIT dataChanged(index(0), index(count() - 1));
+        }
+    }
+    if (count() != before) {
+        Q_EMIT countChanged();
+    }
+    Q_EMIT listChanged();
+}
+
+void CollectionModel::hydrateAll()
+{
+    for (const api::Entry& entry : m_entries) {
+        if (const auto* track = std::get_if<api::Track>(&entry.item);
+            track != nullptr && track->stub && !m_requested.contains(track->id)) {
+            m_wanted.insert(track->id);
+        }
+    }
+    m_hydrateAll = true;
+    if (m_wanted.isEmpty()) {
+        finishHydrateAll();
+        return;
+    }
+    hydrate();
+}
+
+void CollectionModel::finishHydrateAll()
+{
+    const bool stubsLeft = std::ranges::any_of(m_entries, [](const api::Entry& entry) {
+        const auto* track = std::get_if<api::Track>(&entry.item);
+        return track != nullptr && track->stub;
+    });
+    if (m_hydrateAll && !stubsLeft) {
+        m_hydrateAll = false;
+        Q_EMIT hydrated();
+    }
 }
 
 int CollectionModel::rowCount(const QModelIndex& parent) const
@@ -168,6 +440,9 @@ QVariant CollectionModel::data(const QModelIndex& index, int role) const
         return trackData(*track, role);
     }
     if (const auto* playlist = std::get_if<api::Playlist>(&entry.item)) {
+        if ((role == ArtworkRole || role == ThumbnailRole) && playlist->coverUnknown()) {
+            requestCover(playlist->id);
+        }
         return playlistData(*playlist, role);
     }
     return userData(std::get<api::User>(entry.item), role);
@@ -204,12 +479,13 @@ QHash<int, QByteArray> CollectionModel::roleNames() const
 
 bool CollectionModel::canFetchMore(const QModelIndex& parent) const
 {
-    return !parent.isValid() && hasMore() && !m_loading && m_error < 0;
+    // A synced list fetches every page by itself.
+    return m_store == nullptr && !parent.isValid() && hasMore() && !m_loading && m_error < 0;
 }
 
 void CollectionModel::fetchMore(const QModelIndex& parent)
 {
-    if (canFetchMore(parent) && m_first) {
+    if (canFetchMore(parent) && m_first && m_store == nullptr) {
         load(api::endpoints::next(m_first(m_pageSize), m_next), false);
     }
 }
@@ -281,6 +557,7 @@ void CollectionModel::append(std::vector<api::Entry> entries)
     m_entries.insert(m_entries.end(), std::make_move_iterator(entries.begin()), std::make_move_iterator(entries.end()));
     endInsertRows();
     Q_EMIT countChanged();
+    Q_EMIT listChanged();
 }
 
 void CollectionModel::requestHydration(api::Id id) const
@@ -294,6 +571,41 @@ void CollectionModel::requestHydration(api::Id id) const
         // data() is const; the request itself changes the model's bookkeeping, so it runs right after.
         QMetaObject::invokeMethod(const_cast<CollectionModel*>(this),  // NOLINT(cppcoreguidelines-pro-type-const-cast)
                                   &CollectionModel::hydrate, Qt::QueuedConnection);
+    }
+}
+
+void CollectionModel::requestCover(api::Id id) const
+{
+    if (m_coverAsked.contains(id)) {
+        return;
+    }
+    m_coverAsked.insert(id);
+    m_coverQueue.append(id);
+    // data() is const; requests start right after.
+    QMetaObject::invokeMethod(const_cast<CollectionModel*>(this),  // NOLINT(cppcoreguidelines-pro-type-const-cast)
+                              &CollectionModel::fetchCovers, Qt::QueuedConnection);
+}
+
+void CollectionModel::fetchCovers()
+{
+    while (m_coverRequests < kCoverRequests && !m_coverQueue.isEmpty()) {
+        const api::Id id = m_coverQueue.takeFirst();
+        ++m_coverRequests;
+        (void)api::fetch(m_client, api::endpoints::playlist(id), this, [this, id](Result<api::Playlist> playlist) {
+            --m_coverRequests;
+            const QString cover = playlist ? playlist->artwork() : QString();
+            for (int row = 0; row < count() && !cover.isEmpty(); ++row) {
+                auto* listed = std::get_if<api::Playlist>(&m_entries[static_cast<std::size_t>(row)].item);
+                if (listed != nullptr && listed->id == id) {
+                    listed->artworkUrl = cover;  // remembered with the list (and in its snapshot)
+                    Q_EMIT dataChanged(index(row), index(row), {ArtworkRole, ThumbnailRole});
+                    if (m_store != nullptr && m_synced) {
+                        m_resave.start();
+                    }
+                }
+            }
+            fetchCovers();
+        });
     }
 }
 
@@ -317,6 +629,9 @@ void CollectionModel::hydrate()
 void CollectionModel::onHydrated(Result<std::vector<api::Track>> tracks, const QSet<api::Id>& requested, int generation)
 {
     if (generation != m_generation || !tracks) {
+        if (!tracks) {
+            m_requested.subtract(requested);  // asked again when shown, or by the next hydrateAll()
+        }
         return;  // stubs stay pending; a reload asks again
     }
     QHash<api::Id, api::Track*> byId;
@@ -339,8 +654,10 @@ void CollectionModel::onHydrated(Result<std::vector<api::Track>> tracks, const Q
             m_entries.erase(m_entries.begin() + row);
             endRemoveRows();
             Q_EMIT countChanged();
+            Q_EMIT listChanged();
         }
     }
+    finishHydrateAll();
 }
 
 void CollectionModel::setLoading(bool loading)

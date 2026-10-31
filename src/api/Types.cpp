@@ -39,7 +39,13 @@ QString Playlist::artwork() const
             return track.artworkUrl;
         }
     }
-    return user.avatarUrl;
+    return {};
+}
+
+bool Playlist::coverUnknown() const
+{
+    return artworkUrl.isEmpty() && trackCount > 0 &&
+           std::ranges::none_of(tracks, [](const Track& track) { return !track.stub; });
 }
 
 Id itemId(const Item& item) noexcept

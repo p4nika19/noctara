@@ -13,13 +13,37 @@ QVariant count(std::int64_t value)
 
 }  // namespace
 
-PlaylistDetail::PlaylistDetail(api::IApiClient& client, api::Id id, QObject* parent)
+PlaylistDetail::PlaylistDetail(api::IApiClient& client, api::Id id, api::SnapshotStore* snapshots, QObject* parent)
     : QObject(parent)
     , m_client(client)
     , m_id(id)
+    , m_snapshots(snapshots)
     , m_tracks(client)
 {
+    connect(&m_tracks, &CollectionModel::hydrated, this, &PlaylistDetail::save);
+    if (m_snapshots != nullptr) {
+        // Saved as the playlist (header, without tracks) followed by its tracks.
+        m_snapshots->load(snapshotKey(), this, [this](std::optional<api::Snapshot> snapshot) {
+            if (m_fetched || !snapshot || snapshot->entries.empty() || !snapshot->complete) {
+                return;
+            }
+            auto* header = std::get_if<api::Playlist>(&snapshot->entries.front().item);
+            if (header == nullptr || header->id != m_id) {
+                return;
+            }
+            m_playlist = std::move(*header);
+            m_savedTag = snapshot->tag;
+            snapshot->entries.erase(snapshot->entries.begin());
+            m_tracks.applyEntries(std::move(snapshot->entries));
+            Q_EMIT changed();
+        });
+    }
     reload();
+}
+
+QString PlaylistDetail::snapshotKey() const
+{
+    return QStringLiteral("playlist-%1").arg(m_id);
 }
 
 void PlaylistDetail::reload()
@@ -35,15 +59,38 @@ void PlaylistDetail::reload()
             Q_EMIT changed();
             return;
         }
+        m_fetched = true;
         m_playlist = std::move(*playlist);
-        std::vector<api::Entry> entries;
-        entries.reserve(m_playlist.tracks.size());
-        for (const api::Track& track : m_playlist.tracks) {
-            entries.push_back({.item = track, .at = {}, .repostedBy = std::nullopt});
+        const bool unchanged = !m_savedTag.isEmpty() && m_savedTag == m_playlist.lastModified && m_tracks.count() > 0;
+        if (!unchanged) {
+            std::vector<api::Entry> entries;
+            entries.reserve(m_playlist.tracks.size());
+            for (const api::Track& track : m_playlist.tracks) {
+                entries.push_back({.item = track, .at = {}, .repostedBy = std::nullopt});
+            }
+            m_tracks.applyEntries(std::move(entries));
+            if (m_snapshots != nullptr) {
+                m_tracks.hydrateAll();  // then save() keeps the whole list for next time
+            }
         }
-        m_tracks.setEntries(std::move(entries));
         Q_EMIT changed();
     });
+}
+
+void PlaylistDetail::save()
+{
+    if (m_snapshots == nullptr || !m_fetched) {
+        return;
+    }
+    api::Snapshot snapshot{.entries = {}, .tag = m_playlist.lastModified, .complete = true};
+    api::Playlist header = m_playlist;
+    header.artworkUrl = m_playlist.artwork();  // the first track's cover when it has none: the tracks stay out
+    header.tracks.clear();
+    snapshot.entries.reserve(m_tracks.entries().size() + 1);
+    snapshot.entries.push_back({.item = std::move(header), .at = {}, .repostedBy = std::nullopt});
+    snapshot.entries.insert(snapshot.entries.end(), m_tracks.entries().begin(), m_tracks.entries().end());
+    m_snapshots->save(snapshotKey(), std::move(snapshot));
+    m_savedTag = m_playlist.lastModified;
 }
 
 QString PlaylistDetail::artwork() const

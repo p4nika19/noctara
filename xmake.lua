@@ -27,6 +27,7 @@ add_requires("pkgconfig::sqlite3", {alias = "sqlite3", system = true})
 add_requires("pkgconfig::taglib", {alias = "taglib", system = true})
 add_requires("pkgconfig::libxxhash", {alias = "xxhash", system = true})
 add_requires("pkgconfig::simdjson", {alias = "simdjson", system = true})
+add_requires("pkgconfig::libarchive", {alias = "libarchive", system = true})
 add_requires("pkgconfig::libavformat", {alias = "avformat", system = true})
 add_requires("pkgconfig::libavcodec", {alias = "avcodec", system = true})
 add_requires("pkgconfig::libavutil", {alias = "avutil", system = true})
@@ -136,7 +137,7 @@ noctara_module("net", {qt = {"QtCore", "QtConcurrent", "QtDBus"}, deps = {"nocta
     end})
 noctara_module("cache", {qt = {"QtCore", "QtGui", "QtConcurrent"},
     deps = {"noctara_core", "noctara_settings", "noctara_net"}, packages = {"taglib", "xxhash"}})
-noctara_module("api", {qt = {"QtCore"}, deps = {"noctara_core", "noctara_settings", "noctara_net", "noctara_cache"},
+noctara_module("api", {qt = {"QtCore", "QtConcurrent"}, deps = {"noctara_core", "noctara_settings", "noctara_net", "noctara_cache"},
     packages = {"simdjson"}})
 noctara_module("models", {qt = {"QtCore"}, deps = {"noctara_core", "noctara_api"}})
 -- Native playback: FFmpeg decodes what StreamSource reads from the audio cache; Qt Multimedia is the device.
@@ -145,7 +146,7 @@ noctara_module("media", {qt = {"QtCore", "QtGui", "QtMultimedia", "QtDBus"},
     packages = {"avformat", "avcodec", "avutil", "swresample"}})
 -- Protected playback: the castlabs Electron helper's host process, IPC and playback backend.
 noctara_module("drm", {qt = {"QtCore"}, deps = {"noctara_core", "noctara_settings", "noctara_i18n", "noctara_net",
-    "noctara_cache", "noctara_api", "noctara_media"}})
+    "noctara_cache", "noctara_api", "noctara_media"}, packages = {"libarchive"}})
 noctara_module("auth", {qt = {"QtCore", "QtConcurrent", "QtDBus"}, deps = {"noctara_core"},
     packages = {"libsecret", "openssl", "sqlite3"}})
 noctara_module("ui", {qt = {"QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus", "QtMultimedia", "QtWidgets"},

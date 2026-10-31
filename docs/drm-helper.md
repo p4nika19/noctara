@@ -77,18 +77,35 @@ with mode 4755. Noctara never passes `--no-sandbox`; on systems without user nam
 
 ## Getting the helper
 
-```sh
-xmake drm-helper          # downloads, verifies, assembles build/drm-helper/{electron,app}
-```
+Noctara sets the helper up by itself (`drm::HelperInstaller`), so nothing has to be done after installing or
+building it:
 
-- castlabs Electron **v44.9.3+wvcus** for linux-x64 from `github.com/castlabs/electron-releases` (the `+wvcus`
-  builds are the ones with Widevine), SHA-256 `80cb5218…359fad`, which matches castlabs' `SHASUMS256.txt` for the
-  release. hls.js **1.6.15** (Apache-2.0) from the npm registry via jsDelivr, SHA-256 `413a83e2…383938`. Both
-  are pinned in `xmake/tasks/tasks.lua`; downloads are cached in `build/downloads` and re-verified every time.
-- Noctara looks for the helper in *Protected player folder* (`playback.protected.helper`) when set, otherwise in
-  `<binary dir>/drm-helper` (so `build/noctara` finds `build/drm-helper`) and `<prefix>/lib/noctara/drm-helper`. A
-  folder qualifies when it has `electron/electron` (executable) and `app/main.js`.
-- Without the helper protected tracks are skipped with a toast, and the settings row says it is not installed.
+- **When:** 30 s after start when no helper is found, in the background (a metered connection defers it), or at once
+  when a protected track needs one (that track is skipped with "being set up"; the next ones play). *Set up the
+  protected player automatically* (`playback.protected.auto_install`, on) turns this off.
+- **What:** castlabs Electron **v44.9.3+wvcus** for linux-x64 from `github.com/castlabs/electron-releases` (the
+  `+wvcus` builds are the ones with Widevine), SHA-256 `80cb5218…359fad` (matches castlabs' `SHASUMS256.txt`), and
+  hls.js **1.6.15** (Apache-2.0) from the npm registry via jsDelivr, SHA-256 `413a83e2…383938`. Both are pinned once,
+  in `electron/helper-release.json`, which the installer embeds and `xmake drm-helper` reads.
+- **How:** downloaded through Noctara's own network stack, so the proxy and DNS settings apply; an interrupted
+  download resumes with a `Range` request (the bytes on disk are hashed again first); a file that does not match its
+  SHA-256 is deleted and reported. Electron is unpacked with libarchive (entry names outside the folder are refused,
+  nothing is written through symlinks, permissions are kept). The helper app (`electron/*.js`, `player.html`,
+  `protocol.json`) is compiled into Noctara and written out by the installer.
+- **Where:** `<data>/drm-helper/` (`~/.local/share/noctara/drm-helper/`): `electron-<version>/` (the runtime, marked
+  complete by `.complete`) and `app-<hash>/` (the app, named by a hash of its files, so a newer Noctara with a
+  changed helper app writes a new folder without downloading the runtime again). Older folders and the downloads are
+  removed afterwards.
+- **Progress:** *Settings → Playback → Protected tracks* shows the download percentage, unpacking, or why it failed
+  (it is tried again on the next protected track); a toast says when it is ready.
+
+Noctara uses, in this order: *Protected player folder* (`playback.protected.helper`) when set (an unusable folder is
+reported, not replaced), `<binary dir>/drm-helper` (so `build/noctara` finds `build/drm-helper`),
+`<prefix>/lib/noctara/drm-helper`, then the one it set up. A folder qualifies when it has `electron/electron`
+(executable) and `app/main.js`.
+
+For development, `xmake drm-helper` assembles the same thing in `build/drm-helper` from the working tree's
+`electron/` (downloads cached in `build/downloads`, re-verified every time).
 
 ### Packaging, signing and VMP
 
@@ -99,7 +116,8 @@ xmake drm-helper          # downloads, verifies, assembles build/drm-helper/{ele
   EVS signing there. On Windows and macOS, licence servers may demand VMP: the packaged app must be signed with
   castlabs EVS (`python3 -m castlabs_evs.vmp sign-pkg <dir>`) after code signing, and an unsigned helper gets
   lower security levels or refusals. Those platforms are not built yet.
-- Updating: pick a newer `+wvcus` release, update the version and checksum in the task, run the real check below.
+- Updating: pick a newer `+wvcus` release, update version, URL, size and checksum in `electron/helper-release.json`,
+  run the real check below. Installed copies switch to it on their next setup.
 
 ## Verification
 

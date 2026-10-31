@@ -1,5 +1,6 @@
 #include "api/ApiService.hpp"
 #include "api/Session.hpp"
+#include "api/Snapshot.hpp"
 
 #include "auth/BrowserCookieSource.hpp"
 #include "auth/SecretStore.hpp"
@@ -385,16 +386,22 @@ int main(int argc, char** argv)
     auth::BrowserCookieSource browserCookies;
     // Browser discovery never reads cookies; Account asks for consent before importing the selected profile.
     ui::AccountController account(soundcloud.client(), session, secrets, &browserCookies);
-    ui::CatalogController catalog(soundcloud, account);
+    // The account's likes, library and playlists, saved between runs (a cache: "Clear all" and sign-out remove it).
+    const QString cacheRoot = cache.status().root.isEmpty() ? paths.cacheDir : cache.status().root;
+    api::SnapshotStore snapshots(cacheRoot + QStringLiteral("/library"));
+    QObject::connect(&storageUi, &ui::StorageController::clearingAll, &storageUi, [&snapshots] { snapshots.clear(); });
+    ui::CatalogController catalog(soundcloud, account, snapshots);
     QObject::connect(&account, &ui::AccountController::notice, &appController, &ui::AppController::showToast);
 
     // Native playback: the audio cache feeds FFmpeg, the mixer feeds the default output device (opened on the
     // first track). Protected tracks play in the castlabs Electron helper, started on the first one.
     media::QtAudioOutput audioOutput;
     media::NativeBackend nativePlayback(cache.audio(), audioOutput);
-    const QString cacheRoot = cache.status().root.isEmpty() ? paths.cacheDir : cache.status().root;
     drm::DrmService protectedPlayback(store, network, cacheRoot + QStringLiteral("/electron"),
-                                      QCoreApplication::applicationDirPath());
+                                      QCoreApplication::applicationDirPath(), paths.dataDir);
+    QObject::connect(
+        &protectedPlayback, &drm::DrmService::notice, &appController,
+        [&appController](const QString& kind, const QString& message) { appController.showToast(kind, message); });
     const auto showProtectedStatus = [&settingsUi, &protectedPlayback] {
         settingsUi.setRowStatus(QString::fromLatin1(settings::keys::ProtectedEnabled), protectedPlayback.statusText());
     };

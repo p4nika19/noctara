@@ -284,13 +284,12 @@ task("drm-helper")
     set_category("plugin")
     set_menu {usage = "xmake drm-helper", description = "Download castlabs Electron + hls.js (pinned, verified) and assemble build/drm-helper"}
     on_run(function ()
+        import("core.base.json")
+        -- The pinned release, shared with Noctara's own installer (src/drm/HelperInstaller.cpp).
+        local release = json.loadfile(path.join(os.projectdir(), "electron", "helper-release.json"))
         local downloads = {
-            {name = "electron-v44.9.3+wvcus-linux-x64.zip",
-             url = "https://github.com/castlabs/electron-releases/releases/download/v44.9.3%2Bwvcus/electron-v44.9.3%2Bwvcus-linux-x64.zip",
-             sha256 = "80cb5218ab814597282ebe41d16fb5a98abb0c75370e9195914e40e097359fad"},
-            {name = "hls.js-1.6.15.min.js",
-             url = "https://cdn.jsdelivr.net/npm/hls.js@1.6.15/dist/hls.min.js",
-             sha256 = "413a83e2bb0c77ed0bf0be105d539d17ef45dfd984a0b13ecd3b14a901383938"},
+            {name = release.electron.file, url = release.electron.url, sha256 = release.electron.sha256},
+            {name = release.hlsjs.file, url = release.hlsjs.url, sha256 = release.hlsjs.sha256},
         }
         local cache = path.join(os.projectdir(), "build", "downloads")
         local root = path.join(os.projectdir(), "build", "drm-helper")

@@ -464,21 +464,18 @@ Result<Page<Entry>> playlistTracks(const QByteArray& json)
     return page;
 }
 
-Result<Page<Entry>> collection(const QByteArray& json)
+namespace {
+
+Result<Page<Entry>> collectionFrom(element root)
 {
-    NOCTARA_TRACE_SCOPE("api: parse page");
-    Result<element> root = document(json);
-    if (!root) {
-        return std::unexpected(root.error());
-    }
     simdjson::dom::array list;
     Page<Entry> page;
-    if (root->type() == element_type::OBJECT) {
-        if ((*root)["collection"].get_array().get(list) != simdjson::SUCCESS) {
+    if (root.type() == element_type::OBJECT) {
+        if (root["collection"].get_array().get(list) != simdjson::SUCCESS) {
             return fail(ErrorCode::InvalidResponse, "object without a collection");
         }
-        page.next = link(*root, "next_href");
-    } else if (root->get_array().get(list) != simdjson::SUCCESS) {
+        page.next = link(root, "next_href");
+    } else if (root.get_array().get(list) != simdjson::SUCCESS) {
         return fail(ErrorCode::InvalidResponse, "expected a collection");
     }
     page.items.reserve(list.size());
@@ -488,6 +485,39 @@ Result<Page<Entry>> collection(const QByteArray& json)
         }
     }
     return page;
+}
+
+}  // namespace
+
+Result<Page<Entry>> collection(const QByteArray& json)
+{
+    NOCTARA_TRACE_SCOPE("api: parse page");
+    Result<element> root = document(json);
+    if (!root) {
+        return std::unexpected(root.error());
+    }
+    return collectionFrom(*root);
+}
+
+Result<SnapshotFields> snapshot(const QByteArray& json)
+{
+    NOCTARA_TRACE_SCOPE("api: parse snapshot");
+    Result<element> root = document(json);
+    if (!root) {
+        return std::unexpected(root.error());
+    }
+    if (root->type() != element_type::OBJECT) {
+        return fail(ErrorCode::Corrupt, "a snapshot is an object");
+    }
+    Result<Page<Entry>> page = collectionFrom(*root);
+    if (!page) {
+        return std::unexpected(page.error());
+    }
+    SnapshotFields fields{.page = std::move(*page), .tag = text(*root, "noctara_tag"), .complete = true};
+    if (field(*root, "noctara_complete")) {
+        fields.complete = flag(*root, "noctara_complete");
+    }
+    return fields;
 }
 
 Result<Waveform> waveform(const QByteArray& json)

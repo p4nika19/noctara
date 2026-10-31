@@ -494,13 +494,39 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+35"/>
+        <source>The protected player is set up: protected tracks play now.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+61"/>
         <source>Protected tracks do not follow: %1.</source>
         <extracomment>%1 = list of network settings, e.g. &quot;custom DNS servers (…); the bandwidth limit&quot;</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+42"/>
+        <source>Setting up the protected player: downloading, %1 % of %2 MB…</source>
+        <extracomment>%1 = percent done, %2 = total size in MB</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Setting up the protected player: unpacking…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>The protected player is set up once the connection is not metered.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Could not set up the protected player: %1 It is tried again when a protected track plays.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Running: castlabs Electron %1 with Widevine.</source>
         <extracomment>%1 = Electron version</extracomment>
         <translation type="unfinished"></translation>
@@ -593,12 +619,12 @@
     <name>Errors</name>
     <message>
         <location filename="../src/i18n/ErrorMessages.cpp" line="+11"/>
-        <location line="+109"/>
+        <location line="+112"/>
         <source>Something went wrong.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-108"/>
+        <location line="-111"/>
         <source>The operation was cancelled.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -849,6 +875,11 @@
     </message>
     <message>
         <location line="+4"/>
+        <source>The protected player is being set up. Protected tracks play once it is ready.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>The protected player stopped working. Protected tracks are skipped for now.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1341,14 +1372,22 @@
     <name>LikesPage</name>
     <message>
         <location filename="../src/qml/pages/LikesPage.qml" line="+18"/>
-        <location line="+9"/>
+        <location line="+11"/>
         <location line="+7"/>
         <location line="+12"/>
         <source>Likes</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="-27"/>
+        <location line="-28"/>
+        <source>%n track(s) · updating…</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
         <source>%n track(s)</source>
         <translation type="unfinished">
             <numerusform>%n track</numerusform>
@@ -2235,7 +2274,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+189"/>
+        <location filename="../src/app/main.cpp" line="+192"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2339,12 +2378,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+582"/>
+        <location line="+593"/>
         <source>Icons</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-581"/>
+        <location line="-592"/>
         <source>Icon appearance.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2425,13 +2464,13 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+592"/>
+        <location line="+603"/>
         <location line="+344"/>
         <source>System</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-935"/>
+        <location line="-946"/>
         <source>Midnight (dark)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2517,12 +2556,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+604"/>
+        <location line="+615"/>
         <source>Volume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-603"/>
+        <location line="-614"/>
         <source>Volume when Noctara starts.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2795,7 +2834,7 @@
     <message>
         <location line="+4"/>
         <location line="+182"/>
-        <location line="+343"/>
+        <location line="+354"/>
         <location line="+13"/>
         <location line="+12"/>
         <location line="+57"/>
@@ -2805,19 +2844,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-842"/>
+        <location line="-853"/>
         <source>Low</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+387"/>
+        <location line="+398"/>
         <location line="+25"/>
         <source>Medium</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-411"/>
+        <location line="-422"/>
         <source>High</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2981,13 +3020,13 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+568"/>
+        <location line="+579"/>
         <location line="+23"/>
         <source>Custom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-589"/>
+        <location line="-600"/>
         <source>Corner radius</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3110,12 +3149,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+179"/>
+        <location line="+190"/>
         <source>Regular</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-178"/>
+        <location line="-189"/>
         <source>Bold</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3131,12 +3170,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+168"/>
+        <location line="+179"/>
         <source>Compact</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-167"/>
+        <location line="-178"/>
         <source>Comfortable</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3266,17 +3305,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+17"/>
         <source>Protected player folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Folder with the protected player (made by `xmake drm-helper`). Empty looks next to Noctara and in its install directory.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+12"/>
+        <location line="+14"/>
         <source>Close the protected player after</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3980,8 +4014,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-545"/>
-        <location line="+546"/>
+        <location line="-556"/>
+        <location line="+557"/>
         <location line="+11"/>
         <location line="+12"/>
         <location line="+94"/>
@@ -3990,7 +4024,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1141"/>
+        <location line="-1152"/>
         <source>Navigation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4031,12 +4065,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+752"/>
+        <location line="+763"/>
         <source>Full-screen player</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-751"/>
+        <location line="-762"/>
         <source>The large player with the cover art.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4131,7 +4165,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+736"/>
+        <location line="+249"/>
+        <source>Set up the protected player automatically</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Downloads it once (castlabs Electron with Widevine, about 125 MB) when it is missing, in the background and not on a metered connection.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Folder with a protected player of your own (as made by `xmake drm-helper`). Empty uses one next to Noctara, in its install directory, or the one Noctara set up.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+487"/>
         <source>Maximum lifetime</source>
         <translation type="unfinished"></translation>
     </message>

@@ -194,8 +194,11 @@ bool DrmHost::start()
         return false;
     }
     if (!m_options.command) {
-        giveUp(Error{ErrorCode::ProtectedPlayerMissing, "no helper installed"});
-        return false;
+        Q_EMIT helperMissing();
+        if (!m_options.command) {
+            giveUp(m_missingReason);
+            return false;
+        }
     }
     if (!m_options.profileDir.isEmpty()) {
         (void)QDir().mkpath(m_options.profileDir);

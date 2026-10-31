@@ -58,6 +58,7 @@ std::string_view errorCodeName(ErrorCode code) noexcept
     case ErrorCode::AudioOutputFailed: return "AudioOutputFailed";
     case ErrorCode::ProtectedPlayback: return "ProtectedPlayback";
     case ErrorCode::ProtectedPlayerMissing: return "ProtectedPlayerMissing";
+    case ErrorCode::ProtectedPlayerInstalling: return "ProtectedPlayerInstalling";
     case ErrorCode::ProtectedPlayerFailed: return "ProtectedPlayerFailed";
     case ErrorCode::ProtectedNetworkUnsupported: return "ProtectedNetworkUnsupported";
     case ErrorCode::LicenseDenied: return "LicenseDenied";

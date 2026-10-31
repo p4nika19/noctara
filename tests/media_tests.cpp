@@ -20,6 +20,7 @@
 #include "media/PlaybackQueue.hpp"
 #include "media/SessionState.hpp"
 #include "media/StreamSource.hpp"
+#include "models/CollectionModel.hpp"
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
 #include "ui/WaveformItem.hpp"
@@ -942,6 +943,81 @@ TEST_SUITE("media.controller")
         REQUIRE(problems.size() == 1);
         CHECK(problems.first().first().toInt() == static_cast<int>(ErrorCode::ProtectedPlayback));
         CHECK(player.loadedId(2) == u"5");
+    }
+
+    TEST_CASE("the queue follows its list: new tracks join (shuffled among the upcoming), lost ones leave")
+    {
+        Player player;
+        models::CollectionModel model(player.client);
+        const auto entries = [](api::Id first, api::Id last, std::initializer_list<api::Id> skip = {}) {
+            std::vector<api::Entry> out;
+            for (api::Id id = first; id <= last; ++id) {
+                if (std::ranges::find(skip, id) == skip.end()) {
+                    out.push_back({.item = apiTrack(id), .at = {}, .repostedBy = std::nullopt});
+                }
+            }
+            return out;
+        };
+        const auto queued = [&player] {
+            std::vector<api::Id> ids;
+            for (const QueueItem& item : player.controller->queue().items()) {
+                ids.push_back(item.track.id);
+            }
+            return ids;
+        };
+        model.setEntries(entries(1, 3));
+        player.controller->playCollection(&model, 0, QStringLiteral("Likes"));
+        REQUIRE(queued() == std::vector<api::Id>{1, 2, 3});
+        model.applyEntries(entries(1, 5));  // the rest of the list arrived
+        REQUIRE(test::waitUntil([&] { return queued().size() == 5; }));
+        CHECK(queued() == std::vector<api::Id>{1, 2, 3, 4, 5});
+        model.applyEntries(entries(1, 5, {2}));  // unliked meanwhile
+        REQUIRE(test::waitUntil([&] { return queued().size() == 4; }));
+        CHECK(queued() == std::vector<api::Id>{1, 3, 4, 5});
+        model.applyEntries(entries(3, 5));  // the one playing stays
+        test::waitUntil([] { return false; }, 100);
+        CHECK(queued() == std::vector<api::Id>{1, 3, 4, 5});
+
+        // Shuffled: later tracks land at random places after the current one, each once.
+        model.setEntries(entries(1, 3));
+        player.controller->shufflePlay(&model, QStringLiteral("Likes"));
+        const api::Id current = player.controller->currentTrack()->id;
+        model.applyEntries(entries(1, 40));
+        REQUIRE(test::waitUntil([&] { return queued().size() == 40; }));
+        std::vector<api::Id> ids = queued();
+        CHECK(ids[static_cast<std::size_t>(player.controller->queue().current())] == current);
+        CHECK(player.controller->queue().current() <= 2);  // nothing new went before it
+        std::vector<api::Id> sorted = ids;
+        std::ranges::sort(sorted);
+        CHECK(std::ranges::adjacent_find(sorted) == sorted.end());
+        CHECK_FALSE(std::ranges::is_sorted(ids));  // 37 new tracks in order would be a 1 in 37! chance
+
+        // A queue started elsewhere stops following.
+        player.controller->playTracks({apiTrack(99)}, 0, {});
+        model.applyEntries(entries(1, 45));
+        test::waitUntil([] { return false; }, 100);
+        CHECK(queued() == std::vector<api::Id>{99});
+    }
+
+    TEST_CASE("saved (stale) tracks are fetched again before they play, and play as saved when that fails")
+    {
+        api::Track fresh = apiTrack(7);
+        fresh.trackAuthorization = QStringLiteral("fresh");
+        Player player({}, {{7, fresh}});
+        api::Track saved = apiTrack(7);
+        saved.trackAuthorization = QStringLiteral("old");
+        saved.stale = true;
+        api::Track unknown = apiTrack(8);
+        unknown.stale = true;
+        player.controller->playTracks({saved, unknown}, 0, {});
+        REQUIRE(test::waitUntil([&] { return player.backend.loads.size() == 1; }));
+        const QueueItem* now = player.controller->queue().currentItem();
+        REQUIRE(now != nullptr);
+        CHECK_FALSE(now->track.stale);
+        CHECK(now->track.trackAuthorization == u"fresh");
+        player.controller->next();
+        REQUIRE(test::waitUntil([&] { return player.backend.loads.size() == 2; }));
+        CHECK(player.loadedId(1) == u"8");
     }
 
     TEST_CASE("the backend's gapless advance moves the queue without loading again")

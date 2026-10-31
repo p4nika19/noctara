@@ -61,10 +61,12 @@ constexpr Genre kGenres[] = {
     {"trap", QT_TRANSLATE_NOOP("Genres", "Trap")},
 };
 
-CatalogController::CatalogController(api::ApiService& api, AccountController& account, QObject* parent)
+CatalogController::CatalogController(api::ApiService& api, AccountController& account, api::SnapshotStore& snapshots,
+                                     QObject* parent)
     : QObject(parent)
     , m_api(api)
     , m_account(account)
+    , m_snapshots(snapshots)
     , m_search(api.client())
     , m_feed(api.client())
     , m_likes(api.client())
@@ -92,11 +94,16 @@ QVariantList CatalogController::genres() const
 void CatalogController::accountChanged()
 {
     const qint64 id = m_account.userId();
-    if (id == m_accountId) {
-        return;
+    if (id == m_accountId || (id == 0 && m_account.signedIn())) {
+        return;  // unchanged, or signed in but not confirmed yet (the remembered account stands in meanwhile)
     }
     const qint64 previous = m_accountId;
     m_accountId = id;
+    // Saved lists belong to one account: another account (or none) never sees them, and they are deleted.
+    m_snapshots.setAccount(std::max<qint64>(id, 0));
+    if (previous > 0 && previous != id) {
+        m_snapshots.forget(previous);
+    }
     if (previous <= 0 && id > 0) {
         // The signed-in account became known (/me answered): lists loaded so far already belong to it. Likes and
         // following, which need the id, load when their page asks again.
@@ -125,9 +132,24 @@ void CatalogController::ensure(const QString& list)
     load(list);
 }
 
+api::Id CatalogController::accountId()
+{
+    api::Id me = m_account.userId();
+    if (me == 0 && m_account.signedIn() && m_accountId <= 0) {
+        // A saved session: until SoundCloud confirms who it is, the account the saved lists belong to stands in,
+        // so they show at once. accountChanged() replaces them if /me says otherwise.
+        me = m_snapshots.lastAccount();
+        if (me > 0) {
+            m_accountId = me;
+            m_snapshots.setAccount(me);
+        }
+    }
+    return me > 0 ? me : std::max<qint64>(m_accountId, 0);
+}
+
 void CatalogController::load(const QString& list)
 {
-    const api::Id me = m_account.userId();
+    const api::Id me = accountId();
     const int page = m_api.pageSize();
     if (list == u"charts") {
         m_charts.clear();
@@ -137,17 +159,23 @@ void CatalogController::load(const QString& list)
     } else if (list == u"history") {
         m_history.setSource([](int limit) { return api::endpoints::history(limit); }, page);
     } else if (list == u"library") {
-        m_library.setSource([](int limit) { return api::endpoints::library(limit); }, page);
-    } else if (list == u"likes" || list == u"following") {
+        if (me == 0) {
+            return;  // the snapshot belongs to the account: wait until it is known
+        }
+        // Loaded completely, shown from the snapshot meanwhile.
+        m_library.setSyncedSource([](int limit) { return api::endpoints::library(limit); }, &m_snapshots,
+                                  QStringLiteral("library"));
+    } else if (list == u"likes") {
         if (me == 0) {
             return;  // known once /me answered; accountChanged() loads it then
         }
-        models::CollectionModel& model = list == u"likes" ? m_likes : m_following;
-        model.setSource(
-            [me, likes = list == u"likes"](int limit) {
-                return likes ? api::endpoints::userLikes(me, limit) : api::endpoints::followings(me, limit);
-            },
-            page);
+        m_likes.setSyncedSource([me](int limit) { return api::endpoints::userLikes(me, limit); }, &m_snapshots,
+                                QStringLiteral("likes"));
+    } else if (list == u"following") {
+        if (me == 0) {
+            return;
+        }
+        m_following.setSource([me](int limit) { return api::endpoints::followings(me, limit); }, page);
     } else {
         return;
     }
@@ -181,8 +209,9 @@ models::PlaylistDetail* CatalogController::playlist(qint64 id)
     auto it = m_playlists.find(id);
     if (it == m_playlists.end()) {
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): owned by the shared_ptr, deleted via deleteLater()
-        auto detail = std::shared_ptr<models::PlaylistDetail>(new models::PlaylistDetail(m_api.client(), id),
-                                                              [](models::PlaylistDetail* d) { d->deleteLater(); });
+        auto detail =
+            std::shared_ptr<models::PlaylistDetail>(new models::PlaylistDetail(m_api.client(), id, &m_snapshots),
+                                                    [](models::PlaylistDetail* d) { d->deleteLater(); });
         QQmlEngine::setObjectOwnership(detail.get(), QQmlEngine::CppOwnership);
         it = m_playlists.insert(id, std::move(detail));
     }

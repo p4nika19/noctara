@@ -741,14 +741,25 @@ std::vector<Definition> builtinDefinitions()
                     .description = QT_TRANSLATE_NOOP(
                         "Settings", "Plays encrypted tracks through the protected player, which starts only when "
                                     "one plays. Off skips them.")});
+    defs.push_back({.key = keys::ProtectedAutoInstall,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Playback,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Set up the protected player automatically"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Downloads it once (castlabs Electron with Widevine, about 125 MB) when it is "
+                                    "missing, in the background and not on a metered connection."),
+                    .flags = flag::Advanced,
+                    .visibleWhen = Condition{keys::ProtectedEnabled, {"true"}}});
     defs.push_back({.key = keys::ProtectedHelper,
                     .type = Type::Path,
                     .defaultValue = str(""),
                     .category = Playback,
                     .label = QT_TRANSLATE_NOOP("Settings", "Protected player folder"),
                     .description = QT_TRANSLATE_NOOP(
-                        "Settings", "Folder with the protected player (made by `xmake drm-helper`). Empty looks "
-                                    "next to Noctara and in its install directory."),
+                        "Settings", "Folder with a protected player of your own (as made by `xmake drm-helper`). "
+                                    "Empty uses one next to Noctara, in its install directory, or the one Noctara "
+                                    "set up."),
                     .flags = flag::Advanced,
                     .visibleWhen = Condition{keys::ProtectedEnabled, {"true"}}});
     defs.push_back({.key = keys::ProtectedIdle,

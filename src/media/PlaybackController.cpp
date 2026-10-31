@@ -245,7 +245,7 @@ void PlaybackController::playCollection(models::CollectionModel* model, int row,
     if (!std::holds_alternative<api::Track>(clicked)) {
         return;
     }
-    // The list's tracks become the queue, starting at the one clicked.
+    // The list's tracks become the queue, starting at the one clicked; the queue then follows the list.
     std::vector<api::Track> tracks;
     int start = 0;
     for (std::size_t i = 0; i < entries.size(); ++i) {
@@ -257,6 +257,7 @@ void PlaybackController::playCollection(models::CollectionModel* model, int row,
         }
     }
     playTracks(std::move(tracks), start, context);
+    follow(model);
 }
 
 void PlaybackController::shufflePlay(models::CollectionModel* model, const QString& context)
@@ -354,6 +355,7 @@ void PlaybackController::playTracks(std::vector<api::Track> tracks, int start, c
     if (tracks.empty()) {
         return;
     }
+    unfollow();  // a new queue: playCollection() follows its list again
     m_queue.replace(itemsFrom(std::move(tracks), context), start);
     m_failuresInRow = 0;
     queueEdited();
@@ -376,16 +378,22 @@ void PlaybackController::hydrateStubs()
 
 void PlaybackController::hydrate(const std::vector<api::Id>& ids, std::function<void()> then)
 {
-    (void)m_api.lookupTracks(ids, &m_requests, [this, then = std::move(then)](Result<std::vector<api::Track>> tracks) {
-        if (tracks) {
-            for (const api::Track& track : *tracks) {
-                m_queue.updateTrack(track);
-            }
-            m_queueModel.refresh();
-            Q_EMIT trackChanged();
-        }
-        then();
-    });
+    (void)m_api.lookupTracks(ids, &m_requests,
+                             [this, ids, then = std::move(then)](Result<std::vector<api::Track>> tracks) {
+                                 if (tracks) {
+                                     for (const api::Track& track : *tracks) {
+                                         m_queue.updateTrack(track);
+                                     }
+                                 }
+                                 // Saved copies that could not be refreshed play as they are rather than being
+                                 // asked for again and again.
+                                 for (const api::Id id : ids) {
+                                     m_queue.markFresh(id);
+                                 }
+                                 m_queueModel.refresh();
+                                 Q_EMIT trackChanged();
+                                 then();
+                             });
 }
 
 api::StreamPreference PlaybackController::preference() const
@@ -454,8 +462,9 @@ void PlaybackController::startCurrent(std::int64_t startMs, bool paused)
         return;
     }
     publishCurrent();
-    if (item->track.stub) {
-        // Known only by id (a playlist's later tracks): fetched first.
+    if (item->track.stub || item->track.stale) {
+        // Known only by id (a playlist's later tracks), or a saved copy whose authorization may be old: fetched
+        // first.
         const std::uint64_t serial = m_trackSerial;
         const api::Id id = item->track.id;
         hydrate({id}, [this, serial, id, startMs, paused] {
@@ -517,7 +526,7 @@ void PlaybackController::prepareFollowing()
         return;
     }
     const QueueItem& item = m_queue.items()[static_cast<std::size_t>(*following)];
-    if (item.track.stub) {
+    if (item.track.stub || item.track.stale) {
         const std::uint64_t serial = m_trackSerial;
         hydrate({item.track.id}, [this, serial] {
             if (serial == m_trackSerial) {
@@ -546,8 +555,8 @@ void PlaybackController::prefetchUpcoming()
     std::vector<cache::PrefetchItem> upcoming;
     for (int i = m_queue.current() + 1; i < m_queue.size() && std::cmp_less(upcoming.size(), count); ++i) {
         const QueueItem& item = m_queue.items()[static_cast<std::size_t>(i)];
-        if (item.track.stub) {
-            continue;
+        if (item.track.stub || item.track.stale) {
+            continue;  // fetched when it is prepared
         }
         // Protected tracks are never prefetched (or cached).
         if (std::optional<PlaybackSource> source = sourceFor(item); source && !source->info.drm) {
@@ -601,6 +610,7 @@ void PlaybackController::onFailed(const Error& error)
     case ErrorCode::LicenseDenied:
     case ErrorCode::ProtectedPlayback:
     case ErrorCode::ProtectedPlayerMissing:
+    case ErrorCode::ProtectedPlayerInstalling:
     case ErrorCode::ProtectedPlayerFailed:
     case ErrorCode::ProtectedNetworkUnsupported: skipAfterError(error.code); return;
     default:
@@ -798,10 +808,94 @@ void PlaybackController::moveQueueItem(int from, int to)
 
 void PlaybackController::clearUpcoming()
 {
+    unfollow();  // the list's later tracks would otherwise come back
     while (m_queue.size() > m_queue.current() + 1) {
         (void)m_queue.remove(m_queue.size() - 1);
     }
     queueEdited();
+}
+
+void PlaybackController::follow(models::CollectionModel* model)
+{
+    unfollow();
+    if (model == nullptr || m_queue.empty()) {
+        return;
+    }
+    m_followed = model;
+    m_followContext = m_queue.items().front().context;
+    for (const QueueItem& item : m_queue.items()) {
+        m_followKnown.insert(item.track.id);
+        m_followUids.insert(item.uid);
+    }
+    // Coalesced: a sync changes the list several times in a row.
+    m_followConnection = connect(model, &models::CollectionModel::listChanged, this, [this] {
+        if (!m_reconcileQueued) {
+            m_reconcileQueued = true;
+            QMetaObject::invokeMethod(this, &PlaybackController::reconcileFollowed, Qt::QueuedConnection);
+        }
+    });
+}
+
+void PlaybackController::unfollow()
+{
+    disconnect(m_followConnection);
+    m_followed.clear();
+    m_followKnown.clear();
+    m_followUids.clear();
+}
+
+void PlaybackController::reconcileFollowed()
+{
+    m_reconcileQueued = false;
+    if (!m_followed) {
+        unfollow();
+        return;
+    }
+    QSet<api::Id> listed;
+    std::vector<const api::Track*> order;  // the list's tracks in its order
+    for (const api::Entry& entry : m_followed->entries()) {
+        if (const auto* track = std::get_if<api::Track>(&entry.item)) {
+            listed.insert(track->id);
+            order.push_back(track);
+        }
+    }
+    bool edited = false;
+    // Tracks the list lost leave the queue, except the one playing.
+    for (int i = m_queue.size() - 1; i >= 0; --i) {
+        const QueueItem& item = m_queue.items()[static_cast<std::size_t>(i)];
+        if (i != m_queue.current() && m_followUids.contains(item.uid) && !listed.contains(item.track.id)) {
+            m_followUids.remove(item.uid);
+            (void)m_queue.remove(i);
+            edited = true;
+        }
+    }
+    // Tracks it gained join it. In list order, those above the current track are behind it already.
+    const api::Track* current = currentTrack();
+    const auto currentAt =
+        current == nullptr
+            ? order.end()
+            : std::ranges::find_if(order, [current](const api::Track* track) { return track->id == current->id; });
+    std::vector<QueueItem> added;
+    for (auto it = order.begin(); it != order.end(); ++it) {
+        const api::Track& track = **it;
+        if (m_followKnown.contains(track.id)) {
+            continue;
+        }
+        m_followKnown.insert(track.id);
+        if (!m_queue.shuffle() && currentAt != order.end() && it < currentAt) {
+            continue;
+        }
+        added.push_back({.track = track, .context = m_followContext, .uid = 0});
+    }
+    if (!added.empty()) {
+        for (const std::uint64_t uid : m_queue.addUpcoming(std::move(added))) {
+            m_followUids.insert(uid);
+        }
+        edited = true;
+    }
+    if (edited) {
+        queueEdited();
+    }
 }
 
 void PlaybackController::queueEdited()

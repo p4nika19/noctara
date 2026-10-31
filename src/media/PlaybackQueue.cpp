@@ -86,6 +86,29 @@ void PlaybackQueue::insertNext(std::vector<QueueItem> items)
     }
 }
 
+std::vector<std::uint64_t> PlaybackQueue::addUpcoming(std::vector<QueueItem> items)
+{
+    assign(items);
+    std::vector<std::uint64_t> uids;
+    uids.reserve(items.size());
+    for (QueueItem& item : items) {
+        uids.push_back(item.uid);
+        if (!m_shuffle) {
+            m_items.push_back(std::move(item));
+            continue;
+        }
+        m_original.push_back(item.uid);
+        const int first = m_current + 1;
+        const auto slots = static_cast<quint32>(size() - first + 1);
+        const int at = first + static_cast<int>(QRandomGenerator::global()->bounded(slots));
+        m_items.insert(m_items.begin() + at, std::move(item));
+    }
+    if (m_current < 0 && !m_items.empty()) {
+        m_current = 0;
+    }
+    return uids;
+}
+
 bool PlaybackQueue::remove(int index)
 {
     if (index < 0 || index >= size()) {
@@ -244,6 +267,15 @@ void PlaybackQueue::updateTrack(const api::Track& track)
     for (QueueItem& item : m_items) {
         if (item.track.id == track.id) {
             item.track = track;
+        }
+    }
+}
+
+void PlaybackQueue::markFresh(api::Id id)
+{
+    for (QueueItem& item : m_items) {
+        if (item.track.id == id) {
+            item.track.stale = false;
         }
     }
 }

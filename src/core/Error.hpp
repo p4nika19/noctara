@@ -76,6 +76,7 @@ enum class ErrorCode : std::uint16_t {
 
     // protected playback (the DRM helper)
     ProtectedPlayerMissing,       // the helper (castlabs Electron + app) is not installed where Noctara looks
+    ProtectedPlayerInstalling,    // Noctara is setting the helper up right now
     ProtectedPlayerFailed,        // the helper would not start, kept crashing, or has no working Widevine
     ProtectedNetworkUnsupported,  // the network settings cannot be honoured by the helper without leaking
     LicenseDenied,                // SoundCloud's license server refused to play the track here

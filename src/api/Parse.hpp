@@ -29,6 +29,13 @@ namespace noctara::api::parse {
 [[nodiscard]] Result<Page<Entry>> playlistTracks(const QByteArray& json);
 // A transcoding's resolution: {"url": "<signed media URL>"}.
 [[nodiscard]] Result<QUrl> streamUrl(const QByteArray& json);
+// A saved list (api/Snapshot): a collection page plus Noctara's "noctara_tag" and "noctara_complete" keys.
+struct SnapshotFields {
+    Page<Entry> page;
+    QString tag;
+    bool complete = true;
+};
+[[nodiscard]] Result<SnapshotFields> snapshot(const QByteArray& json);
 // An encrypted transcoding's resolution: {"url": …, "licenseAuthToken": …}.
 [[nodiscard]] Result<ProtectedStream> protectedStream(const QByteArray& json);
 

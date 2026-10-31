@@ -24,6 +24,7 @@ Noctara keeps three caches: audio of regular tracks, images, and API responses. 
   images/<aa>/<hash> # encoded images (DiskLru), index alongside
   http/<aa>/<hash>   # stored API responses (DiskLru), index alongside
   electron/          # protected-playback helper profile: non-media data and the Widevine CDM
+  library/<account>/ # saved lists: likes.json, library.json, playlist-<id>.json (see below)
 ```
 
 All directories are created with mode 0700 and files with 0600. A second instance cannot take the lock. It then runs with the RAM tiers only and the page explains why. The GPU probe and the pipeline cache from `gfx` also live in the cache root, and they are kept when the cache layout changes.
@@ -85,6 +86,27 @@ They are never cached, in any tier. `AudioCache::open` refuses `TrackInfo::drm` 
 - When the network fails (offline mode, outage, 5xx), a stale copy is served with `Response::stale` set. `CacheMode::OnlyIfCached` never touches the network.
 - Keys include a digest of the `Authorization` header, so one account never sees another's data. `Vary` is honoured, and a successful `POST`/`PUT`/`DELETE` invalidates the URL.
 - The disk budget is `cache.metadata.disk_mb` (128 MB). There is no RAM tier: lookups run on the cache thread anyway, and the page cache keeps hot files in memory.
+
+## Saved lists (likes, library, playlists)
+
+`api::SnapshotStore` keeps the signed-in account's likes, its library (playlists and albums) and each opened
+playlist between runs, so they show at once and only need checking against SoundCloud. Files are written in
+api-v2's own JSON shape (plus `noctara_tag`, `noctara_complete`), so the API parser reads them back; writes are
+atomic and off the GUI thread. They belong to one account: another account never reads them, switching accounts or
+signing out deletes them, and *Clear all* removes them.
+
+- **Likes and library** (`CollectionModel::setSyncedSource`): on first opening per session the snapshot shows,
+  then every page is fetched one after another (200 items per request, without waiting for the view to scroll).
+  New items at the top appear as soon as page one arrives; when the list is complete it replaces the snapshot row by
+  row (inserted and removed rows only, so views keep their position; a reordered list falls back to a reset) and is
+  saved. Without a snapshot the rows appear as pages arrive, and progress is saved every 5 pages. The sync keeps
+  running when the page is left.
+- **Playlists** (`models::PlaylistDetail`): the saved copy shows at once; when SoundCloud's `last_modified` is
+  unchanged the saved (fully known) tracks stay, otherwise the fresh list replaces them, all of its tracks are
+  fetched in the background, and the result is saved.
+- Tracks read from a snapshot are marked `stale`: they show as saved but are looked up again right before they play
+  or are prepared (their `track_authorization` may have expired), and never prefetched while stale. A lookup that
+  fails lets the saved copy play.
 
 ## Threading
 

@@ -32,6 +32,10 @@ public:
     void append(std::vector<QueueItem> items);
     // After the current item.
     void insertNext(std::vector<QueueItem> items);
+    // Items the list being played grew by: appended, or with shuffle on each put at a uniformly random place among
+    // the upcoming items (the same as shuffling the rest of the queue again together with them). In the original
+    // order they go at the end. Returns their uids.
+    std::vector<std::uint64_t> addUpcoming(std::vector<QueueItem> items);
     bool remove(int index);
     bool move(int from, int to);
     void clear();
@@ -60,6 +64,8 @@ public:
 
     // Replaces a track by id (a stub hydrated, a refreshed copy).
     void updateTrack(const api::Track& track);
+    // Clears the stale mark of a track by id (refreshing it failed: it plays as saved).
+    void markFresh(api::Id id);
 
 private:
     std::uint64_t assign(std::vector<QueueItem>& items);
