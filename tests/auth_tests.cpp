@@ -2,15 +2,21 @@
 // (verified against /me before it is kept), expiry handling and sign-out, against tests/mock/FakeApi.hpp.
 #include "TestUtil.hpp"
 #include "api/ApiClient.hpp"
+#include "api/ApiService.hpp"
 #include "api/ClientId.hpp"
 #include "api/Endpoints.hpp"
 #include "api/Session.hpp"
+#include "api/Snapshot.hpp"
 #include "mock/FakeApi.hpp"
 
 #include "auth/SecretStore.hpp"
+#include "settings/Keys.hpp"
+#include "settings/SettingsStore.hpp"
 #include "ui/AccountController.hpp"
+#include "ui/CatalogController.hpp"
 
 #include <QSignalSpy>
+#include <QTemporaryDir>
 
 #include <optional>
 
@@ -403,5 +409,57 @@ TEST_SUITE("ui.account")
         CHECK(account.state() == AccountController::SignedOut);
         CHECK(h.session.token().isEmpty());
         CHECK_FALSE(h.stored().has_value());
+    }
+}
+
+TEST_SUITE("ui.catalog")
+{
+    TEST_CASE("signing in again after a sign-out loads the personal lists for the new account")
+    {
+        settings::SettingsStore store(settings::Schema::builtin());
+        REQUIRE(store.setUserValue(settings::keys::ClientId, QString::fromLatin1(kClientId)));
+        FakeApi transport;
+        transport.setHandler([](const net::Request& request) -> Result<net::Response> {
+            const QByteArray auth = FakeApi::header(request, QByteArrayLiteral("authorization"));
+            if (request.url.path() == u"/me") {
+                if (auth != "OAuth token-a" && auth != "OAuth token-b") {
+                    return FakeApi::reply(401, R"({"error":"401 - Unauthorized"})", jsonHeaders());
+                }
+                const char* id = auth == "OAuth token-a" ? "1" : "2";
+                return FakeApi::reply(200, QByteArray(R"({"id":)") + id + R"(,"username":"u","permalink":"u"})",
+                                      jsonHeaders());
+            }
+            return FakeApi::reply(200, R"({"collection":[],"next_href":null})", jsonHeaders());
+        });
+        api::Session session;
+        api::ApiService service(store, transport, session, {});
+        auth::MemorySecretStore secrets;
+        QTemporaryDir dir;
+        REQUIRE(dir.isValid());
+        api::SnapshotStore snapshots(dir.path());
+        ui::AccountController account(service.client(), session, secrets);
+        ui::CatalogController catalog(service, account, snapshots);
+        const auto streamWith = [&](const QByteArray& token) {
+            for (const net::Request& request : transport.requests()) {
+                if (request.url.path() == u"/stream" &&
+                    FakeApi::header(request, QByteArrayLiteral("authorization")) == "OAuth " + token) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        account.signInWithToken(QStringLiteral("token-a"));
+        REQUIRE(test::waitUntil([&] { return account.signedIn() && account.userId() == 1; }, 3000));
+        catalog.ensure(QStringLiteral("feed"));  // Home shows the feed
+        REQUIRE(test::waitUntil([&] { return streamWith("token-a"); }, 3000));
+
+        account.signOut();
+        account.signInWithToken(QStringLiteral("token-b"));
+        REQUIRE(test::waitUntil([&] { return account.signedIn() && account.userId() == 2; }, 3000));
+        catalog.ensure(QStringLiteral("feed"));  // Home asks again once signed in
+        CHECK(test::waitUntil([&] { return streamWith("token-b"); }, 3000));
+        CHECK(test::waitUntil([&] { return !catalog.feed()->loading(); }, 3000));
+        CHECK(catalog.feed()->errorCode() == -1);
     }
 }

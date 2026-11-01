@@ -109,17 +109,19 @@ void CatalogController::accountChanged()
         // following, which need the id, load when their page asks again.
         return;
     }
-    // Personal lists belong to the account: reload those already shown, forget the others.
+    // Personal lists belong to the account: reload those already shown for another account, forget the others.
+    // Signed out, nothing is reloaded: the lists would only fail, and the next sign-in would then take them as
+    // loaded for it (above). Pages ask again once signed in.
     const QStringList shown = m_loaded;
     m_loaded.clear();
     for (models::CollectionModel* model : {&m_feed, &m_likes, &m_history, &m_library, &m_following}) {
         model->clear();
     }
     for (const QString& list : shown) {
-        if (list != u"charts") {
-            ensure(list);
-        } else {
+        if (list == u"charts") {
             m_loaded.append(list);
+        } else if (id > 0) {
+            ensure(list);
         }
     }
 }
