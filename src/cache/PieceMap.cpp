@@ -135,6 +135,9 @@ void PieceMap::clear()
 
 bool PieceMap::complete() const noexcept
 {
+    if (m_layout == Layout::Hls && m_pieces.empty()) {
+        return false;  // the placeholder used until the playlist is known (a real playlist has segments)
+    }
     const int count = pieceCount();
     return count >= 0 && m_present == count;
 }

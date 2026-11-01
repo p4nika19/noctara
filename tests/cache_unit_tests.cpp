@@ -111,6 +111,16 @@ TEST_SUITE("cache.pieces")
         CHECK(map.ranges().front().first == 3 * PieceMap::kChunkSize);
     }
 
+    TEST_CASE("an HLS map is complete once every segment is stored, never before its playlist is known")
+    {
+        CHECK_FALSE(PieceMap::hls(0).complete());
+        PieceMap map = PieceMap::hls(2);
+        map.mark(0, 100, 1);
+        CHECK_FALSE(map.complete());
+        map.mark(1, 50, 2);
+        CHECK(map.complete());
+    }
+
     TEST_CASE("serialization round-trips and detects damage")
     {
         PieceMap map = PieceMap::progressive(1'000'000);

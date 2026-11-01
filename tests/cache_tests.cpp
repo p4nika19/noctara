@@ -514,6 +514,33 @@ TEST_SUITE("cache.audio")
         CHECK(audio.origin.count() == 0);
     }
 
+    TEST_CASE("an HLS entry whose playlist has not arrived yet is not complete")
+    {
+        Audio audio;
+        const QString playlist = QStringLiteral("https://cdn.test/hls/list.m3u8?sig=x");
+        audio.origin.serve(playlist, {.body = "#EXTM3U\n#EXT-X-TARGETDURATION:10\n#EXTINF:4.0,\ns1.mp3?sig=x\n"
+                                              "#EXT-X-ENDLIST\n"});
+        const QByteArray segment = randomBytes(10'000, 120);
+        audio.origin.serve(QStringLiteral("https://cdn.test/hls/s1.mp3?sig=x"), {.body = segment});
+        const TrackInfo info = track(QStringLiteral("hls-pending"), StreamProtocol::Hls);
+        audio.origin.setHold(true);
+        AudioReaderPtr reader = audio.open(info, playlist);
+        test::waitUntil([] { return false; }, 200);
+        CHECK_FALSE(reader->complete());
+        CHECK(audio.cache->usage().completeEntries == 0);
+        const auto sidecarComplete = [&] {
+            const Result<QByteArray> sidecar = readWholeFile(audio.entryDir(info) + QStringLiteral("/meta.json"));
+            REQUIRE(sidecar);
+            return sidecar->contains("\"complete\": true") || sidecar->contains("\"complete\":true");
+        };
+        CHECK_FALSE(sidecarComplete());
+
+        audio.origin.setHold(false);
+        CHECK(Audio::piece(*reader, 0).data == segment);
+        REQUIRE(test::waitUntil([&] { return audio.cache->usage().completeEntries == 1; }));
+        CHECK(sidecarComplete());
+    }
+
     TEST_CASE("least recently used entries are evicted to stay within the byte cap; open ones are kept")
     {
         Audio audio;

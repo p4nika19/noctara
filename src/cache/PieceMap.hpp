@@ -45,6 +45,7 @@ public:
     void clear();
 
     [[nodiscard]] int presentCount() const noexcept { return m_present; }
+    // Every piece is stored. Never true while the length (progressive) or the playlist (HLS, no pieces) is unknown.
     [[nodiscard]] bool complete() const noexcept;
     [[nodiscard]] std::int64_t storedBytes() const noexcept { return m_storedBytes; }
     // The first missing piece at or after `from` (pieces past a still unknown end count as missing).
