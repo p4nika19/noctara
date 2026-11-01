@@ -262,6 +262,7 @@ public:
     net::RequestHandle lookupTracks(std::vector<api::Id> ids, QObject* context,
                                     std::function<void(Result<std::vector<api::Track>>)> done) override
     {
+        ++lookups;
         std::vector<api::Track> found;
         for (const api::Id id : ids) {
             if (const auto it = known.find(id); it != known.end()) {
@@ -276,6 +277,7 @@ public:
     Handler handler;
     std::map<api::Id, api::Track> known;
     std::vector<QUrl> requests;
+    int lookups = 0;
 };
 
 class FakeBackend : public IPlaybackBackend {
@@ -1062,6 +1064,22 @@ TEST_SUITE("media.controller")
         REQUIRE(test::waitUntil([&] { return !player.backend.loads.empty(); }));
         CHECK(player.loadedId(0) == u"7");
         CHECK(player.controller->title() == u"Track 7");
+    }
+
+    TEST_CASE("a following track the lookup does not return is asked for once, then left to be skipped")
+    {
+        Player player;
+        api::Track stub;
+        stub.id = 2;
+        stub.stub = true;  // deleted or private: /tracks?ids= leaves it out
+        player.controller->playTracks({apiTrack(1), stub}, 0, {});
+        REQUIRE(player.backend.loads.size() == 1);
+        test::waitUntil([] { return false; }, 100);  // the hydration playTracks starts
+        const int before = player.client.lookups;
+        player.backend.setPosition(190'000);
+        test::waitUntil([] { return false; }, 300);
+        CHECK(player.client.lookups - before <= 1);
+        CHECK_FALSE(player.backend.next.has_value());
     }
 
     TEST_CASE("stream URLs are resolved through the API when the cache asks, with the track authorization")

@@ -528,10 +528,22 @@ void PlaybackController::prepareFollowing()
     const QueueItem& item = m_queue.items()[static_cast<std::size_t>(*following)];
     if (item.track.stub || item.track.stale) {
         const std::uint64_t serial = m_trackSerial;
-        hydrate({item.track.id}, [this, serial] {
-            if (serial == m_trackSerial) {
-                prepareFollowing();
+        const api::Id id = item.track.id;
+        hydrate({id}, [this, serial, id] {
+            if (serial != m_trackSerial) {
+                return;
             }
+            // Still a stub: the lookup left it out (deleted, private) or failed. Asking again would only repeat
+            // that; onEnded() reports and skips it.
+            const std::optional<int> now = m_queue.following();
+            if (now) {
+                const api::Track& track = m_queue.items()[static_cast<std::size_t>(*now)].track;
+                if (track.id == id && track.stub) {
+                    m_active->setNext(std::nullopt);
+                    return;
+                }
+            }
+            prepareFollowing();
         });
         return;
     }
