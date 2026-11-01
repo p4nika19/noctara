@@ -21,11 +21,11 @@ Noctara is a native SoundCloud desktop client written in C++23 and Qt 6 Quick. I
 | libarchive (unpacking the protected player Noctara sets up) | 3.8 | system, pkg-config |
 | doctest | 2.4.12 | xrepo (fetched automatically) |
 
-Arch: `pacman -S curl libarchive libproxy libsecret openssl sqlite simdjson taglib xxhash`; Debian/Ubuntu:
-`libcurl4-openssl-dev libarchive-dev libproxy-dev libsecret-1-dev libssl-dev libsqlite3-dev libsimdjson-dev libtag-dev
-libxxhash-dev`. The build fails early
-if libcurl lacks SSL, HTTP2 or IPv6. Native playback needs FFmpeg (libavformat, libavcodec, libavutil, libswresample)
-and Qt Multimedia. Protected (DRM) tracks play in a castlabs Electron helper that Noctara downloads and sets up by itself
+Arch: `pacman -S curl libarchive libproxy libsecret openssl sqlite simdjson taglib xxhash ffmpeg qt6-multimedia`;
+Debian/Ubuntu: `libcurl4-openssl-dev libarchive-dev libproxy-dev libsecret-1-dev libssl-dev libsqlite3-dev
+libsimdjson-dev libtag-dev libxxhash-dev libavformat-dev libavcodec-dev libavutil-dev libswresample-dev
+qt6-multimedia-dev`. The build fails early if libcurl lacks SSL, HTTP2 or IPv6. Native playback needs FFmpeg
+(libavformat, libavcodec, libavutil, libswresample) and Qt Multimedia. Protected (DRM) tracks play in a castlabs Electron helper that Noctara downloads and sets up by itself
 (pinned and verified, about 125 MB once); `xmake drm-helper` builds the same thing into `build/drm-helper` for
 development (needs `curl` and `unzip`). See [docs/drm-helper.md](docs/drm-helper.md).
 

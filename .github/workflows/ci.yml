@@ -17,7 +17,8 @@ jobs:
         run: |
           pacman -Syu --noconfirm --needed git clang lld mold xmake unzip \
             qt6-base qt6-declarative qt6-svg qt6-shadertools qt6-tools qt6-translations \
-            tomlplusplus vulkan-headers vulkan-icd-loader mesa xorg-server-xvfb fontconfig noto-fonts
+            qt6-multimedia tomlplusplus vulkan-headers vulkan-icd-loader mesa xorg-server-xvfb fontconfig noto-fonts \
+            curl libarchive libproxy libsecret openssl sqlite simdjson taglib xxhash ffmpeg
       - uses: actions/checkout@v4
       - name: Configure
         run: xmake f -y -m ${{ matrix.mode }} --qt=/usr/lib/qt6 --werror=y --march=x86-64-v2 --root
@@ -41,7 +42,10 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:
-      - run: pacman -Syu --noconfirm --needed git clang mold xmake qt6-base qt6-declarative qt6-svg qt6-shadertools qt6-tools tomlplusplus vulkan-headers
+      - run: |
+          pacman -Syu --noconfirm --needed git clang mold xmake \
+            qt6-base qt6-declarative qt6-svg qt6-shadertools qt6-tools qt6-multimedia tomlplusplus vulkan-headers \
+            curl libarchive libproxy libsecret openssl sqlite simdjson taglib xxhash ffmpeg
       - uses: actions/checkout@v4
       - run: xmake f -y -m tsan --qt=/usr/lib/qt6 --root && xmake build -y --root noctara-tests
       - run: xmake test-tsan --root
