@@ -26,6 +26,16 @@ function fail(code, detail) {
   emit({ type: 'error', id: current, code, detail: String(detail || '') });
 }
 
+// A pause or a new load interrupts a pending play() with an AbortError: that is no failure, and a late
+// rejection must never be reported against the track loaded since.
+function playNow() {
+  const id = current;
+  audio.play().catch((e) => {
+    if (e && e.name === 'AbortError') return;
+    if (id === current) fail('media', e);
+  });
+}
+
 function unload() {
   if (hls) {
     hls.destroy();
@@ -71,7 +81,7 @@ function load(command) {
   hls.loadSource(command.url);
   hls.attachMedia(audio);
   hls.once(Hls.Events.MANIFEST_PARSED, () => {
-    if (wantPlay) audio.play().catch((e) => fail('media', e));
+    if (wantPlay) playNow();
     else state('paused');
   });
 }
@@ -90,7 +100,7 @@ window.noctara.onCommand((command) => {
     case 'load': load(command); break;
     case 'play':
       wantPlay = true;
-      if (current && hls && audio.readyState > 0) audio.play().catch((e) => fail('media', e));
+      if (current && hls && audio.readyState > 0) playNow();
       break;
     case 'pause': wantPlay = false; audio.pause(); break;
     case 'seek': audio.currentTime = command.ms / 1000; position(); break;
