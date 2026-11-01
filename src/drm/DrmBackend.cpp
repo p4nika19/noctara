@@ -64,6 +64,11 @@ void DrmBackend::load(const media::PlaybackSource& source, std::int64_t startMs,
 void DrmBackend::open()
 {
     const std::uint64_t serial = ++m_serial;
+    if (m_loaded && m_host.running()) {
+        // The helper keeps the previous track until the new "load" arrives, which waits for the stream to resolve:
+        // unload it now, or a stop or failure meanwhile leaves it playing unseen.
+        (void)m_host.send(QJsonObject{{QStringLiteral("type"), QStringLiteral("stop")}});
+    }
     m_loaded = false;
     m_resume = false;
     m_opening = true;

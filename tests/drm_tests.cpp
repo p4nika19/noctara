@@ -528,6 +528,39 @@ TEST_SUITE("drm.backend")
         CHECK(backend.position() >= 5000);
     }
 
+    TEST_CASE("a new load unloads the previous track at once, even when it is stopped or fails before reaching "
+              "the helper")
+    {
+        QTemporaryDir profile;
+        ScopedEnv env{{"NOCTARA_MOCK_DRM_DURATION_MS", "60000"}};
+        DrmHost host(mockOptions(profile.path()));
+        host.setNetwork(planNetwork(directConfig()));
+        Transcript transcript(host);
+        DrmBackend backend(host);
+        QSignalSpy failed(&backend, &DrmBackend::failed);
+        const auto playFirst = [&] {
+            backend.load(protectedSource([] { return Result<api::ProtectedStream>(stream()); }), 0, false);
+            REQUIRE(test::waitUntil([&] { return backend.state() == media::BackendState::Playing; }, 10000));
+        };
+
+        // Stopped while the next track's stream is still being resolved.
+        playFirst();
+        media::PlaybackSource pending;
+        pending.info.drm = true;
+        pending.protectedStream = [](QObject*, const std::function<void(Result<api::ProtectedStream>)>&) {
+        };
+        backend.load(pending, 0, false);
+        backend.stop();
+        REQUIRE(test::waitUntil([&] { return transcript.ofType(QStringLiteral("stop")).size() == 1; }, 5000));
+
+        // The next track's resolution fails.
+        playFirst();
+        backend.load(protectedSource([] { return Result<api::ProtectedStream>(fail(ErrorCode::Forbidden)); }), 0,
+                     false);
+        REQUIRE(test::waitUntil([&] { return failed.size() == 1; }));
+        REQUIRE(test::waitUntil([&] { return transcript.ofType(QStringLiteral("stop")).size() == 2; }, 5000));
+    }
+
     TEST_CASE("a refused license, a failed resolution and a missing helper fail the track")
     {
         QTemporaryDir profile;
