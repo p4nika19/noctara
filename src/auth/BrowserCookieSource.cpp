@@ -333,6 +333,22 @@ Result<std::optional<QByteArray>> secretServicePassword(const QString& keyringNa
     if (!collection) {
         return std::nullopt;
     }
+    if (secret_collection_get_locked(collection.get()) != FALSE) {
+        // A locked collection hides its item labels (gnome-keyring keeps them encrypted, KeePassXC lists no items),
+        // so unlock it first with the desktop's own prompt; the user has just asked for this import.
+        GList* objects = g_list_append(nullptr, collection.get());
+        const gint unlocked = secret_service_unlock_sync(service.get(), objects, nullptr, nullptr, &error);
+        g_list_free(objects);
+        clearError(error);
+        if (unlocked < 1) {
+            return fail(ErrorCode::PermissionDenied,
+                        "The keyring holding the browser's Safe Storage password is locked");
+        }
+        if (secret_collection_load_items_sync(collection.get(), nullptr, &error) == FALSE) {
+            clearError(error);
+            return fail(ErrorCode::PermissionDenied, "Could not list the items of the unlocked keyring");
+        }
+    }
     Result<std::optional<QByteArray>> password = std::nullopt;
     GList* items = secret_collection_get_items(collection.get());
     for (const GList* node = items; node != nullptr; node = node->next) {

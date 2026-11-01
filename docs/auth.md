@@ -125,7 +125,8 @@ and cookie values are wiped (`auth::wipe`, which skips implicitly shared buffers
   - Other prefixes (for example Windows' app-bound `v20`) are reported as unsupported.
 
   The Safe Storage password (`auth::chromiumSafeStoragePassword`) comes from the Secret Service (libsecret; the item
-  labelled `<name> Safe Storage` in the default collection, unlocked with the desktop's prompt if needed) or from
+  labelled `<name> Safe Storage` in the default collection; a locked collection hides its labels, so it is unlocked
+  with the desktop's prompt before the scan) or from
   KWallet over D-Bus (`org.kde.kwalletd6`, else `kwalletd5`: entry `<name> Safe Storage` in folder `<name> Keys` of
   the network wallet; never created if missing). KWallet is asked first on KDE Plasma. `<name>` is `Chrome`
   (Chrome, Vivaldi), `Chromium` (Chromium, Edge, Opera) or `Brave`; the browser-specific names are macOS-only.
