@@ -11,6 +11,9 @@
 #include <QQuickWindow>
 #include <QTemporaryDir>
 
+#include <algorithm>
+#include <chrono>
+#include <cmath>
 #include <map>
 
 using namespace noctara;
@@ -49,6 +52,30 @@ struct MockProbe {
         };
     }
 };
+
+// Average interval between presentations of a render loop paced by FramePacer: each frame takes `renderMs` to
+// draw and, with VSync (`refreshHz` > 0), is presented on the next refresh after that.
+double pacedIntervalMs(int cap, double refreshHz, double renderMs, int frames = 60)
+{
+    using Clock = std::chrono::steady_clock;
+    using Ms = std::chrono::duration<double, std::milli>;
+    const Clock::time_point origin = Clock::time_point{} + std::chrono::hours(1);
+    const double vsyncMs = refreshHz > 0.0 ? 1000.0 / refreshHz : 0.0;
+    double start = 0.0;
+    double first = 0.0;
+    double last = 0.0;
+    FramePacer pacer;
+    for (int frame = 0; frame < frames; ++frame) {
+        const double done = start + renderMs;
+        const double presented = vsyncMs > 0.0 ? std::ceil(done / vsyncMs) * vsyncMs : done;
+        (frame == 0 ? first : last) = presented;
+        start = presented;
+        if (const auto wake = pacer.wakeUp(origin + std::chrono::duration_cast<Clock::duration>(Ms(presented)), cap)) {
+            start = std::max(presented, Ms(*wake - origin).count());
+        }
+    }
+    return (last - first) / (frames - 1);
+}
 
 Blocklist realBlocklist()
 {
@@ -364,6 +391,31 @@ TEST_SUITE("gfx.governor")
             samples.push_back(i);
         }
         CHECK(percentile90(samples) == doctest::Approx(90.0));
+    }
+
+    TEST_CASE("the frame cap paces from the frame just presented")
+    {
+        // 30 fps on a 60 Hz display: every second refresh, not every one, also when a frame takes longer to
+        // draw than the wake-up slack.
+        CHECK(pacedIntervalMs(30, 60.0, 1.0) == doctest::Approx(1000.0 / 30).epsilon(0.01));
+        CHECK(pacedIntervalMs(30, 60.0, 4.0) == doctest::Approx(1000.0 / 30).epsilon(0.01));
+        // A cap that does not divide the refresh rate averages out at the cap.
+        CHECK(pacedIntervalMs(60, 144.0, 1.0) == doctest::Approx(1000.0 / 60).epsilon(0.02));
+        CHECK(pacedIntervalMs(60, 144.0, 1.0) >= 1000.0 / 60 - 0.01);
+        // Without VSync, too.
+        CHECK(pacedIntervalMs(60, 0.0, 2.0) == doctest::Approx(1000.0 / 60).epsilon(0.01));
+        // Frames slower than the cap are not slowed down further.
+        CHECK(pacedIntervalMs(60, 0.0, 25.0) == doctest::Approx(25.0).epsilon(0.02));
+        // After an idle scene the grid restarts: the next frame waits a full period, no burst.
+        FramePacer pacer;
+        const auto start = std::chrono::steady_clock::now();
+        (void)pacer.wakeUp(start, 60);
+        const auto later = start + std::chrono::seconds(2);
+        const auto wake = pacer.wakeUp(later, 60);
+        REQUIRE(wake.has_value());
+        CHECK(*wake - later >= std::chrono::milliseconds(15));
+        // No cap: every refresh.
+        CHECK(pacedIntervalMs(0, 60.0, 1.0) == doctest::Approx(1000.0 / 60).epsilon(0.01));
     }
 }
 

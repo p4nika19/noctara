@@ -19,6 +19,8 @@ constexpr auto kWindow = std::chrono::seconds(1);
 constexpr double kMaxIntervalMs = 100.0;
 // Wake up this much before the paced deadline: the following VSync wait absorbs the difference.
 constexpr auto kPacingSlack = std::chrono::microseconds(1500);
+// A frame this far behind the pacing grid follows an idle scene: the grid restarts from it.
+constexpr auto kIdleGap = std::chrono::milliseconds(100);
 
 }  // namespace
 
@@ -30,6 +32,23 @@ double percentile90(std::vector<double> samples)
     const auto index = static_cast<std::ptrdiff_t>((samples.size() - 1) * 9 / 10);
     std::ranges::nth_element(samples, samples.begin() + index);
     return samples[static_cast<std::size_t>(index)];
+}
+
+std::optional<FramePacer::Clock::time_point> FramePacer::wakeUp(Clock::time_point presented, int capFps)
+{
+    if (capFps <= 0) {
+        m_slot.reset();
+        return std::nullopt;
+    }
+    const auto period = std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(1.0 / capFps));
+    // Advance from the slot of the frame just presented, never from an earlier one: the sleep delays the next
+    // frame, so measuring from the frame before would let two frames through per period.
+    if (!m_slot || presented - (*m_slot + period) > kIdleGap) {
+        m_slot = presented + period;  // the first frame, or the first after an idle scene: restart the grid
+    } else {
+        m_slot = std::max(*m_slot + period, presented);  // after a late frame the next may follow at once
+    }
+    return *m_slot - kPacingSlack;
 }
 
 FrameMonitor::FrameMonitor(QObject* parent)
@@ -89,14 +108,11 @@ void FrameMonitor::onSwapped()
             this, [this] { QTimer::singleShot(kWindow, this, &FrameMonitor::summarise); }, Qt::QueuedConnection);
     }
 
-    // Pace from the previous presentation: sleep until shortly before the next allowed frame, then let the
-    // VSync wait absorb the rest.
-    const int cap = m_frameCapFps.load(std::memory_order_relaxed);
-    if (cap > 0 && m_hasLastSwap && QThread::currentThread() != QCoreApplication::instance()->thread()) {
-        const auto period = std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(1.0 / cap));
-        const Clock::time_point deadline = m_lastSwap + period - kPacingSlack;
-        if (deadline > now) {
-            std::this_thread::sleep_until(deadline);
+    // Sleep until shortly before the next allowed frame, then let the VSync wait absorb the rest.
+    if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
+        if (const auto deadline = m_pacer.wakeUp(now, m_frameCapFps.load(std::memory_order_relaxed));
+            deadline && *deadline > now) {
+            std::this_thread::sleep_until(*deadline);
         }
     }
     m_lastSwap = now;

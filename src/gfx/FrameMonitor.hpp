@@ -9,9 +9,26 @@
 #include <atomic>
 #include <chrono>
 #include <mutex>
+#include <optional>
 #include <vector>
 
 namespace noctara::gfx {
+
+// Paces presented frames to a frame-rate cap on a grid of one period per frame: after a frame was presented,
+// the render thread may start the next one shortly before the next grid slot, so the following VSync wait
+// absorbs the difference. After a late frame the next one may follow at once; after an idle scene the grid
+// restarts from the presented frame, so the first frames are not let through in a burst. Pure; render thread
+// only.
+class FramePacer {
+public:
+    using Clock = std::chrono::steady_clock;
+
+    // When to start the next frame after one was presented at `presented`; nothing for no cap (0).
+    [[nodiscard]] std::optional<Clock::time_point> wakeUp(Clock::time_point presented, int capFps);
+
+private:
+    std::optional<Clock::time_point> m_slot;  // when the next frame may be presented
+};
 
 // Measures rendering on a window and paces it to the frame-rate cap.
 //
@@ -46,6 +63,7 @@ private:
     std::atomic<bool> m_windowOpen{false};
 
     // Render thread only.
+    FramePacer m_pacer;
     Clock::time_point m_lastSwap;
     bool m_hasLastSwap = false;
 
