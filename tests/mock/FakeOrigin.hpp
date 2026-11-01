@@ -2,7 +2,7 @@
 
 // An in-process INetworkTransport for cache tests: serves resources from memory with real HTTP semantics
 // (ranges, ETags, 403 for expired URLs, 404, offline), streams bodies in chunks over several event-loop turns
-// so cancellation mid-stream is possible, can hold responses back, and records every request.
+// so cancellation mid-stream is possible, can hold responses back or pause them mid-body, and records every request.
 
 #include "core/Error.hpp"
 #include "net/Transport.hpp"
@@ -51,6 +51,21 @@ public:
     {
         const std::scoped_lock lock(m_mutex);
         m_failAfter = bytes;
+    }
+    // Streamed bodies stop after this many bytes of each response; nullopt lets the paused ones go on.
+    void pauseAfter(std::optional<std::int64_t> bytes)
+    {
+        std::vector<std::function<void()>> paused;
+        {
+            const std::scoped_lock lock(m_mutex);
+            m_pauseAfter = bytes;
+            if (!bytes) {
+                paused = std::exchange(m_paused, {});
+            }
+        }
+        for (auto& run : paused) {
+            run();
+        }
     }
     void setHold(bool hold)
     {
@@ -192,6 +207,25 @@ private:
         if (failAfter) {
             size = std::min<qsizetype>(size, static_cast<qsizetype>(*failAfter - offset));
         }
+        {
+            const std::scoped_lock lock(m_mutex);
+            if (m_pauseAfter && offset >= *m_pauseAfter) {
+                m_paused.emplace_back([this, target, callbacks, state, response, body, offset, failAfter] {
+                    if (target) {
+                        QMetaObject::invokeMethod(
+                            target,
+                            [this, target, callbacks, state, response, body, offset, failAfter] {
+                                stream(target, callbacks, state, response, body, offset, failAfter);
+                            },
+                            Qt::QueuedConnection);
+                    }
+                });
+                return;
+            }
+            if (m_pauseAfter) {
+                size = std::min<qsizetype>(size, static_cast<qsizetype>(*m_pauseAfter - offset));
+            }
+        }
         callbacks.onData(body.sliced(offset, size));
         if (!target) {
             return;
@@ -209,6 +243,8 @@ private:
     QSet<QString> m_forbidden;
     std::vector<net::Request> m_requests;
     std::vector<std::function<void()>> m_held;
+    std::vector<std::function<void()>> m_paused;
+    std::optional<std::int64_t> m_pauseAfter;
     std::optional<std::int64_t> m_failAfter;
     bool m_offline = false;
     bool m_hold = false;

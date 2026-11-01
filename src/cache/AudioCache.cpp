@@ -103,7 +103,7 @@ struct EntryState {
     TrackKey key;
     QByteArray name;
     std::uint64_t id = 0;
-    QString dir;  // empty: RAM only
+    QString dir;  // empty: RAM only. Cleared under `mutex` when the cache moves; readers copy it under the lock
 
     mutable std::mutex mutex;
     std::condition_variable changed;
@@ -278,6 +278,7 @@ AudioReader::Piece AudioReader::tryRead(int piece)
     std::int64_t size = 0;
     std::uint64_t sum = 0;
     bool present = false;
+    QString dir;
     const bool hls = info().protocol == StreamProtocol::Hls;
     {
         const std::scoped_lock lock(m_entry->mutex);
@@ -296,6 +297,7 @@ AudioReader::Piece AudioReader::tryRead(int piece)
             size = map.pieceSize(piece);
             sum = map.checksum(piece);
             fd = m_generation->fd;
+            dir = m_entry->dir;
         } else if (m_entry->failure && m_generation == m_entry->current &&
                    m_entry->failureSeq != m_seenFailure.load()) {
             m_seenFailure.store(m_entry->failureSeq);
@@ -306,10 +308,10 @@ AudioReader::Piece AudioReader::tryRead(int piece)
     if (present) {
         Result<QByteArray> data = [&] -> Result<QByteArray> {
             if (hls) {
-                if (m_entry->dir.isEmpty()) {
+                if (dir.isEmpty()) {
                     return fail(ErrorCode::NotFound, "RAM-only piece evicted");
                 }
-                return readWholeFile(m_entry->dir + QStringLiteral("/seg/") + QString::fromLatin1(hlsPieceName(piece)));
+                return readWholeFile(dir + QStringLiteral("/seg/") + QString::fromLatin1(hlsPieceName(piece)));
             }
             if (!fd || !fd->valid()) {
                 return fail(ErrorCode::NotFound, "RAM-only piece evicted");
@@ -416,10 +418,24 @@ AudioCache::~AudioCache()
 void AudioCache::setLayout(std::optional<CacheLayout> layout)
 {
     flush();
-    for (const auto& live : std::as_const(m_live)) {
-        cancelFetch(*live);
+    // Entries still being read go on in RAM only: their readers need further fetches, and the old location
+    // is no longer ours to write to. Pieces already stored there stay readable through the open file.
+    for (auto it = m_live.begin(); it != m_live.end();) {
+        Live& l = **it;
+        if (l.readers.isEmpty()) {
+            cancelFetch(l);
+            it = m_live.erase(it);
+            continue;
+        }
+        l.writeFd.reset();
+        l.volatilePieces.clear();
+        l.doomed = false;
+        {
+            const std::scoped_lock lock(l.entry->mutex);
+            l.entry->dir.clear();
+        }
+        ++it;
     }
-    m_live.clear();
     m_ledger.clear();
     m_entryCovers.clear();
     m_entryComplete.clear();
@@ -1692,7 +1708,7 @@ void AudioCache::onTagged(const QByteArray& name, std::uint32_t generation, Resu
         } else {
             qCInfo(lcCache) << "tagging skipped, the entry is unchanged:" << map.error().describe();
         }
-    } else if (sameGeneration) {
+    } else if (sameGeneration && !entry.dir.isEmpty()) {
         // The file was rewritten: readers opened from now on use the new layout; open readers keep the old file.
         auto next = std::make_shared<Generation>();
         next->id = m_nextGeneration++;
@@ -1705,7 +1721,9 @@ void AudioCache::onTagged(const QByteArray& name, std::uint32_t generation, Resu
     }
     writeSidecar(entry);
     persistMap(entry);
-    m_ledger.upsert(name, directorySize(entry.dir), accessStamp());
+    if (!entry.dir.isEmpty()) {  // empty: the cache moved while tagging
+        m_ledger.upsert(name, directorySize(entry.dir), accessStamp());
+    }
     scheduleFlush({});
     if (l->resetAfterTagging) {
         l->resetAfterTagging = false;

@@ -669,6 +669,28 @@ TEST_SUITE("cache.audio")
         CHECK(audio.origin.count() >= 1);
     }
 
+    TEST_CASE("an open reader keeps working when the cache moves to another location")
+    {
+        Audio audio;
+        const QByteArray content = randomBytes(600'000, 66);
+        audio.origin.serve(QString::fromLatin1(kTrackUrl), {.body = content});
+        audio.origin.pauseAfter(2 * PieceMap::kChunkSize);
+        const TrackInfo info = track(QStringLiteral("moved"));
+        AudioReaderPtr reader = audio.open(info);
+        CHECK(Audio::piece(*reader, 0).status == AudioReader::Status::Ready);
+        CHECK(Audio::piece(*reader, 1).status == AudioReader::Status::Ready);
+        QTemporaryDir elsewhere;
+        const CacheLayout moved = *prepareLayout(elsewhere.filePath(QStringLiteral("cache")));
+        audio.cache->setLayout(moved);  // the user picked another cache location
+        audio.origin.pauseAfter(std::nullopt);
+        CHECK(Audio::readAll(*reader) == content);
+        audio.memory.clear();  // pieces stored before the move come from the old file, later ones again
+        CHECK(Audio::piece(*reader, 0).data == content.first(PieceMap::kChunkSize));
+        CHECK(Audio::piece(*reader, 5).data == content.sliced(5 * PieceMap::kChunkSize, PieceMap::kChunkSize));
+        const QByteArray name = info.key.name();
+        CHECK_FALSE(QFileInfo::exists(moved.audio() + u'/' + QString::fromLatin1(name.first(2))));
+    }
+
     TEST_CASE("prefetch warms upcoming tracks in the background and stops when the queue changes")
     {
         Audio audio;

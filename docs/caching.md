@@ -110,7 +110,7 @@ signing out deletes them, and *Clear all* removes them.
 
 ## Threading
 
-`CacheService` owns a `noctara-cache` thread on which the audio cache, the image cache's disk side and the HTTP cache live. It applies the `cache.*` settings live: budgets, the enable switch and tagging. The location switches live too, because the old layout is closed and the new one opened. All cache I/O runs on that thread, or on the reader's thread for `pread`. Tagging and image decoding run on the thread pool. The GUI thread never does any of it. `AudioReader::read` blocks (the decoder's thread), while `tryRead` never waits. `open()`, `request()` and `usage()` deliver their results through `CallbackChannel` to the caller's thread. Handles that may outlive the cache post through a `Mailbox`, which drops posts once the cache is gone.
+`CacheService` owns a `noctara-cache` thread on which the audio cache, the image cache's disk side and the HTTP cache live. It applies the `cache.*` settings live: budgets, the enable switch and tagging. The location switches live too, because the old layout is closed and the new one opened. Entries open at that moment go on in RAM only, so the playing track keeps streaming. All cache I/O runs on that thread, or on the reader's thread for `pread`. Tagging and image decoding run on the thread pool. The GUI thread never does any of it. `AudioReader::read` blocks (the decoder's thread), while `tryRead` never waits. `open()`, `request()` and `usage()` deliver their results through `CallbackChannel` to the caller's thread. Handles that may outlive the cache post through a `Mailbox`, which drops posts once the cache is gone.
 
 ## Limits and open items
 
