@@ -851,10 +851,11 @@ void AudioCache::readerClosed(const QByteArray& name, std::uint64_t readerId)
 
 void AudioCache::retire(const QByteArray& name)
 {
-    const Live* l = live(name);
+    Live* l = live(name);
     if (l == nullptr || !l->readers.isEmpty() || l->tagging || l->coverFetches > 0 || l->resolving) {
         return;
     }
+    cancelFetch(*l);  // dropping the handle alone would leave the transfer running
     persistMap(*l->entry);
     m_dirty.removeAll(name);
     const std::shared_ptr<EntryState> entry = l->entry;
@@ -1009,9 +1010,11 @@ void AudioCache::withUrl(Live& live, bool refresh, std::function<void(Live&)> th
                 return;
             }
             l->url = *url;
-            for (const auto& then : pending) {
-                if (Live* again = cache->live(name)) {
-                    then(*again);
+            if (!l->readers.isEmpty()) {  // all closed meanwhile: nobody needs the download any more
+                for (const auto& then : pending) {
+                    if (Live* again = cache->live(name)) {
+                        then(*again);
+                    }
                 }
             }
             cache->retire(name);

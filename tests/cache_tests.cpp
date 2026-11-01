@@ -182,6 +182,24 @@ struct Audio {
     void settle() { QCoreApplication::processEvents(QEventLoop::AllEvents, 50); }
 };
 
+// A stream URL that arrives only when the test says so, like one resolved through an API round trip.
+struct DeferredUrl {
+    std::vector<UrlCallback> pending;
+
+    UrlProvider provider()
+    {
+        return [this](bool, UrlCallback done) {
+            pending.push_back(std::move(done));
+        };
+    }
+    void resolve(const QString& url)
+    {
+        for (const UrlCallback& done : std::exchange(pending, {})) {
+            done(QUrl(url));
+        }
+    }
+};
+
 }  // namespace
 
 TEST_SUITE("cache.audio")
@@ -667,6 +685,22 @@ TEST_SUITE("cache.audio")
         audio.origin.reset();
         CHECK(Audio::piece(*reader, 1).data == content.sliced(PieceMap::kChunkSize, PieceMap::kChunkSize));
         CHECK(audio.origin.count() >= 1);
+    }
+
+    TEST_CASE("a reader closed while the stream URL resolves leaves no download behind")
+    {
+        Audio audio;
+        audio.origin.serve(QString::fromLatin1(kTrackUrl), {.body = randomBytes(300'000, 62)});
+        DeferredUrl url;
+        {
+            Result<AudioReaderPtr> opened = audio.tryOpen(track(QStringLiteral("skipped")), url.provider());
+            REQUIRE(opened);
+        }
+        audio.settle();
+        REQUIRE(url.pending.size() == 1);
+        url.resolve(QString::fromLatin1(kTrackUrl));
+        audio.settle();
+        CHECK(audio.origin.count() == 0);
     }
 
     TEST_CASE("a piece evicted from RAM while its download still runs is fetched again at once")
