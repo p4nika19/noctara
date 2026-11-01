@@ -50,6 +50,9 @@ Result<QByteArray> mpegPayload(QByteArrayView file)
         if (last - first >= 32 && file.sliced(last - 32).startsWith("APETAGEX")) {
             const qsizetype size = qFromLittleEndian<std::uint32_t>(file.data() + last - 32 + 12);
             const bool header = (qFromLittleEndian<std::uint32_t>(file.data() + last - 32 + 20) & 0x80000000U) != 0;
+            if (size < 32) {  // the size includes the footer itself: anything less would never move `last`
+                return fail(ErrorCode::Corrupt, "invalid APEv2 footer");
+            }
             last -= size + (header ? 32 : 0);  // APEv2 (footer + items [+ header])
             trimmed = true;
         }

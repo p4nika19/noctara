@@ -346,6 +346,33 @@ TEST_SUITE("cache.payload")
         CHECK(payloadHash(opus));
         CHECK(test::errorOf(payloadHash(QByteArray("plain text"))) == ErrorCode::Unsupported);
     }
+
+    TEST_CASE("an APEv2 tag at the end is skipped; a footer with an impossible size is corrupt, not a hang")
+    {
+        const QByteArray mp3 = *readWholeFile(fixture("sine.mp3"));
+        const auto footer = [](std::uint32_t size, bool header) {
+            QByteArray bytes("APETAGEX");
+            const auto le32 = [&bytes](std::uint32_t value) {
+                for (int i = 0; i < 4; ++i) {
+                    bytes += static_cast<char>((value >> (8U * static_cast<unsigned>(i))) & 0xFFU);
+                }
+            };
+            le32(2000);  // version
+            le32(size);  // items + footer
+            le32(1);     // item count
+            le32(header ? 0x80000000U : 0U);
+            bytes += QByteArray(8, '\0');
+            return bytes;
+        };
+        const QByteArray items(10, 'x');
+        CHECK(*payloadHash(QByteArray(mp3 + items + footer(42, false))) == *payloadHash(mp3));
+        CHECK(*payloadHash(QByteArray(mp3 + QByteArray(32, 'h') + items + footer(42, true))) == *payloadHash(mp3));
+        for (const std::uint32_t size : {0U, 1U, 31U}) {
+            CAPTURE(size);
+            CHECK(test::errorOf(payloadHash(QByteArray(mp3 + footer(size, false)))) == ErrorCode::Corrupt);
+        }
+        CHECK(test::errorOf(payloadHash(QByteArray(mp3 + footer(0xFFFFFFF0U, false)))) == ErrorCode::Corrupt);
+    }
 }
 
 TEST_SUITE("cache.tags")
