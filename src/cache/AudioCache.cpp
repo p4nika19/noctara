@@ -152,6 +152,8 @@ struct AudioCache::Live {
     UniqueFd writeFd;          // progressive data.part
     int coverFetches = 0;
     bool tagging = false;
+    QString tagAttemptFor;  // tag signature of the running (or last) tagging pass
+    QString tagFailedFor;   // signature whose pass failed: not retried until the metadata changes
     bool resetAfterTagging = false;
     bool doomed = false;  // cleared while in use: files go when the last reader closes
 };
@@ -1659,7 +1661,9 @@ void AudioCache::maybeTag(Live& live)
         const std::scoped_lock lock(entry.mutex);
         info = entry.info;
     }
-    if (info.protocol != StreamProtocol::Progressive || !info.complete || info.taggedFor == tagSignature(info)) {
+    const QString signature = tagSignature(info);
+    if (info.protocol != StreamProtocol::Progressive || !info.complete || info.taggedFor == signature ||
+        live.tagFailedFor == signature) {
         return;
     }
     // The front cover as received, unless it is huge: then the thumbnail; never re-encoded.
@@ -1681,6 +1685,7 @@ void AudioCache::maybeTag(Live& live)
         }
     }
     live.tagging = true;
+    live.tagAttemptFor = signature;
     const QString file = path(entry.dir, "data");
     const TagData tags = tagDataFor(info, cover, info.coverMime);
     FileOps* ops = &m_ops;
@@ -1718,6 +1723,7 @@ void AudioCache::onTagged(const QByteArray& name, std::uint32_t generation, Resu
             const std::scoped_lock lock(entry.mutex);
             entry.info.taggedFor = tagSignature(entry.info);  // sidecar only for this container
         } else {
+            l->tagFailedFor = l->tagAttemptFor;  // the same pass would fail the same way
             qCInfo(lcCache) << "tagging skipped, the entry is unchanged:" << map.error().describe();
         }
     } else if (sameGeneration && !entry.dir.isEmpty()) {

@@ -640,6 +640,43 @@ TEST_SUITE("cache.audio")
         CHECK(*payloadHashOfFile(data) == refreshed->info().payloadHash);
     }
 
+    TEST_CASE("a tagging pass that keeps failing is not retried until the metadata changes")
+    {
+        // Every copy for tagging fails (I/O error), so every tagging pass fails the same way.
+        class NoCopies : public FileOps {
+        public:
+            Result<void> copyFile(const QString&, const QString&) override
+            {
+                ++copies;
+                return fail(ErrorCode::IoError, "copy failed");
+            }
+            std::atomic<int> copies{0};
+        };
+        NoCopies disk;
+        Audio audio(disk);
+        audio.config.embedTags = true;
+        audio.cache->setConfig(audio.config);
+        const QByteArray mp3 = *readWholeFile(QStringLiteral(NOCTARA_SOURCE_DIR "/tests/fixtures/audio/sine.mp3"));
+        audio.origin.serve(QString::fromLatin1(kTrackUrl), {.body = mp3});
+        TrackInfo info = track(QStringLiteral("untaggable"));
+        {
+            AudioReaderPtr reader = audio.open(info);
+            CHECK(Audio::readAll(*reader) == mp3);
+            REQUIRE(test::waitUntil([&] { return disk.copies.load() >= 1; }, 5000));
+        }
+        test::waitUntil([] { return false; }, 500);
+        CHECK(disk.copies.load() == 1);
+
+        // New metadata: one more attempt.
+        info.sourceUpdatedAt = QStringLiteral("2025-01-01T00:00:00Z");
+        {
+            AudioReaderPtr reader = audio.open(info);
+            REQUIRE(test::waitUntil([&] { return disk.copies.load() >= 2; }, 5000));
+        }
+        test::waitUntil([] { return false; }, 500);
+        CHECK(disk.copies.load() == 2);
+    }
+
     TEST_CASE("cached tracks describe themselves offline; clearing removes them and their covers")
     {
         Audio audio;
