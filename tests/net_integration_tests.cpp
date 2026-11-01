@@ -14,9 +14,13 @@
 #include <QTimer>
 
 #include <algorithm>
+#include <arpa/inet.h>
 #include <atomic>
 #include <map>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include <thread>
+#include <unistd.h>
 
 using namespace noctara;
 using namespace noctara::net;
@@ -74,6 +78,39 @@ std::uint16_t deadPort()
     const test::TcpServer probe([](int) {});
     return probe.port();
 }
+
+// A UDP "DNS server" that takes queries and never answers, so a lookup stays in flight until it times out.
+class SilentUdpServer {
+public:
+    SilentUdpServer()
+        : m_fd(::socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0))
+    {
+        sockaddr_in address{};
+        address.sin_family = AF_INET;
+        address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+        socklen_t length = sizeof(address);
+        auto* raw = reinterpret_cast<sockaddr*>(&address);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        REQUIRE(::bind(m_fd, raw, length) == 0);
+        REQUIRE(::getsockname(m_fd, raw, &length) == 0);
+        m_port = ntohs(address.sin_port);
+    }
+    ~SilentUdpServer() { ::close(m_fd); }
+    SilentUdpServer(const SilentUdpServer&) = delete;
+    SilentUdpServer& operator=(const SilentUdpServer&) = delete;
+    SilentUdpServer(SilentUdpServer&&) = delete;
+    SilentUdpServer& operator=(SilentUdpServer&&) = delete;
+
+    [[nodiscard]] std::uint16_t port() const noexcept { return m_port; }
+    [[nodiscard]] bool received() const
+    {
+        char byte = 0;
+        return ::recv(m_fd, &byte, 1, MSG_DONTWAIT | MSG_PEEK) >= 0;
+    }
+
+private:
+    int m_fd;
+    std::uint16_t m_port = 0;
+};
 
 struct Network {
     FakeSystemResolver system;
@@ -235,6 +272,37 @@ TEST_SUITE("net.resolver")
         REQUIRE_FALSE(strict);
         CHECK(test::errorOf(strict) == ErrorCode::DnsServerUnreachable);
         CHECK(system.calls == 1);
+    }
+
+    TEST_CASE("a DNS settings change during a lookup asks again under the new settings")
+    {
+        const SilentUdpServer silent;
+        FakeSystemResolver system;
+        system.table[QStringLiteral("api.test")] = std::vector{ip("192.0.2.1")};
+        system.table[QStringLiteral("other.test")] = std::vector{ip("192.0.2.2")};
+        DnsResolver resolver(system);
+
+        // The change arrives while the query waits for the silent server.
+        resolver.setConfig(customServers({silent.port()}, false));
+        std::optional<Result<Resolution>> first;
+        resolver.resolve(QStringLiteral("api.test"), [&](Result<Resolution> result) { first = std::move(result); });
+        REQUIRE(test::waitUntil([&] { return silent.received(); }));
+        resolver.setConfig(DnsConfig{});
+        REQUIRE(test::waitUntil([&] { return first.has_value(); }, 1500));
+        REQUIRE_MESSAGE(*first, test::describe(*first));
+        CHECK((*first)->source == ResolverSource::System);
+        CHECK((*first)->addresses == std::vector{ip("192.0.2.1")});
+
+        // The change arrives before the lookup has even picked its upstream.
+        resolver.setConfig(customServers({silent.port()}, false));
+        std::optional<Result<Resolution>> second;
+        resolver.resolve(QStringLiteral("other.test"), [&](Result<Resolution> result) { second = std::move(result); });
+        resolver.setConfig(DnsConfig{});
+        REQUIRE(test::waitUntil([&] { return second.has_value(); }, 1500));
+        REQUIRE_MESSAGE(*second, test::describe(*second));
+        CHECK((*second)->source == ResolverSource::System);
+        CHECK((*second)->addresses == std::vector{ip("192.0.2.2")});
+        CHECK(system.calls == 2);
     }
 
     TEST_CASE("DoH: answers over HTTP POST, insecure URLs refused, strict mode leaks nothing")

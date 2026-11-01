@@ -90,6 +90,14 @@ void DnsResolver::rebuild()
             m_upstream = makeUpstream<DohUpstream>(config.doh.url, addresses, m_dohSender);
         }
     }
+    // Lookups in flight belong to the old settings, and the old upstream drops its queries without answering:
+    // ask again under the new settings, or their callers (and every later caller of the host) would wait forever.
+    QHash<QString, Pending> pending = std::exchange(m_pending, {});
+    for (auto it = pending.begin(); it != pending.end(); ++it) {
+        for (ResolveCallback& callback : it->callbacks) {
+            start(it.key(), std::move(callback), true);
+        }
+    }
 }
 
 void DnsResolver::flush()
@@ -185,22 +193,27 @@ void DnsResolver::start(const QString& rawHost, ResolveCallback callback, bool u
     Pending& pending = m_pending[host];
     pending.callbacks.push_back(std::move(callback));
     pending.clock.start();
+    pending.lookup = ++m_lastLookup;
+    const std::uint64_t lookup = pending.lookup;
 
     if (m_config.mode == DnsMode::System) {
-        lookupSystem(host, ResolverSource::System);
+        lookupSystem(host, ResolverSource::System, lookup);
         return;
     }
     const ResolverSource source = m_config.mode == DnsMode::Doh ? ResolverSource::Doh : ResolverSource::Servers;
-    withUpstream([this, host, source](Result<std::shared_ptr<IDnsUpstream>> upstream) {
+    withUpstream([this, host, source, lookup](Result<std::shared_ptr<IDnsUpstream>> upstream) {
+        if (!isCurrent(host, lookup)) {
+            return;  // the settings changed in between and the host is being looked up again
+        }
         if (upstream) {
-            lookupUpstream(host, *upstream, source);
+            lookupUpstream(host, *upstream, source, lookup);
         } else if (m_config.fallbackToSystem) {
             ++m_stats.fallbacks;
             qCInfo(lcNet).noquote() << "DNS falls back to the system resolver:"
                                     << QString::fromStdString(upstream.error().describe());
-            lookupSystem(host, ResolverSource::SystemFallback);
+            lookupSystem(host, ResolverSource::SystemFallback, lookup);
         } else {
-            complete(host, std::unexpected(upstream.error()));
+            complete(host, lookup, std::unexpected(upstream.error()));
         }
     });
 }
@@ -256,7 +269,7 @@ void DnsResolver::withUpstream(const std::function<void(Result<std::shared_ptr<I
 }
 
 void DnsResolver::lookupUpstream(const QString& host, const std::shared_ptr<IDnsUpstream>& upstream,
-                                 ResolverSource source)
+                                 ResolverSource source, std::uint64_t lookup)
 {
     struct Gathered {
         int remaining = 0;
@@ -274,9 +287,9 @@ void DnsResolver::lookupUpstream(const QString& host, const std::shared_ptr<IDns
     const std::uint64_t generation = m_generation;
     const QByteArray name = host.toLatin1();
     for (const dns::RecordType type : types) {
-        upstream->query(name, type, [self = QPointer(this), gathered, host, source, generation](auto answer) {
+        upstream->query(name, type, [self = QPointer(this), gathered, host, source, generation, lookup](auto answer) {
             gathered->answers.push_back(std::move(answer));
-            if (--gathered->remaining > 0 || self == nullptr) {
+            if (--gathered->remaining > 0 || self == nullptr || !self->isCurrent(host, lookup)) {
                 return;
             }
             std::vector<IpAddress> addresses;
@@ -304,7 +317,7 @@ void DnsResolver::lookupUpstream(const QString& host, const std::shared_ptr<IDns
                 if (cacheable) {
                     self->m_cache.storeAddresses(host, addresses, std::chrono::seconds(ttl), now);
                 }
-                self->complete(host, Resolution{self->ordered(std::move(addresses)), source, server, {}});
+                self->complete(host, lookup, Resolution{self->ordered(std::move(addresses)), source, server, {}});
                 return;
             }
             if (firstError == nullptr) {
@@ -313,27 +326,27 @@ void DnsResolver::lookupUpstream(const QString& host, const std::shared_ptr<IDns
                     self->m_cache.storeMissing(
                         host, negativeTtl.transform([](std::uint32_t s) { return std::chrono::seconds(s); }), now);
                 }
-                self->complete(host, fail(ErrorCode::DnsResolutionFailed, "no such host"));
+                self->complete(host, lookup, fail(ErrorCode::DnsResolutionFailed, "no such host"));
                 return;
             }
             if (self->m_config.fallbackToSystem && generation == self->m_generation) {
                 ++self->m_stats.fallbacks;
                 qCInfo(lcNet).noquote() << "DNS falls back to the system resolver:"
                                         << QString::fromStdString(firstError->describe());
-                self->lookupSystem(host, ResolverSource::SystemFallback);
+                self->lookupSystem(host, ResolverSource::SystemFallback, lookup);
                 return;
             }
-            self->complete(host, std::unexpected(*firstError));
+            self->complete(host, lookup, std::unexpected(*firstError));
         });
     }
 }
 
-void DnsResolver::lookupSystem(const QString& host, ResolverSource source)
+void DnsResolver::lookupSystem(const QString& host, ResolverSource source, std::uint64_t lookup)
 {
     ++m_stats.systemLookups;
     const std::uint64_t generation = m_generation;
-    m_system.lookup(host, [self = QPointer(this), host, source, generation](auto addresses) {
-        if (self == nullptr) {
+    m_system.lookup(host, [self = QPointer(this), host, source, generation, lookup](auto addresses) {
+        if (self == nullptr || !self->isCurrent(host, lookup)) {
             return;
         }
         const auto now = DnsCache::Clock::now();
@@ -342,9 +355,9 @@ void DnsResolver::lookupSystem(const QString& host, ResolverSource source)
                 if (generation == self->m_generation) {
                     self->m_cache.storeMissing(host, std::nullopt, now);
                 }
-                self->complete(host, fail(ErrorCode::DnsResolutionFailed, "no such host"));
+                self->complete(host, lookup, fail(ErrorCode::DnsResolutionFailed, "no such host"));
             } else {
-                self->complete(host, std::unexpected(addresses.error()));
+                self->complete(host, lookup, std::unexpected(addresses.error()));
             }
             return;
         }
@@ -354,17 +367,23 @@ void DnsResolver::lookupSystem(const QString& host, ResolverSource source)
         }
         auto ordered = self->ordered(std::move(*addresses));
         if (ordered.empty()) {
-            self->complete(host, fail(ErrorCode::DnsResolutionFailed, "no address of the allowed IP version"));
+            self->complete(host, lookup, fail(ErrorCode::DnsResolutionFailed, "no address of the allowed IP version"));
             return;
         }
-        self->complete(host, Resolution{std::move(ordered), source, {}, {}});
+        self->complete(host, lookup, Resolution{std::move(ordered), source, {}, {}});
     });
 }
 
-void DnsResolver::complete(const QString& host, Result<Resolution> result)
+bool DnsResolver::isCurrent(const QString& host, std::uint64_t lookup) const
+{
+    const auto it = m_pending.constFind(host);
+    return it != m_pending.cend() && it->lookup == lookup;
+}
+
+void DnsResolver::complete(const QString& host, std::uint64_t lookup, Result<Resolution> result)
 {
     const auto it = m_pending.find(host);
-    if (it == m_pending.end()) {
+    if (it == m_pending.end() || it->lookup != lookup) {
         return;
     }
     const Pending pending = std::move(*it);

@@ -52,13 +52,16 @@ private:
     struct Pending {
         std::vector<ResolveCallback> callbacks;
         QElapsedTimer clock;
+        std::uint64_t lookup = 0;  // answers of an earlier lookup of this host (before a config change) are dropped
     };
 
     void rebuild();
     void start(const QString& host, ResolveCallback callback, bool useCache);
-    void lookupUpstream(const QString& host, const std::shared_ptr<IDnsUpstream>& upstream, ResolverSource source);
-    void lookupSystem(const QString& host, ResolverSource source);
-    void complete(const QString& host, Result<Resolution> result);
+    void lookupUpstream(const QString& host, const std::shared_ptr<IDnsUpstream>& upstream, ResolverSource source,
+                        std::uint64_t lookup);
+    void lookupSystem(const QString& host, ResolverSource source, std::uint64_t lookup);
+    [[nodiscard]] bool isCurrent(const QString& host, std::uint64_t lookup) const;
+    void complete(const QString& host, std::uint64_t lookup, Result<Resolution> result);
     void deliverLater(ResolveCallback callback, Result<Resolution> result);
     void withUpstream(const std::function<void(Result<std::shared_ptr<IDnsUpstream>>)>& next);
     [[nodiscard]] std::vector<IpAddress> ordered(std::vector<IpAddress> addresses) const;
@@ -71,6 +74,7 @@ private:
     std::shared_ptr<IDnsUpstream> m_upstream;  // for custom servers / DoH; rebuilt on config changes
     std::vector<IpAddress> m_dohAddresses;     // resolved DoH host when no bootstrap addresses are given
     std::uint64_t m_generation = 0;            // answers from before a config change are not cached
+    std::uint64_t m_lastLookup = 0;
     ResolverStats m_stats;
 };
 
