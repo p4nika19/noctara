@@ -76,8 +76,11 @@ void CoverFiles::request(const QString& url, std::function<void(const QString& p
                     done({});
                     return;
                 }
+                // Requests for one URL made before its file was written each get here: track it once.
+                if (!m_files.contains(url)) {
+                    m_order.append(url);
+                }
                 m_files.insert(url, path);
-                m_order.append(url);
                 while (m_order.size() > kKeep) {
                     QFile::remove(m_files.take(m_order.takeFirst()));
                 }

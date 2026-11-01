@@ -9,8 +9,10 @@
 #include "cache/AudioCache.hpp"
 #include "cache/CacheLayout.hpp"
 #include "cache/FileOps.hpp"
+#include "cache/ImageCache.hpp"
 #include "cache/MemoryTier.hpp"
 #include "core/FileIo.hpp"
+#include "media/CoverFiles.hpp"
 #include "media/Decoder.hpp"
 #include "media/Mixer.hpp"
 #include "media/Mpris.hpp"
@@ -25,8 +27,10 @@
 #include "settings/SettingsStore.hpp"
 #include "ui/WaveformItem.hpp"
 
+#include <QBuffer>
 #include <QDir>
 #include <QElapsedTimer>
+#include <QFileInfo>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 
@@ -1226,6 +1230,43 @@ TEST_SUITE("media.mpris")
         CHECK(mprisMetadata({}).value(QStringLiteral("mpris:trackid")).value<QDBusObjectPath>().path() ==
               u"/org/mpris/MediaPlayer2/TrackList/NoTrack");
         CHECK(mprisTrackPath(QStringLiteral("a-b.c")).path() == u"/org/noctara/track/ta_b_c");
+    }
+
+    TEST_CASE("a cover asked for twice at once is kept once, so a later eviction never deletes its current file")
+    {
+        QTemporaryDir dir;
+        test::FakeOrigin origin;
+        QImage image(8, 8, QImage::Format_RGB32);
+        image.fill(Qt::magenta);
+        QByteArray png;
+        QBuffer buffer(&png);
+        buffer.open(QIODevice::WriteOnly);
+        image.save(&buffer, "PNG");
+        const auto url = [](char name) {
+            return QStringLiteral("https://img.test/") + QLatin1Char(name) + QStringLiteral(".png");
+        };
+        for (const char name : {'a', 'b', 'c', 'd'}) {
+            origin.serve(url(name), {.body = png, .type = "image/png"});
+        }
+        cache::ImageCache images(origin, cache::FileOps::posix(), 16 << 20);
+        CoverFiles covers(images, dir.filePath(QStringLiteral("covers-1")));
+        const auto fetch = [&](char name) {
+            std::optional<QString> path;
+            covers.request(url(name), [&](const QString& file) { path = file; });
+            REQUIRE(test::waitUntil([&] { return path.has_value(); }));
+            return *path;
+        };
+        // MPRIS and the notification both ask for the new track's cover in the same track change.
+        int answered = 0;
+        covers.request(url('a'), [&](const QString&) { ++answered; });
+        covers.request(url('a'), [&](const QString&) { ++answered; });
+        REQUIRE(test::waitUntil([&] { return answered == 2; }));
+        for (const char name : {'b', 'c', 'd'}) {
+            CHECK(QFileInfo::exists(fetch(name)));
+        }
+        const QString again = fetch('a');
+        REQUIRE_FALSE(again.isEmpty());
+        CHECK(QFileInfo::exists(again));
     }
 }
 
