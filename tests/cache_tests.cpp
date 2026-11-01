@@ -669,6 +669,23 @@ TEST_SUITE("cache.audio")
         CHECK(audio.origin.count() >= 1);
     }
 
+    TEST_CASE("a piece evicted from RAM while its download still runs is fetched again at once")
+    {
+        Audio audio;
+        audio.cache->setLayout(std::nullopt);
+        const QByteArray content = randomBytes(1'000'000, 65);
+        audio.origin.serve(QString::fromLatin1(kTrackUrl), {.body = content});
+        audio.origin.pauseAfter(3 * PieceMap::kChunkSize);
+        AudioReaderPtr reader = audio.open(track(QStringLiteral("evicted")));
+        for (int i = 0; i < 3; ++i) {
+            CHECK(Audio::piece(*reader, i).status == AudioReader::Status::Ready);
+        }
+        audio.memory.clear();  // memory pressure while the first download is stalled after piece 2
+        const AudioReader::Piece again = Audio::piece(*reader, 0);
+        CHECK(again.data == content.first(PieceMap::kChunkSize));
+        audio.origin.pauseAfter(std::nullopt);
+    }
+
     TEST_CASE("an open reader keeps working when the cache moves to another location")
     {
         Audio audio;

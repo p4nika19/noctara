@@ -891,7 +891,8 @@ void AudioCache::want(const QByteArray& name, int piece)
     if (l->fetch) {
         const Fetch& fetch = *l->fetch;
         const int ahead = entry.info.protocol == StreamProtocol::Hls ? kHlsLookahead : kLookaheadPieces;
-        if (piece >= fetch.start && piece < fetch.next + ahead && (fetch.end < 0 || piece < fetch.end)) {
+        // Pieces behind fetch.next were delivered already: one missing again (evicted) needs a new fetch.
+        if (piece >= fetch.next && piece < fetch.next + ahead && (fetch.end < 0 || piece < fetch.end)) {
             return;  // the running fetch brings it (single flight)
         }
     }
