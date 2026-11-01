@@ -899,6 +899,12 @@ void AudioCache::want(const QByteArray& name, int piece)
         }
         entry.failure.reset();
     }
+    if (l->resolving) {
+        // The fetch waiting for the URL starts from here instead (one fetch, not one per request).
+        l->resumeAt = piece;
+        l->retries = 0;
+        return;
+    }
     if (l->fetch) {
         const Fetch& fetch = *l->fetch;
         const int ahead = entry.info.protocol == StreamProtocol::Hls ? kHlsLookahead : kLookaheadPieces;
@@ -983,7 +989,7 @@ void AudioCache::startFetch(Live& live, int piece)
         launchSegment(live, piece);
         return;
     }
-    withUrl(live, false, [this, piece](Live& l) { launchProgressive(l, piece); });
+    withUrl(live, false, [this](Live& l) { launchProgressive(l, l.resumeAt); });
 }
 
 void AudioCache::withUrl(Live& live, bool refresh, std::function<void(Live&)> then)
@@ -1076,6 +1082,7 @@ void AudioCache::launchProgressive(Live& live, int piece)
     callbacks.onFinished = [this, name, id](Result<net::Response> result) {
         onFetchFinished(name, id, std::move(result));
     };
+    cancelFetch(live);  // never orphan a running transfer
     live.fetch = std::move(fetch);
     ++m_networkRequests;
     live.fetch->handle = m_transport.send(std::move(request), this, std::move(callbacks));
@@ -1215,10 +1222,8 @@ void AudioCache::onFetchFinished(const QByteArray& name, std::uint64_t fetchId, 
             // Signed URLs expire: ask for a fresh one once, then resume where we were.
             l->urlRefreshed = true;
             l->sourcePlaylist.reset();
-            withUrl(*l, true, [this, resume](Live& again) {
-                again.resumeAt = resume;
-                startFetch(again, resume);
-            });
+            l->resumeAt = resume;
+            withUrl(*l, true, [this](Live& again) { startFetch(again, again.resumeAt); });
             return;
         }
         failWaiters(*l,
@@ -1368,6 +1373,7 @@ void AudioCache::fetchPlaylist(Live& live)
     fetch.next = live.resumeAt;
     const QByteArray name = live.entry->name;
     const std::uint64_t id = fetch.id;
+    cancelFetch(live);  // never orphan a running transfer
     live.fetch = std::move(fetch);
     ++m_networkRequests;
     net::Callbacks callbacks;
@@ -1461,6 +1467,7 @@ void AudioCache::launchSegment(Live& live, int piece)
     fetch.next = piece;
     const QByteArray name = live.entry->name;
     const std::uint64_t id = fetch.id;
+    cancelFetch(live);  // never orphan a running transfer
     live.fetch = std::move(fetch);
     ++m_networkRequests;
     net::Callbacks callbacks;

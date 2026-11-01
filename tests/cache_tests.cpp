@@ -687,6 +687,28 @@ TEST_SUITE("cache.audio")
         CHECK(audio.origin.count() >= 1);
     }
 
+    TEST_CASE("a piece wanted while the stream URL resolves starts one download, from that piece")
+    {
+        Audio audio;
+        const QByteArray content = randomBytes(300'000, 61);
+        audio.origin.serve(QString::fromLatin1(kTrackUrl), {.body = content});
+        DeferredUrl url;
+        Result<AudioReaderPtr> opened = audio.tryOpen(track(QStringLiteral("deferred")), url.provider());
+        REQUIRE(opened);
+        AudioReader& reader = **opened;
+        CHECK(reader.tryRead(2).status == AudioReader::Status::Pending);  // the voice reads before the URL is in
+        audio.settle();
+        REQUIRE(url.pending.size() == 1);
+        url.resolve(QString::fromLatin1(kTrackUrl));
+        REQUIRE(test::waitUntil([&] { return reader.complete(); }));
+        audio.settle();
+        const std::vector<net::Request> requests = audio.origin.requests();
+        REQUIRE(requests.size() == 2);  // from the wanted piece to the end, then what lies before it
+        REQUIRE(requests.front().range.has_value());
+        CHECK(requests.front().range->first == 2 * PieceMap::kChunkSize);
+        CHECK(Audio::readAll(reader) == content);
+    }
+
     TEST_CASE("a reader closed while the stream URL resolves leaves no download behind")
     {
         Audio audio;
