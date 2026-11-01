@@ -2,6 +2,7 @@
 
 #include "core/FileIo.hpp"
 #include "core/Log.hpp"
+#include "core/Paths.hpp"
 #include "settings/ConfigFile.hpp"
 #include "settings/Keys.hpp"
 #include "settings/Migrations.hpp"
@@ -10,6 +11,7 @@
 #include "settings/SettingsStore.hpp"
 #include "settings/TomlCodec.hpp"
 
+#include <QDir>
 #include <QFile>
 #include <QRegularExpression>
 #include <QSignalSpy>
@@ -366,6 +368,41 @@ TEST_SUITE("settings.file")
         CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.0));
         REQUIRE(file.importFrom(exported).has_value());
         CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.6));
+    }
+
+    TEST_CASE("the system config file is the first XDG_CONFIG_DIRS entry that has one")
+    {
+        QTemporaryDir dir;
+        REQUIRE(dir.isValid());
+        const QString app = QCoreApplication::applicationName();
+        // Plasma prepends ~/.config/kdedefaults, Ubuntu /etc/xdg/xdg-ubuntu: neither holds Noctara's file.
+        const QString kdeDefaults = dir.filePath(QStringLiteral("kdedefaults"));
+        const QString etc = dir.filePath(QStringLiteral("etc"));
+        const QString systemFile = etc + u'/' + app + QStringLiteral("/config.toml");
+        REQUIRE(QDir().mkpath(kdeDefaults + u'/' + app));
+        REQUIRE(QDir().mkpath(etc + u'/' + app));
+        REQUIRE(writeText(systemFile, "config_version = 6\n"));
+
+        const QByteArray previousHome = qgetenv("XDG_CONFIG_HOME");
+        const QByteArray previousDirs = qgetenv("XDG_CONFIG_DIRS");
+        qputenv("XDG_CONFIG_HOME", QFile::encodeName(dir.filePath(QStringLiteral("home"))));
+        qputenv("XDG_CONFIG_DIRS", QFile::encodeName(kdeDefaults + u':' + etc));
+        const QString found = AppPaths::standard().systemConfigFile;
+        qputenv("XDG_CONFIG_DIRS", QFile::encodeName(kdeDefaults + u':' + dir.filePath(QStringLiteral("none"))));
+        const QString fallback = AppPaths::standard().systemConfigFile;
+        const auto restore = [](const char* name, const QByteArray& previous) {
+            if (previous.isNull()) {
+                qunsetenv(name);
+            } else {
+                qputenv(name, previous);
+            }
+        };
+        restore("XDG_CONFIG_HOME", previousHome);
+        restore("XDG_CONFIG_DIRS", previousDirs);
+
+        CHECK(found == systemFile);
+        // Without any system file the first system directory is still named (documented location).
+        CHECK(fallback == kdeDefaults + u'/' + app + QStringLiteral("/config.toml"));
     }
 }
 
