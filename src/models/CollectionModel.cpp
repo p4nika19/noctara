@@ -121,6 +121,7 @@ void CollectionModel::setSyncedSource(FirstPage first, api::SnapshotStore* store
     m_pageSize = kSyncPageSize;
     m_store = store;
     m_key = std::move(key);
+    Q_EMIT sourceReset();
     reload();
 }
 
@@ -143,6 +144,7 @@ bool CollectionModel::complete() const noexcept
 
 void CollectionModel::clear()
 {
+    Q_EMIT sourceReset();
     m_request.cancel();
     ++m_generation;
     m_next.clear();
@@ -177,6 +179,7 @@ void CollectionModel::reload()
     m_request.cancel();
     ++m_generation;
     if (m_store == nullptr) {
+        Q_EMIT sourceReset();  // page one replaces every row, later pages included
         load(m_first(m_pageSize), true);
         return;
     }

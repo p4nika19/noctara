@@ -241,6 +241,7 @@ private:
     // The list the queue follows (see playCollection()).
     QPointer<models::CollectionModel> m_followed;
     QMetaObject::Connection m_followConnection;
+    QMetaObject::Connection m_followResetConnection;
     QString m_followContext;
     QSet<api::Id> m_followKnown;       // tracks of the list already offered to the queue (removed ones stay out)
     QSet<std::uint64_t> m_followUids;  // queue items that came from the list

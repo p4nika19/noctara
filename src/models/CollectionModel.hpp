@@ -106,6 +106,9 @@ Q_SIGNALS:
     void stateChanged();
     // Items were added, removed or replaced (not just their data refreshed): for the player's queue.
     void listChanged();
+    // The contents are about to be replaced by another list's (clear(), a new source, a paged list reloaded from
+    // page one) rather than edited: a queue following the old list stops following.
+    void sourceReset();
     // hydrateAll() finished: no stubs are left.
     void hydrated();
 

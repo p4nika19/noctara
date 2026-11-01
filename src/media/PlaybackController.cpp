@@ -846,11 +846,16 @@ void PlaybackController::follow(models::CollectionModel* model)
             QMetaObject::invokeMethod(this, &PlaybackController::reconcileFollowed, Qt::QueuedConnection);
         }
     });
+    // Repointed to other contents (a new search, another chart genre, a refresh from page one, another account):
+    // those are not the list the queue came from.
+    m_followResetConnection =
+        connect(model, &models::CollectionModel::sourceReset, this, &PlaybackController::unfollow);
 }
 
 void PlaybackController::unfollow()
 {
     disconnect(m_followConnection);
+    disconnect(m_followResetConnection);
     m_followed.clear();
     m_followKnown.clear();
     m_followUids.clear();

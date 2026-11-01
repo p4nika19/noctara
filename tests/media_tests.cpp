@@ -1001,6 +1001,47 @@ TEST_SUITE("media.controller")
         CHECK(queued() == std::vector<api::Id>{99});
     }
 
+    TEST_CASE("a followed list repointed to other contents (a new search, a refresh) stops being followed")
+    {
+        Player player;
+        models::CollectionModel model(player.client);
+        const auto entries = [](api::Id first, api::Id last) {
+            std::vector<api::Entry> out;
+            for (api::Id id = first; id <= last; ++id) {
+                out.push_back({.item = apiTrack(id), .at = {}, .repostedBy = std::nullopt});
+            }
+            return out;
+        };
+        const auto queued = [&player] {
+            std::vector<api::Id> ids;
+            for (const QueueItem& item : player.controller->queue().items()) {
+                ids.push_back(item.track.id);
+            }
+            return ids;
+        };
+        model.setEntries(entries(1, 3));
+        player.controller->playCollection(&model, 0, QStringLiteral("Search"));
+        REQUIRE(queued() == std::vector<api::Id>{1, 2, 3});
+        model.setEntries(entries(10, 12));  // clear + append, as a new search does
+        test::waitUntil([] { return false; }, 100);
+        CHECK(queued() == std::vector<api::Id>{1, 2, 3});
+        model.applyEntries(entries(20, 22));
+        test::waitUntil([] { return false; }, 100);
+        CHECK(queued() == std::vector<api::Id>{1, 2, 3});
+
+        // A paged list refreshed from page one (History's refresh) is not followed afterwards either.
+        player.client.handler = [](const api::ApiRequest& /*request*/) -> Result<QByteArray> {
+            return QByteArray(R"({"collection":[{"kind":"track","id":1,"title":"x"}],"next_href":null})");
+        };
+        models::CollectionModel paged(player.client);
+        paged.setEntries(entries(1, 3));
+        player.controller->playCollection(&paged, 0, QStringLiteral("History"));
+        paged.setSource([](int limit) { return api::endpoints::history(limit); }, 2);  // page one: track 1 only
+        REQUIRE(test::waitUntil([&] { return paged.count() == 1; }));
+        test::waitUntil([] { return false; }, 100);
+        CHECK(queued() == std::vector<api::Id>{1, 2, 3});
+    }
+
     TEST_CASE("saved (stale) tracks are fetched again before they play, and play as saved when that fails")
     {
         api::Track fresh = apiTrack(7);
