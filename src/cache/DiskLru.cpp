@@ -11,12 +11,14 @@
 #include <QFileInfo>
 
 #include <atomic>
+#include <utility>
 
 namespace noctara::cache {
 
 namespace {
 
 constexpr auto kIndexName = "index";
+constexpr auto kUnflushedName = "index.unflushed";  // changes since the index was written: it may be stale
 constexpr QByteArrayView kIndexHeader = "noctara-lru 1\n";
 
 bool validName(QByteArrayView name)
@@ -71,17 +73,25 @@ void DiskLru::load()
             m_ledger.upsert(fields[0], fields[1].toLongLong(), fields[2].toLongLong());
         }
     }
+    m_marked = QFileInfo::exists(m_directory + u'/' + QLatin1StringView(kUnflushedName));
+    if (m_marked) {
+        rebuild();  // the last session ended without flushing: the index may miss files or list deleted ones
+    }
 }
 
 void DiskLru::rebuild()
 {
-    m_ledger.clear();
+    // Access times the index still knows are kept; files it does not list are dated by their modification time.
+    const LruLedger known = std::exchange(m_ledger, LruLedger{});
     QDirIterator it(m_directory, QDir::Files, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         const QFileInfo info = it.nextFileInfo();
         const QByteArray name = info.fileName().toLatin1();
         if (validName(name) && info.dir().dirName().toLatin1() == name.first(2)) {
-            m_ledger.upsert(name, info.size(), info.lastModified().toMSecsSinceEpoch());
+            const auto entry = known.items().constFind(name);
+            m_ledger.upsert(name, info.size(),
+                            entry != known.items().cend() ? entry->lastAccess
+                                                          : info.lastModified().toMSecsSinceEpoch());
         } else if (info.fileName().endsWith(u".tmp")) {
             QFile::remove(info.filePath());  // left over from an interrupted write
         }
@@ -116,6 +126,7 @@ Result<void> DiskLru::put(const QByteArray& name, QByteArrayView data)
     if (auto dir = ensureDirectory(m_directory + u'/' + QString::fromLatin1(name.first(2))); !dir) {
         return dir;
     }
+    markUnflushed();
     Result<void> written = m_ops.writeFile(pathFor(name), data);
     if (!written && written.error().code == ErrorCode::NoSpace && m_ledger.size() > 0) {
         // Disk full: make room from our own files, then try once more.
@@ -135,6 +146,7 @@ Result<void> DiskLru::put(const QByteArray& name, QByteArrayView data)
 
 void DiskLru::remove(const QByteArray& name)
 {
+    markUnflushed();
     QFile::remove(pathFor(name));
     m_ledger.remove(name);
     m_dirty = true;
@@ -146,8 +158,10 @@ void DiskLru::clear()
         removeTree(m_directory + u'/' + entry);
     }
     QFile::remove(m_directory + u'/' + QLatin1StringView(kIndexName));
+    QFile::remove(m_directory + u'/' + QLatin1StringView(kUnflushedName));
     m_ledger.clear();
     m_dirty = false;
+    m_marked = false;
 }
 
 void DiskLru::setBudget(std::int64_t bytes)
@@ -179,6 +193,21 @@ void DiskLru::flushIndex()
         return;
     }
     m_dirty = false;
+    if (m_marked && QFile::remove(m_directory + u'/' + QLatin1StringView(kUnflushedName))) {
+        m_marked = false;
+    }
+}
+
+void DiskLru::markUnflushed()
+{
+    if (m_marked) {
+        return;
+    }
+    QFile marker(m_directory + u'/' + QLatin1StringView(kUnflushedName));
+    m_marked = marker.open(QIODevice::WriteOnly);
+    if (!m_marked) {
+        qCDebug(lcCache) << "could not mark the index of" << m_directory << "as unflushed:" << marker.errorString();
+    }
 }
 
 }  // namespace noctara::cache

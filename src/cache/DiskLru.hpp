@@ -15,7 +15,9 @@ class FileOps;
 
 // A directory of opaque blobs (images, HTTP responses) with a byte budget and LRU eviction. Blobs are written
 // atomically; the index (sizes and access times) is advisory: a lost or stale index is rebuilt from the files,
-// and a blob that vanished is simply a miss. Not thread-safe: used on the cache thread only.
+// and a blob that vanished is simply a miss. An "unflushed" marker is created before the first change after a
+// flush and removed by the next flush, so an index left behind by a crash or kill is reconciled with the files.
+// Not thread-safe: used on the cache thread only.
 class DiskLru {
 public:
     DiskLru(QString directory, std::int64_t budget, FileOps& ops);
@@ -45,6 +47,7 @@ private:
     [[nodiscard]] QString pathFor(const QByteArray& name) const;
     void rebuild();
     void evict();
+    void markUnflushed();
 
     QString m_directory;
     std::int64_t m_budget;
@@ -52,6 +55,7 @@ private:
     LruLedger m_ledger;
     bool m_loaded = false;
     bool m_dirty = false;
+    bool m_marked = false;  // the unflushed marker exists
 };
 
 [[nodiscard]] std::int64_t unixNow();

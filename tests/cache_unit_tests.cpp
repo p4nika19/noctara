@@ -576,6 +576,35 @@ TEST_SUITE("cache.disklru")
         DiskLru again(dir.path(), 10'000, full);  // no index written: rebuilt by scanning
         CHECK(again.get("cccccccccccccccc"));
     }
+
+    TEST_CASE("blobs stored after the last index flush are found and evicted after an unclean exit")
+    {
+        QTemporaryDir dir;
+        {
+            DiskLru lru(dir.path(), 1 << 20, FileOps::posix());
+            REQUIRE(lru.put("aaaaaaaaaaaaaaaa", QByteArray(100, 'a')));
+            lru.flushIndex();
+            REQUIRE(lru.put("bbbbbbbbbbbbbbbb", QByteArray(200, 'b')));
+            // Gone without flushing, like a crash or SIGTERM.
+        }
+        DiskLru reopened(dir.path(), 1 << 20, FileOps::posix());
+        const Result<QByteArray> late = reopened.get("bbbbbbbbbbbbbbbb");
+        REQUIRE(late);
+        CHECK(*late == QByteArray(200, 'b'));
+        CHECK(reopened.bytes() == 300);
+        reopened.setBudget(150);
+        CHECK_FALSE(QFileInfo::exists(dir.path() + QStringLiteral("/bb/bbbbbbbbbbbbbbbb")));
+        CHECK(reopened.bytes() <= 150);
+
+        // A clean session: the index is trusted again.
+        reopened.setBudget(1 << 20);
+        REQUIRE(reopened.put("cccccccccccccccc", QByteArray(50, 'c')));
+        reopened.flushIndex();
+        CHECK_FALSE(QFileInfo::exists(dir.path() + QStringLiteral("/index.unflushed")));
+        DiskLru clean(dir.path(), 1 << 20, FileOps::posix());
+        clean.load();
+        CHECK(clean.bytes() == 50);
+    }
 }
 
 TEST_SUITE("cache.prefetch")
