@@ -703,6 +703,41 @@ TEST_SUITE("cache.audio")
         CHECK(audio.origin.count() == 0);
     }
 
+    TEST_CASE("a limited prefetch stops at its limit, progressive and HLS")
+    {
+        Audio audio;
+        audio.origin.serve(QString::fromLatin1(kTrackUrl), {.body = randomBytes(1'000'000, 63)});
+        Result<AudioReaderPtr> progressive =
+            audio.tryOpen(track(QStringLiteral("limited")), audio.urls(QString::fromLatin1(kTrackUrl)), true);
+        REQUIRE(progressive);
+        (*progressive)->prefetch(2 * PieceMap::kChunkSize);
+        REQUIRE(test::waitUntil([&] { return audio.origin.count() >= 1; }));
+        test::waitUntil([] { return false; }, 500);
+        std::int64_t stored = 0;
+        for (const auto& [from, to] : (*progressive)->cachedRanges()) {
+            stored += to - from;
+        }
+        CHECK(stored == 2 * PieceMap::kChunkSize);
+        CHECK(audio.origin.count() == 1);
+
+        audio.origin.reset();
+        const QString playlist = QStringLiteral("https://cdn.test/hls/limited.m3u8");
+        audio.origin.serve(playlist, {.body = "#EXTM3U\n#EXT-X-TARGETDURATION:10\n#EXTINF:10.0,\ns1.ts\n"
+                                              "#EXTINF:10.0,\ns2.ts\n#EXTINF:10.0,\ns3.ts\n#EXT-X-ENDLIST\n"});
+        for (const char* name : {"s1.ts", "s2.ts", "s3.ts"}) {
+            audio.origin.serve(QStringLiteral("https://cdn.test/hls/") + QLatin1StringView(name),
+                               {.body = randomBytes(20'000, 64)});
+        }
+        Result<AudioReaderPtr> hls =
+            audio.tryOpen(track(QStringLiteral("limited-hls"), StreamProtocol::Hls), audio.urls(playlist), true);
+        REQUIRE(hls);
+        (*hls)->prefetch(PieceMap::kChunkSize);
+        REQUIRE(test::waitUntil([&] { return audio.origin.count() >= 2; }));
+        test::waitUntil([] { return false; }, 500);
+        CHECK(audio.origin.count() == 2);  // the playlist and the first segment
+        CHECK((*hls)->tryRead(0).status == AudioReader::Status::Ready);
+    }
+
     TEST_CASE("a piece evicted from RAM while its download still runs is fetched again at once")
     {
         Audio audio;

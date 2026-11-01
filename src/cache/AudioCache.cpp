@@ -35,6 +35,16 @@ constexpr qsizetype kRetiredGenerations = 16;
 constexpr QByteArrayView kIndexHeader = "noctara-audio-index 1\n";
 constexpr std::chrono::milliseconds kWaitSlice{50};
 
+// How far to fill an entry: everything for playback readers, the largest prefetch limit otherwise.
+std::int64_t fillLimit(const QHash<std::uint64_t, std::int64_t>& readers)
+{
+    std::int64_t limit = 0;
+    for (const std::int64_t value : readers) {
+        limit = value < 0 || limit < 0 ? -1 : std::max(limit, value);
+    }
+    return limit;
+}
+
 QString path(const QString& dir, const char* file)
 {
     return dir + u'/' + QLatin1StringView(file);
@@ -916,11 +926,7 @@ void AudioCache::continueFill(Live& live)
     if (live.fetch || live.resolving || live.readers.isEmpty()) {
         return;
     }
-    // How far to fill: everything for playback readers, the largest prefetch limit otherwise.
-    std::int64_t limit = 0;
-    for (const std::int64_t value : std::as_const(live.readers)) {
-        limit = value < 0 || limit < 0 ? -1 : std::max(limit, value);
-    }
+    const std::int64_t limit = fillLimit(live.readers);
     std::optional<int> target;
     {
         const std::scoped_lock lock(live.entry->mutex);
@@ -1036,6 +1042,12 @@ void AudioCache::launchProgressive(Live& live, int piece)
         }
         first = map.pieceOffset(piece);
         end = map.runEnd(piece);
+        if (const std::int64_t limit = fillLimit(live.readers); limit >= 0) {
+            // Only prefetching readers: stop at the limit, but always bring the piece asked for.
+            const auto limitEnd =
+                static_cast<int>(std::max<std::int64_t>((limit + map.chunkSize() - 1) / map.chunkSize(), piece + 1));
+            end = end < 0 ? limitEnd : std::min(end, limitEnd);
+        }
         if (end >= 0 && map.pieceCount() >= 0) {
             last = std::min(map.pieceOffset(end), map.contentLength()) - 1;
         } else if (end >= 0) {
@@ -1111,9 +1123,8 @@ void AudioCache::onProgressiveResponse(const QByteArray& name, std::uint64_t fet
                 map.setContentLength(total);
                 entry.info.contentLength = total;
                 sidecar = true;
-                if (l->fetch->end < 0) {
-                    l->fetch->end = map.runEnd(l->fetch->next);
-                }
+                const int run = map.runEnd(l->fetch->next);
+                l->fetch->end = l->fetch->end < 0 ? run : std::min(l->fetch->end, run);
             }
             if (!etag.isEmpty() && entry.info.mediaEtag.isEmpty()) {
                 entry.info.mediaEtag = etag;
@@ -1241,19 +1252,9 @@ void AudioCache::onFetchFinished(const QByteArray& name, std::uint64_t fetchId, 
         if (live(name) == nullptr || !l->fetch || l->fetch->id != fetchId) {
             return;
         }
-        const int next = piece + 1;
-        bool more = false;
-        {
-            const std::scoped_lock lock(l->entry->mutex);
-            more = next < l->entry->current->map.pieceCount() && !l->entry->current->map.has(next);
-        }
         l->fetch.reset();
-        l->resumeAt = next;
-        if (more) {
-            launchSegment(*l, next);
-        } else {
-            continueFill(*l);
-        }
+        l->resumeAt = piece + 1;
+        continueFill(*l);  // the next segment, unless only prefetches with their limit reached remain
         return;
     }
     if (response.status == 416) {
