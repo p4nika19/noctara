@@ -181,7 +181,13 @@ private:
             m_hash.addData(m_file->read(kReadChunk));
         }
         m_offset = m_file->size();
-        if (m_offset > artifact.size) {
+        // Every byte arrived last time and only the transfer did not finish: a Range past the end would be refused.
+        if (m_offset == artifact.size && m_hash.result().toHex() == artifact.sha256) {
+            m_file->close();
+            keep(artifact);
+            return;
+        }
+        if (m_offset >= artifact.size) {
             restartFile();
         }
         net::Request request;
@@ -251,6 +257,13 @@ private:
             done(Error{ErrorCode::Corrupt, artifact.file.toStdString() + " does not match its pinned SHA-256"});
             return;
         }
+        keep(artifact);
+    }
+
+    // Moves a checked part into place and goes on with the next artifact.
+    void keep(const Artifact& artifact)
+    {
+        const QString part = m_file->fileName();
         const QString finished = m_downloads + u'/' + artifact.file;
         (void)QFile::remove(finished);
         if (!QFile::rename(part, finished)) {

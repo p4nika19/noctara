@@ -719,6 +719,34 @@ TEST_SUITE("drm.installer")
         CHECK_FALSE(QDir(installer.root() + QStringLiteral("/downloads")).exists());
     }
 
+    TEST_CASE("a download cut after its last byte is finished from its part, not resumed past its end")
+    {
+        QTemporaryDir dir;
+        test::FakeOrigin origin;
+        const QByteArray runtime = fixture("runtime.zip");
+        const QByteArray hls = "/* hls.js */";
+        const HelperRelease release{.electron = artifactFor(QStringLiteral("runtime.zip"), runtime),
+                                    .hlsjs = artifactFor(QStringLiteral("hls.min.js"), hls)};
+        origin.serve(release.electron.url.toString(), resource(runtime));
+        origin.serve(release.hlsjs.url.toString(), resource(hls));
+        HelperInstaller installer(origin, dir.path(), release);
+        QSignalSpy finished(&installer, &HelperInstaller::finished);
+
+        origin.failAfter(runtime.size());  // every byte arrives, then the connection resets
+        installer.install(false);
+        REQUIRE(test::waitUntil([&] { return finished.size() == 1; }, 10000));
+        CHECK_FALSE(finished.last().first().toBool());
+
+        origin.failAfter(std::nullopt);
+        installer.install(false);
+        REQUIRE(test::waitUntil([&] { return finished.size() == 2; }, 10000));
+        CHECK_MESSAGE(finished.last().first().toBool(), installer.error().describe());
+        CHECK(installer.installed().has_value());
+        for (const net::Request& request : origin.requests()) {
+            CHECK_FALSE((request.range && request.range->first >= runtime.size()));
+        }
+    }
+
     TEST_CASE("a download that does not match its pinned SHA-256 is refused and not kept")
     {
         QTemporaryDir dir;
