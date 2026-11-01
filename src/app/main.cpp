@@ -386,9 +386,13 @@ int main(int argc, char** argv)
     auth::BrowserCookieSource browserCookies;
     // Browser discovery never reads cookies; Account asks for consent before importing the selected profile.
     ui::AccountController account(soundcloud.client(), session, secrets, &browserCookies);
+    // Files kept beside the caches, never in a root another instance holds: there, "Clear all" would delete them.
+    const QString cacheRoot = cache.privateRoot();
+    const auto besideCaches = [&cacheRoot](const QString& name) {
+        return cacheRoot.isEmpty() ? QString() : cacheRoot + u'/' + name;
+    };
     // The account's likes, library and playlists, saved between runs (a cache: "Clear all" and sign-out remove it).
-    const QString cacheRoot = cache.status().root.isEmpty() ? paths.cacheDir : cache.status().root;
-    api::SnapshotStore snapshots(cacheRoot + QStringLiteral("/library"));
+    api::SnapshotStore snapshots(besideCaches(QStringLiteral("library")));
     QObject::connect(&storageUi, &ui::StorageController::clearingAll, &storageUi, [&snapshots] { snapshots.clear(); });
     ui::CatalogController catalog(soundcloud, account, snapshots);
     QObject::connect(&account, &ui::AccountController::notice, &appController, &ui::AppController::showToast);
@@ -397,7 +401,7 @@ int main(int argc, char** argv)
     // first track). Protected tracks play in the castlabs Electron helper, started on the first one.
     media::QtAudioOutput audioOutput;
     media::NativeBackend nativePlayback(cache.audio(), audioOutput);
-    drm::DrmService protectedPlayback(store, network, cacheRoot + QStringLiteral("/electron"),
+    drm::DrmService protectedPlayback(store, network, besideCaches(QStringLiteral("electron")),
                                       QCoreApplication::applicationDirPath(), paths.dataDir);
     QObject::connect(
         &protectedPlayback, &drm::DrmService::notice, &appController,

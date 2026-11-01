@@ -225,7 +225,7 @@ SnapshotStore::SnapshotStore(QString root)
     , m_shared(std::make_shared<Shared>())
 {
     QFile remembered(m_root + QStringLiteral("/account"));
-    if (remembered.open(QIODevice::ReadOnly)) {
+    if (!m_root.isEmpty() && remembered.open(QIODevice::ReadOnly)) {
         m_lastAccount.store(remembered.read(32).trimmed().toLongLong());  // a few bytes, once at start
     }
 }
@@ -233,7 +233,7 @@ SnapshotStore::SnapshotStore(QString root)
 void SnapshotStore::setAccount(Id account)
 {
     m_account.store(account);
-    if (account <= 0 || account == m_lastAccount.load()) {
+    if (account <= 0 || account == m_lastAccount.load() || m_root.isEmpty()) {
         return;
     }
     m_lastAccount.store(account);
@@ -271,7 +271,7 @@ QString SnapshotStore::pathFor(Id account, const QString& key) const
 void SnapshotStore::load(const QString& key, QObject* context, std::function<void(std::optional<Snapshot>)> done) const
 {
     const Id account = m_account.load();
-    if (account == 0) {
+    if (account == 0 || m_root.isEmpty()) {
         QMetaObject::invokeMethod(context, [done = std::move(done)] { done(std::nullopt); }, Qt::QueuedConnection);
         return;
     }
@@ -301,7 +301,7 @@ void SnapshotStore::load(const QString& key, QObject* context, std::function<voi
 void SnapshotStore::save(const QString& key, Snapshot snapshot)
 {
     const Id account = m_account.load();
-    if (account == 0) {
+    if (account == 0 || m_root.isEmpty()) {
         return;
     }
     {
@@ -324,6 +324,9 @@ void SnapshotStore::save(const QString& key, Snapshot snapshot)
 
 void SnapshotStore::forget(Id account)
 {
+    if (m_root.isEmpty()) {
+        return;
+    }
     flush();
     const std::scoped_lock lock(m_shared->mutex);
     (void)QDir(QStringLiteral("%1/%2").arg(m_root).arg(account)).removeRecursively();
@@ -335,6 +338,9 @@ void SnapshotStore::forget(Id account)
 
 void SnapshotStore::clear()
 {
+    if (m_root.isEmpty()) {
+        return;  // QDir("") would be the working directory
+    }
     flush();
     const std::scoped_lock lock(m_shared->mutex);
     (void)QDir(m_root).removeRecursively();

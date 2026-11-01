@@ -895,6 +895,29 @@ TEST_SUITE("cache.service")
         CHECK(service.diskAvailable());
     }
 
+    TEST_CASE("a second instance keeps its own files out of the cache root the first one holds")
+    {
+        QTemporaryDir dir;
+        test::FakeOrigin origin;
+        settings::SettingsStore store(settings::Schema::builtin());
+        const QString root = dir.filePath(QStringLiteral("cache"));
+        CacheService first(store, origin, root);
+        REQUIRE(first.diskAvailable());
+        CHECK(first.privateRoot() == first.status().root);
+
+        QString elsewhere;
+        {
+            CacheService second(store, origin, root);
+            REQUIRE(second.status().problem == ErrorCode::CacheLocked);
+            elsewhere = second.privateRoot();
+            REQUIRE_FALSE(elsewhere.isEmpty());
+            CHECK(QFileInfo(elsewhere).isDir());
+            CHECK(QDir(root).relativeFilePath(elsewhere).startsWith(QStringLiteral("..")));
+            CHECK(second.privateRoot() == elsewhere);
+        }
+        CHECK_FALSE(QFileInfo::exists(elsewhere));
+    }
+
     TEST_CASE("clear on exit empties the caches when the service shuts down")
     {
         QTemporaryDir dir;

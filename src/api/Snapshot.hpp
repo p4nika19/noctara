@@ -30,7 +30,8 @@ struct Snapshot {
 
 // The account's saved lists, kept between runs so they show at once and only need checking against SoundCloud:
 // <root>/<account id>/<key>.json, read and written atomically on worker threads (the last save of a key wins).
-// They are a cache: "Clear all" removes them, and so does signing out (forget()). Thread-safe.
+// They are a cache: "Clear all" removes them, and so does signing out (forget()). An empty root keeps nothing.
+// Thread-safe.
 class SnapshotStore {
 public:
     explicit SnapshotStore(QString root);

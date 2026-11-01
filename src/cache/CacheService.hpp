@@ -15,6 +15,8 @@
 #include <memory>
 #include <optional>
 
+class QTemporaryDir;
+
 namespace noctara::settings {
 class SettingsStore;
 }
@@ -67,6 +69,10 @@ public:
     // Upcoming queue items worth warming right now.
     [[nodiscard]] int prefetchCount(bool metered) const;
     [[nodiscard]] bool diskAvailable() const noexcept { return !m_status.root.isEmpty() && !m_status.problem; }
+    // Where other modules keep their own disposable files (the saved lists, the protected-playback helper's
+    // profile): the cache root while this instance holds its lock, otherwise a private temporary directory
+    // removed together with the service. Never a root another instance has locked.
+    [[nodiscard]] QString privateRoot();
 
     void usage(QObject* context, std::function<void(CacheUsage)> done);
     void clear(Part part, QObject* context, std::function<void()> done);
@@ -91,6 +97,7 @@ private:
     CacheStatus m_status;
     QString m_appliedRoot;
     QTimer m_applyTimer;
+    std::unique_ptr<QTemporaryDir> m_privateRoot;  // only when the disk tiers are off
 };
 
 }  // namespace noctara::cache

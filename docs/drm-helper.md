@@ -49,7 +49,8 @@ no way to save protected content, and none may be added.
   is off in every session from its creation and the dictionary URL points nowhere: otherwise Chromium fetches a
   dictionary for the system language from Google at start (seen with a Russian locale).
   Licenses are requested with `persistentState: 'not-allowed'` and `distinctiveIdentifier: 'not-allowed'`.
-- userData is `<cache>/electron` (`--noctara-user-data`): Chromium's profile files and the Widevine CDM component
+- userData is `<cache>/electron` (`--noctara-user-data`; a second instance without the cache lock uses a
+  private temporary directory instead): Chromium's profile files and the Widevine CDM component
   (about 21 MB, downloaded by Chromium's component updater on first start). Checked after playing a protected
   track in the app: `Cache/` holds only its empty index, `blob_storage/` and `Dictionaries/` are empty. *Storage → Clear all* stops an idle helper and
   empties the folder except `WidevineCdm/` (which would only be downloaded again). Uninstalling: remove

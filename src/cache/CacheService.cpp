@@ -9,6 +9,9 @@
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
 
+#include <QDir>
+#include <QTemporaryDir>
+
 namespace noctara::cache {
 
 namespace {
@@ -122,6 +125,21 @@ AudioCache& CacheService::audio() noexcept
 ImageCache& CacheService::images() noexcept
 {
     return m_core->images;
+}
+
+QString CacheService::privateRoot()
+{
+    if (diskAvailable()) {
+        return m_status.root;
+    }
+    if (!m_privateRoot) {
+        m_privateRoot = std::make_unique<QTemporaryDir>(QDir::tempPath() + QStringLiteral("/noctara-XXXXXX"));
+        if (!m_privateRoot->isValid()) {
+            qCWarning(lcCache).noquote() << "no private directory for files kept beside the caches:"
+                                         << m_privateRoot->errorString();
+        }
+    }
+    return m_privateRoot->isValid() ? m_privateRoot->path() : QString();
 }
 
 int CacheService::prefetchCount(bool metered) const
