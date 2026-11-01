@@ -41,7 +41,7 @@ If an explicitly chosen API fails, the other one is tried and the user is told (
    - `off` → software, no notice.
    - Otherwise probe the candidate APIs in order. The probe creates a throw-away `QRhi` and reads `QRhiDriverInfo`. A CPU device or a known rasterizer name (llvmpipe, lavapipe, SwiftShader…) → software unless forced `on`. Blocklist actions: `software`, `avoid-api`, `no-liquid-glass`.
 5. Apply: `QQuickWindow::setGraphicsApi`, and the default surface format (VSync swap interval).
-6. Disarm the sentinel after the **first presented frame** (`frameSwapped`, queued to the GUI thread), or on orderly exit.
+6. Disarm the sentinel after the **first presented frame** (`frameSwapped`, queued to the GUI thread), or on orderly exit. A window that starts hidden in the tray initialises no graphics: the sentinel is disarmed at once and armed again when the window is first shown (`gfx::coverFirstFrame`).
 
 ### Probe cache
 

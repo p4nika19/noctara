@@ -600,15 +600,11 @@ int main(int argc, char** argv)
                 QCoreApplication::quit();
             });
         }
-        // frameSwapped comes from the render thread; disarm on the GUI thread after the first frame.
-        QObject::connect(
-            window, &QQuickWindow::frameSwapped, &graphics,
-            [&sentinel, sinceStart] {
-                NOCTARA_TRACE_INSTANT("first frame");
-                qCInfo(lcGfx) << "first frame" << sinceStart.elapsed() << "ms after start";
-                sentinel.disarm();
-            },
-            static_cast<Qt::ConnectionType>(Qt::QueuedConnection | Qt::SingleShotConnection));
+        // Disarmed on the first frame, or at once while the window waits hidden in the tray.
+        gfx::coverFirstFrame(sentinel, *window, graphics, [sinceStart] {
+            NOCTARA_TRACE_INSTANT("first frame");
+            qCInfo(lcGfx) << "first frame" << sinceStart.elapsed() << "ms after start";
+        });
     }
     QTimer::singleShot(0, &appController, [&appController, issues] { appController.reportConfigIssues(issues); });
     if (!cli.artwork.isEmpty()) {

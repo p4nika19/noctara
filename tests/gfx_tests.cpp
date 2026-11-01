@@ -8,6 +8,7 @@
 #include "gfx/QualityGovernor.hpp"
 
 #include <QFile>
+#include <QQuickWindow>
 #include <QTemporaryDir>
 
 #include <map>
@@ -241,6 +242,33 @@ TEST_SUITE("gfx.sentinel")
         CHECK_FALSE(QFile::exists(path));
         CrashSentinel third(path);
         CHECK_FALSE(third.previousLaunchCrashed());
+    }
+
+    TEST_CASE("a window that starts hidden leaves the sentinel disarmed until it is first shown")
+    {
+        QTemporaryDir dir;
+        const QString path = dir.filePath(QStringLiteral("graphics-init.sentinel"));
+        CrashSentinel sentinel(path);
+        sentinel.arm();  // as the graphics bootstrap does
+        QObject context;
+        QQuickWindow window;
+        window.resize(64, 64);
+        int frames = 0;
+        coverFirstFrame(sentinel, window, context, [&frames] { ++frames; });
+        // In the tray: no graphics are initialised, so a kill now is no graphics crash.
+        CHECK_FALSE(QFile::exists(path));
+        test::waitUntil([] { return false; }, 100);
+        CHECK_FALSE(QFile::exists(path));
+
+        window.show();
+        CHECK(QFile::exists(path));
+        REQUIRE(test::waitUntil([&frames] { return frames == 1; }));
+        CHECK_FALSE(QFile::exists(path));
+        window.hide();
+        window.show();
+        test::waitUntil([] { return false; }, 100);
+        CHECK_FALSE(QFile::exists(path));
+        CHECK(frames == 1);
     }
 }
 

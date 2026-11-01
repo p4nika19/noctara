@@ -6,6 +6,7 @@
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QFile>
+#include <QQuickWindow>
 
 namespace noctara::gfx {
 
@@ -44,6 +45,32 @@ void CrashSentinel::disarm()
         m_armed = false;
         m_foundAtStartup = false;
     }
+}
+
+void coverFirstFrame(CrashSentinel& sentinel, QQuickWindow& window, const QObject& context,
+                     std::function<void()> firstFrame)
+{
+    if (!window.isVisible()) {
+        sentinel.disarm();
+        QObject::connect(
+            &window, &QWindow::visibleChanged, &context,
+            [&sentinel](bool visible) {
+                if (visible) {
+                    sentinel.arm();
+                }
+            },
+            Qt::SingleShotConnection);
+    }
+    // frameSwapped comes from the render thread; the context's thread is the GUI thread, so the call is queued.
+    QObject::connect(
+        &window, &QQuickWindow::frameSwapped, &context,
+        [&sentinel, firstFrame = std::move(firstFrame)] {
+            sentinel.disarm();
+            if (firstFrame) {
+                firstFrame();
+            }
+        },
+        Qt::SingleShotConnection);
 }
 
 }  // namespace noctara::gfx
