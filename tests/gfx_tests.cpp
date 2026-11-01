@@ -6,15 +6,20 @@
 #include "gfx/GpuProbe.hpp"
 #include "gfx/GraphicsPolicy.hpp"
 #include "gfx/QualityGovernor.hpp"
+#include "gfx/Relaunch.hpp"
 
 #include <QFile>
 #include <QQuickWindow>
 #include <QTemporaryDir>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <map>
+#include <optional>
+#include <string>
+#include <string_view>
 
 using namespace noctara;
 using namespace noctara::gfx;
@@ -476,6 +481,43 @@ TEST_SUITE("gfx.effects")
         const EffectsState state = resolveEffects(inputs);
         CHECK_FALSE(state.governed);
         CHECK(state.quality == 2);
+    }
+}
+
+TEST_SUITE("gfx.relaunch")
+{
+    TEST_CASE("a relaunch gets the environment the process started with, not the GPU variables it set")
+    {
+        // The GPU selection variables that bootstrapGraphics sets look like a user's choice to the new process.
+        constexpr std::array kSet{"DRI_PRIME", "QT_VK_PHYSICAL_DEVICE_INDEX"};
+        std::vector<std::optional<QByteArray>> previous;
+        for (const char* name : kSet) {
+            previous.push_back(qEnvironmentVariableIsSet(name) ? std::optional(qgetenv(name)) : std::nullopt);
+            qunsetenv(name);
+        }
+        qputenv("NOCTARA_TEST_RELAUNCH", "kept");
+        {
+            const RelaunchGuard guard;
+            for (const char* name : kSet) {
+                qputenv(name, "1");
+            }
+            const std::vector<std::string> environment = guard.environment();
+            const auto has = [&environment](std::string_view prefix) {
+                return std::ranges::any_of(environment,
+                                           [prefix](const std::string& entry) { return entry.starts_with(prefix); });
+            };
+            CHECK_FALSE(has("DRI_PRIME="));
+            CHECK_FALSE(has("QT_VK_PHYSICAL_DEVICE_INDEX="));
+            CHECK(has("NOCTARA_TEST_RELAUNCH=kept"));
+        }
+        qunsetenv("NOCTARA_TEST_RELAUNCH");
+        for (std::size_t i = 0; i < kSet.size(); ++i) {
+            if (previous[i]) {
+                qputenv(kSet[i], *previous[i]);
+            } else {
+                qunsetenv(kSet[i]);
+            }
+        }
     }
 }
 

@@ -22,6 +22,13 @@ void RelaunchGuard::request(const QString& program, const QStringList& arguments
     }
 }
 
+RelaunchGuard::RelaunchGuard()
+{
+    for (char* const* entry = environ; *entry != nullptr; ++entry) {
+        m_environment.emplace_back(*entry);
+    }
+}
+
 RelaunchGuard::~RelaunchGuard()
 {
     if (!m_program) {
@@ -34,8 +41,14 @@ RelaunchGuard::~RelaunchGuard()
         argv.push_back(argument.data());
     }
     argv.push_back(nullptr);
+    std::vector<char*> envp;
+    envp.reserve(m_environment.size() + 1);
+    for (std::string& entry : m_environment) {
+        envp.push_back(entry.data());
+    }
+    envp.push_back(nullptr);
     (void)std::fflush(nullptr);
-    ::execv(m_program->c_str(), argv.data());
+    ::execve(m_program->c_str(), argv.data(), envp.data());
     // Only reached on failure; the process exits normally afterwards.
     std::println(stderr, "relaunch failed: {}", std::generic_category().message(errno));
 }

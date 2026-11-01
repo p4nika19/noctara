@@ -8,7 +8,7 @@
 | `on` | Use the GPU even when it is a CPU rasterizer or blocklisted, as long as a device can be created. |
 | `off` | Qt Quick software renderer. Glass styles fall back to *Solid*. |
 
-The renderer is chosen before the first window exists, so changing it needs a restart. The settings page marks these rows *Restart required* and offers **Restart now**. Restart goes through `RelaunchGuard`, which calls `execv` on itself after a full orderly shutdown, so no child process is left behind.
+The renderer is chosen before the first window exists, so changing it needs a restart. The settings page marks these rows *Restart required* and offers **Restart now**. Restart goes through `RelaunchGuard`, which calls `execve` on itself after a full orderly shutdown, so no child process is left behind. The new instance gets the environment the process started with, so the GPU selection variables the bootstrap set (`DRI_PRIME`, `QT_VK_PHYSICAL_DEVICE_INDEX`) do not pass for the user's own and a changed GPU preference applies.
 
 Ways to set the mode: the config key, `--gpu=…`, `--disable-gpu`, `NOCTARA_PERFORMANCE_GPU_ACCELERATION`. The graphics API works the same way: `--graphics-api`, `performance.gpu.api`.
 
