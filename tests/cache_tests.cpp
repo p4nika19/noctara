@@ -1062,6 +1062,29 @@ TEST_SUITE("cache.service")
         CHECK(service.diskAvailable());
     }
 
+    TEST_CASE("with the audio disk tier off, prefetch is one track and only its first MiB, in RAM")
+    {
+        QTemporaryDir dir;
+        test::FakeOrigin origin;
+        settings::SettingsStore store(settings::Schema::builtin());
+        CacheService service(store, origin, dir.filePath(QStringLiteral("cache")));
+        REQUIRE(service.diskAvailable());
+        CHECK(service.audioDiskEnabled());
+        CHECK(service.prefetchCount(false) == 2);
+        CHECK(prefetchBytes(service.audioDiskEnabled()) < 0);
+
+        REQUIRE(store.setUserValue(settings::keys::AudioDiskMb, 0));
+        CHECK_FALSE(service.audioDiskEnabled());
+        CHECK(service.prefetchCount(false) == 1);
+        CHECK(prefetchBytes(service.audioDiskEnabled()) == 1LL << 20);
+
+        REQUIRE(store.setUserValue(settings::keys::AudioDiskMb, 512));
+        REQUIRE(store.setUserValue(settings::keys::AudioCacheEnabled, false));
+        CHECK_FALSE(service.audioDiskEnabled());
+        CHECK(service.prefetchCount(false) == 1);
+        CHECK(service.diskAvailable());  // the image and HTTP caches keep their disk tier
+    }
+
     TEST_CASE("a second instance keeps its own files out of the cache root the first one holds")
     {
         QTemporaryDir dir;

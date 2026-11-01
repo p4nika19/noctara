@@ -69,6 +69,9 @@ public:
     // Upcoming queue items worth warming right now.
     [[nodiscard]] int prefetchCount(bool metered) const;
     [[nodiscard]] bool diskAvailable() const noexcept { return !m_status.root.isEmpty() && !m_status.problem; }
+    // Audio entries are stored on disk: the location is usable and neither the audio switch nor a zero
+    // `cache.disk_mb` turns the disk tier off.
+    [[nodiscard]] bool audioDiskEnabled() const;
     // Where other modules keep their own disposable files (the saved lists, the protected-playback helper's
     // profile): the cache root while this instance holds its lock, otherwise a private temporary directory
     // removed together with the service. Never a root another instance has locked.

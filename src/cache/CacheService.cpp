@@ -142,10 +142,16 @@ QString CacheService::privateRoot()
     return m_privateRoot->isValid() ? m_privateRoot->path() : QString();
 }
 
+bool CacheService::audioDiskEnabled() const
+{
+    return m_settings.boolValue(settings::keys::AudioCacheEnabled) &&
+           m_settings.intValue(settings::keys::AudioDiskMb) > 0 && diskAvailable();
+}
+
 int CacheService::prefetchCount(bool metered) const
 {
     return effectivePrefetchCount(static_cast<int>(m_settings.intValue(settings::keys::Prefetch)), metered,
-                                  m_settings.boolValue(settings::keys::AudioCacheEnabled) && diskAvailable());
+                                  audioDiskEnabled());
 }
 
 void CacheService::runOnCacheThread(const std::function<void()>& function)

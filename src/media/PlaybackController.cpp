@@ -575,7 +575,7 @@ void PlaybackController::prefetchUpcoming()
             upcoming.push_back({.info = std::move(source->info), .urls = std::move(source->urls)});
         }
     }
-    m_prefetcher->setQueue(std::move(upcoming), count, cache::prefetchBytes(m_cache->diskAvailable()));
+    m_prefetcher->setQueue(std::move(upcoming), count, cache::prefetchBytes(m_cache->audioDiskEnabled()));
 }
 
 // --- Backend events ----------------------------------------------------------------------------
