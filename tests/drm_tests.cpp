@@ -642,6 +642,28 @@ TEST_SUITE("drm.installer")
         CHECK_FALSE(QFile::exists(dir.filePath(QStringLiteral("a/escaped.txt"))));
     }
 
+    TEST_CASE("zips unpack below a folder reached through a symlink")
+    {
+        QTemporaryDir dir;
+        REQUIRE(QDir().mkpath(dir.filePath(QStringLiteral("real"))));
+        REQUIRE(QFile::link(dir.filePath(QStringLiteral("real")), dir.filePath(QStringLiteral("link"))));
+        QFile zip(dir.filePath(QStringLiteral("runtime.zip")));
+        REQUIRE(zip.open(QIODevice::WriteOnly));
+        zip.write(fixture("runtime.zip"));
+        zip.close();
+        const Result<void> unpacked = extractZip(zip.fileName(), dir.filePath(QStringLiteral("link/runtime")));
+        REQUIRE_MESSAGE(unpacked, test::describe(unpacked));
+        CHECK(QFileInfo(dir.filePath(QStringLiteral("real/runtime/electron"))).isExecutable());
+
+        QFile escape(dir.filePath(QStringLiteral("escape.zip")));
+        REQUIRE(escape.open(QIODevice::WriteOnly));
+        escape.write(fixture("escape.zip"));
+        escape.close();
+        REQUIRE(QDir().mkpath(dir.filePath(QStringLiteral("real/a/b"))));
+        CHECK_FALSE(extractZip(escape.fileName(), dir.filePath(QStringLiteral("link/a/b"))));
+        CHECK_FALSE(QFile::exists(dir.filePath(QStringLiteral("real/a/escaped.txt"))));
+    }
+
     TEST_CASE("real drm runtime: the castlabs zip unpacks" * doctest::skip())
     {
         const QString zip = QStringLiteral(NOCTARA_SOURCE_DIR "/build/downloads/") + helperRelease().electron.file;

@@ -66,7 +66,16 @@ Result<void> extractZip(const QString& zip, const QString& into)
     if (archive_read_open_filename(reader.get(), QFile::encodeName(zip).constData(), kArchiveBlock) != ARCHIVE_OK) {
         return std::unexpected(archiveError(reader.get(), "cannot open the archive"));
     }
-    const QByteArray base = QFile::encodeName(QDir::cleanPath(QDir(into).absolutePath())) + '/';
+    // The folder's own path is resolved first: the symlink check covers every component of the targets, so a
+    // symlink in the user's prefix (a linked home or data folder) would otherwise refuse every entry.
+    if (!QDir().mkpath(into)) {
+        return fail(ErrorCode::IoError, "cannot create " + into.toStdString());
+    }
+    const QString folder = QFileInfo(into).canonicalFilePath();
+    if (folder.isEmpty()) {
+        return fail(ErrorCode::IoError, "cannot resolve " + into.toStdString());
+    }
+    const QByteArray base = QFile::encodeName(folder) + '/';
     archive_entry* entry = nullptr;
     int status = ARCHIVE_OK;
     while ((status = archive_read_next_header(reader.get(), &entry)) == ARCHIVE_OK) {
