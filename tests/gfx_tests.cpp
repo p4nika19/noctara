@@ -113,6 +113,28 @@ TEST_SUITE("gfx.policy")
         CHECK(decision.api == Api::OpenGL);
     }
 
+    TEST_CASE("the shipped blocklist's CPU rasterizer entry does not end the search either")
+    {
+        MockProbe probe;
+        probe.results[Api::Vulkan] = gpu("llvmpipe (LLVM 19.1.0, 256 bits)", DeviceKind::Cpu);
+        probe.results[Api::OpenGL] = gpu("AMD Radeon Graphics", DeviceKind::Integrated, 0x1002);
+        const auto decision = decide({}, probe.function(), realBlocklist());
+        CHECK(decision.hardware);
+        CHECK(decision.api == Api::OpenGL);
+        CHECK(probe.calls == std::vector<Api>{Api::Vulkan, Api::OpenGL});
+
+        // A real GPU blocklisted to software still ends the search: its other API is the same device.
+        Blocklist list = parseBlocklist(R"({"entries":[{"id":"x","deviceName":"Broken","action":"software",
+                                                       "reason":"test"}]})");
+        MockProbe broken;
+        broken.results[Api::Vulkan] = gpu("Broken GPU");
+        broken.results[Api::OpenGL] = gpu("Broken GPU");
+        const auto blocked = decide({}, broken.function(), list);
+        CHECK_FALSE(blocked.hardware);
+        CHECK(blocked.reason == Reason::Blocklisted);
+        CHECK(broken.calls == std::vector<Api>{Api::Vulkan});
+    }
+
     TEST_CASE("an explicit API that fails falls back with a notice")
     {
         MockProbe probe;

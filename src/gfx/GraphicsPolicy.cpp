@@ -212,6 +212,7 @@ GraphicsDecision decide(const GraphicsRequest& request, const ProbeFunction& pro
             continue;
         }
 
+        const bool cpuDevice = result.kind == DeviceKind::Cpu || isSoftwareRasterizer(result.deviceName);
         bool liquidGlass = true;
         if (const BlocklistEntry* entry = matchBlocklist(blocklist, result)) {
             qCInfo(lcGfx).noquote() << "gpu blocklist match" << entry->id << ':' << entry->reason;
@@ -220,14 +221,20 @@ GraphicsDecision decide(const GraphicsRequest& request, const ProbeFunction& pro
                 continue;
             }
             if (entry->action == BlockAction::Software && !forced) {
-                rejected = software(Reason::Blocklisted, true, entry->reason);
-                rejected->probe = result;
+                // A blocklisted CPU rasterizer (lavapipe as the only Vulkan) must not hide a real GPU's
+                // other API; a blocklisted real GPU ends the search, its other API is the same device.
+                if (!cpuDevice || !rejected) {
+                    rejected = software(Reason::Blocklisted, true, entry->reason);
+                    rejected->probe = result;
+                }
+                if (cpuDevice) {
+                    continue;
+                }
                 break;
             }
             liquidGlass = entry->action != BlockAction::NoLiquidGlass;
         }
 
-        const bool cpuDevice = result.kind == DeviceKind::Cpu || isSoftwareRasterizer(result.deviceName);
         if (cpuDevice && !forced) {
             // Keep looking: lavapipe is often the only Vulkan driver next to a real GPU's OpenGL.
             if (!rejected) {
