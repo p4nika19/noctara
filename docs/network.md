@@ -26,8 +26,8 @@ How the pieces fit:
   `unexpectedCurlResolves()` increments. Every integration test asserts it stays 0.
 - Redirects are followed by Noctara, not by curl. Each new host goes through the same resolver and proxy rules.
   `Authorization` and `Cookie` headers are dropped when a redirect changes the scheme, host or port.
-- `CURLOPT_PROXY` is always set: `""` disables curl's own environment lookup, because routing has already been
-  decided by `net::ProxyRouter`.
+- `CURLOPT_PROXY` and `CURLOPT_NOPROXY` are always set (`""` for no proxy and no bypass), which disables curl's own
+  `*_proxy` and `no_proxy` environment lookups, because routing has already been decided by `net::ProxyRouter`.
 
 Verified environment: system libcurl 8.23 (OpenSSL 3.6, nghttp2, ngtcp2/nghttp3). The build fails if libcurl lacks
 SSL, HTTP2 or IPv6 (pkg-config `supported_features`). `net::initialiseCurl()` checks the same at startup, and
