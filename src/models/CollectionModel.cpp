@@ -534,6 +534,9 @@ void CollectionModel::onPage(Result<api::Page<api::Entry>> page, bool replace, i
         endResetModel();
         if (hadRows) {
             Q_EMIT countChanged();
+            if (page->items.empty()) {
+                Q_EMIT listChanged();  // otherwise append() reports the replaced rows
+            }
         }
     }
     m_next = page->next;

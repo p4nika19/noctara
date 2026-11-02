@@ -716,6 +716,26 @@ TEST_SUITE("models.collection")
         CHECK(model.data(model.index(1), models::CollectionModel::TitleRole).toString() == u"Two");
         CHECK_FALSE(model.data(model.index(1), models::CollectionModel::PendingRole).toBool());
     }
+
+    TEST_CASE("a reload whose first page is empty reports the list as changed")
+    {
+        Harness h;
+        bool empty = false;
+        h.transport.setHandler([&](const net::Request&) -> Result<net::Response> {
+            return FakeApi::reply(200, empty ? page({}) : page({trackJson(1), trackJson(2)}));
+        });
+        models::CollectionModel model(h.client);
+        QAbstractItemModelTester tester(&model, QAbstractItemModelTester::FailureReportingMode::Warning);
+        model.setSource(
+            [](int limit) { return endpoints::search(QStringLiteral("x"), endpoints::SearchKind::Tracks, limit); }, 20);
+        REQUIRE(test::waitUntil([&] { return !model.loading() && model.count() == 2; }));
+        QSignalSpy changed(&model, &models::CollectionModel::listChanged);
+        empty = true;
+        model.reload();
+        REQUIRE(test::waitUntil([&] { return !model.loading(); }));
+        CHECK(model.count() == 0);
+        CHECK(changed.count() == 1);  // the rows are gone, like after clear()
+    }
 }
 
 // Talks to the real SoundCloud. Skipped by default: run with --no-skip -tc="real api*".
