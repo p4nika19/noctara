@@ -1212,6 +1212,51 @@ TEST_SUITE("media.controller")
         CHECK_FALSE(player.controller->playing());
     }
 
+    TEST_CASE("an autoplay answer that arrives after another queue was started is dropped")
+    {
+        Player player;
+        player.client.handler = [](const api::ApiRequest& request) -> Result<QByteArray> {
+            if (request.url.path().contains(u"/related")) {
+                return QByteArray(R"({"collection":[{"kind":"track","id":60,"title":"x"},)"
+                                  R"({"kind":"track","id":61,"title":"y"}],"next_href":null})");
+            }
+            return fail(ErrorCode::NotFound, "unexpected");
+        };
+        const auto queued = [&player] {
+            std::vector<api::Id> ids;
+            for (const QueueItem& item : player.controller->queue().items()) {
+                ids.push_back(item.track.id);
+            }
+            return ids;
+        };
+        player.controller->playTracks({apiTrack(1)}, 0, {});
+        Q_EMIT player.backend.ended();  // the end of the queue: related tracks are asked for
+        REQUIRE(player.client.requests.size() == 1);
+        player.controller->playTracks({apiTrack(50), apiTrack(51)}, 0, {});
+        test::waitUntil([] { return false; }, 100);
+        CHECK(player.controller->trackId() == u"50");
+        CHECK(queued() == std::vector<api::Id>{50, 51});
+        CHECK(player.controller->playing());
+
+        // An empty answer does not mark the new queue as ended either.
+        player.client.handler = [](const api::ApiRequest& /*request*/) -> Result<QByteArray> {
+            return QByteArray(R"({"collection":[],"next_href":null})");
+        };
+        player.controller->playTracks({apiTrack(2)}, 0, {});
+        Q_EMIT player.backend.ended();
+        player.controller->playTracks({apiTrack(70)}, 0, {});
+        test::waitUntil([] { return false; }, 100);
+        CHECK(player.controller->trackId() == u"70");
+        CHECK(player.controller->playing());
+
+        // Answered for the queue it was asked for, it still continues it.
+        player.client.handler = [](const api::ApiRequest& /*request*/) -> Result<QByteArray> {
+            return QByteArray(R"({"collection":[{"kind":"track","id":80,"title":"x"}],"next_href":null})");
+        };
+        Q_EMIT player.backend.ended();
+        REQUIRE(test::waitUntil([&] { return player.controller->trackId() == u"80"; }));
+    }
+
     TEST_CASE("the backend's gapless advance moves the queue without loading again")
     {
         Player player;

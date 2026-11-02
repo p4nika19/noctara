@@ -659,13 +659,21 @@ void PlaybackController::skipAfterError(ErrorCode code)
 void PlaybackController::autoplay()
 {
     const api::Track* last = currentTrack();
-    if (last == nullptr || m_autoplaying) {
+    if (last == nullptr || m_autoplayFor == m_trackSerial) {
         return;
     }
-    m_autoplaying = true;
-    (void)api::fetch(m_api, api::endpoints::related(last->id, kAutoplayCount), &m_requests,
-                     [this](Result<api::Page<api::Entry>> page) {
-                         m_autoplaying = false;
+    const std::uint64_t serial = m_trackSerial;
+    const api::Id lastId = last->id;
+    m_autoplayFor = serial;
+    (void)api::fetch(m_api, api::endpoints::related(lastId, kAutoplayCount), &m_requests,
+                     [this, serial, lastId](Result<api::Page<api::Entry>> page) {
+                         if (m_autoplayFor == serial) {
+                             m_autoplayFor = 0;
+                         }
+                         const QueueItem* now = m_queue.currentItem();
+                         if (serial != m_trackSerial || now == nullptr || now->track.id != lastId) {
+                             return;  // another queue or track started meanwhile
+                         }
                          QSet<api::Id> queued;
                          for (const QueueItem& item : m_queue.items()) {
                              queued.insert(item.track.id);

@@ -239,7 +239,7 @@ private:
     QElapsedTimer m_positionAge;
     qint64 m_lastPosition = 0;
     net::RequestHandle m_waveformRequest;
-    bool m_autoplaying = false;
+    std::uint64_t m_autoplayFor = 0;  // the track serial the related tracks being asked for would continue
     // The list the queue follows (see playCollection()).
     QPointer<models::CollectionModel> m_followed;
     QMetaObject::Connection m_followConnection;
