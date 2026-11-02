@@ -66,6 +66,9 @@ void Mixer::setCrossfadeFrames(std::int64_t frames)
 
 void Mixer::setGain(float gain)
 {
+    if (!std::isfinite(gain)) {
+        return;  // a NaN target would make approach() lower the gain without bound
+    }
     const std::scoped_lock lock(m_mutex);
     m_targetGain = std::clamp(gain, 0.0F, 1.0F);
 }

@@ -683,6 +683,18 @@ TEST_SUITE("media.mixer")
         CHECK(static_cast<double>(resumed.back()) == doctest::Approx(0.5));
     }
 
+    TEST_CASE("a gain that is not a number is ignored instead of driving the output past full scale")
+    {
+        Mixer mixer(kSlow);
+        auto ring = ringOf(5000, 0.5F, false);
+        mixer.setVoices(ring, nullptr);
+        (void)render(mixer, 50);
+        mixer.setGain(std::numeric_limits<float>::quiet_NaN());
+        const std::vector<float> out = render(mixer, 1000);
+        CHECK(std::ranges::all_of(out, [](float sample) { return std::isfinite(sample) && std::abs(sample) <= 1.0F; }));
+        CHECK(static_cast<double>(out.back()) == doctest::Approx(0.5));
+    }
+
     TEST_CASE("a starving voice is reported and fades back in")
     {
         Mixer mixer(kSlow);
@@ -1175,6 +1187,17 @@ TEST_SUITE("media.controller")
         FakeBackend backend;
         PlaybackController controller({.settings = store, .api = client, .native = backend, .statePath = path});
         CHECK(controller.volume() == doctest::Approx(0.4));
+    }
+
+    TEST_CASE("a volume that is not a number (an MPRIS client may send one) leaves the volume as it was")
+    {
+        Player player;
+        player.controller->setVolume(0.5);
+        player.controller->setVolume(std::numeric_limits<double>::quiet_NaN());
+        CHECK(player.controller->volume() == doctest::Approx(0.5));
+        CHECK(player.backend.gain == doctest::Approx(0.125));
+        player.controller->setVolume(std::numeric_limits<double>::infinity());
+        CHECK(player.controller->volume() == doctest::Approx(0.5));
     }
 
     TEST_CASE("the queue, the track and the position come back paused after a restart")

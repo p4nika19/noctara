@@ -928,6 +928,9 @@ void PlaybackController::queueEdited()
 
 void PlaybackController::setVolume(double volume)
 {
+    if (!std::isfinite(volume)) {
+        return;  // std::clamp lets NaN through; an MPRIS client can send one
+    }
     volume = std::clamp(volume, 0.0, 1.0);
     if (qFuzzyCompare(volume + 1.0, m_session.volume + 1.0) && (!m_session.muted || volume <= 0.0)) {
         return;
