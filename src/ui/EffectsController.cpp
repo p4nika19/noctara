@@ -47,7 +47,8 @@ QString qualityName(int quality)
 
 EffectsController::EffectsController(settings::SettingsStore& settings, theme::Theme& theme, gfx::PowerMonitor& power,
                                      gfx::FrameMonitor& frames, const gfx::GraphicsInfo& graphics,
-                                     i18n::LanguageManager& languages, SettingsController& settingsUi, QObject* parent)
+                                     i18n::LanguageManager& languages, SettingsController& settingsUi,
+                                     gfx::GovernorConfig governor, QObject* parent)
     : QObject(parent)
     , m_settings(settings)
     , m_theme(theme)
@@ -55,6 +56,7 @@ EffectsController::EffectsController(settings::SettingsStore& settings, theme::T
     , m_frames(frames)
     , m_graphics(graphics)
     , m_settingsUi(settingsUi)
+    , m_governor(governor)
 {
     m_clock.start();
     connect(&m_frames, &gfx::FrameMonitor::measured, this, &EffectsController::onMeasured);
@@ -89,7 +91,12 @@ void EffectsController::onMeasured(const gfx::FrameWindowStats& stats, double fp
                              << "ms, interval p90" << stats.intervalP90Ms << "ms, style" << m_theme.glass().style
                              << "quality" << m_theme.glass().quality;
 
-    if (!m_graphics.hardware() || !m_theme.glass().blurred ||
+    // At Solid the governor's own cap removed the blur: keep measuring, so headroom can bring it back.
+    const auto& glass = m_theme.glass();
+    const bool blurWanted =
+        glass.blurred || (m_governor.tier() == gfx::Tier::Solid && glass.blurAvailable &&
+                          glass.requestedStyle != u"solid" && !m_settings.boolValue(keys::ReduceTransparency));
+    if (!m_graphics.hardware() || !blurWanted ||
         gfx::parseQualitySetting(m_settings.stringValue(keys::GlassQuality)) != gfx::QualitySetting::Auto) {
         return;  // nothing to govern: no blur, or quality fixed by the user
     }

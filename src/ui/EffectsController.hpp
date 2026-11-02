@@ -42,7 +42,7 @@ class EffectsController : public QObject {
 public:
     EffectsController(settings::SettingsStore& settings, theme::Theme& theme, gfx::PowerMonitor& power,
                       gfx::FrameMonitor& frames, const gfx::GraphicsInfo& graphics, i18n::LanguageManager& languages,
-                      SettingsController& settingsUi, QObject* parent = nullptr);
+                      SettingsController& settingsUi, gfx::GovernorConfig governor = {}, QObject* parent = nullptr);
 
     [[nodiscard]] double fps() const noexcept { return m_fps; }
     [[nodiscard]] double gpuFrameMs() const noexcept { return m_gpuFrameMs; }

@@ -1,5 +1,8 @@
 #include "TestUtil.hpp"
 
+#include "gfx/FrameMonitor.hpp"
+#include "gfx/GraphicsBootstrap.hpp"
+#include "gfx/PowerMonitor.hpp"
 #include "i18n/LanguageManager.hpp"
 #include "media/PlaybackQueue.hpp"
 #include "media/QueueModel.hpp"
@@ -8,6 +11,8 @@
 #include "settings/ConfigFile.hpp"
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
+#include "theme/Theme.hpp"
+#include "ui/EffectsController.hpp"
 #include "ui/IconProvider.hpp"
 #include "ui/SettingsController.hpp"
 #include "ui/SettingsModel.hpp"
@@ -33,6 +38,46 @@
 #include <set>
 
 using namespace noctara;
+
+TEST_SUITE("ui.effects")
+{
+    TEST_CASE("the quality governor keeps measuring at Solid and brings the blur back when there is headroom")
+    {
+        QTemporaryDir dir;
+        settings::SettingsStore store(settings::Schema::builtin());
+        settings::ConfigFile config(store, dir.filePath(QStringLiteral("config.toml")), {});
+        REQUIRE(store.setUserValue(settings::keys::EnergySaving, QStringLiteral("off")));
+        i18n::LanguageManager languages(store);
+        ui::SettingsController settingsUi(store, config, languages);
+        theme::Theme theme(store, {});
+        gfx::PowerMonitor power;
+        gfx::FrameMonitor frames;
+        gfx::GraphicsDecision decision;
+        decision.hardware = true;
+        const gfx::GraphicsInfo graphics(decision);
+        gfx::GovernorConfig governor;
+        governor.upCooldownS = 0.0;  // the controller's clock is real time
+        ui::EffectsController effects(store, theme, power, frames, graphics, languages, settingsUi, governor);
+        REQUIRE(theme.glass().style == u"kawase");
+
+        gfx::FrameWindowStats overloaded;
+        overloaded.frames = 60;
+        overloaded.gpuP90Ms = 20.0;
+        for (int window = 0; window < 8; ++window) {
+            Q_EMIT frames.measured(overloaded, 50.0);
+        }
+        REQUIRE(effects.tier() == u"solid");
+        REQUIRE_FALSE(theme.glass().blurred);
+
+        gfx::FrameWindowStats healthy = overloaded;
+        healthy.gpuP90Ms = 2.0;
+        for (int window = 0; window < 5; ++window) {
+            Q_EMIT frames.measured(healthy, 60.0);
+        }
+        CHECK(effects.tier() == u"kawase");
+        CHECK(theme.glass().style == u"kawase");
+    }
+}
 
 TEST_SUITE("ui.settings")
 {
