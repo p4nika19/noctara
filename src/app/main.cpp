@@ -483,8 +483,10 @@ int main(int argc, char** argv)
                              showWindow();
                          }
                      });
-    const ui::TrackNotifier notifier(player, store, &coverFiles,
-                                     [&mainWindow] { return mainWindow && mainWindow->isActive(); });
+    // Not const: its slots update its own members, which would modify a const object.
+    // NOLINTNEXTLINE(misc-const-correctness)
+    ui::TrackNotifier notifier(player, store, &coverFiles,
+                               [&mainWindow] { return mainWindow && mainWindow->isActive(); });
     QObject::connect(&config, &settings::ConfigFile::reloadIssues, &appController,
                      &ui::AppController::reportConfigIssues);
     QObject::connect(&config, &settings::ConfigFile::saveFailed, &appController,
