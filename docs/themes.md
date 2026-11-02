@@ -14,7 +14,8 @@ theme* (an advanced setting; config key `appearance.theme.custom` = the file nam
   falls back to the built-in look.
 - **Readable.** With *Enforce readable contrast* on (the default), text, icons and accents that a theme makes
   unreadable are moved to the nearest tone that meets WCAG AA against the glass they sit on (the hue is kept).
-  With it off, the picker shows a warning instead.
+  Contrast is measured as drawn, so a translucent `#aarrggbb` colour first gains opacity, and only then changes
+  tone. With it off, the picker shows a warning instead.
 - **Shareable.** *Import* checks a file and copies it into the folder (under a free name); *Export* saves the
   selected one elsewhere. The folder button opens it in the file manager.
 

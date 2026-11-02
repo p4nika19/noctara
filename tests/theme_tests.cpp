@@ -11,6 +11,7 @@
 #include <QPainter>
 #include <QSignalSpy>
 
+#include <algorithm>
 #include <cmath>
 #include <random>
 
@@ -128,6 +129,50 @@ TEST_SUITE("theme.palette")
         CHECK((backdrop.h > 240.0 && backdrop.h < 285.0));  // blue
         CHECK(light.surfaceBase.alpha > dark.surfaceBase.alpha);
         CHECK(color::relativeLuminance(light.textPrimary.rgb) < color::relativeLuminance(dark.textPrimary.rgb));
+    }
+
+    TEST_CASE("translucent foreground colours are judged and enforced as drawn over the glass")
+    {
+        for (const Scheme scheme : {Scheme::Dark, Scheme::Light}) {
+            CAPTURE(std::string(scheme == Scheme::Dark ? "dark" : "light"));
+            const SchemeTones& tones = defaultTones(scheme);
+            Palette palette = generatePalette({.scheme = scheme, .glassOpacity = 0.5});
+            // "#66ffffff" in Midnight, "#66000000" in Frost: opaque, either would pass easily.
+            const color::Srgb ink = scheme == Scheme::Dark ? color::Srgb{1.0, 1.0, 1.0} : color::Srgb{0.0, 0.0, 0.0};
+            palette.textTertiary = {ink, 0.4};
+            palette.iconSecondary = {ink, 0.3};
+            palette.onAccent = {palette.onAccent.rgb, 0.3};
+
+            const auto result = [](const std::vector<ContrastResult>& results, std::string_view role) {
+                const auto it = std::ranges::find(results, role, &ContrastResult::role);
+                REQUIRE(it != results.end());
+                return *it;
+            };
+            const auto before = checkContrast(palette, scheme, tones);
+            CHECK_FALSE(result(before, "textTertiary").passes());
+            CHECK_FALSE(result(before, "iconSecondary").passes());
+            CHECK_FALSE(result(before, "onAccent").passes());
+
+            const Palette fixed = enforceReadable(palette, scheme, tones);
+            for (const ContrastResult& r : checkContrast(fixed, scheme, tones)) {
+                INFO("role=", std::string(r.role), " ratio=", r.ratio);
+                CHECK(r.passes());
+            }
+            // Measured independently: the colour as composited over each worst-case background.
+            const auto gray = [](double l) {
+                return color::toSrgbGamutMapped({l, 0.0, 0.0});
+            };
+            std::vector<color::Srgb> backgrounds{gray(tones.backdropMinL), gray(tones.backdropMaxL),
+                                                 fixed.solidBase.rgb, fixed.solidRaised.rgb, fixed.solidOverlay.rgb};
+            for (const color::Rgba& surface : {fixed.surfaceBase, fixed.surfaceRaised, fixed.surfaceOverlay}) {
+                backgrounds.push_back(color::composite(surface, gray(tones.backdropMinL)));
+                backgrounds.push_back(color::composite(surface, gray(tones.backdropMaxL)));
+            }
+            for (const color::Srgb& bg : backgrounds) {
+                CHECK(color::contrastRatio(color::composite(fixed.textTertiary, bg), bg) >= kContrastText - 1e-9);
+                CHECK(color::contrastRatio(color::composite(fixed.iconSecondary, bg), bg) >= kContrastGraphic - 1e-9);
+            }
+        }
     }
 }
 

@@ -14,6 +14,7 @@ using color::Srgb;
 
 constexpr double kAchromaticChroma = 0.02;
 constexpr double kToneStep = 0.0025;
+constexpr double kAlphaStep = 0.01;
 
 // Midnight: near-black blue-violet base lit by soft aurora light. Base/raised glass is a light,
 // accent-tinted veil at low opacity (it lifts what is behind it); overlays (drawers, popups) are dark glass.
@@ -115,6 +116,16 @@ double minContrast(Srgb fg, std::span<const Srgb> backgrounds)
     return worst;
 }
 
+// Contrast of a possibly translucent foreground as drawn: composited over each background first.
+double minContrast(Rgba fg, std::span<const Srgb> backgrounds)
+{
+    double worst = 21.0;
+    for (const Srgb& bg : backgrounds) {
+        worst = std::min(worst, color::contrastRatio(color::composite(fg, bg), bg));
+    }
+    return worst;
+}
+
 // Moves lightness away from the backgrounds until the target ratio holds (or L saturates).
 OkLch enforce(OkLch fg, std::span<const Srgb> backgrounds, double target, Scheme scheme)
 {
@@ -149,6 +160,22 @@ std::vector<Srgb> worstBackgrounds(const Palette& p, const SchemeTones& tones)
     out.push_back(lo);
     out.push_back(hi);
     return out;
+}
+
+// Makes a role readable as drawn: a translucent one first gains opacity (its colour kept), then the
+// lightness moves in `direction` until the target ratio holds.
+void enforceRole(Rgba& role, std::span<const Srgb> backgrounds, double required, Scheme direction)
+{
+    if (minContrast(role, backgrounds) + 1e-9 >= required) {
+        return;
+    }
+    while (role.alpha < 1.0 && minContrast(role, backgrounds) + 1e-9 < required) {
+        role.alpha = std::min(1.0, role.alpha + kAlphaStep);
+    }
+    if (minContrast(role, backgrounds) + 1e-9 < required) {
+        role.alpha = 1.0;
+        role.rgb = color::toSrgbGamutMapped(enforce(color::toOkLch(role.rgb), backgrounds, required, direction));
+    }
 }
 
 }  // namespace
@@ -295,9 +322,7 @@ Palette enforceReadable(const Palette& palette, Scheme scheme, const SchemeTones
     Palette p = palette;
     const std::vector<Srgb> backgrounds = worstBackgrounds(p, tones);
     const auto fix = [&](Rgba& role, double required) {
-        if (minContrast(role.rgb, backgrounds) + 1e-9 < required) {
-            role.rgb = color::toSrgbGamutMapped(enforce(color::toOkLch(role.rgb), backgrounds, required, scheme));
-        }
+        enforceRole(role, backgrounds, required, scheme);
     };
     fix(p.textPrimary, kContrastText);
     fix(p.textSecondary, kContrastText);
@@ -313,11 +338,8 @@ Palette enforceReadable(const Palette& palette, Scheme scheme, const SchemeTones
     fix(p.success, kContrastText);
     // Text on the accent: away from the accent states, towards whichever end reads better.
     const Srgb accentStates[] = {p.accent.rgb, p.accentHover.rgb, p.accentPressed.rgb};
-    if (minContrast(p.onAccent.rgb, accentStates) + 1e-9 < kContrastText) {
-        const Scheme away = color::relativeLuminance(p.accent.rgb) > 0.18 ? Scheme::Light : Scheme::Dark;
-        p.onAccent.rgb =
-            color::toSrgbGamutMapped(enforce(color::toOkLch(p.onAccent.rgb), accentStates, kContrastText, away));
-    }
+    const Scheme away = color::relativeLuminance(p.accent.rgb) > 0.18 ? Scheme::Light : Scheme::Dark;
+    enforceRole(p.onAccent, accentStates, kContrastText, away);
     return p;
 }
 
@@ -326,7 +348,7 @@ std::vector<ContrastResult> checkContrast(const Palette& p, Scheme /*scheme*/, c
     const std::vector<Srgb> backgrounds = worstBackgrounds(p, tones);
     std::vector<ContrastResult> results;
     const auto against = [&](std::string_view role, const Rgba& fg, double required) {
-        results.push_back({role, minContrast(fg.rgb, backgrounds), required});
+        results.push_back({role, minContrast(fg, backgrounds), required});
     };
     against("textPrimary", p.textPrimary, kContrastText);
     against("textSecondary", p.textSecondary, kContrastText);
@@ -342,9 +364,9 @@ std::vector<ContrastResult> checkContrast(const Palette& p, Scheme /*scheme*/, c
     against("success", p.success, kContrastText);
 
     const Srgb accentStates[] = {p.accent.rgb, p.accentHover.rgb, p.accentPressed.rgb};
-    results.push_back({"onAccent", minContrast(p.onAccent.rgb, accentStates), kContrastText});
-    results.push_back(
-        {"onAccentContainer", color::contrastRatio(p.onAccentContainer.rgb, p.accentContainer.rgb), kContrastText});
+    results.push_back({"onAccent", minContrast(p.onAccent, accentStates), kContrastText});
+    const Srgb containerBg[] = {p.accentContainer.rgb};
+    results.push_back({"onAccentContainer", minContrast(p.onAccentContainer, containerBg), kContrastText});
     return results;
 }
 
