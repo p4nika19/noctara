@@ -75,6 +75,11 @@ TEST_SUITE("i18n")
         CHECK(en.format->count(1234) == QStringLiteral("1.2K"));
         CHECK(en.format->count(12'000) == QStringLiteral("12K"));
         CHECK(en.format->count(3'400'000) == QStringLiteral("3.4M"));
+        // Mantissas of 100 and more are rounded to an integer, which carries into the next unit.
+        CHECK(en.format->count(999'499) == QStringLiteral("999K"));
+        CHECK(en.format->count(999'700) == QStringLiteral("1M"));
+        CHECK(en.format->count(999'600'000) == QStringLiteral("1B"));
+        CHECK(en.format->count(100'450) == QStringLiteral("100K"));
         CHECK(en.format->bytes(1536) == QStringLiteral("1.5 KB"));
         CHECK(en.format->duration(185'000) == QStringLiteral("3:05"));
         CHECK(en.format->duration(3'723'000) == QStringLiteral("1:02:03"));

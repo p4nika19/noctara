@@ -25,11 +25,15 @@ QString twoDigits(qint64 value)
     return QStringLiteral("%1").arg(value, 2, 10, QChar(u'0'));
 }
 
-// One decimal, dropped when it is zero ("1.2" / "12"), with the locale's decimal separator.
+// One decimal, dropped when it is zero ("1.2" / "12"), with the locale's decimal separator. From 100 on the
+// mantissa is rounded to an integer straight from the value (never from the one-decimal rounding: 100.45 is 100).
 QString compactMantissa(const QLocale& locale, double value)
 {
     const double rounded = std::round(value * 10.0) / 10.0;
-    if (rounded >= 100.0 || std::fmod(rounded, 1.0) == 0.0) {
+    if (rounded >= 100.0) {
+        return locale.toString(static_cast<qint64>(std::llround(value)));
+    }
+    if (std::fmod(rounded, 1.0) == 0.0) {
         return locale.toString(static_cast<qint64>(std::llround(rounded)));
     }
     return locale.toString(rounded, 'f', 1);
@@ -82,11 +86,12 @@ QString Formatter::count(qint64 value) const
         return locale.toString(value);
     }
     const auto v = static_cast<double>(value);
-    if (magnitude < 999'950) {
+    // The thresholds are where the integer mantissa would round up to 1000.
+    if (magnitude < 999'500) {
         return QCoreApplication::translate("Format", "%1K", "compact thousands, e.g. 1.2K")
             .arg(compactMantissa(locale, v / 1e3));
     }
-    if (magnitude < 999'950'000) {
+    if (magnitude < 999'500'000) {
         return QCoreApplication::translate("Format", "%1M", "compact millions, e.g. 3.4M")
             .arg(compactMantissa(locale, v / 1e6));
     }
