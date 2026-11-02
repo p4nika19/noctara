@@ -15,6 +15,7 @@ T.Popup {
     function show(newActions, item, point) {
         actions = newActions.filter(a => a !== null && a !== undefined)
         highlighted = -1
+        list.forceLayout()  // the Column sizes itself on the next frame: clamp with this menu's height, not the last one's
         const where = item.mapToItem(null, point.x, point.y)
         const parentWidth = parent ? parent.width : width
         const parentHeight = parent ? parent.height : height

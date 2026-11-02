@@ -433,4 +433,24 @@ TEST_SUITE("ui.components")
         combo->setProperty("currentId", QStringLiteral("c"));  // e.g. a section reset or a preset
         CHECK(combo->property("currentIndex").toInt() == 2);
     }
+
+    TEST_CASE("a context menu opened near the bottom stays inside the window")
+    {
+        const WindowHarness harness(R"(Window {
+            width: 400; height: 400; visible: true
+            property QtObject menu: menu
+            ContextMenu { id: menu }
+        })");
+        QObject* menu = harness.object("menu");
+        QVariantList actions;
+        for (int i = 0; i < 10; ++i) {
+            actions.append(QVariantMap{{QStringLiteral("text"), QStringLiteral("Action %1").arg(i)}});
+        }
+        QVariant item = QVariant::fromValue<QObject*>(harness.window->contentItem());
+        REQUIRE(QMetaObject::invokeMethod(menu, "show", Q_ARG(QVariant, QVariant(actions)), Q_ARG(QVariant, item),
+                                          Q_ARG(QVariant, QVariant(QPointF(10, 390)))));
+        REQUIRE(test::waitUntil([&] { return menu->property("height").toReal() > 300; }));
+        CHECK(menu->property("y").toReal() + menu->property("height").toReal() <= 400);
+        CHECK(menu->property("y").toReal() >= 0);
+    }
 }
