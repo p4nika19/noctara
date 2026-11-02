@@ -435,6 +435,14 @@ TEST_SUITE("net.config")
         config = configFromSettings(store);
         CHECK(config.proxy.manual.curlUrl() == QStringLiteral("socks5h://proxy.lan:1080"));
         CHECK_FALSE(config.proxy.manual.hasCredentials());
+
+        // The usual bracketed IPv6 form is bracketed exactly once in the proxy URL.
+        REQUIRE(store.setUserValue(keys::ProxyType, QStringLiteral("http")));
+        REQUIRE(store.setUserValue(keys::ProxyHost, QStringLiteral("[2001:db8::1]")));
+        REQUIRE(store.setUserValue(keys::ProxyPort, 3128));
+        config = configFromSettings(store);
+        CHECK(config.proxy.manual.curlUrl() == QStringLiteral("http://[2001:db8::1]:3128"));
+        CHECK(config.proxy.manual.displayUrl() == QStringLiteral("http://[2001:db8::1]:3128"));
     }
 
     TEST_CASE("network settings reject malformed values with a precise error")

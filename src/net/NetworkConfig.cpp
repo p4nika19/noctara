@@ -121,6 +121,9 @@ ProxyConfig proxyFromSettings(const settings::SettingsStore& store)
     proxy.mode = mode == u"none" ? ProxyMode::None : mode == u"manual" ? ProxyMode::Manual : ProxyMode::System;
     proxy.manual.type = proxyTypeFromScheme(store.stringValue(keys::ProxyType)).value_or(ProxyType::Http);
     proxy.manual.host = store.stringValue(keys::ProxyHost).trimmed();
+    if (const auto literal = IpAddress::parse(proxy.manual.host)) {
+        proxy.manual.host = literal->toString();  // "[2001:db8::1]" -> bare; the URLs bracket it once
+    }
     proxy.manual.port = static_cast<std::uint16_t>(store.intValue(keys::ProxyPort));
     proxy.bypass = store.listValue(keys::ProxyBypass);
     proxy.bypassLocal = store.boolValue(keys::ProxyBypassLocal);
