@@ -88,6 +88,7 @@ PlaybackController::PlaybackController(Dependencies dependencies, QObject* paren
     applySettings();
     applyGain();
     if (m_settings.boolValue(keys::RestoreQueue) && !m_session.queue.empty()) {
+        m_restorePending = true;
         restoreQueue(m_session);
     }
 }
@@ -193,6 +194,7 @@ void PlaybackController::restoreQueue(const SessionState& saved)
                                      }
                                  }
                                  if (items.empty()) {
+                                     m_restorePending = false;  // none of them exists any more
                                      return;
                                  }
                                  const bool sameTrack = items[static_cast<std::size_t>(current)].track.id ==
@@ -1125,15 +1127,21 @@ void PlaybackController::saveSession()
 {
     m_session.shuffle = m_queue.shuffle();
     m_session.repeat = m_queue.repeat();
-    m_session.queue.clear();
-    // Around the current item when the queue is long.
-    const int first = std::max(0, m_queue.current() - static_cast<int>(SessionState::kMaxQueue / 2));
-    for (int i = first; i < m_queue.size() && m_session.queue.size() < SessionState::kMaxQueue; ++i) {
-        m_session.queue.push_back(m_queue.items()[static_cast<std::size_t>(i)].track.id);
+    if (!m_queue.empty()) {
+        m_restorePending = false;
     }
-    m_session.current = m_queue.current() - first;
-    m_session.positionMs = position();
-    m_session.context = context();
+    // Until the saved queue came back (or another took its place), it is kept as it was saved.
+    if (!m_restorePending) {
+        m_session.queue.clear();
+        // Around the current item when the queue is long.
+        const int first = std::max(0, m_queue.current() - static_cast<int>(SessionState::kMaxQueue / 2));
+        for (int i = first; i < m_queue.size() && m_session.queue.size() < SessionState::kMaxQueue; ++i) {
+            m_session.queue.push_back(m_queue.items()[static_cast<std::size_t>(i)].track.id);
+        }
+        m_session.current = m_queue.current() - first;
+        m_session.positionMs = position();
+        m_session.context = context();
+    }
     m_store.save(m_session);
 }
 

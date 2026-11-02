@@ -227,6 +227,8 @@ private:
     bool m_pendingPlay = false;  // meant to play while the current item is still being prepared (hydrated)
     bool m_ended = false;        // the queue played to its end
     bool m_nextPrepared = false;
+    // The saved queue is still being looked up, or that failed: until a queue exists, it stays saved as it was.
+    bool m_restorePending = false;
     int m_failuresInRow = 0;
     qint64 m_resumeAt = 0;  // a restored queue starts here when played
     qint64 m_duration = 0;

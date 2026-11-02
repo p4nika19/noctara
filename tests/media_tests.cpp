@@ -281,12 +281,21 @@ public:
             }
         }
         QMetaObject::invokeMethod(
-            context, [done = std::move(done), found = std::move(found)] { done(found); }, Qt::QueuedConnection);
+            context,
+            [this, done = std::move(done), found = std::move(found)] {
+                if (failLookups) {
+                    done(fail(ErrorCode::Offline, "offline"));
+                } else {
+                    done(found);
+                }
+            },
+            Qt::QueuedConnection);
         return {};
     }
 
     Handler handler;
     std::map<api::Id, api::Track> known;
+    bool failLookups = false;  // read when the answer is delivered
     std::vector<QUrl> requests;
     int lookups = 0;
 };
@@ -1331,6 +1340,35 @@ TEST_SUITE("media.controller")
         restored.controller->play();
         REQUIRE(restored.backend.loads.size() == 1);
         CHECK(restored.backend.startPositions[0] == 42'000);
+    }
+
+    TEST_CASE("a saved queue that could not be looked up (offline) is kept for the next start")
+    {
+        QTemporaryDir dir;
+        const QString path = dir.filePath(QStringLiteral("session.json"));
+        {
+            Player player(path);
+            player.controller->playTracks({apiTrack(1), apiTrack(2), apiTrack(3)}, 1, QStringLiteral("Mix"));
+            player.backend.setPosition(42'000);
+        }
+        {
+            Player offline(path, {{1, apiTrack(1)}, {2, apiTrack(2)}, {3, apiTrack(3)}});
+            offline.client.failLookups = true;
+            REQUIRE(test::waitUntil([&] { return offline.client.lookups == 1; }));
+            test::waitUntil([] { return false; }, 100);  // the failed answer arrives
+            CHECK_FALSE(offline.controller->hasTrack());
+            offline.controller->setVolume(0.3);  // saves the session
+        }
+        {
+            Player early(path, {{1, apiTrack(1)}, {2, apiTrack(2)}, {3, apiTrack(3)}});  // quit before the answer
+        }
+        Player restored(path, {{1, apiTrack(1)}, {2, apiTrack(2)}, {3, apiTrack(3)}});
+        REQUIRE(test::waitUntil([&] { return restored.controller->hasTrack(); }));
+        CHECK(restored.controller->trackId() == u"2");
+        CHECK(restored.controller->context() == u"Mix");
+        CHECK(restored.controller->queue().size() == 3);
+        CHECK(restored.controller->position() == 42'000);
+        CHECK(restored.controller->volume() == doctest::Approx(0.3));
     }
 
     TEST_CASE("the crossfade setting reaches the backend live")
