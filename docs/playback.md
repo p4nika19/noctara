@@ -133,7 +133,9 @@ when the size, samples, stored ranges or colours change. The stored parts of the
 
 Playback errors are `ErrorCode`s (`NotPlayable`, `DecodeFailed`, `AudioOutputFailed`, `ProtectedPlayback`, plus
 the network and cache codes) shown as translated toasts. A network failure keeps the track; pressing play retries
-from where it stopped. Undecodable or unavailable tracks are skipped, never in circles through a queue where
+from where it stopped. When the cache resets an entry while it plays (`ContentChanged`: the server sent other
+media), the backend opens the track again from the same position, once per load; if it changes again, play opens it
+anew. Undecodable or unavailable tracks are skipped, never in circles through a queue where
 nothing plays.
 
 ## Not done (yet)

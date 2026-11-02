@@ -844,6 +844,31 @@ TEST_SUITE("media.backend")
         CHECK(backend.state() == BackendState::Playing);
     }
 
+    TEST_CASE("a cache entry reset while it plays (the server sent different media) is opened again and plays")
+    {
+        Cache cache;
+        FakeOutput output;
+        NativeBackend backend(*cache.audio, output);
+        QSignalSpy ended(&backend, &IPlaybackBackend::ended);
+        QSignalSpy failed(&backend, &IPlaybackBackend::failed);
+        const QString url = QStringLiteral("https://cdn.test/changed.mp3");
+        cache.origin.serve(url, {.body = fixture(QStringLiteral("sine.mp3")), .etag = "\"1\""});
+        cache.origin.failAfter(8000);  // the first response is cut; the cache asks again a moment later
+        backend.load({.info = trackInfo(QStringLiteral("changed"), cache::StreamProtocol::Progressive,
+                                        QStringLiteral("audio/mpeg")),
+                      .urls = Cache::urls(url)},
+                     0, false);
+        REQUIRE(test::waitUntil([&] { return cache.origin.count() == 1; }));
+        (void)test::waitUntil([] { return false; }, 100);
+        // The retry gets other media: the cache resets the entry under the reader the voice decodes from.
+        cache.origin.serve(url, {.body = fixture(QStringLiteral("sine.mp3")), .etag = "\"2\""});
+        cache.origin.failAfter(std::nullopt);
+        REQUIRE(pump(output, [&] { return !ended.isEmpty() || !failed.isEmpty(); }));
+        CHECK_MESSAGE(failed.isEmpty(),
+                      (failed.isEmpty() ? std::string() : failed.first().first().value<Error>().describe()));
+        CHECK(ended.size() == 1);
+    }
+
     TEST_CASE("replay and a backward seek come from the cache with zero requests; a DRM source never writes")
     {
         Cache cache;

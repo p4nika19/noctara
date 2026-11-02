@@ -151,6 +151,13 @@ void NativeBackend::attach(Slot& slot, const cache::AudioReaderPtr& reader)
         }
     });
     connect(voice, &Voice::failed, this, [this, voice](const Error& error) {
+        if (m_current.voice.get() == voice && error.code == ErrorCode::ContentChanged) {
+            // The cache reset the entry: this voice's reader stays bound to the old content, so the source is
+            // opened again (later: a voice is not destroyed from inside its own signal).
+            QMetaObject::invokeMethod(
+                this, [this, voice, error] { reopenCurrent(voice, error); }, Qt::QueuedConnection);
+            return;
+        }
         if (m_current.voice.get() == voice) {
             fail(error);
             return;
@@ -172,6 +179,27 @@ void NativeBackend::attach(Slot& slot, const cache::AudioReaderPtr& reader)
     } else {
         armNext();
     }
+}
+
+void NativeBackend::reopenCurrent(const Voice* voice, const Error& error)
+{
+    if (m_current.voice.get() != voice) {
+        return;
+    }
+    const std::int64_t at = position();
+    if (m_mixer) {
+        m_mixer->setVoices(nullptr, m_next.voice ? m_next.voice->ring() : nullptr);
+        m_advancesSeen = m_mixer->advances();
+    }
+    m_current.voice.reset();
+    m_startMs = at;
+    m_seekMs = -1;
+    if (m_reopened) {
+        fail(error);  // changed again: play() opens it once more
+        return;
+    }
+    m_reopened = true;
+    open(m_current, PlaybackSource(m_current.source));
 }
 
 void NativeBackend::syncAdvances()
@@ -212,6 +240,7 @@ void NativeBackend::load(const PlaybackSource& source, std::int64_t startMs, boo
     m_paused = paused;
     m_seekMs = -1;
     m_startMs = startMs;
+    m_reopened = false;
     syncAdvances();
     const bool preloaded =
         m_next.source.info.key == source.info.key && (m_next.voice || m_next.opening) && startMs == 0;

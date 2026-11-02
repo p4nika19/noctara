@@ -59,6 +59,8 @@ private:
 
     void open(Slot& slot, const PlaybackSource& source);
     void attach(Slot& slot, const cache::AudioReaderPtr& reader);
+    // Opens the current source again after its cache entry was reset under `voice`.
+    void reopenCurrent(const Voice* voice, const Error& error);
     [[nodiscard]] bool ensureOutput();
     void restartOutput();
     void syncAdvances();
@@ -83,6 +85,7 @@ private:
     bool m_paused = false;
     bool m_buffering = false;
     bool m_suspended = false;
+    bool m_reopened = false;          // the current source was opened again after a reset (once per load)
     std::int64_t m_startMs = 0;       // where the current source starts (until it delivers)
     std::int64_t m_seekMs = -1;       // a seek on its way
     std::int64_t m_lastPosition = 0;  // for positionChanged
