@@ -343,6 +343,13 @@ TEST_SUITE("settings.file")
         REQUIRE(writeText(path, "[appearance.theme\n"));
         REQUIRE(test::waitUntil([&] { return issues.count() > 0; }));
         CHECK(store.stringValue(keys::ThemeMode) == QStringLiteral("light"));
+
+        // Saving over a hand edit that does not parse keeps it as a backup, as at startup.
+        REQUIRE(store.setUserValue(keys::GlassGrain, 0.3).has_value());
+        file.flush();
+        const QString backup = path + QStringLiteral(".bak");
+        REQUIRE(QFile::exists(backup));
+        CHECK(readWholeFile(backup)->contains("[appearance.theme\n"));
     }
 
     TEST_CASE("a broken file is backed up before being overwritten, and reset/import/export work")

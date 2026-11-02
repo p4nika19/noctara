@@ -168,6 +168,7 @@ void ConfigFile::reloadFromDisk()
         m_lastContent = loaded.content;
         logIssues(loaded.parsed.issues);
         if (!loaded.parsed.syntaxOk) {
+            m_fileUnparseable = true;  // the next save keeps this hand edit as config.toml.bak
             Q_EMIT reloadIssues(loaded.parsed.issues);
             return;
         }
