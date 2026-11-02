@@ -16,6 +16,7 @@
 #include <QQuickItem>
 #include <QQuickWindow>
 #include <QTemporaryDir>
+#include <QTest>
 
 #include <functional>
 #include <map>
@@ -404,5 +405,32 @@ TEST_SUITE("ui.components")
         REQUIRE_FALSE(row->childItems().isEmpty());
         // The label is accentText here, the icon must not be onAccent (white on the button material).
         CHECK(row->childItems().at(0)->property("color").value<QColor>() == QColor(QStringLiteral("#3366ff")));
+    }
+
+    TEST_CASE("a dropdown keeps following currentId after a disabled entry was activated")
+    {
+        const WindowHarness harness(R"(Window {
+            id: window
+            width: 300; height: 100; visible: true
+            property Item combo: combo
+            property int picks: 0
+            ComboBox {
+                id: combo
+                model: [{id: "a", label: "A"}, {id: "b", label: "B", enabled: false}, {id: "c", label: "C"}]
+                currentId: "a"
+                onPicked: window.picks++
+            }
+        })");
+        QQuickItem* combo = harness.item("combo");
+        REQUIRE(combo->property("currentIndex").toInt() == 0);
+        harness.window->requestActivate();
+        combo->forceActiveFocus();
+        REQUIRE(test::waitUntil([&] { return combo->hasActiveFocus(); }));
+        QTest::keyClick(harness.window.get(), Qt::Key_Down);  // activates "b", which is refused
+        CHECK(harness.window->property("picks").toInt() == 0);
+        CHECK(combo->property("currentIndex").toInt() == 0);
+
+        combo->setProperty("currentId", QStringLiteral("c"));  // e.g. a section reset or a preset
+        CHECK(combo->property("currentIndex").toInt() == 2);
     }
 }

@@ -27,8 +27,8 @@ T.ComboBox {
         const entry = model[index]
         if (entry && entry.enabled !== false)
             picked(entry.id)
-        else
-            currentIndex = indexOfValue(currentId)
+        else  // refused: back to currentId, restoring the binding a plain assignment would remove
+            currentIndex = Qt.binding(() => count > 0 ? indexOfValue(currentId) : -1)
     }
 
     contentItem: Text {
