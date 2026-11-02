@@ -268,6 +268,7 @@ void NativeBackend::load(const PlaybackSource& source, std::int64_t startMs, boo
             m_advancesSeen = m_mixer->advances();
         }
         m_current = {};
+        m_current.source = source;  // play() opens it again if the device cannot start below
         m_next = {};
     }
     const bool ready = m_current.voice && m_current.voice->isReady();

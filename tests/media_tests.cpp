@@ -181,7 +181,13 @@ public:
     {
     }
 
-    Result<AudioFormat> preferredFormat() override { return m_format; }
+    Result<AudioFormat> preferredFormat() override
+    {
+        if (unavailable) {
+            return fail(ErrorCode::AudioOutputFailed, "no output device");
+        }
+        return m_format;
+    }
     Result<void> start(AudioFormat format, RenderFunction render) override
     {
         m_format = format;
@@ -218,6 +224,7 @@ public:
     }
 
     bool suspended = false;
+    bool unavailable = false;  // no device: preferredFormat() fails
     int starts = 0;
 
 private:
@@ -877,6 +884,27 @@ TEST_SUITE("media.backend")
         CHECK(backend.position() > 0);  // b plays on instead of starting over
         CHECK(backend.state() == BackendState::Playing);
         CHECK(cache.origin.count() == requests);
+    }
+
+    TEST_CASE("a track that could not start for want of an output device plays once play is pressed again")
+    {
+        Cache cache;
+        FakeOutput output;
+        output.unavailable = true;
+        NativeBackend backend(*cache.audio, output);
+        QSignalSpy failed(&backend, &IPlaybackBackend::failed);
+        cache.origin.serve(QStringLiteral("https://cdn.test/s.mp3"), {.body = fixture(QStringLiteral("sine.mp3"))});
+        backend.load(
+            {.info = trackInfo(QStringLiteral("s"), cache::StreamProtocol::Progressive, QStringLiteral("audio/mpeg")),
+             .urls = Cache::urls(QStringLiteral("https://cdn.test/s.mp3"))},
+            0, false);
+        REQUIRE(failed.size() == 1);
+        CHECK(failed.first().first().value<Error>().code == ErrorCode::AudioOutputFailed);
+        CHECK(backend.state() == BackendState::Failed);
+        output.unavailable = false;  // the device is back
+        backend.play();
+        CHECK(pump(output, [&] { return backend.state() == BackendState::Playing; }, nullptr, 5000));
+        CHECK(cache.origin.count() > 0);
     }
 
     TEST_CASE("a cache entry reset while it plays (the server sent different media) is opened again and plays")
