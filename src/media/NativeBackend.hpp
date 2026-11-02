@@ -63,7 +63,8 @@ private:
     void reopenCurrent(const Voice* voice, const Error& error);
     [[nodiscard]] bool ensureOutput();
     void restartOutput();
-    void syncAdvances();
+    // Takes over the moves the mixer made to the next voice; `report` emits advanced() for each. True if any.
+    bool syncAdvances(bool report = true);
     void armNext();
     void dropNext();
     [[nodiscard]] Slot* slotFor(std::uint64_t serial);

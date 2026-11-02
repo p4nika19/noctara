@@ -202,12 +202,13 @@ void NativeBackend::reopenCurrent(const Voice* voice, const Error& error)
     open(m_current, PlaybackSource(m_current.source));
 }
 
-void NativeBackend::syncAdvances()
+bool NativeBackend::syncAdvances(bool report)
 {
     if (!m_mixer) {
-        return;
+        return false;
     }
     const std::uint64_t advances = m_mixer->advances();
+    const bool any = m_advancesSeen < advances;
     while (m_advancesSeen < advances) {
         ++m_advancesSeen;
         // The mixer reads the next voice now; the old one is no longer used.
@@ -215,8 +216,11 @@ void NativeBackend::syncAdvances()
         m_next = {};
         m_startMs = 0;
         m_seekMs = -1;
-        Q_EMIT advanced();
+        if (report) {
+            Q_EMIT advanced();
+        }
     }
+    return any;
 }
 
 void NativeBackend::armNext()
@@ -238,13 +242,19 @@ void NativeBackend::dropNext()
 void NativeBackend::load(const PlaybackSource& source, std::int64_t startMs, bool paused)
 {
     m_paused = paused;
+    // The caller has chosen what plays now: a move the mixer made since the last tick is not reported, or it would
+    // move the caller past the track it is loading.
+    const bool movedOn = syncAdvances(false);
     m_seekMs = -1;
     m_startMs = startMs;
     m_reopened = false;
-    syncAdvances();
+    const bool playingIt = movedOn && startMs == 0 && m_current.source.info.key == source.info.key &&
+                           (m_current.voice || m_current.opening);
     const bool preloaded =
-        m_next.source.info.key == source.info.key && (m_next.voice || m_next.opening) && startMs == 0;
-    if (preloaded) {
+        playingIt || (m_next.source.info.key == source.info.key && (m_next.voice || m_next.opening) && startMs == 0);
+    if (playingIt) {
+        // The mixer already plays it (gaplessly after the previous one): it goes on as it is.
+    } else if (preloaded) {
         // The track prepared to follow: take it over as it is.
         if (m_mixer) {
             m_mixer->setVoices(m_next.voice ? m_next.voice->ring() : nullptr, nullptr);

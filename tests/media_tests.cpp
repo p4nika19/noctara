@@ -844,6 +844,41 @@ TEST_SUITE("media.backend")
         CHECK(backend.state() == BackendState::Playing);
     }
 
+    TEST_CASE("loading the track the mixer just moved on to keeps it playing and reports no stale advance")
+    {
+        Cache cache;
+        FakeOutput output;
+        NativeBackend backend(*cache.audio, output);
+        QSignalSpy advanced(&backend, &IPlaybackBackend::advanced);
+        for (const char* name : {"a.mp3", "b.mp3"}) {
+            cache.origin.serve(QStringLiteral("https://cdn.test/") + QLatin1StringView(name),
+                               {.body = fixture(QStringLiteral("sine.mp3"))});
+        }
+        const auto source = [](const char* name) {
+            return PlaybackSource{.info = trackInfo(QLatin1StringView(name), cache::StreamProtocol::Progressive,
+                                                    QStringLiteral("audio/mpeg")),
+                                  .urls = Cache::urls(QStringLiteral("https://cdn.test/") + QLatin1StringView(name))};
+        };
+        backend.load(source("a.mp3"), 0, false);
+        REQUIRE(pump(output, [&] { return backend.state() == BackendState::Playing; }));
+        backend.setNext(source("b.mp3"));
+        REQUIRE(pump(output, [&] { return cache.origin.count() == 2; }));
+        (void)test::waitUntil([] { return false; }, 300);  // b decodes ahead
+        // The device drains a and goes on into b before the backend's tick has seen it (no event loop here).
+        const std::int64_t left = 2500 - backend.position();
+        for (std::int64_t pulled = 0; pulled < left * kDevice.sampleRate / 1000; pulled += 480) {
+            (void)output.pull(480);
+            std::this_thread::sleep_for(1ms);
+        }
+        REQUIRE(advanced.isEmpty());
+        const int requests = cache.origin.count();
+        backend.load(source("b.mp3"), 0, false);  // the caller moved its queue to b itself
+        CHECK(advanced.isEmpty());
+        CHECK(backend.position() > 0);  // b plays on instead of starting over
+        CHECK(backend.state() == BackendState::Playing);
+        CHECK(cache.origin.count() == requests);
+    }
+
     TEST_CASE("a cache entry reset while it plays (the server sent different media) is opened again and plays")
     {
         Cache cache;
