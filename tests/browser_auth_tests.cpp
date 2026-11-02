@@ -452,6 +452,29 @@ TEST_SUITE("auth.browser-cookies")
         CHECK(*token == QByteArrayLiteral("firefox-token"));
     }
 
+    TEST_CASE("discovers Firefox profiles whose name contains a comma")
+    {
+        QTemporaryDir home;
+        const QString root = home.path() + QStringLiteral("/.mozilla/firefox");
+        makeFirefoxProfile(root, QByteArrayLiteral("comma-token"));
+        // Firefox names the directory "<salt>.<profile name>" and writes Path= and Name= unquoted.
+        REQUIRE(QDir(root).rename(QStringLiteral("default-profile"), QStringLiteral("abcd.Work, Home")));
+        QFile settings(root + QStringLiteral("/profiles.ini"));
+        REQUIRE(settings.open(QIODevice::WriteOnly | QIODevice::Truncate));
+        REQUIRE(settings.write("[General]\nStartWithLastProfile=1\n\n"
+                               "[Profile0]\nName=Work, Home\nIsRelative=1\nPath=abcd.Work, Home\n") > 0);
+        settings.close();
+
+        auth::BrowserCookieSource source(home.path(), {});
+        auto profiles = discover(source);
+        REQUIRE(profiles);
+        REQUIRE(profiles->size() == 1);
+        CHECK(profiles->constFirst().profileName == u"Work, Home");
+        auto token = importToken(source, profiles->constFirst());
+        REQUIRE(token);
+        CHECK(*token == QByteArrayLiteral("comma-token"));
+    }
+
     TEST_CASE("Firefox expiry is understood in seconds and in milliseconds")
     {
         const qint64 past = QDateTime::currentSecsSinceEpoch() - 60;

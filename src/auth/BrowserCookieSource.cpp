@@ -12,12 +12,12 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QFuture>
+#include <QHash>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QPointer>
 #include <QProcessEnvironment>
 #include <QSet>
-#include <QSettings>
 #include <QTemporaryDir>
 #include <QtConcurrent/QtConcurrentRun>
 
@@ -202,13 +202,42 @@ void addChromiumRoot(QVector<BrowserProfile>& profiles, QSet<QString>& seen, con
     }
 }
 
+// profiles.ini as Firefox's own INI parser reads it: [section] headers and key=value lines split at the first '='.
+// QSettings is not used because it turns unquoted values with commas (Path=abcd.Work, Home) into lists and applies
+// quote and escape rules Firefox does not write.
+QHash<QString, QHash<QString, QString>> readProfilesIni(const QString& path)
+{
+    QHash<QString, QHash<QString, QString>> sections;
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return sections;
+    }
+    QString section;
+    for (const QByteArray& rawLine : file.readAll().split('\n')) {
+        const QString line = QString::fromUtf8(rawLine).trimmed();
+        if (line.isEmpty() || line.startsWith(u';') || line.startsWith(u'#')) {
+            continue;
+        }
+        if (line.startsWith(u'[')) {
+            const qsizetype end = line.indexOf(u']');
+            section = end > 0 ? line.mid(1, end - 1).trimmed() : QString();
+            continue;
+        }
+        const qsizetype equals = line.indexOf(u'=');
+        if (section.isEmpty() || equals <= 0) {
+            continue;
+        }
+        sections[section].insert(line.left(equals).trimmed(), line.mid(equals + 1).trimmed());
+    }
+    return sections;
+}
+
 void addFirefoxRoot(QVector<BrowserProfile>& profiles, QSet<QString>& seen, const FirefoxBrowser& browser,
                     const Root& root)
 {
-    QSettings settings(root.path + QStringLiteral("/profiles.ini"), QSettings::IniFormat);
-    const QStringList groups = settings.childGroups();
+    const auto sections = readProfilesIni(root.path + QStringLiteral("/profiles.ini"));
     QStringList profileGroups;
-    for (const QString& group : groups) {
+    for (const QString& group : sections.keys()) {
         if (group.startsWith(QStringLiteral("Profile"))) {
             profileGroups.append(group);
         }
@@ -227,11 +256,10 @@ void addFirefoxRoot(QVector<BrowserProfile>& profiles, QSet<QString>& seen, cons
     };
     bool found = false;
     for (const QString& group : profileGroups) {
-        settings.beginGroup(group);
-        QString directory = settings.value(QStringLiteral("Path")).toString();
-        const bool relative = settings.value(QStringLiteral("IsRelative"), 1).toInt() != 0;
-        QString name = settings.value(QStringLiteral("Name")).toString();
-        settings.endGroup();
+        const QHash<QString, QString> values = sections.value(group);
+        QString directory = values.value(QStringLiteral("Path"));
+        const bool relative = values.value(QStringLiteral("IsRelative"), QStringLiteral("1")).toInt() != 0;
+        const QString name = values.value(QStringLiteral("Name"));
         if (directory.isEmpty()) {
             continue;
         }
@@ -242,7 +270,7 @@ void addFirefoxRoot(QVector<BrowserProfile>& profiles, QSet<QString>& seen, cons
         if (seen.contains(database) || !QFileInfo::exists(QFileInfo(database).absolutePath())) {
             continue;
         }
-        add(directory, database, name.isEmpty() ? QFileInfo(directory).fileName() : std::move(name));
+        add(directory, database, name.isEmpty() ? QFileInfo(directory).fileName() : name);
         found = true;
     }
     if (found || !QFileInfo::exists(root.path)) {
