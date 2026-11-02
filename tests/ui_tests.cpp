@@ -1,6 +1,8 @@
 #include "TestUtil.hpp"
 
 #include "i18n/LanguageManager.hpp"
+#include "media/PlaybackQueue.hpp"
+#include "media/QueueModel.hpp"
 #include "settings/ConfigFile.hpp"
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
@@ -9,6 +11,7 @@
 #include "ui/SettingsModel.hpp"
 #include "ui/WaveformItem.hpp"
 
+#include <QAbstractItemModelTester>
 #include <QColor>
 #include <QJSEngine>
 #include <QQmlComponent>
@@ -20,6 +23,7 @@
 #include <QTest>
 
 #include <atomic>
+#include <cmath>
 #include <functional>
 #include <map>
 #include <memory>
@@ -363,7 +367,7 @@ constexpr auto kPlayerStub = R"js(({
     waveform: [], cachedRanges: [], errorCode: 0, queue: null
 }))js";
 
-void installStubs()
+void installStubs(stub::Factory player)
 {
     static const bool waveform = [] {
         qmlRegisterType<ui::WaveformItem>("Noctara", 1, 0, "WaveformItem");
@@ -376,7 +380,11 @@ void installStubs()
     stub::singleton("Layout", QStringLiteral("({fullPlayerQueue: false, fullPlayerArt: 'large', "
                                              "fullPlayerWaveform: false})"));
     stub::singleton("Artwork", QStringLiteral("({hasArtwork: false, revision: 0})"));
-    stub::singleton("Player", QString::fromUtf8(kPlayerStub));
+    if (player) {
+        stub::singleton("Player", std::move(player));
+    } else {
+        stub::singleton("Player", QString::fromUtf8(kPlayerStub));
+    }
 }
 
 // A shown Window written in `qml`, resolved as if it lived next to the components (so they are found by name),
@@ -385,9 +393,9 @@ struct WindowHarness {
     QQmlEngine engine;
     std::unique_ptr<QQuickWindow> window;
 
-    explicit WindowHarness(const QByteArray& qml, QQmlImageProviderBase* cover = nullptr)
+    explicit WindowHarness(const QByteArray& qml, QQmlImageProviderBase* cover = nullptr, stub::Factory player = {})
     {
-        installStubs();
+        installStubs(std::move(player));
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
         engine.addImageProvider(QStringLiteral("icon"), new SolidIconProvider);
         if (cover != nullptr) {
@@ -429,6 +437,18 @@ public:
 private:
     std::atomic<int>& m_requests;
 };
+
+std::vector<media::QueueItem> queueItems(int count)
+{
+    std::vector<media::QueueItem> items;
+    for (int i = 0; i < count; ++i) {
+        media::QueueItem item;
+        item.track.id = i + 1;
+        item.track.title = QStringLiteral("Track %1").arg(i);
+        items.push_back(std::move(item));
+    }
+    return items;
+}
 
 }  // namespace
 
@@ -537,5 +557,67 @@ TEST_SUITE("ui.components")
         CHECK_FALSE(pill->isVisible());
         rail->setProperty("current", QStringLiteral("settings"));
         CHECK(pill->isVisible());
+    }
+
+    TEST_CASE("queue edits keep the queue list's scroll position")
+    {
+        media::PlaybackQueue queue;
+        media::QueueModel model(queue);
+        queue.replace(queueItems(200), 0);
+        model.reload();
+        QAbstractItemModelTester tester(&model, QAbstractItemModelTester::FailureReportingMode::Warning);
+        QQmlEngine::setObjectOwnership(&model, QQmlEngine::CppOwnership);
+        const WindowHarness harness(R"(Window {
+            width: 300; height: 400; visible: true
+            property Item list: list
+            QueueList { id: list; anchors.fill: parent }
+        })",
+                                    nullptr, [&model](QJSEngine* js) {
+                                        QJSValue player = js->newObject();
+                                        player.setProperty(QStringLiteral("queue"), js->newQObject(&model));
+                                        return player;
+                                    });
+        QQuickItem* list = harness.item("list");
+        REQUIRE(test::waitUntil([&] { return list->property("count").toInt() == 200; }));
+        // The track at the top of the view (its number in the title).
+        const auto topTrack = [&] {
+            int row = -1;
+            QMetaObject::invokeMethod(list, "indexAt", Q_RETURN_ARG(int, row), Q_ARG(qreal, 10),
+                                      Q_ARG(qreal, list->property("contentY").toReal() + 1));
+            return model.data(model.index(row), media::QueueModel::TitleRole).toString().section(u' ', 1).toInt();
+        };
+        list->setProperty("contentY", 150 * 40);
+        QCoreApplication::processEvents();
+        REQUIRE(topTrack() == 150);
+
+        // The view stays where it is; a row added or removed above shifts the content by that row only.
+        const auto stays = [&](int expected) {
+            QCoreApplication::processEvents();
+            CHECK(list->property("contentY").toReal() == 150 * 40);
+            CHECK(std::abs(topTrack() - expected) <= 1);
+        };
+        REQUIRE(queue.remove(160));  // the hover "x" on a row below
+        model.reload();
+        stays(150);
+        REQUIRE(queue.move(170, 1));  // "Play next"
+        model.reload();
+        stays(150);
+        REQUIRE(queue.remove(5));  // above the visible rows
+        model.reload();
+        stays(150);
+        queue.append(queueItems(3));
+        model.reload();
+        stays(150);
+        CHECK(model.data(model.index(model.rowCount() - 1), media::QueueModel::TitleRole).toString() ==
+              QStringLiteral("Track 2"));
+
+        // A new queue still brings its current item into view.
+        list->setProperty("contentY", 0);
+        queue.replace(queueItems(200), 120);
+        model.reload();
+        CHECK(test::waitUntil([&] {
+            const qreal top = list->property("contentY").toReal();
+            return top <= 120 * 40 && 121 * 40 <= top + 400;
+        }));
     }
 }

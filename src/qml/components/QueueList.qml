@@ -9,9 +9,16 @@ ListView {
 
     // False unloads the rows (the drawer is closed).
     property bool active: true
+    // The first rows and a new queue (the model is reset) bring the current item into view; removing, moving or
+    // adding items keeps the scroll position.
+    property int shownCount: 0
 
     function centerOnCurrent() {
         positionViewAtIndex(Math.max(0, Player.queue.currentIndex), ListView.Center)
+    }
+    function showCurrent() {
+        if (active && count > 0)
+            positionViewAtIndex(Math.max(0, Player.queue.currentIndex), ListView.Contain)
     }
 
     clip: true
@@ -19,7 +26,16 @@ ListView {
     boundsBehavior: Flickable.StopAtBounds
     model: active ? Player.queue : null
     ScrollBar.vertical: ScrollBar {}
-    onCountChanged: if (active) positionViewAtIndex(Math.max(0, Player.queue.currentIndex), ListView.Contain)
+    onCountChanged: {
+        if (shownCount === 0)
+            showCurrent()
+        shownCount = count
+    }
+    Connections {
+        target: list.model
+        // After the view has rebuilt its rows.
+        function onModelReset() { Qt.callLater(list.showCurrent) }
+    }
 
     delegate: Item {
         id: row
