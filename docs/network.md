@@ -25,7 +25,7 @@ How the pieces fit:
 - `CURLOPT_RESOLVER_START_FUNCTION` acts as a guard. If curl ever starts its own resolution, the transfer fails and
   `unexpectedCurlResolves()` increments. Every integration test asserts it stays 0.
 - Redirects are followed by Noctara, not by curl. Each new host goes through the same resolver and proxy rules.
-  `Authorization` and `Cookie` headers are dropped when a redirect leaves the host.
+  `Authorization` and `Cookie` headers are dropped when a redirect changes the scheme, host or port.
 - `CURLOPT_PROXY` is always set: `""` disables curl's own environment lookup, because routing has already been
   decided by `net::ProxyRouter`.
 

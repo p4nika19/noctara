@@ -404,6 +404,33 @@ TEST_SUITE("net.transport")
         REQUIRE(away);
         CHECK(away->body == "clean");
         CHECK(away->url.host() == QStringLiteral("other.test"));
+
+        // Same host, another port: a different origin, so the credentials stay behind too.
+        test::HttpServer port([&](const test::HttpRequest&) {
+            const QByteArray location = "http://app.test:" + QByteArray::number(target.port()) + "/x";
+            return test::HttpReply{.status = 302, .headers = {{"Location", location}}, .body = {}};
+        });
+        request.url = QUrl(QStringLiteral("http://app.test:%1/port").arg(port.port()));
+        const auto otherPort = net.fetch(request);
+        REQUIRE_MESSAGE(otherPort, test::describe(otherPort));
+        CHECK(otherPort->body == "clean");
+
+        // https -> http on the same host: never send the token in cleartext.
+        const test::TestCertificate certificate;
+        TransportConfig config;
+        config.caBundle = certificate.pemPath();
+        config.retryBackoff = 50ms;
+        net.transport.setConfig(config);
+        test::HttpServer secure(
+            [&](const test::HttpRequest&) {
+                const QByteArray location = "http://app.test:" + QByteArray::number(target.port()) + "/x";
+                return test::HttpReply{.status = 302, .headers = {{"Location", location}}, .body = {}};
+            },
+            &certificate);
+        request.url = QUrl(QStringLiteral("https://app.test:%1/down").arg(secure.port()));
+        const auto downgrade = net.fetch(request);
+        REQUIRE_MESSAGE(downgrade, test::describe(downgrade));
+        CHECK(downgrade->body == "clean");
         CHECK(net.transport.unexpectedCurlResolves() == 0);
     }
 

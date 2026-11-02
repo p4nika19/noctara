@@ -845,8 +845,9 @@ void CurlTransport::followRedirect(Transfer& transfer, const QUrl& target)
         request.method = Method::Get;
         request.body.clear();
     }
-    if (target.host() != request.url.host()) {
-        // Credentials meant for one host never travel to another.
+    if (target.scheme() != request.url.scheme() || target.host() != request.url.host() ||
+        defaultPort(target) != defaultPort(request.url)) {
+        // Credentials meant for one origin never travel to another (nor from https down to http).
         request.headers.removeIf(
             [](const auto& header) { return header.first == "authorization" || header.first == "cookie"; });
     }
