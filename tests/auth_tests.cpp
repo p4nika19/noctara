@@ -19,6 +19,7 @@
 #include <QTemporaryDir>
 
 #include <optional>
+#include <thread>
 
 using namespace noctara;
 using test::FakeApi;
@@ -313,6 +314,27 @@ TEST_SUITE("ui.account")
         CHECK(h.session.token() == QByteArray("good-token"));
         CHECK(h.stored() == QByteArray("good-token"));
         CHECK(rejected.isEmpty());  // a wrong candidate says nothing about the working session
+    }
+
+    TEST_CASE("a queued rejection of the previous token leaves a newly installed token alone")
+    {
+        Harness h("good-token");
+        AccountController account(h.client, h.session, h.secrets);
+        account.signInWithToken(QStringLiteral("good-token"));
+        REQUIRE(test::waitUntil([&] { return account.signedIn() && account.username() == u"nightowl"; }, 3000));
+
+        // The API thread reports a 401 for the old token while the new token's accepted check is already queued
+        // for the GUI thread: the rejection arrives after the new token is installed.
+        std::thread([&] { h.session.reportRejected("good-token"); }).join();
+        h.session.setToken("new-token");
+        test::waitUntil([] { return false; }, 100);
+        CHECK(h.session.token() == QByteArray("new-token"));
+        CHECK(account.state() == AccountController::SignedIn);
+
+        // A rejection of the current token still expires it.
+        std::thread([&] { h.session.reportRejected("new-token"); }).join();
+        REQUIRE(test::waitUntil([&] { return account.state() == AccountController::Expired; }, 3000));
+        CHECK(h.session.token().isEmpty());
     }
 
     TEST_CASE("the check of a candidate token bypasses the HTTP cache")

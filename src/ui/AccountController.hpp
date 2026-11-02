@@ -102,7 +102,7 @@ private:
     void setState(State state);
     void setBusy(bool busy);
     void setBrowserBusy(bool busy);
-    void onRejected();
+    void onRejected(const QByteArray& digest);
 
     api::IApiClient& m_client;
     api::Session& m_session;

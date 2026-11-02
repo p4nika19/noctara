@@ -29,8 +29,9 @@ public:
 
 Q_SIGNALS:
     void changed();
-    // The token no longer works: the UI asks the user to sign in again.
-    void rejected();
+    // The token with this digest() no longer works: the UI asks the user to sign in again. Receivers on other
+    // threads get it queued, so they compare the digest with the token current when it arrives.
+    void rejected(const QByteArray& digest);
 
 private:
     mutable std::mutex m_mutex;

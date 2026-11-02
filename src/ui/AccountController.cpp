@@ -300,8 +300,11 @@ void AccountController::signOut()
     Q_EMIT notice(QStringLiteral("info"), tr("Signed out of SoundCloud."));
 }
 
-void AccountController::onRejected()
+void AccountController::onRejected(const QByteArray& digest)
 {
+    if (digest != api::Session::digest(m_session.token())) {
+        return;  // the rejected token was replaced before this queued report arrived
+    }
     expire();  // a no-op once signed out or already expired
 }
 

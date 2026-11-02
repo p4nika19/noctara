@@ -48,7 +48,7 @@ void Session::reportRejected(const QByteArray& token)
         }
         m_rejected = token;
     }
-    Q_EMIT rejected();
+    Q_EMIT rejected(digest(token));
 }
 
 QByteArray Session::digest(const QByteArray& token)
