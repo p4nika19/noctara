@@ -469,7 +469,7 @@ void PlaybackController::startCurrent(std::int64_t startMs, bool paused)
         // first.
         const std::uint64_t serial = m_trackSerial;
         const api::Id id = item->track.id;
-        hydrate({id}, [this, serial, id, startMs, paused] {
+        hydrate({id}, [this, serial, id, startMs] {
             if (serial != m_trackSerial) {
                 return;
             }
@@ -481,7 +481,7 @@ void PlaybackController::startCurrent(std::int64_t startMs, bool paused)
                 skipAfterError(ErrorCode::NotPlayable);
                 return;
             }
-            startCurrent(startMs, paused);
+            startCurrent(startMs, !m_pendingPlay);  // paused or stopped meanwhile: it loads paused
         });
         Q_EMIT stateChanged();
         return;

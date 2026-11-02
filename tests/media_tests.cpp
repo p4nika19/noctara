@@ -1198,6 +1198,20 @@ TEST_SUITE("media.controller")
         CHECK(player.loadedId(1) == u"8");
     }
 
+    TEST_CASE("a pause while the current track is still being looked up keeps it paused when it loads")
+    {
+        Player player({}, {{7, apiTrack(7)}});
+        api::Track saved = apiTrack(7);
+        saved.stale = true;
+        player.controller->playTracks({saved}, 0, {});
+        CHECK(player.controller->playing());
+        player.controller->pause();  // the lookup answers queued, so this comes first
+        CHECK_FALSE(player.controller->playing());
+        REQUIRE(test::waitUntil([&] { return player.backend.loads.size() == 1; }));
+        CHECK(player.backend.state() == BackendState::Paused);
+        CHECK_FALSE(player.controller->playing());
+    }
+
     TEST_CASE("the backend's gapless advance moves the queue without loading again")
     {
         Player player;
