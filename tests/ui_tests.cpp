@@ -731,4 +731,38 @@ TEST_SUITE("ui.settings-panes")
         CHECK_MESSAGE(requests == 0, "image requests from theme text: ", requests.load());
     }
 
+    TEST_CASE("Enter in the empty proxy password field keeps the saved credentials")
+    {
+        stub::singleton("Network", QStringLiteral(R"js((function() {
+            const network = {proxyUsername: 'u', hasProxyCredentials: true, keyringAvailable: true,
+                             secretsPersistent: true, calls: []};
+            network.saveProxyCredentials = (user, password) => network.calls.push('save ' + user + ':' + password);
+            network.forgetProxyCredentials = () => network.calls.push('forget');
+            return network;
+        })())js"));
+        const WindowHarness harness(R"(import "../settings/network"
+        Window {
+            width: 600; height: 300; visible: true
+            property Item credentials: credentials
+            function calls() { return Network.calls.join(',') }
+            ProxyCredentials { id: credentials; width: 600 }
+        })");
+        QQuickItem* password = nullptr;
+        for (auto* child : harness.item("credentials")->findChildren<QQuickItem*>()) {
+            if (child->inherits("QQuickTextField") && child->property("echoMode").toInt() == 2) {  // Password
+                password = child;
+            }
+        }
+        REQUIRE(password != nullptr);
+        REQUIRE(password->property("text").toString().isEmpty());
+        REQUIRE(QMetaObject::invokeMethod(password, "accepted"));
+        QVariant calls;
+        REQUIRE(QMetaObject::invokeMethod(harness.window.get(), "calls", Q_RETURN_ARG(QVariant, calls)));
+        CHECK_MESSAGE(calls.toString().isEmpty(), "credential calls: ", calls.toString());
+
+        password->setProperty("text", QStringLiteral("secret"));  // a typed password is still saved on Enter
+        REQUIRE(QMetaObject::invokeMethod(password, "accepted"));
+        REQUIRE(QMetaObject::invokeMethod(harness.window.get(), "calls", Q_RETURN_ARG(QVariant, calls)));
+        CHECK(calls.toString() == QStringLiteral("save u:secret"));
+    }
 }

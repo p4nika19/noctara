@@ -43,7 +43,7 @@ Column {
             iconName: "lock"
             echoMode: TextInput.Password
             placeholderText: Network.hasProxyCredentials ? qsTr("Saved – type to replace") : qsTr("Password")
-            onAccepted: save.clicked()
+            onAccepted: if (save.enabled) save.clicked()
         }
     }
     Flow {
