@@ -3,6 +3,8 @@
 #include "i18n/LanguageManager.hpp"
 #include "media/PlaybackQueue.hpp"
 #include "media/QueueModel.hpp"
+#include "models/CollectionModel.hpp"
+#include "models/Details.hpp"
 #include "settings/ConfigFile.hpp"
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
@@ -22,6 +24,7 @@
 #include <QTemporaryDir>
 #include <QTest>
 
+#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <functional>
@@ -619,5 +622,73 @@ TEST_SUITE("ui.components")
             const qreal top = list->property("contentY").toReal();
             return top <= 120 * 40 && 121 * 40 <= top + 400;
         }));
+    }
+}
+
+namespace {
+
+// An API client that records the URLs it is asked for and never answers (the lists stay loading).
+class RecordingClient : public api::IApiClient {
+public:
+    net::RequestHandle send(api::ApiRequest request, QObject* /*context*/, api::Decoder /*decode*/) override
+    {
+        urls.push_back(request.url);
+        return {};
+    }
+    net::RequestHandle lookupTracks(std::vector<api::Id> /*ids*/, QObject* /*context*/,
+                                    std::function<void(Result<std::vector<api::Track>>)> /*done*/) override
+    {
+        return {};
+    }
+    [[nodiscard]] bool asked(const QString& path) const
+    {
+        return std::ranges::any_of(urls, [&](const QUrl& url) { return url.path() == path; });
+    }
+
+    std::vector<QUrl> urls;
+};
+
+}  // namespace
+
+TEST_SUITE("ui.pages")
+{
+    TEST_CASE("a user page reused for another user loads that user's playlists on the Playlists tab")
+    {
+        static const bool registered = [] {
+            qmlRegisterUncreatableType<models::UserDetail>("Noctara", 1, 0, "UserDetail", QStringLiteral("test"));
+            qmlRegisterUncreatableType<models::CollectionModel>("Noctara", 1, 0, "CollectionModel",
+                                                                QStringLiteral("test"));
+            return true;
+        }();
+        (void)registered;
+        RecordingClient client;
+        models::UserDetail first(client, 1, 20);
+        models::UserDetail second(client, 2, 20);
+        QQmlEngine::setObjectOwnership(&first, QQmlEngine::CppOwnership);
+        QQmlEngine::setObjectOwnership(&second, QQmlEngine::CppOwnership);
+        // Like Main.qml's detail Loader: one user detail replacing another keeps the same UserPage.
+        const WindowHarness harness(R"(import "../pages"
+        Window {
+            id: root
+            width: 800; height: 600; visible: true
+            property QtObject user: null
+            property Item page: loader.item
+            Loader {
+                id: loader
+                anchors.fill: parent
+                active: root.user !== null
+                sourceComponent: Component { UserPage { detail: root.user } }
+            }
+        })");
+        harness.window->setProperty("user", QVariant::fromValue<QObject*>(&first));
+        REQUIRE(test::waitUntil([&] { return harness.item("page") != nullptr; }));
+        QQuickItem* page = harness.item("page");
+        page->setProperty("tab", QStringLiteral("playlists"));
+        CHECK(client.asked(QStringLiteral("/users/1/playlists")));
+
+        harness.window->setProperty("user", QVariant::fromValue<QObject*>(&second));
+        REQUIRE(harness.item("page") == page);
+        CHECK(page->property("tab").toString() == QStringLiteral("playlists"));
+        CHECK(test::waitUntil([&] { return client.asked(QStringLiteral("/users/2/playlists")); }, 1000));
     }
 }

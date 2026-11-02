@@ -9,6 +9,8 @@ Item {
     required property UserDetail detail
     property string tab: "tracks"
     onTabChanged: if (tab === "playlists") detail.loadPlaylists()
+    // The page is kept when one user replaces another (Main.qml's detail Loader); the tab stays.
+    onDetailChanged: if (tab === "playlists" && detail) detail.loadPlaylists()
 
     CollectionView {
         anchors.fill: parent
