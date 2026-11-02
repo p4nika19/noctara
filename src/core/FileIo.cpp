@@ -102,9 +102,10 @@ Result<void> writeViaTemp(const QString& path, QByteArrayView data, mode_t mode,
         return dir;
     }
 
-    const QString tempPath = QStringLiteral("%1/.%2.%3.tmp")
-                                 .arg(info.absolutePath(), info.fileName())
-                                 .arg(QRandomGenerator::system()->generate64(), 0, 16);
+    // One multi-arg pass: a chained arg() would replace a "%2" or the like inside the directory's name.
+    const QString tempPath =
+        QStringLiteral("%1/.%2.%3.tmp")
+            .arg(info.absolutePath(), info.fileName(), QString::number(QRandomGenerator::system()->generate64(), 16));
     const QByteArray nativeTemp = QFile::encodeName(tempPath);
     const QByteArray nativeTarget = QFile::encodeName(info.absoluteFilePath());
 

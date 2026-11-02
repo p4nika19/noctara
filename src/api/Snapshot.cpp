@@ -265,7 +265,8 @@ QString SnapshotStore::pathFor(Id account, const QString& key) const
     static const QRegularExpression unsafe(QStringLiteral("[^a-z0-9-]"));
     QString name = key.toLower();
     name.replace(unsafe, QStringLiteral("-"));
-    return QStringLiteral("%1/%2/%3.json").arg(m_root).arg(account).arg(name);
+    // One multi-arg pass: chained arg() calls would also replace "%2" and the like inside the root path.
+    return QStringLiteral("%1/%2/%3.json").arg(m_root, QString::number(account), name);
 }
 
 void SnapshotStore::load(const QString& key, QObject* context, std::function<void(std::optional<Snapshot>)> done) const
@@ -329,7 +330,7 @@ void SnapshotStore::forget(Id account)
     }
     flush();
     const std::scoped_lock lock(m_shared->mutex);
-    (void)QDir(QStringLiteral("%1/%2").arg(m_root).arg(account)).removeRecursively();
+    (void)QDir(QStringLiteral("%1/%2").arg(m_root, QString::number(account))).removeRecursively();
     if (account == m_lastAccount.load()) {
         m_lastAccount.store(0);
         (void)QFile::remove(m_root + QStringLiteral("/account"));

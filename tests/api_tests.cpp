@@ -948,6 +948,28 @@ TEST_SUITE("api.snapshot")
         store.clear();
         CHECK_FALSE(QDir(dir.path()).exists());
     }
+
+    TEST_CASE("a store root with percent signs keeps the lists inside it")
+    {
+        QTemporaryDir dir;
+        const QString root = dir.filePath(QStringLiteral("dav:prefix=%2Fdav%3Ax/library"));  // like a gvfs mount
+        SnapshotStore store(root);
+        Snapshot snapshot;
+        Track track;
+        track.id = 5;
+        track.stub = true;
+        snapshot.entries.push_back({.item = track, .at = {}, .repostedBy = std::nullopt});
+        store.setAccount(7);
+        store.save(QStringLiteral("likes"), snapshot);
+        store.flush();
+        CHECK(QFile::exists(root + QStringLiteral("/7/likes.json")));
+        CHECK(QDir(dir.path()).entryList(QDir::AllEntries | QDir::NoDotAndDotDot) ==
+              QStringList{QStringLiteral("dav:prefix=%2Fdav%3Ax")});
+        store.forget(7);
+        CHECK_FALSE(QDir(root + QStringLiteral("/7")).exists());
+        store.clear();
+        CHECK_FALSE(QDir(root).exists());
+    }
 }
 
 TEST_SUITE("models.sync")
