@@ -57,6 +57,7 @@ Column {
             required property string modelData
             width: root.width
             text: modelData
+            textFormat: Text.PlainText
             font: Theme.font.caption
             color: Theme.colors.warning
             wrapMode: Text.Wrap

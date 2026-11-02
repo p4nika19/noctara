@@ -692,3 +692,43 @@ TEST_SUITE("ui.pages")
         CHECK(test::waitUntil([&] { return client.asked(QStringLiteral("/users/2/playlists")); }, 1000));
     }
 }
+
+TEST_SUITE("ui.settings-panes")
+{
+    TEST_CASE("theme names and issue lines from a theme file are shown as plain text")
+    {
+        // A theme's name and its (raw TOML key) issue lines are untrusted: rich text would load <img> sources.
+        stub::singleton("Themes", QStringLiteral(R"js(({
+            themes: [{id: 'a', name: "<img src='image://cover/name'>Aurora", usable: true},
+                     {id: 'b', name: "<img src='image://cover/unusable'>Broken", usable: false}],
+            selected: 'a',
+            selectedIssues: ["<img src='image://cover/issue'> is not a known token"],
+            select: id => {}, importFile: url => {}, exportTheme: (id, url) => {}, openFolder: () => {}
+        }))js"));
+        std::atomic<int> requests = 0;
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
+        auto* cover = new CountingCoverProvider(requests);
+        const WindowHarness harness(R"(import "../settings"
+        Window {
+            width: 600; height: 400; visible: true
+            property Item picker: picker
+            ThemePicker { id: picker }
+        })",
+                                    cover);
+        QQuickItem* combo = nullptr;
+        for (auto* child : harness.item("picker")->findChildren<QQuickItem*>()) {
+            if (child->inherits("QQuickComboBox")) {
+                combo = child;
+            }
+        }
+        REQUIRE(combo != nullptr);
+        REQUIRE(combo->property("displayText").toString().contains(QStringLiteral("Aurora")));
+        auto* popup = combo->property("popup").value<QObject*>();
+        REQUIRE(popup != nullptr);
+        REQUIRE(QMetaObject::invokeMethod(popup, "open"));
+        REQUIRE(test::waitUntil([&] { return popup->property("opened").toBool(); }));
+        QTest::qWait(300);
+        CHECK_MESSAGE(requests == 0, "image requests from theme text: ", requests.load());
+    }
+
+}

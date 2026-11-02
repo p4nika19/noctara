@@ -33,6 +33,7 @@ T.ComboBox {
 
     contentItem: Text {
         text: control.displayText
+        textFormat: Text.PlainText
         font: control.font
         color: Theme.colors.textPrimary
         verticalAlignment: Text.AlignVCenter
@@ -78,6 +79,7 @@ T.ComboBox {
                 Text {
                     width: parent.width
                     text: entry.modelData.label
+                    textFormat: Text.PlainText
                     font: entry.index === control.currentIndex ? Theme.font.bodyStrong : Theme.font.body
                     color: entry.index === control.currentIndex ? Theme.colors.accentText : Theme.colors.textPrimary
                     opacity: entry.available ? 1 : 0.45
@@ -87,6 +89,7 @@ T.ComboBox {
                     width: parent.width
                     visible: !entry.available && (entry.modelData.reason || "").length > 0
                     text: entry.modelData.reason || ""
+                    textFormat: Text.PlainText
                     font: Theme.font.caption
                     color: Theme.colors.textTertiary
                     wrapMode: Text.Wrap
