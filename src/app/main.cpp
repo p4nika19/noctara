@@ -282,8 +282,10 @@ int main(int argc, char** argv)
     }
 
     const std::span<char*> rawArgs(argv, static_cast<std::size_t>(argc));
+    // Every spelling of the help and version options (QCommandLineParser also accepts -v and --help-all).
     const bool headless = hasFlag(rawArgs, "--print-config") || hasFlag(rawArgs, "--reset-config") ||
-                          hasFlag(rawArgs, "--help") || hasFlag(rawArgs, "-h") || hasFlag(rawArgs, "--version");
+                          hasFlag(rawArgs, "--help") || hasFlag(rawArgs, "--help-all") || hasFlag(rawArgs, "-h") ||
+                          hasFlag(rawArgs, "--version") || hasFlag(rawArgs, "-v");
     // QApplication (not QGuiApplication) for the tray icon's menu; the UI itself is Qt Quick.
     const std::unique_ptr<QCoreApplication> app =
         headless ? std::make_unique<QCoreApplication>(argc, argv) : std::make_unique<QApplication>(argc, argv);
