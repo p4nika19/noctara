@@ -7,6 +7,7 @@
 #include "ui/IconProvider.hpp"
 #include "ui/SettingsController.hpp"
 #include "ui/SettingsModel.hpp"
+#include "ui/WaveformItem.hpp"
 
 #include <QColor>
 #include <QJSEngine>
@@ -18,6 +19,7 @@
 #include <QTemporaryDir>
 #include <QTest>
 
+#include <atomic>
 #include <functional>
 #include <map>
 #include <memory>
@@ -355,14 +357,26 @@ constexpr auto kThemeStub = R"js(({
     }
 }))js";
 
+constexpr auto kPlayerStub = R"js(({
+    artworkUrl: 'https://example.com/cover.jpg', title: 'Title', artist: 'Artist', artistId: 0, context: '',
+    duration: 0, position: 0, playing: false, canGoNext: false, shuffle: false, repeat: 0, volume: 1, muted: false,
+    waveform: [], cachedRanges: [], errorCode: 0, queue: null
+}))js";
+
 void installStubs()
 {
+    static const bool waveform = [] {
+        qmlRegisterType<ui::WaveformItem>("Noctara", 1, 0, "WaveformItem");
+        return true;
+    }();
+    (void)waveform;
     stub::singleton("Theme", QString::fromUtf8(kThemeStub));
     stub::singleton("Graphics", QStringLiteral("({hardware: false, ndcYUp: true})"));
     stub::singleton("Format", QStringLiteral("({revision: 0, duration: ms => '0:00', error: code => ''})"));
     stub::singleton("Layout", QStringLiteral("({fullPlayerQueue: false, fullPlayerArt: 'large', "
                                              "fullPlayerWaveform: false})"));
     stub::singleton("Artwork", QStringLiteral("({hasArtwork: false, revision: 0})"));
+    stub::singleton("Player", QString::fromUtf8(kPlayerStub));
 }
 
 // A shown Window written in `qml`, resolved as if it lived next to the components (so they are found by name),
@@ -371,11 +385,14 @@ struct WindowHarness {
     QQmlEngine engine;
     std::unique_ptr<QQuickWindow> window;
 
-    explicit WindowHarness(const QByteArray& qml)
+    explicit WindowHarness(const QByteArray& qml, QQmlImageProviderBase* cover = nullptr)
     {
         installStubs();
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
         engine.addImageProvider(QStringLiteral("icon"), new SolidIconProvider);
+        if (cover != nullptr) {
+            engine.addImageProvider(QStringLiteral("cover"), cover);
+        }
         QQmlComponent component(&engine);
         component.setData("import QtQuick\nimport Noctara\n" + qml,
                           QUrl::fromLocalFile(QStringLiteral(NOCTARA_SOURCE_DIR "/src/qml/components/Harness.qml")));
@@ -387,6 +404,30 @@ struct WindowHarness {
 
     [[nodiscard]] QObject* object(const char* name) const { return window->property(name).value<QObject*>(); }
     [[nodiscard]] QQuickItem* item(const char* name) const { return qobject_cast<QQuickItem*>(object(name)); }
+};
+
+// Counts image://cover requests (decode + mask jobs) and answers each with a small grey square.
+class CountingCoverProvider : public QQuickImageProvider {
+public:
+    explicit CountingCoverProvider(std::atomic<int>& requests)
+        : QQuickImageProvider(QQuickImageProvider::Image, QQmlImageProviderBase::ForceAsynchronousImageLoading)
+        , m_requests(requests)
+    {
+    }
+
+    QImage requestImage(const QString& /*id*/, QSize* size, const QSize& /*requestedSize*/) override
+    {
+        ++m_requests;
+        QImage image(8, 8, QImage::Format_ARGB32_Premultiplied);
+        image.fill(Qt::gray);
+        if (size != nullptr) {
+            *size = image.size();
+        }
+        return image;
+    }
+
+private:
+    std::atomic<int>& m_requests;
 };
 
 }  // namespace
@@ -452,5 +493,26 @@ TEST_SUITE("ui.components")
         REQUIRE(test::waitUntil([&] { return menu->property("height").toReal() > 300; }));
         CHECK(menu->property("y").toReal() + menu->property("height").toReal() <= 400);
         CHECK(menu->property("y").toReal() >= 0);
+    }
+
+    TEST_CASE("the full player's flying cover is decoded once, not on every animation frame")
+    {
+        std::atomic<int> requests = 0;
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
+        auto* cover = new CountingCoverProvider(requests);
+        const WindowHarness harness(R"(Window {
+            width: 1000; height: 800; visible: true
+            property Item player: player
+            FullPlayer { id: player; anchors.fill: parent; sourceRect: Qt.rect(20, 720, 64, 64) }
+        })",
+                                    cover);
+        QQuickItem* player = harness.item("player");
+        REQUIRE(test::waitUntil([&] { return requests > 0; }));
+        QTest::qWait(200);
+        const int before = requests;
+        player->setProperty("open", true);
+        REQUIRE(test::waitUntil([&] { return player->property("shown").toReal() == 1.0; }));
+        QTest::qWait(200);
+        CHECK_MESSAGE(requests - before <= 1, "cover requests during the flight: ", requests - before);
     }
 }

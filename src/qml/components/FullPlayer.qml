@@ -317,7 +317,9 @@ FocusScope {
         }
     }
 
-    // The flying cover: from the player bar into its slot while opening, and back while closing.
+    // The flying cover: from the player bar into its slot while opening, and back while closing. It keeps the
+    // slot's size and radius and is scaled instead: a size or radius that changed every frame would ask the image
+    // provider for a new decode each time and show the skeleton for the whole flight.
     CoverArt {
         id: flyer
         // Re-evaluated whenever anything that moves the slot changes (mapToItem alone does not track that).
@@ -327,9 +329,11 @@ FocusScope {
         }
         x: root.sourceRect.x + (slot.x - root.sourceRect.x) * root.shown
         y: root.sourceRect.y + (slot.y - root.sourceRect.y) * root.shown
-        width: root.sourceRect.width + (artSlot.width - root.sourceRect.width) * root.shown
+        width: artSlot.width
         height: width
-        radius: Theme.radius.sm + (Theme.radius.lg - Theme.radius.sm) * root.shown
+        transformOrigin: Item.TopLeft
+        scale: (root.sourceRect.width + (artSlot.width - root.sourceRect.width) * root.shown) / Math.max(1, artSlot.width)
+        radius: Theme.radius.lg
         source: Player.artworkUrl
         Accessible.ignored: true
         MouseArea {
