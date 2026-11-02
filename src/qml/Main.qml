@@ -227,6 +227,7 @@ Window {
         action: "search"
         onActivated: {
             window.fullPlayer = false
+            window.details = []  // also when the page already is "search" (no pageChanged then)
             window.page = "search"
             Qt.callLater(() => { if (searchPage.item) searchPage.item.focusField() })
         }
