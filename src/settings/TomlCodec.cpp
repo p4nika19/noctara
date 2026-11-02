@@ -215,6 +215,30 @@ ParsedConfig parseConfig(std::string_view text, const QString& fileName, const S
     migrate(root, parsed.version, Schema::kConfigVersion, builtinMigrations());
     root.erase(kVersionKey);
 
+    // Every settings section, and each table on its path, is written as a [table] header. A value in that place
+    // could not be written back next to the header (invalid TOML), so it is dropped; inline tables become
+    // standard tables.
+    for (const Section& section : schema.sections()) {
+        toml::table* current = &root;
+        std::string path;
+        for (const auto part : splitPath(section.id)) {
+            path += path.empty() ? std::string(part) : "." + std::string(part);
+            toml::node* node = current->get(part);
+            if (node == nullptr) {
+                break;
+            }
+            if (toml::table* child = node->as_table()) {
+                child->is_inline(false);
+                current = child;
+                continue;
+            }
+            parsed.issues.append(issueAt(*node, fileName, ConfigIssue::Severity::Error, ErrorCode::ConfigTypeMismatch,
+                                         latin(path), QStringLiteral("%1: expected a table").arg(latin(path))));
+            current->erase(part);
+            break;
+        }
+    }
+
     for (std::size_t i = 0; i < schema.size(); ++i) {
         const Definition& def = schema.at(i);
         toml::table* parent = tableAt(root, def.sectionId());

@@ -208,6 +208,35 @@ TEST_SUITE("settings.toml")
         CHECK(QString::fromUtf8(rewritten).contains(QStringLiteral("кириллица 🎵")));
     }
 
+    TEST_CASE("a value where a settings table belongs is reported and the rewrite stays valid TOML")
+    {
+        for (const std::string text : {"[cache]\nimages = 512\n", "[general]\nformatting = \"24h\"\n",
+                                       "network = 1\n[cache]\nimages = { future = 1 }\n"}) {
+            CAPTURE(text);
+            const auto parsed = parse(text);
+            REQUIRE(parsed.syntaxOk);
+            CHECK(std::ranges::any_of(parsed.issues, [](const ConfigIssue& issue) {
+                return issue.severity == ConfigIssue::Severity::Error || issue.code == ErrorCode::ConfigUnknownKey;
+            }));
+            const QByteArray rewritten = serializeConfig(schema(), parsed.values, parsed.unknownToml);
+            const auto reparsed =
+                parse(std::string_view(rewritten.constData(), static_cast<std::size_t>(rewritten.size())));
+            CHECK(reparsed.syntaxOk);
+        }
+
+        // Keys of a settings table written inline still apply; unknown ones are kept in that table.
+        const auto inlined =
+            parse("[cache]\nimages = { future = 1 }\n[network]\ndns = { fallback_to_system = false }\n");
+        REQUIRE(inlined.syntaxOk);
+        CHECK(parsedValue(inlined, keys::DnsFallbackToSystem)->toBool() == false);
+        const QByteArray rewritten = serializeConfig(schema(), inlined.values, inlined.unknownToml);
+        const auto reparsed =
+            parse(std::string_view(rewritten.constData(), static_cast<std::size_t>(rewritten.size())));
+        REQUIRE(reparsed.syntaxOk);
+        CHECK(reparsed.unknownToml == inlined.unknownToml);
+        CHECK(parsedValue(reparsed, keys::DnsFallbackToSystem)->toBool() == false);
+    }
+
     TEST_CASE("every schema value round-trips through the serializer")
     {
         ValueMap values;
