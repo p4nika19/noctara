@@ -11,6 +11,7 @@
 #include "settings/SettingsStore.hpp"
 
 #include <QElapsedTimer>
+#include <QScopeGuard>
 #include <QTimer>
 
 #include <algorithm>
@@ -570,6 +571,42 @@ TEST_SUITE("net.transport")
         REQUIRE_MESSAGE(socks4, test::describe(socks4));
         CHECK(socks.connects().back().version == 4);
         CHECK(net.system.calls == 0);
+        CHECK(net.transport.unexpectedCurlResolves() == 0);
+    }
+
+    TEST_CASE("the environment's no_proxy never overrides the router's proxy choice")
+    {
+        const QByteArray saved = qgetenv("no_proxy");
+        const bool hadSaved = qEnvironmentVariableIsSet("no_proxy");
+        qputenv("no_proxy", "*");
+        const auto restore = qScopeGuard([&] {
+            if (hadSaved) {
+                qputenv("no_proxy", saved);
+            } else {
+                qunsetenv("no_proxy");
+            }
+        });
+        test::HttpServer origin([](const test::HttpRequest&) { return text("direct"); });
+        test::HttpProxy http;
+        test::SocksProxy socks;
+        Network net;
+
+        net.useProxy(ProxyType::Http, http.port());
+        const auto viaHttp = net.get(QStringLiteral("http://app.test:%1/").arg(origin.port()));
+        REQUIRE_MESSAGE(viaHttp, test::describe(viaHttp));
+        CHECK(viaHttp->body == "via-proxy");
+
+        net.transport.drainConnections();
+        net.useProxy(ProxyType::Socks5h, socks.port());
+        const auto viaSocks5h = net.get(QStringLiteral("http://app.test:%1/").arg(origin.port()));
+        REQUIRE_MESSAGE(viaSocks5h, test::describe(viaSocks5h));
+        CHECK(socks.connects().size() == 1);
+
+        net.transport.drainConnections();
+        net.useProxy(ProxyType::Socks5, socks.port());
+        const auto viaSocks5 = net.get(QStringLiteral("http://app.test:%1/").arg(origin.port()));
+        REQUIRE_MESSAGE(viaSocks5, test::describe(viaSocks5));
+        CHECK(socks.connects().size() == 2);
         CHECK(net.transport.unexpectedCurlResolves() == 0);
     }
 

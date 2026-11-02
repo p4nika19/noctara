@@ -553,9 +553,11 @@ void CurlTransport::launch(std::uint64_t id, const std::vector<QByteArray>& reso
         setopt(easy, CURLOPT_CAINFO, m_config.caBundle.toLocal8Bit().constData());
     }
 
-    // Proxy: an empty string disables curl's own environment lookup; routing was decided above.
+    // Proxy: empty strings disable curl's own environment lookups (*_proxy and no_proxy, which would
+    // otherwise drop the chosen proxy); routing, bypass rules included, was decided above.
     const auto& proxy = transfer->route.proxy;
     setopt(easy, CURLOPT_PROXY, proxy ? proxy->curlUrl().toUtf8().constData() : "");
+    setopt(easy, CURLOPT_NOPROXY, "");
     if (proxy) {
         setopt(easy, CURLOPT_SUPPRESS_CONNECT_HEADERS, 1L);
         setopt(easy, CURLOPT_PROXY_SSL_VERIFYPEER, 1L);
