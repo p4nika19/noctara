@@ -537,6 +537,27 @@ TEST_SUITE("api.client")
         CHECK_FALSE(called);
     }
 
+    TEST_CASE("a request cancelled while the client_id is discovered is not sent")
+    {
+        Harness h(false);
+        const auto handle = std::make_shared<net::RequestHandle>();
+        h.transport.setHandler([handle](const net::Request& request) -> Result<net::Response> {
+            if (request.url.host() == u"soundcloud.com") {
+                handle->cancel();  // the caller gives up while discovery is still running
+                return FakeApi::reply(200,
+                                      QByteArray(R"({"hydratable":"apiClient","data":{"id":")") + kClientId + "\"}}");
+            }
+            return FakeApi::reply(200, trackJson(1));
+        });
+        const auto result = std::make_shared<std::optional<Result<Track>>>();
+        *handle =
+            fetch(h.client, endpoints::track(1), &h.context, [result](Result<Track> r) { *result = std::move(r); });
+        REQUIRE(test::waitUntil([&] { return result->has_value(); }));
+        CHECK(test::errorOf(**result) == ErrorCode::Cancelled);
+        CHECK(h.clientIds.current() == QString::fromLatin1(kClientId));
+        CHECK(h.transport.count() == 1);  // only the page; the track request nobody wants is not sent
+    }
+
     TEST_CASE("the service parses off the caller's thread and follows the client_id setting")
     {
         settings::SettingsStore store(settings::Schema::builtin());

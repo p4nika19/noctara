@@ -177,7 +177,7 @@ void ApiClient::dispatch(const std::shared_ptr<Flight>& flight)
                 return;
             }
             if (id) {
-                self->transmit(flight);
+                self->dispatch(flight);  // drops callers that gave up meanwhile and honours a pause
             } else {
                 self->complete(flight, std::unexpected(id.error()));
             }
