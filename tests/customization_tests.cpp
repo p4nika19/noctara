@@ -19,6 +19,7 @@
 #include "ui/SettingsController.hpp"
 
 #include <QFile>
+#include <QQuickWindow>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 
@@ -332,6 +333,19 @@ TEST_SUITE("ui.layout")
         layout.setView(QStringLiteral("charts"), QStringLiteral("grid"));
         CHECK(layout.views().value(QStringLiteral("charts")).toString() == u"grid");
         CHECK_FALSE(changed.isEmpty());
+    }
+
+    TEST_CASE("a window maximized before any normal size was saved opens maximized again")
+    {
+        // A first run that quits maximized knows no normal geometry, so it saves 0x0 with maximized = true.
+        QTemporaryDir dir;
+        const QString path = dir.filePath(QStringLiteral("window.json"));
+        write(path, R"({"version":1,"x":0,"y":0,"width":0,"height":0,"maximized":true})");
+        settings::SettingsStore store(settings::Schema::builtin());
+        const ui::LayoutController layout(store, path);
+        QQuickWindow window;
+        layout.restore(window);
+        CHECK((window.windowStates() & Qt::WindowMaximized) != 0);
     }
 }
 

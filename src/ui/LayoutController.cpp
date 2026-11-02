@@ -202,16 +202,19 @@ QString LayoutController::startPage() const
 
 void LayoutController::restore(QQuickWindow& window) const
 {
-    if (!m_settings.boolValue(keys::RememberGeometry) || !m_state.geometry.isValid()) {
+    if (!m_settings.boolValue(keys::RememberGeometry)) {
         return;
     }
-    window.resize(m_state.geometry.size());
-    // Positions only mean something where the platform lets applications place windows (not on Wayland), and
-    // only when the spot is still on a screen.
-    if (QGuiApplication::platformName() != u"wayland") {
-        const QScreen* screen = QGuiApplication::screenAt(m_state.geometry.center());
-        if (screen != nullptr) {
-            window.setPosition(m_state.geometry.topLeft());
+    // A window that was only ever maximized has no normal geometry saved, but it is still maximized again.
+    if (m_state.geometry.isValid()) {
+        window.resize(m_state.geometry.size());
+        // Positions only mean something where the platform lets applications place windows (not on Wayland),
+        // and only when the spot is still on a screen.
+        if (QGuiApplication::platformName() != u"wayland") {
+            const QScreen* screen = QGuiApplication::screenAt(m_state.geometry.center());
+            if (screen != nullptr) {
+                window.setPosition(m_state.geometry.topLeft());
+            }
         }
     }
     if (m_state.maximized) {
