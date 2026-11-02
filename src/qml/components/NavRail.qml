@@ -35,16 +35,24 @@ GlassPanel {
             return length - Theme.space.md - (footer.length - index) * itemExtent + (itemExtent - pillLength) / 2
         return 0
     }
+    function inRail(id) {
+        return destinations.some(d => d.id === id) || footer.some(d => d.id === id)
+    }
     readonly property real pillPosition: positionOf(current)
+    // A page hidden from the rail (layout.navigation.items) can still be current: then nothing is selected.
+    readonly property bool pillShown: inRail(current)
     property real glideOffset: 0
     property string shownCurrent: current
 
     onCurrentChanged: {
-        if (shownCurrent.length > 0 && current.length > 0 && Theme.motion.slow > 0) {
+        if (inRail(shownCurrent) && inRail(current) && Theme.motion.slow > 0) {
             // Start where the pill is drawn now (even mid-glide). Derived from the previous selection, not
             // read from the pill, which may already have been re-evaluated for the new one.
             glideOffset = positionOf(shownCurrent) + glideOffset - positionOf(current)
             glide.restart()
+        } else {
+            glide.stop()  // to or from a page outside the rail: the pill appears in place
+            glideOffset = 0
         }
         shownCurrent = current
     }
@@ -127,7 +135,8 @@ GlassPanel {
     // Active item: lit glass with a light edge and an accent halo (no overshoot when it moves).
     Item {
         id: pill
-        visible: root.current.length > 0
+        objectName: "selectionPill"
+        visible: root.pillShown
         width: root.horizontal ? root.itemExtent - Theme.space.xs
                                : (root.expanded ? root.width - Theme.space.sm * 2 : Theme.space.controlHeight + Theme.space.xs)
         height: root.horizontal ? root.height - Theme.space.sm * 2 : Theme.space.controlHeight + Theme.space.xxs

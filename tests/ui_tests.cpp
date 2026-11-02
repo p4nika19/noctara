@@ -515,4 +515,27 @@ TEST_SUITE("ui.components")
         QTest::qWait(200);
         CHECK_MESSAGE(requests - before <= 1, "cover requests during the flight: ", requests - before);
     }
+
+    TEST_CASE("the navigation pill is hidden while the current page is not in the rail")
+    {
+        const WindowHarness harness(R"(Window {
+            width: 100; height: 400; visible: true
+            property Item rail: rail
+            NavRail {
+                id: rail
+                width: 72; height: 400
+                destinations: [{id: "library", icon: "library", label: "Library"}]
+                footer: [{id: "settings", icon: "settings", label: "Settings"}]
+                current: "library"
+            }
+        })");
+        QQuickItem* rail = harness.item("rail");
+        auto* pill = rail->findChild<QQuickItem*>(QStringLiteral("selectionPill"));
+        REQUIRE(pill != nullptr);
+        CHECK(pill->isVisible());
+        rail->setProperty("current", QStringLiteral("home"));  // hidden from the rail by the user
+        CHECK_FALSE(pill->isVisible());
+        rail->setProperty("current", QStringLiteral("settings"));
+        CHECK(pill->isVisible());
+    }
 }
