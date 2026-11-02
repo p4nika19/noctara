@@ -47,7 +47,8 @@ T.Button {
             anchors.verticalCenter: parent.verticalCenter
             name: control.iconName
             size: Theme.space.iconSizeSmall
-            color: control.variant === "primary" ? Theme.targetColors.onAccent
+            color: control.variant === "primary" ? (Theme.glass.primaryOnAccent ? Theme.targetColors.onAccent
+                                                                                : Theme.targetColors.accent)
                  : control.variant === "ghost" ? Theme.targetColors.accent : Theme.targetColors.iconPrimary
         }
         Text {

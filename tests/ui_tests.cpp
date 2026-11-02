@@ -13,8 +13,12 @@
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QQuickImageProvider>
+#include <QQuickItem>
+#include <QQuickWindow>
 #include <QTemporaryDir>
 
+#include <functional>
+#include <map>
 #include <memory>
 #include <set>
 
@@ -186,6 +190,36 @@ TEST_SUITE("ui.icons")
 
 namespace {
 
+namespace stub {
+
+using Factory = std::function<QJSValue(QJSEngine*)>;
+
+std::map<QString, Factory>& factories()
+{
+    static std::map<QString, Factory> registry;
+    return registry;
+}
+
+// Makes the Noctara singleton `name` whatever `factory` returns, in every engine created from now on. Each name
+// is registered with QML once; later calls only swap the factory.
+void singleton(const char* name, Factory factory)
+{
+    static std::set<QString> registered;
+    const QString key = QString::fromLatin1(name);
+    factories()[key] = std::move(factory);
+    if (registered.insert(key).second) {
+        qmlRegisterSingletonType("Noctara", 1, 0, name,
+                                 [key](QQmlEngine*, QJSEngine* js) { return factories().at(key)(js); });
+    }
+}
+
+void singleton(const char* name, const QString& source)
+{
+    singleton(name, [source](QJSEngine* js) { return js->evaluate(source); });
+}
+
+}  // namespace stub
+
 // Solid squares in the requested colour, loaded asynchronously like the real icon provider.
 class SolidIconProvider : public QQuickImageProvider {
 public:
@@ -213,10 +247,8 @@ struct IconHarness {
 
     IconHarness()
     {
-        qmlRegisterSingletonType("Noctara", 1, 0, "Theme", [](QQmlEngine*, QJSEngine* js) {
-            return js->evaluate(QStringLiteral("({targetColors: {iconPrimary: '#101010'}, space: {iconSize: 16}, "
-                                               "iconStroke: 1.5, motion: {normal: 0}})"));
-        });
+        stub::singleton("Theme", QStringLiteral("({targetColors: {iconPrimary: '#101010'}, space: {iconSize: 16}, "
+                                                "iconStroke: 1.5, motion: {normal: 0}})"));
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
         engine.addImageProvider(QStringLiteral("icon"), new SolidIconProvider);
         QQmlComponent component(&engine,
@@ -276,5 +308,101 @@ TEST_SUITE("ui.icons")
             harness.setColour(colours.at(static_cast<std::size_t>(round) % colours.size()));
             CHECK(harness.settlesOn(colours.at(static_cast<std::size_t>(round) % colours.size())));
         }
+    }
+}
+
+namespace {
+
+// Every token the components read, with quiet values: no blur, flat surfaces, instant motion except `slow`.
+// Main buttons are drawn "like other buttons" (not accent-filled).
+constexpr auto kThemeStub = R"js(({
+    scale: 1, dark: true, coverShape: 'rounded', iconStroke: 1.5,
+    colors: {
+        accent: '#3366ff', accentDeep: '#2244aa', accentLight: '#88aaff', accentText: '#6688ff', onAccent: '#ffffff',
+        backdrop: '#000000', danger: '#ff4444', divider: '#333333', edge: '#444444', focusRing: '#6688ff',
+        outline: '#555555', rimHighlight: '#ffffff', scrim: '#000000', selection: '#334488', shadow: '#000000',
+        sheen: '#ffffff', skeletonBase: '#222222', skeletonHighlight: '#333333', solidBase: '#111111',
+        solidOverlay: '#1a1a1a', solidRaised: '#161616', stateHover: '#20ffffff', statePressed: '#30ffffff',
+        surfaceBase: '#111111', surfaceOverlay: '#1a1a1a', surfaceRaised: '#161616', textPrimary: '#eeeeee',
+        textSecondary: '#bbbbbb', textTertiary: '#888888', warning: '#ffaa00'
+    },
+    targetColors: {
+        accent: '#3366ff', onAccent: '#ffffff', iconPrimary: '#eeeeee', iconSecondary: '#bbbbbb', danger: '#ff4444',
+        success: '#44ff44', warning: '#ffaa00'
+    },
+    space: {
+        xxs: 2, xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48, hairline: 1, focusRingWidth: 2,
+        controlHeight: 40, controlHeightSmall: 32, iconSize: 20, iconSizeSmall: 16, iconSizeLarge: 28,
+        rowHeight: 40, navRailWidth: 72, navRailWidthExpanded: 220, nowPlayingHeight: 80
+    },
+    radius: { xs: 4, sm: 6, md: 10, lg: 16, button: 20 },
+    font: {
+        body: Qt.font({pixelSize: 14}), bodyStrong: Qt.font({pixelSize: 14, bold: true}),
+        caption: Qt.font({pixelSize: 12}), display: Qt.font({pixelSize: 32}), eyebrow: Qt.font({pixelSize: 11}),
+        headline: Qt.font({pixelSize: 24}), label: Qt.font({pixelSize: 14}), mono: Qt.font({pixelSize: 13}),
+        monoSmall: Qt.font({pixelSize: 11}), numeric: Qt.font({pixelSize: 13}), subtitle: Qt.font({pixelSize: 16}),
+        title: Qt.font({pixelSize: 20})
+    },
+    motion: { fast: 0, normal: 0, slow: 400, accent: 0, shimmer: 0, reduced: false, easingStandard: 7,
+              easingEmphasized: 7 },
+    glass: {
+        buttons: 'plain', primary: 'material', primaryOnAccent: false, flat: true, surface: 'flat', style: 'solid',
+        blurred: false, translucent: false, backdrop: false, backdropAnimated: false, grain: 0, glow: 0,
+        glowControls: false, glowCover: false, glowProgress: false, blurDownsample: 1, blurIterations: 0,
+        blurOffset: 0, blurSigma: 0, brightnessLift: 0, saturationLift: 0, dispersion: 0, fresnel: 0, lightAngle: 0,
+        refraction: 0, rimDarkening: 0, specular: 0, thickness: 0
+    }
+}))js";
+
+void installStubs()
+{
+    stub::singleton("Theme", QString::fromUtf8(kThemeStub));
+    stub::singleton("Graphics", QStringLiteral("({hardware: false, ndcYUp: true})"));
+    stub::singleton("Format", QStringLiteral("({revision: 0, duration: ms => '0:00', error: code => ''})"));
+    stub::singleton("Layout", QStringLiteral("({fullPlayerQueue: false, fullPlayerArt: 'large', "
+                                             "fullPlayerWaveform: false})"));
+    stub::singleton("Artwork", QStringLiteral("({hasArtwork: false, revision: 0})"));
+}
+
+// A shown Window written in `qml`, resolved as if it lived next to the components (so they are found by name),
+// with the stub singletons above. The window exposes the items a test looks at as properties.
+struct WindowHarness {
+    QQmlEngine engine;
+    std::unique_ptr<QQuickWindow> window;
+
+    explicit WindowHarness(const QByteArray& qml)
+    {
+        installStubs();
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
+        engine.addImageProvider(QStringLiteral("icon"), new SolidIconProvider);
+        QQmlComponent component(&engine);
+        component.setData("import QtQuick\nimport Noctara\n" + qml,
+                          QUrl::fromLocalFile(QStringLiteral(NOCTARA_SOURCE_DIR "/src/qml/components/Harness.qml")));
+        QObject* created = component.create();
+        window.reset(qobject_cast<QQuickWindow*>(created));
+        REQUIRE_MESSAGE(window != nullptr, component.errorString());
+        REQUIRE(test::waitUntil([this] { return window->isExposed(); }));
+    }
+
+    [[nodiscard]] QObject* object(const char* name) const { return window->property(name).value<QObject*>(); }
+    [[nodiscard]] QQuickItem* item(const char* name) const { return qobject_cast<QQuickItem*>(object(name)); }
+};
+
+}  // namespace
+
+TEST_SUITE("ui.components")
+{
+    TEST_CASE("a primary button's icon is accent-coloured when Main buttons are not accent-filled")
+    {
+        const WindowHarness harness(R"(Window {
+            width: 300; height: 100; visible: true
+            property Item button: button
+            Button { id: button; variant: "primary"; iconName: "play"; text: "Play" }
+        })");
+        const auto* row = harness.item("button")->property("contentItem").value<QQuickItem*>();
+        REQUIRE(row != nullptr);
+        REQUIRE_FALSE(row->childItems().isEmpty());
+        // The label is accentText here, the icon must not be onAccent (white on the button material).
+        CHECK(row->childItems().at(0)->property("color").value<QColor>() == QColor(QStringLiteral("#3366ff")));
     }
 }
