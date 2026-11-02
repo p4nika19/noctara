@@ -4,12 +4,12 @@
 #include "net/Transport.hpp"
 
 #include <QByteArrayView>
-#include <QDateTime>
 #include <QObject>
 #include <QSet>
 #include <QString>
 #include <QUrl>
 
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -77,7 +77,7 @@ private:
     std::vector<QUrl> m_scripts;  // still to search, last first
     bool m_discovering = false;
     std::optional<Error> m_lastFailure;
-    QDateTime m_failedAt;
+    std::chrono::steady_clock::time_point m_failedAt;  // monotonic: a clock step must not stretch the throttle
 };
 
 }  // namespace noctara::api

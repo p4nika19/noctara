@@ -3,11 +3,13 @@
 #include "core/FileIo.hpp"
 #include "core/Log.hpp"
 
+#include <QDateTime>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QRegularExpression>
 
 #include <algorithm>
+#include <chrono>
 
 namespace noctara::api {
 
@@ -175,7 +177,7 @@ void ClientIdProvider::acquire(std::function<void(Result<QString>)> done)
         done(fail(ErrorCode::ClientIdUnavailable, "the configured client_id was rejected by the API"));
         return;
     }
-    if (m_lastFailure && m_failedAt.secsTo(QDateTime::currentDateTimeUtc()) < kRetryAfterFailure.count()) {
+    if (m_lastFailure && std::chrono::steady_clock::now() - m_failedAt < kRetryAfterFailure) {
         done(std::unexpected(*m_lastFailure));
         return;
     }
@@ -266,7 +268,7 @@ void ClientIdProvider::finish(Result<QString> result)
         // Network failures are not the site's fault: only throttle when the site was reachable.
         if (result.error().code == ErrorCode::ClientIdUnavailable) {
             m_lastFailure = result.error();
-            m_failedAt = QDateTime::currentDateTimeUtc();
+            m_failedAt = std::chrono::steady_clock::now();
         }
     }
     for (const auto& done : std::exchange(m_waiting, {})) {
