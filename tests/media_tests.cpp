@@ -907,6 +907,28 @@ TEST_SUITE("media.backend")
         CHECK(cache.origin.count() > 0);
     }
 
+    TEST_CASE("seeking after a network failure plays on from the target and leaves the failed state")
+    {
+        Cache cache;
+        FakeOutput output;
+        NativeBackend backend(*cache.audio, output);
+        QSignalSpy ended(&backend, &IPlaybackBackend::ended);
+        QSignalSpy failed(&backend, &IPlaybackBackend::failed);
+        cache.origin.serve(QStringLiteral("https://cdn.test/s.mp3"), {.body = fixture(QStringLiteral("sine.mp3"))});
+        cache.origin.setOffline(true);
+        backend.load(
+            {.info = trackInfo(QStringLiteral("s"), cache::StreamProtocol::Progressive, QStringLiteral("audio/mpeg")),
+             .urls = Cache::urls(QStringLiteral("https://cdn.test/s.mp3"))},
+            0, false);
+        REQUIRE(pump(output, [&] { return !failed.isEmpty(); }));
+        REQUIRE(backend.state() == BackendState::Failed);
+        cache.origin.setOffline(false);
+        backend.seek(500);  // a click on the waveform
+        CHECK(backend.state() != BackendState::Failed);
+        CHECK(pump(output, [&] { return !ended.isEmpty(); }, nullptr, 8000));
+        CHECK(backend.state() == BackendState::Ended);
+    }
+
     TEST_CASE("a cache entry reset while it plays (the server sent different media) is opened again and plays")
     {
         Cache cache;

@@ -383,8 +383,10 @@ void NativeBackend::seek(std::int64_t ms)
         m_mixer->interrupt();
     }
     m_current.voice->seek(ms);
-    if (m_state == BackendState::Ended) {
-        setState(m_paused ? BackendState::Paused : BackendState::Playing);
+    if (m_state == BackendState::Ended || m_state == BackendState::Failed) {
+        // After a failure the voice decodes again from the target: Loading until it delivers (tick()).
+        const BackendState playing = m_state == BackendState::Failed ? BackendState::Loading : BackendState::Playing;
+        setState(m_paused ? BackendState::Paused : playing);
         if (!m_paused && m_suspended) {
             m_output.resume();
             m_suspended = false;
