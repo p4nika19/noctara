@@ -485,6 +485,8 @@ int main(int argc, char** argv)
                                      [&mainWindow] { return mainWindow && mainWindow->isActive(); });
     QObject::connect(&config, &settings::ConfigFile::reloadIssues, &appController,
                      &ui::AppController::reportConfigIssues);
+    QObject::connect(&config, &settings::ConfigFile::saveFailed, &appController,
+                     &ui::AppController::reportConfigSaveFailed);
     config.setHotReloadEnabled(true);
 
     QQmlApplicationEngine engine;

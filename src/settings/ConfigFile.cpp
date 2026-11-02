@@ -219,26 +219,38 @@ void ConfigFile::saveNow()
         return;
     }
     const bool backup = std::exchange(m_fileUnparseable, false);
-    m_lastContent = content;
-    QtConcurrent::run(&m_io, [path = m_userPath, content = std::move(content), backup] -> Result<void> {
-        if (backup) {
-            const QString backupPath = path + QStringLiteral(".bak");
-            QFile::remove(backupPath);
-            QFile::copy(path, backupPath);
-        }
-        return writeFileAtomic(path, content);
-    }).then(this, [this](const Result<void>& written) {
-        if (!written) {
+    QByteArray previous = std::exchange(m_lastContent, content);
+    m_retrySave = false;
+    QtConcurrent::run(&m_io,
+                      [path = m_userPath, content, backup] -> Result<void> {
+                          if (backup) {
+                              const QString backupPath = path + QStringLiteral(".bak");
+                              QFile::remove(backupPath);
+                              QFile::copy(path, backupPath);
+                          }
+                          return writeFileAtomic(path, content);
+                      })
+        .then(this, [this, attempted = std::move(content), previous = std::move(previous),
+                     backup](const Result<void>& written) {
+            if (written) {
+                return;
+            }
             qCWarning(lcSettings).noquote()
                 << "saving config failed:" << QString::fromStdString(written.error().describe());
+            if (m_lastContent == attempted) {
+                // The file still holds the previous content: a hot reload must not take that for an external edit,
+                // and the next save or flush writes the unsaved state again (backing a broken file up first).
+                m_lastContent = previous;
+                m_fileUnparseable = m_fileUnparseable || backup;
+                m_retrySave = true;
+            }
             Q_EMIT saveFailed(written.error());
-        }
-    });
+        });
 }
 
 void ConfigFile::flush()
 {
-    if (m_saveTimer.isActive()) {
+    if (m_saveTimer.isActive() || m_retrySave) {
         saveNow();
     }
     m_io.waitForDone();

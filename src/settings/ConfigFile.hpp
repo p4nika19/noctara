@@ -33,7 +33,7 @@ public:
     void setHotReloadEnabled(bool enabled);
     void setSaveDelay(std::chrono::milliseconds delay);
 
-    // Writes pending changes and waits for all background I/O to finish.
+    // Writes pending changes (and retries a save that failed) and waits for all background I/O to finish.
     void flush();
 
     // Moves the current file aside (<name>.bak) and writes a fresh template; resets the user layer.
@@ -71,6 +71,7 @@ private:
     std::string m_unknownToml;
     std::int64_t m_fileVersion = 0;
     bool m_fileUnparseable = false;  // back the file up before the first overwrite
+    bool m_retrySave = false;        // the last save failed: flush() writes the state again
 };
 
 }  // namespace noctara::settings

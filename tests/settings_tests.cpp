@@ -14,8 +14,11 @@
 #include <QDir>
 #include <QFile>
 #include <QRegularExpression>
+#include <QScopeGuard>
 #include <QSignalSpy>
 #include <QTemporaryDir>
+
+#include <unistd.h>
 
 using namespace noctara;
 using namespace noctara::settings;
@@ -375,6 +378,37 @@ TEST_SUITE("settings.file")
         CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.0));
         REQUIRE(file.importFrom(exported).has_value());
         CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.6));
+    }
+
+    TEST_CASE("a failed save is reported and written by the next flush")
+    {
+        if (::geteuid() == 0) {
+            return;  // root ignores the directory permissions this case relies on
+        }
+        QTemporaryDir dir;
+        REQUIRE(dir.isValid());
+        const QString configDir = dir.filePath(QStringLiteral("config"));
+        const QString path = configDir + QStringLiteral("/config.toml");
+
+        SettingsStore store(schema());
+        ConfigFile file(store, path, {});
+        file.setSaveDelay(std::chrono::milliseconds(1));
+        CHECK(file.load().isEmpty());
+        file.flush();
+        REQUIRE(QFile::exists(path));
+
+        const auto writable = QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner;
+        const auto restore = qScopeGuard([&] { QFile::setPermissions(configDir, writable); });
+        REQUIRE(QFile::setPermissions(configDir, QFileDevice::ReadOwner | QFileDevice::ExeOwner));
+        QSignalSpy failed(&file, &ConfigFile::saveFailed);
+        REQUIRE(store.setUserValue(keys::GlassGrain, 0.4).has_value());
+        file.flush();
+        REQUIRE(test::waitUntil([&] { return failed.count() == 1; }));
+        CHECK_FALSE(readWholeFile(path)->contains("\ngrain = 0.4"));
+
+        REQUIRE(QFile::setPermissions(configDir, writable));
+        file.flush();
+        CHECK(readWholeFile(path)->contains("\ngrain = 0.4"));
     }
 
     TEST_CASE("the system config file is the first XDG_CONFIG_DIRS entry that has one")

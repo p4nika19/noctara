@@ -1601,7 +1601,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+162"/>
+        <location line="+163"/>
         <source>Got it</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1662,7 +1662,7 @@
 <context>
     <name>NavRail</name>
     <message>
-        <location filename="../src/qml/components/NavRail.qml" line="+66"/>
+        <location filename="../src/qml/components/NavRail.qml" line="+74"/>
         <source>Navigation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2192,7 +2192,7 @@
 <context>
     <name>QueueList</name>
     <message>
-        <location filename="../src/qml/components/QueueList.qml" line="+40"/>
+        <location filename="../src/qml/components/QueueList.qml" line="+56"/>
         <source>Loading</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4879,7 +4879,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+21"/>
         <source>Some colors of this theme fall below WCAG AA contrast. Turn on “Enforce readable contrast” to correct them.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4934,7 +4934,7 @@
 <context>
     <name>UserPage</name>
     <message>
-        <location filename="../src/qml/pages/UserPage.qml" line="+18"/>
+        <location filename="../src/qml/pages/UserPage.qml" line="+20"/>
         <source>No playlists.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5134,7 +5134,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+10"/>
+        <source>Settings could not be saved. %1 Noctara tries again when a setting changes or the app closes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>The graphics device stopped working. Hardware acceleration has been turned off; restart Noctara to continue in software mode.</source>
         <translation type="unfinished"></translation>
     </message>

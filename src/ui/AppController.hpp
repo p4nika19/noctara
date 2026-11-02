@@ -42,6 +42,7 @@ public:
     Q_INVOKABLE QString licenseText(const QString& id) const;
 
     void reportConfigIssues(const settings::ConfigIssues& issues);
+    void reportConfigSaveFailed(const Error& error);
     Q_INVOKABLE void showToast(const QString& kind, const QString& message, const QString& actionLabel = {},
                                const QString& actionId = {});
 

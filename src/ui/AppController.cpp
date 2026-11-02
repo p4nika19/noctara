@@ -141,6 +141,13 @@ void AppController::reportConfigIssues(const settings::ConfigIssues& issues)
     }
 }
 
+void AppController::reportConfigSaveFailed(const Error& error)
+{
+    showToast(QStringLiteral("error"),
+              tr("Settings could not be saved. %1 Noctara tries again when a setting changes or the app closes.")
+                  .arg(i18n::errorMessage(error.code)));
+}
+
 void AppController::onGraphicsFailed()
 {
     // Persist the fallback so the next launch starts in software mode; tell the user and offer a restart.
