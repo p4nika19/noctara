@@ -80,7 +80,9 @@ task("docs-config")
         import("core.project.config")
         import("core.project.project")
         config.load()
-        os.execv("xmake", {"build", "noctara-schema-doc"})
+        -- xmake refuses to run as root without --root and does not pass it on to a nested run (root CI container).
+        -- The option must precede the target name.
+        os.execv("xmake", table.join({"build"}, os.isroot() and {"--root"} or {}, {"noctara-schema-doc"}))
         local tool = project.target("noctara-schema-doc"):targetfile()
         local generated = os.iorunv(tool, {"--markdown"})
         local docfile = path.join(os.projectdir(), "docs", "configuration.md")
@@ -134,15 +136,17 @@ task("pgo")
     set_menu {usage = "xmake pgo", description = "PGO: instrumented build, scripted scenario, merge, optimised rebuild"}
     on_run(function ()
         local pgo = path.join(os.projectdir(), "build", "pgo")
+        -- Nested xmake runs need --root again when this one runs as root (see docs-config).
+        local root = os.isroot() and {"--root"} or {}
         os.tryrm(pgo)
-        os.execv("xmake", {"f", "-m", "release", "--pgo=generate"})
-        os.execv("xmake", {"build", "noctara"})
+        os.execv("xmake", table.join({"f", "-m", "release", "--pgo=generate"}, root))
+        os.execv("xmake", table.join({"build"}, root, {"noctara"}))
         os.execv(path.join(os.projectdir(), "build", "noctara"), {"--pgo-scenario"},
                  {envs = {QT_QPA_PLATFORM = "offscreen", LLVM_PROFILE_FILE = path.join(pgo, "%p.profraw")}})
         os.execv("llvm-profdata", table.join({"merge", "-o", path.join(pgo, "noctara.profdata")},
                  os.files(path.join(pgo, "*.profraw"))))
-        os.execv("xmake", {"f", "-m", "release", "--pgo=use"})
-        os.execv("xmake", {"build", "noctara"})
+        os.execv("xmake", table.join({"f", "-m", "release", "--pgo=use"}, root))
+        os.execv("xmake", table.join({"build"}, root, {"noctara"}))
     end)
 task_end()
 
