@@ -18,3 +18,8 @@ thread:QThread::start
 # (uninstrumented) locking.
 race:g_wakeup_signal
 race:g_wakeup_free
+# A receiver's ~QObject calls sender->metaObject() (for disconnectNotify) while holding the receiver's
+# signalSlotLock; a sender being destroyed on another thread blocks on that lock before it is freed (see the
+# comment in Qt's ~QObject). With the lock inside uninstrumented Qt, the read of a CallbackChannel's vptr there is
+# reported against its delete on the owner thread (image://cover shutdown test).
+race:noctara::net::CallbackChannel::metaObject
