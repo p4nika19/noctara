@@ -6,7 +6,9 @@
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
 
+#include <QFile>
 #include <QSignalSpy>
+#include <QXmlStreamReader>
 
 using namespace noctara;
 namespace keys = noctara::settings::keys;
@@ -56,6 +58,34 @@ TEST_SUITE("i18n")
         CHECK(i18n::errorMessage(ErrorCode::Offline) == QString::fromUtf8("Нет подключения к сети."));
         REQUIRE(f.store.setUserValue(keys::Language, QStringLiteral("en")).has_value());
         CHECK(i18n::errorMessage(ErrorCode::Offline) == QStringLiteral("You are offline."));
+    }
+
+    TEST_CASE("every English plural message has its forms filled in")
+    {
+        // lrelease drops a message whose forms are empty, and the source text with a literal "(s)" shows instead.
+        Fixture f("en");
+        CHECK(QCoreApplication::translate("LikesPage", "%n track(s) · updating…", "", 2) ==
+              QString::fromUtf8("2 tracks · updating…"));
+
+        QFile file(QStringLiteral(NOCTARA_SOURCE_DIR "/translations/noctara_en.ts"));
+        REQUIRE(file.open(QIODevice::ReadOnly));
+        QXmlStreamReader xml(&file);
+        QString source;
+        int forms = 0;
+        while (!xml.atEnd()) {
+            if (xml.readNext() != QXmlStreamReader::StartElement) {
+                continue;
+            }
+            if (xml.name() == QLatin1StringView("source")) {
+                source = xml.readElementText();
+            } else if (xml.name() == QLatin1StringView("numerusform")) {
+                ++forms;
+                INFO("source: ", source.toStdString());
+                CHECK_FALSE(xml.readElementText().trimmed().isEmpty());
+            }
+        }
+        CHECK_FALSE(xml.hasError());
+        CHECK(forms > 0);
     }
 
     TEST_CASE("relative times use plural forms")

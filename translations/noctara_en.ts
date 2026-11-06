@@ -1382,8 +1382,8 @@
         <location line="-28"/>
         <source>%n track(s) · updating…</source>
         <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+            <numerusform>%n track · updating…</numerusform>
+            <numerusform>%n tracks · updating…</numerusform>
         </translation>
     </message>
     <message numerus="yes">
