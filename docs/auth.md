@@ -23,10 +23,12 @@ active protection: keyring, encrypted local store (with a warning), or memory on
 
 `SecretServiceStore` keeps its tiers consistent:
 
-- **read** asks the keyring; on a miss *or* a keyring error it asks the encrypted file, then memory. A secret saved
-  while the keyring was unavailable is therefore still found in a later session once the keyring is back.
+- **read** asks the keyring; on a miss *or* a keyring error it asks memory, then the encrypted file. A secret saved
+  while the keyring was unavailable is therefore still found in a later session once the keyring is back. Memory
+  only holds secrets written after the file tier failed, so it is always the newer copy.
 - **write** goes to the first tier that accepts it, then removes copies from the lower tiers so they cannot shadow
-  the new value later. A secret found only in the encrypted file moves to the keyring with its next write.
+  the new value later. A secret found only in the encrypted file moves to the keyring with its next write. When a
+  file write fails, the older file copy is removed too, so a replaced secret does not come back at the next launch.
 - **remove** clears every tier and always asks the keyring, even after a keyring error in this session. Per-key
   epochs make sure a slow keyring write that fails *after* a remove (sign-out) does not land in a fallback.
 - After a keyring error, reads and writes skip the keyring for the rest of the session, so a dismissed unlock prompt

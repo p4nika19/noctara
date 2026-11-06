@@ -141,28 +141,34 @@ SecretServiceStore::~SecretServiceStore()
 
 void SecretServiceStore::fallbackRead(const QString& key, QObject* context, ReadCallback callback)
 {
-    if (!m_file) {
-        m_fallback.read(key, context, std::move(callback));
-        return;
-    }
-    m_file->read(key, this,
-                 [this, key, context = QPointer(context),
-                  callback = std::move(callback)](Result<std::optional<QByteArray>> result) mutable {
-                     if (context == nullptr) {
-                         return;
-                     }
-                     if (result && *result) {
-                         callback(std::move(result));
-                         return;
-                     }
-                     if (!result) {
-                         // One unreadable entry (tampered, written with another master key) says nothing about
-                         // the others, so the file tier stays enabled; only a failed write disables it.
-                         qCWarning(lcAuth).noquote()
-                             << QString::fromStdString(result.error().describe()) << "- ignoring the stored secret";
-                     }
-                     m_fallback.read(key, context, std::move(callback));
-                 });
+    // Memory first: it only holds secrets written after the file tier failed (or without one), and a successful
+    // file write drops the memory copy, so a memory copy is always newer than the file.
+    m_fallback.read(
+        key, this,
+        [this, key, context = QPointer(context),
+         callback = std::move(callback)](Result<std::optional<QByteArray>> memory) mutable {
+            if (context == nullptr) {
+                return;
+            }
+            if (!m_file || (memory && *memory)) {
+                callback(std::move(memory));
+                return;
+            }
+            m_file->read(key, this,
+                         [context, callback = std::move(callback)](Result<std::optional<QByteArray>> result) mutable {
+                             if (context == nullptr) {
+                                 return;
+                             }
+                             if (!result) {
+                                 // One unreadable entry (tampered, written with another master key) says nothing
+                                 // about the others, so the file tier stays enabled; only a failed write disables it.
+                                 qCWarning(lcAuth).noquote() << QString::fromStdString(result.error().describe())
+                                                             << "- ignoring the stored secret";
+                                 result = std::nullopt;
+                             }
+                             callback(std::move(result));
+                         });
+        });
 }
 
 void SecretServiceStore::fallbackWrite(const QString& key, const QString& label, const QByteArray& secret,
@@ -184,6 +190,15 @@ void SecretServiceStore::fallbackWrite(const QString& key, const QString& label,
                           m_fileAvailable = false;
                           if (!superseded(key, epoch)) {
                               m_fallback.write(key, label, secret, this, ignore);
+                              // The older file copy would come back at the next launch although it was replaced;
+                              // unlinking usually still works when writing does not (ENOSPC, EDQUOT).
+                              m_file->remove(key, this, [](const Result<void>& removed) {
+                                  if (!removed) {
+                                      qCWarning(lcAuth).noquote()
+                                          << QString::fromStdString(removed.error().describe())
+                                          << "- could not remove the replaced secret from the encrypted fallback";
+                                  }
+                              });
                           }
                       }
                       if (context != nullptr) {

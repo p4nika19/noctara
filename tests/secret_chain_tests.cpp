@@ -5,6 +5,7 @@
 #include "auth/EncryptedFileSecretStore.hpp"
 #include "auth/SecretStore.hpp"
 
+#include <QFile>
 #include <QHash>
 #include <QTemporaryDir>
 
@@ -12,6 +13,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <unistd.h>
 
 using namespace noctara;
 
@@ -196,6 +198,57 @@ TEST_SUITE("auth.secret-chain")
         CHECK_FALSE(read(store).has_value());
         auth::EncryptedFileSecretStore file(directory.path());
         CHECK_FALSE(read(file).has_value());
+    }
+
+    TEST_CASE("a newer secret kept in memory after a failed file write is not shadowed by the older file")
+    {
+        if (::geteuid() == 0) {
+            MESSAGE("permissions do not apply to root; skipped");
+            return;
+        }
+        QTemporaryDir directory;
+        auto keyring = std::make_shared<KeyringState>();
+        keyring->failStore = true;
+        keyring->failLookup = true;
+        auth::SecretServiceStore store(std::make_unique<FakeKeyring>(keyring), directory.path());
+        write(store, "old-token");  // goes to the file
+        settle();
+
+        const auto writable = QFile::permissions(directory.path());
+        REQUIRE(QFile::setPermissions(directory.path(), QFile::ReadOwner | QFile::ExeOwner));
+        write(store, "new-token");  // the file write fails: kept in memory
+        settle();
+        CHECK(read(store) == QByteArray("new-token"));
+        REQUIRE(QFile::setPermissions(directory.path(), writable));
+    }
+
+    TEST_CASE("a failed file write removes the older file copy so it does not come back next session")
+    {
+        if (::geteuid() == 0) {
+            MESSAGE("permissions do not apply to root; skipped");
+            return;
+        }
+        QTemporaryDir directory;
+        auto keyring = std::make_shared<KeyringState>();
+        keyring->failStore = true;
+        keyring->failLookup = true;
+        {
+            auth::SecretServiceStore store(std::make_unique<FakeKeyring>(keyring), directory.path());
+            write(store, "old-token");  // goes to the file
+            settle();
+
+            // An unreadable master key makes the next file write fail while the old file can still be unlinked.
+            const QString masterKey = directory.path() + QStringLiteral("/master.key");
+            const auto readable = QFile::permissions(masterKey);
+            REQUIRE(QFile::setPermissions(masterKey, QFileDevice::Permissions{}));
+            write(store, "new-token");
+            settle();
+            CHECK_FALSE(store.persistent());
+            CHECK(read(store) == QByteArray("new-token"));
+            REQUIRE(QFile::setPermissions(masterKey, readable));
+        }
+        auth::SecretServiceStore nextSession(std::make_unique<FakeKeyring>(keyring), directory.path());
+        CHECK_FALSE(read(nextSession).has_value());  // forgotten, as the user was told; never the replaced one
     }
 
     TEST_CASE("without any persistent tier the secret lives in memory only")
