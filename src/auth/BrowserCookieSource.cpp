@@ -522,6 +522,13 @@ QByteArray columnBytes(sqlite3_stmt* statement, int column)
     return {value, sqlite3_column_bytes(statement, column)};
 }
 
+// A query that stops with anything but SQLITE_DONE (a torn snapshot, a damaged page, an I/O error) did not see every
+// row, so "no cookie found" would be a guess.
+std::unexpected<Error> stepFailure(sqlite3* database)
+{
+    return fail(ErrorCode::Corrupt, std::string("Could not read copied cookie database: ") + sqlite3_errmsg(database));
+}
+
 Result<QByteArray> readFirefox(const QString& path)
 {
     const CookieSnapshot snapshot(path);
@@ -543,7 +550,8 @@ Result<QByteArray> readFirefox(const QString& path)
     // 1e11 (the year 5138), so larger values are milliseconds.
     constexpr qint64 millisecondsThreshold = 100'000'000'000LL;
     const qint64 now = QDateTime::currentSecsSinceEpoch();
-    while (sqlite3_step(selected->get()) == SQLITE_ROW) {
+    int step = SQLITE_DONE;
+    while ((step = sqlite3_step(selected->get())) == SQLITE_ROW) {
         qint64 expiry = sqlite3_column_int64(selected->get(), 1);
         if (expiry > millisecondsThreshold) {
             expiry /= 1000;
@@ -556,6 +564,9 @@ Result<QByteArray> readFirefox(const QString& path)
             return token;
         }
         wipe(token);
+    }
+    if (step != SQLITE_DONE) {
+        return stepFailure(database->get());
     }
     return fail(ErrorCode::NotFound, "No usable SoundCloud OAuth cookie was found");
 }
@@ -684,7 +695,8 @@ Result<QByteArray> readChromium(const BrowserProfile& profile, const ChromiumPas
     constexpr qint64 chromeEpochOffset = 11644473600LL;
     const qint64 now = (QDateTime::currentSecsSinceEpoch() + chromeEpochOffset) * 1000000LL;
     sqlite3_stmt* statement = selected->get();
-    while (sqlite3_step(statement) == SQLITE_ROW) {
+    int step = SQLITE_DONE;
+    while ((step = sqlite3_step(statement)) == SQLITE_ROW) {
         const qint64 expiry = sqlite3_column_int64(statement, 3);
         if (expiry > 0 && expiry <= now) {
             continue;
@@ -731,6 +743,9 @@ Result<QByteArray> readChromium(const BrowserProfile& profile, const ChromiumPas
             }
         }
         undecryptable = true;
+    }
+    if (step != SQLITE_DONE) {
+        return stepFailure(database->get());
     }
     if (undecryptable) {
         if (keyError) {

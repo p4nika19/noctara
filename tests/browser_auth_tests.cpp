@@ -10,6 +10,7 @@
 #include <QJsonObject>
 #include <QTemporaryDir>
 
+#include <algorithm>
 #include <array>
 #include <memory>
 #include <openssl/evp.h>
@@ -191,6 +192,30 @@ QString makeFirefoxProfile(const QString& root, const QByteArray& token, const Q
     REQUIRE(settings.open(QIODevice::WriteOnly));
     REQUIRE(settings.write("[Profile0]\nName=Default\nIsRelative=1\nPath=default-profile\n") > 0);
     return databasePath;
+}
+
+// Runs `fill` to add enough unrelated cookies to span many pages, then overwrites one table page with garbage so the
+// database still opens and prepares but stepping through the query hits SQLITE_CORRUPT: the page holding `marker`
+// (a value stored only in the table row), or the last page of the file when no marker is given.
+void corruptCookieTable(const QString& databasePath, const char* fill, QByteArrayView marker = {})
+{
+    {
+        auto database = openDatabase(databasePath);
+        execute(database.get(), fill);
+    }
+    QFile file(databasePath);
+    REQUIRE(file.open(QIODevice::ReadWrite));
+    constexpr qint64 pageSize = 4096;
+    const QByteArray contents = file.readAll();
+    REQUIRE(contents.size() >= 16 * pageSize);
+    qint64 page = (contents.size() / pageSize) - 1;
+    if (!marker.isEmpty()) {
+        const qint64 offset = contents.indexOf(marker);
+        REQUIRE(offset >= pageSize);
+        page = offset / pageSize;
+    }
+    REQUIRE(file.seek(page * pageSize));
+    REQUIRE(file.write(QByteArray(pageSize, '\xff')) == pageSize);
 }
 
 // A password provider that counts how often it is asked and returns a fixed answer.
@@ -503,6 +528,32 @@ TEST_SUITE("auth.browser-cookies")
         auto token = importToken(source, profiles->constFirst());
         REQUIRE(token);
         CHECK(*token == QByteArrayLiteral("xdg-firefox-token"));
+    }
+
+    TEST_CASE("an unreadable cookie table is reported as corrupt, not as a missing cookie")
+    {
+        QTemporaryDir home;
+        const QString chromium =
+            makeChromiumProfile(home.path() + QStringLiteral("/.config/chromium"),
+                                {.encrypted = encryptChromium("chromium-token", "peanuts", "v10", "soundcloud.com")});
+        corruptCookieTable(chromium, "WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 2000) "
+                                     "INSERT INTO cookies(host_key, name, value, expires_utc, last_access_utc) "
+                                     "SELECT 'example.com', 'pad' || i, hex(randomblob(100)), 0, i FROM n");
+        auth::BrowserCookieSource source(home.path(), {});
+        CHECK(test::errorOf(importToken(source, chromiumProfile(chromium))) == ErrorCode::Corrupt);
+
+        const QString firefox =
+            makeFirefoxProfile(home.path() + QStringLiteral("/.mozilla/firefox"), QByteArrayLiteral("firefox-token"));
+        corruptCookieTable(firefox,
+                           "WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 2000) "
+                           "INSERT INTO moz_cookies(host, name, value, expiry, lastAccessed) "
+                           "SELECT 'example.com', 'pad' || i, hex(randomblob(100)), 0, i FROM n",
+                           "firefox-token");
+        auto profiles = discover(source);
+        REQUIRE(profiles);
+        const auto profile = std::ranges::find(*profiles, auth::BrowserFamily::Firefox, &auth::BrowserProfile::family);
+        REQUIRE(profile != profiles->cend());
+        CHECK(test::errorOf(importToken(source, *profile)) == ErrorCode::Corrupt);
     }
 
     // Opt-in (--no-skip) because it reads the current user's real browser profiles and, for Chromium-family
