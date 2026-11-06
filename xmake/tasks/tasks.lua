@@ -155,7 +155,16 @@ task("package")
     set_category("plugin")
     set_menu {usage = "xmake package", description = "Build a release tarball with desktop file and icons"}
     on_run(function ()
-        os.execv("sh", {path.join(os.projectdir(), "tools", "package.sh")})
+        import("core.project.config")
+        import("core.project.project")
+        config.load()
+        if config.mode() ~= "release" then
+            raise("package needs a release configuration: run `xmake f -m release` first")
+        end
+        os.execv("xmake", table.join({"build"}, os.isroot() and {"--root"} or {}, {"noctara"}))
+        local binary = path.absolute(project.target("noctara"):targetfile(), os.projectdir())
+        os.execv("sh", {path.join(os.projectdir(), "tools", "package.sh"), binary, project.version(),
+                        path.join(os.projectdir(), "build", "dist")})
     end)
 task_end()
 

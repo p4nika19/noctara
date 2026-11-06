@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=Noctara
+GenericName=Music Player
+GenericName[ru]=Музыкальный проигрыватель
+Comment=SoundCloud desktop client
+Comment[ru]=Клиент SoundCloud для рабочего стола
+Exec=noctara
+Icon=noctara
+Terminal=false
+Categories=AudioVideo;Audio;Player;Qt;
+Keywords=SoundCloud;music;audio;player;
+Keywords[ru]=SoundCloud;музыка;аудио;проигрыватель;
+StartupNotify=true
+StartupWMClass=noctara
