@@ -122,11 +122,12 @@ task("lint")
             table.join2(files, os.files(path.join(os.projectdir(), pattern)))
         end
         assert(os.isfile(path.join(os.projectdir(), "compile_commands.json")), "build once to generate compile_commands.json")
+        -- .clang-tidy reports findings as warnings, on which clang-tidy exits 0: make any finding fail the task (CI gate).
         local runner = "run-clang-tidy"
         if os.isexec("/usr/bin/run-clang-tidy") then
-            os.execv(runner, table.join({"-quiet", "-p", os.projectdir()}, files))
+            os.execv(runner, table.join({"-quiet", "-warnings-as-errors=*", "-p", os.projectdir()}, files))
         else
-            os.execv("clang-tidy", table.join({"-p", os.projectdir(), "--quiet"}, files))
+            os.execv("clang-tidy", table.join({"-p", os.projectdir(), "--quiet", "--warnings-as-errors=*"}, files))
         end
     end)
 task_end()
