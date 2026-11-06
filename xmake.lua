@@ -69,7 +69,10 @@ if is_mode("release", "releasedbg") then
         add_cxflags("-fprofile-generate=build/pgo", {force = true})
         add_ldflags("-fprofile-generate=build/pgo", {force = true})
     elseif get_config("pgo") == "use" then
-        add_cxflags("-fprofile-use=build/pgo/noctara.profdata", "-Wno-profile-instr-unprofiled", {force = true})
+        -- The option stays set after `xmake pgo`: a function edited since profiling must not fail the -Werror build
+        -- ("control flow change detected (hash mismatch)", -Wbackend-plugin); its stale counts are simply dropped.
+        add_cxflags("-fprofile-use=build/pgo/noctara.profdata", "-Wno-profile-instr-unprofiled",
+                    "-mllvm=-no-pgo-warn-mismatch", {force = true})
     end
 elseif is_mode("debug") then
     set_symbols("debug")
