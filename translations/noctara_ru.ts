@@ -4,7 +4,37 @@
 <context>
     <name>AboutPane</name>
     <message>
-        <location filename="../src/qml/settings/AboutPane.qml" line="+46"/>
+        <location filename="../src/qml/settings/AboutPane.qml" line="+16"/>
+        <source>Dual Kawase blur</source>
+        <translation>Размытие Dual Kawase</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Gaussian blur</source>
+        <translation>Размытие по Гауссу</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Solid (no blur)</source>
+        <translation>Сплошной (без размытия)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Liquid Glass</source>
+        <translation>Жидкое стекло</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>flat</source>
+        <translation>плоский</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>frosted</source>
+        <translation>матовое стекло</translation>
+    </message>
+    <message>
+        <location line="+37"/>
         <source>Version %1</source>
         <extracomment>%1 = version number</extracomment>
         <translation>Версия %1</translation>
@@ -129,7 +159,7 @@
         <translation>Срок сессии истёк. Войдите снова ниже, чтобы слушать свою медиатеку и лайки.</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+27"/>
         <source>Sign in to SoundCloud</source>
         <translation>Вход в SoundCloud</translation>
     </message>
@@ -174,7 +204,7 @@
         <translation>Импортировать сессию…</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+32"/>
         <source>Or paste an OAuth token</source>
         <translation>Или вставьте OAuth-токен</translation>
     </message>
@@ -506,7 +536,7 @@
         <translation>Защищённые треки не учитывают: %1.</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+51"/>
         <source>Setting up the protected player: downloading, %1 % of %2 MB…</source>
         <extracomment>%1 = percent done, %2 = total size in MB</extracomment>
         <translation>Установка защищённого плеера: загрузка, %1 % из %2 МБ…</translation>
@@ -576,7 +606,7 @@
         <translation>высокое</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+95"/>
         <source>Energy saving is active: %1 is used for now.</source>
         <translation>Включено энергосбережение: пока используется «%1».</translation>
     </message>
@@ -916,7 +946,7 @@
 <context>
     <name>Format</name>
     <message>
-        <location filename="../src/i18n/Formatter.cpp" line="+86"/>
+        <location filename="../src/i18n/Formatter.cpp" line="+91"/>
         <source>%1K</source>
         <comment>compact thousands, e.g. 1.2K</comment>
         <translation>%1 тыс.</translation>
@@ -1252,7 +1282,7 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="../src/qml/pages/HomePage.qml" line="+46"/>
+        <location filename="../src/qml/pages/HomePage.qml" line="+55"/>
         <source>Good night</source>
         <translation>Доброй ночи</translation>
     </message>
@@ -1487,7 +1517,7 @@
         <translation>Копировать ссылку</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+11"/>
         <location line="+10"/>
         <location line="+18"/>
         <location line="+16"/>
@@ -1766,7 +1796,7 @@
 <context>
     <name>NowPlayingBar</name>
     <message>
-        <location filename="../src/qml/components/NowPlayingBar.qml" line="+27"/>
+        <location filename="../src/qml/components/NowPlayingBar.qml" line="+31"/>
         <source>Now playing</source>
         <translation>Сейчас играет</translation>
     </message>
@@ -1821,7 +1851,7 @@
         <translation>Повтор: выкл.</translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+62"/>
         <source>Unmute</source>
         <translation>Включить звук</translation>
     </message>
@@ -4610,7 +4640,7 @@
         <translation>Сбросить по умолчанию</translation>
     </message>
     <message>
-        <location line="+144"/>
+        <location line="+155"/>
         <source>Default</source>
         <translation>По умолчанию</translation>
     </message>
@@ -4672,7 +4702,7 @@
         <translation>Нажмите новое сочетание</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+47"/>
         <source>Press keys…</source>
         <translation>Нажмите клавиши…</translation>
     </message>
@@ -4938,7 +4968,7 @@
 <context>
     <name>Toast</name>
     <message>
-        <location filename="../src/qml/components/Toast.qml" line="+62"/>
+        <location filename="../src/qml/components/Toast.qml" line="+69"/>
         <source>Dismiss</source>
         <translation>Закрыть</translation>
     </message>

@@ -4,7 +4,37 @@
 <context>
     <name>AboutPane</name>
     <message>
-        <location filename="../src/qml/settings/AboutPane.qml" line="+46"/>
+        <location filename="../src/qml/settings/AboutPane.qml" line="+16"/>
+        <source>Dual Kawase blur</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Gaussian blur</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Solid (no blur)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Liquid Glass</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>flat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>frosted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+37"/>
         <source>Version %1</source>
         <extracomment>%1 = version number</extracomment>
         <translation type="unfinished"></translation>
@@ -129,7 +159,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+27"/>
         <source>Sign in to SoundCloud</source>
         <translation type="unfinished"></translation>
     </message>
@@ -174,7 +204,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+32"/>
         <source>Or paste an OAuth token</source>
         <translation type="unfinished"></translation>
     </message>
@@ -505,7 +535,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+51"/>
         <source>Setting up the protected player: downloading, %1 % of %2 MB…</source>
         <extracomment>%1 = percent done, %2 = total size in MB</extracomment>
         <translation type="unfinished"></translation>
@@ -575,7 +605,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="+95"/>
         <source>Energy saving is active: %1 is used for now.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -915,7 +945,7 @@
 <context>
     <name>Format</name>
     <message>
-        <location filename="../src/i18n/Formatter.cpp" line="+86"/>
+        <location filename="../src/i18n/Formatter.cpp" line="+91"/>
         <source>%1K</source>
         <comment>compact thousands, e.g. 1.2K</comment>
         <translation type="unfinished"></translation>
@@ -1245,7 +1275,7 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="../src/qml/pages/HomePage.qml" line="+46"/>
+        <location filename="../src/qml/pages/HomePage.qml" line="+55"/>
         <source>Good night</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1478,7 +1508,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+11"/>
         <location line="+10"/>
         <location line="+18"/>
         <location line="+16"/>
@@ -1757,7 +1787,7 @@
 <context>
     <name>NowPlayingBar</name>
     <message>
-        <location filename="../src/qml/components/NowPlayingBar.qml" line="+27"/>
+        <location filename="../src/qml/components/NowPlayingBar.qml" line="+31"/>
         <source>Now playing</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1812,7 +1842,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+62"/>
         <source>Unmute</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4599,7 +4629,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+144"/>
+        <location line="+155"/>
         <source>Default</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4661,7 +4691,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+47"/>
         <source>Press keys…</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4926,7 +4956,7 @@
 <context>
     <name>Toast</name>
     <message>
-        <location filename="../src/qml/components/Toast.qml" line="+62"/>
+        <location filename="../src/qml/components/Toast.qml" line="+69"/>
         <source>Dismiss</source>
         <translation type="unfinished"></translation>
     </message>

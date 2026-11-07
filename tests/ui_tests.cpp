@@ -425,7 +425,9 @@ void installStubs(stub::Factory player)
     }();
     (void)waveform;
     stub::singleton("Theme", QString::fromUtf8(kThemeStub));
-    stub::singleton("Graphics", QStringLiteral("({hardware: false, ndcYUp: true})"));
+    stub::singleton(
+        "Graphics",
+        QStringLiteral("({hardware: false, ndcYUp: true, api: '', deviceName: '', driver: '', safeMode: false})"));
     stub::singleton("Format", QStringLiteral("({revision: 0, duration: ms => '0:00', error: code => ''})"));
     stub::singleton("Layout", QStringLiteral("({fullPlayerQueue: false, fullPlayerArt: 'large', "
                                              "fullPlayerWaveform: false, playerSize: 'normal', playerTime: true, "
@@ -1065,5 +1067,25 @@ TEST_SUITE("ui.settings-panes")
         }
         REQUIRE(import != nullptr);
         CHECK(import->isEnabled());
+    }
+
+    TEST_CASE("the about page names the glass blur and surface instead of showing their ids")
+    {
+        stub::singleton("App", QStringLiteral("({version: '1.0', licenseText: id => ''})"));
+        stub::singleton("SettingsUi", QStringLiteral("({configPath: '/tmp/config.toml', openConfigFile: () => {}})"));
+        const WindowHarness harness(R"(import "../settings"
+        Window {
+            width: 700; height: 800; visible: true
+            property Item pane: pane
+            AboutPane { id: pane; anchors.fill: parent }
+        })");
+        // The Theme stub uses the 'solid' blur and the 'flat' surface.
+        bool named = false;
+        for (auto* child : harness.item("pane")->findChildren<QQuickItem*>()) {
+            const QString text = child->inherits("QQuickText") ? child->property("text").toString() : QString();
+            CHECK_FALSE(text.contains(QStringLiteral("solid / flat")));
+            named = named || text.contains(QStringLiteral("Solid (no blur)"));
+        }
+        CHECK(named);
     }
 }

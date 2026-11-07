@@ -10,6 +10,22 @@ Flickable {
     boundsBehavior: Flickable.StopAtBounds
     ScrollBar.vertical: ScrollBar {}
 
+    // Translated names for the glass ids (as on the Performance page), never the raw ids.
+    function styleName(style) {
+        switch (style) {
+        case "kawase": return qsTr("Dual Kawase blur")
+        case "gaussian": return qsTr("Gaussian blur")
+        default: return qsTr("Solid (no blur)")
+        }
+    }
+    function surfaceName(surface) {
+        switch (surface) {
+        case "liquid": return qsTr("Liquid Glass")
+        case "flat": return qsTr("flat")
+        default: return qsTr("frosted")
+        }
+    }
+
     component InfoRow: Row {
         property string name
         property string info
@@ -82,7 +98,7 @@ Flickable {
         }
         InfoRow {
             name: qsTr("Glass style")
-            info: Theme.glass.style + " / " + Theme.glass.surface
+            info: root.styleName(Theme.glass.style) + " / " + root.surfaceName(Theme.glass.surface)
         }
 
         Text {
