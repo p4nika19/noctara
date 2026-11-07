@@ -133,9 +133,18 @@ void DrmService::clearProfile()
     if (m_backend.state() != media::BackendState::Idle || m_profileDir.isEmpty()) {
         return;
     }
-    m_host.shutdown();
-    // The helper is on its way out; Chromium only writes its profile while running, and a new start waits for the
-    // old process to be gone.
+    if (m_host.processId() != 0) {
+        // Running or already on its way out: Chromium writes parts of its profile as it exits, so the profile is
+        // emptied once the helper is gone (a new start reaps the old process first, so this runs before it begins).
+        connect(&m_host, &DrmHost::stopped, this, &DrmService::removeProfile, Qt::SingleShotConnection);
+        m_host.shutdown();
+        return;
+    }
+    removeProfile();
+}
+
+void DrmService::removeProfile()
+{
     const QDir profile(m_profileDir);
     for (const QFileInfo& entry : profile.entryInfoList(QDir::AllEntries | QDir::Hidden | QDir::NoDotAndDotDot)) {
         if (entry.fileName() == u"WidevineCdm") {

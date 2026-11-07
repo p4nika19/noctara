@@ -54,6 +54,7 @@ Q_SIGNALS:
 private:
     void applySettings(const QString& key);
     void applyNetwork();
+    void removeProfile();
     [[nodiscard]] std::optional<HelperCommand> command() const;
     void installIfMissing(bool background);
 

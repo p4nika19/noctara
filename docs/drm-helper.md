@@ -52,8 +52,9 @@ no way to save protected content, and none may be added.
 - userData is `<cache>/electron` (`--noctara-user-data`; a second instance without the cache lock uses a
   private temporary directory instead): Chromium's profile files and the Widevine CDM component
   (about 21 MB, downloaded by Chromium's component updater on first start). Checked after playing a protected
-  track in the app: `Cache/` holds only its empty index, `blob_storage/` and `Dictionaries/` are empty. *Storage → Clear all* stops an idle helper and
-  empties the folder except `WidevineCdm/` (which would only be downloaded again). Uninstalling: remove
+  track in the app: `Cache/` holds only its empty index, `blob_storage/` and `Dictionaries/` are empty. *Storage → Clear all* stops an idle helper and,
+  once it has exited (Chromium writes parts of its profile on exit), empties the folder except `WidevineCdm/`
+  (which would only be downloaded again). Uninstalling: remove
   `~/.cache/noctara` as a whole.
 
 ## Network

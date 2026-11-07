@@ -10,6 +10,8 @@
 //   NOCTARA_MOCK_DRM_CHILD=1           start a child process in its group and log "child <pid>"
 //   NOCTARA_MOCK_DRM_DURATION_MS=<n>   length of every track (default 3000)
 //   NOCTARA_MOCK_DRM_CONFIGURE_ERROR=1 answer "configure" with an error outside a track (empty id)
+//   NOCTARA_MOCK_DRM_EXIT_FILE=<name>  on its way out, write <name> into its profile 100 ms later (as Chromium
+//                                      writes its profile on exit)
 // Every message it receives is echoed back as a "log" message "got <json>"; its arguments as "args <json>".
 // A "load" whose URL contains "license-denied" fails with the "drm" error code.
 
@@ -97,7 +99,7 @@ private:
         std::array<char, 4096> chunk{};
         const ssize_t got = ::read(STDIN_FILENO, chunk.data(), chunk.size());
         if (got <= 0) {
-            QCoreApplication::quit();  // Noctara is gone
+            quit();  // Noctara is gone
             return;
         }
         m_buffer.append(chunk.data(), got);
@@ -140,7 +142,7 @@ private:
                     {{QStringLiteral("type"), QStringLiteral("pong")}, {QStringLiteral("seq"), message.value(u"seq")}});
             }
         } else if (type == u"shutdown") {
-            QCoreApplication::quit();
+            quit();
         } else if (type == u"load") {
             load(message);
         } else if (type == u"play" && !m_id.isEmpty()) {
@@ -156,6 +158,33 @@ private:
             m_tick.stop();
             m_id.clear();
         }
+    }
+
+    void quit()
+    {
+        const QString exitFile = qEnvironmentVariable("NOCTARA_MOCK_DRM_EXIT_FILE");
+        if (exitFile.isEmpty()) {
+            QCoreApplication::quit();
+            return;
+        }
+        m_stdin.setEnabled(false);
+        if (m_quitting) {
+            return;
+        }
+        m_quitting = true;
+        QString profile;
+        for (const QString& argument : QCoreApplication::arguments()) {
+            if (argument.startsWith(u"--noctara-user-data=")) {
+                profile = argument.section(u'=', 1);
+            }
+        }
+        const QString path = profile + u'/' + exitFile;
+        QTimer::singleShot(100, this, [path] {
+            QFile file(path);
+            (void)file.open(QIODevice::WriteOnly);
+            file.close();
+            QCoreApplication::quit();
+        });
     }
 
     void load(const QJsonObject& message)
@@ -228,6 +257,7 @@ private:
     qint64 m_base = 0;
     qint64 m_duration = 3000;
     bool m_playing = false;
+    bool m_quitting = false;
     bool m_silent = qEnvironmentVariableIntValue("NOCTARA_MOCK_DRM_SILENT") == 1;  // hung after the handshake
 };
 

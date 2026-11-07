@@ -76,6 +76,7 @@ so a late event from a replaced track never moves the current one.
 
 `noctara-mock-drm-helper` (`tests/mock-drm-helper/main.cpp`, QtCore only) speaks the same protocol, validated with
 the same embedded definition, and simulates playback with timers. Environment variables make it crash on load (or
-once), hang, report another version or no Widevine, refuse `configure`, change the track length, or fork a child
-into its process group; it echoes what it receives as `log` messages so tests can check what reached the helper. It
-is a separate binary because anything linking the GUI stack spends seconds in GL driver initialisation under ASan.
+once), hang, report another version or no Widevine, refuse `configure`, change the track length, fork a child into
+its process group, or write a file into its profile on its way out; it echoes what it receives as `log` messages so
+tests can check what reached the helper. It is a separate binary because anything linking the GUI stack spends
+seconds in GL driver initialisation under ASan.

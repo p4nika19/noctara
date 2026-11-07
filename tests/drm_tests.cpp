@@ -4,13 +4,18 @@
 
 #include "drm/DrmBackend.hpp"
 #include "drm/DrmHost.hpp"
+#include "drm/DrmService.hpp"
 #include "drm/HelperInstaller.hpp"
 #include "drm/HelperNetwork.hpp"
 #include "drm/Protocol.hpp"
+#include "net/NetworkService.hpp"
+#include "settings/Keys.hpp"
+#include "settings/SettingsStore.hpp"
 
 #include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDir>
+#include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QSignalSpy>
@@ -641,6 +646,52 @@ TEST_SUITE("drm.backend")
         backend.load(protectedSource([] { return Result<api::ProtectedStream>(stream()); }), 0, false);
         REQUIRE(test::waitUntil([&] { return failed.size() == 3; }));
         CHECK(failed.last().first().value<Error>().code == ErrorCode::ProtectedPlayerMissing);
+    }
+}
+
+TEST_SUITE("drm.service")
+{
+    TEST_CASE("clearing the profile waits for a running helper to be gone: what it writes on exit goes too")
+    {
+        QTemporaryDir dir;
+        // A helper folder whose "electron" is the mock helper.
+        const QString helper = dir.path() + QStringLiteral("/helper");
+        REQUIRE(QDir().mkpath(helper + QStringLiteral("/electron")));
+        REQUIRE(QDir().mkpath(helper + QStringLiteral("/app")));
+        REQUIRE(QFile::link(QCoreApplication::applicationDirPath() + QStringLiteral("/noctara-mock-drm-helper"),
+                            helper + QStringLiteral("/electron/electron")));
+        QFile main(helper + QStringLiteral("/app/main.js"));
+        REQUIRE(main.open(QIODevice::WriteOnly));
+        main.close();
+        const QString profile = dir.path() + QStringLiteral("/electron");
+        REQUIRE(QDir().mkpath(profile + QStringLiteral("/WidevineCdm")));
+        QFile preferences(profile + QStringLiteral("/Preferences"));
+        REQUIRE(preferences.open(QIODevice::WriteOnly));
+        preferences.close();
+
+        ScopedEnv env{{"NOCTARA_MOCK_DRM_EXIT_FILE", "Local State"}};
+        settings::SettingsStore store(settings::Schema::builtin());
+        REQUIRE(store.setUserValue(settings::keys::ProxyMode, QStringLiteral("none")));
+        REQUIRE(store.setUserValue(settings::keys::ProtectedHelper, helper));
+        net::NetworkService network(store, net::processEnvironment(), false);
+        DrmService service(store, network, profile, QCoreApplication::applicationDirPath(), dir.path());
+        QSignalSpy ready(&service.host(), &DrmHost::ready);
+        QSignalSpy stopped(&service.host(), &DrmHost::stopped);
+        service.host().warm();
+        REQUIRE(test::waitUntil([&] { return ready.size() == 1; }, 10000));
+
+        service.clearProfile();
+        REQUIRE(test::waitUntil([&] { return stopped.size() == 1; }, 5000));
+        CHECK(QDir(profile).entryList(QDir::AllEntries | QDir::Hidden | QDir::NoDotAndDotDot) ==
+              QStringList{QStringLiteral("WidevineCdm")});
+
+        // Not running: emptied at once.
+        QFile again(profile + QStringLiteral("/Preferences"));
+        REQUIRE(again.open(QIODevice::WriteOnly));
+        again.close();
+        service.clearProfile();
+        CHECK(QDir(profile).entryList(QDir::AllEntries | QDir::Hidden | QDir::NoDotAndDotDot) ==
+              QStringList{QStringLiteral("WidevineCdm")});
     }
 }
 
