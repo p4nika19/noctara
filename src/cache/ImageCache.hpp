@@ -75,9 +75,12 @@ private:
         std::shared_ptr<Callback> done;
     };
 
-    void requestOnThread(const QUrl& url, Waiter waiter);
+    // Where decoded bytes came from: only a download is stored, and only once it decodes.
+    enum class Source : std::uint8_t { Network, Disk, Fallback };
+
+    void requestOnThread(const QUrl& url, Waiter waiter, bool useDisk = true);
     void onDownloaded(const QByteArray& key, const QUrl& url, Result<net::Response> result);
-    void decode(const QUrl& url, const QByteArray& data, std::vector<Waiter> waiters);
+    void decode(const QUrl& url, const QByteArray& data, std::vector<Waiter> waiters, Source source);
     static void deliver(const Waiter& waiter, Result<QImage> result);
 
     [[nodiscard]] static QByteArray memoryKey(const QUrl& url, QSize size);

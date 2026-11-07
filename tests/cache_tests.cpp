@@ -7,7 +7,9 @@
 #include "cache/AudioCache.hpp"
 #include "cache/AudioPayload.hpp"
 #include "cache/CacheService.hpp"
+#include "cache/DiskLru.hpp"
 #include "cache/FileOps.hpp"
+#include "cache/Hash.hpp"
 #include "cache/HttpCache.hpp"
 #include "cache/ImageCache.hpp"
 #include "cache/Prefetch.hpp"
@@ -1060,6 +1062,44 @@ TEST_SUITE("cache.image")
         REQUIRE(test::waitUntil([&] { return again.has_value(); }));
         CHECK(again->has_value());
         CHECK(origin.count() == 0);
+    }
+
+    TEST_CASE("a response that is not an image is not stored; an undecodable stored blob is fetched again")
+    {
+        QTemporaryDir dir;
+        test::FakeOrigin origin;
+        const QUrl url(QStringLiteral("https://img.test/blocked.png"));
+        QObject context;
+        const auto fetch = [&](ImageCache& images) {
+            std::optional<Result<QImage>> result;
+            images.request(url, {}, &context, [&](Result<QImage> image) { result = std::move(image); });
+            REQUIRE(test::waitUntil([&] { return result.has_value(); }));
+            return *result;
+        };
+        origin.serve(url.toString(), {.body = "<html>blocked by the proxy</html>", .type = "text/html"});
+        {
+            ImageCache images(origin, FileOps::posix(), 16 << 20);
+            images.setDisk(dir.path(), 1 << 20);
+            CHECK(test::errorOf(fetch(images)) == ErrorCode::ParseError);
+        }
+        origin.serve(url.toString(), {.body = pngCover(Qt::cyan), .type = "image/png"});
+        {
+            ImageCache reopened(origin, FileOps::posix(), 16 << 20);
+            reopened.setDisk(dir.path(), 1 << 20);
+            CHECK(fetch(reopened).has_value());
+            CHECK(origin.count() == 2);
+        }
+
+        // A blob stored by an older version, or damaged on disk, is dropped and downloaded again.
+        {
+            DiskLru lru(dir.path(), 1 << 20, FileOps::posix());
+            REQUIRE(lru.put(nameFor(url.toEncoded()), "not an image"));
+            lru.flushIndex();
+        }
+        ImageCache again(origin, FileOps::posix(), 16 << 20);
+        again.setDisk(dir.path(), 1 << 20);
+        CHECK(fetch(again).has_value());
+        CHECK(origin.count() == 3);
     }
 
     TEST_CASE("offline, stored covers of audio entries stand in")

@@ -7,6 +7,8 @@
 #include <QImageReader>
 #include <QtConcurrentRun>
 
+#include <algorithm>
+
 namespace noctara::cache {
 
 namespace {
@@ -185,7 +187,7 @@ void ImageCache::deliver(const Waiter& waiter, Result<QImage> result)
     waiter.channel->reset();
 }
 
-void ImageCache::requestOnThread(const QUrl& url, Waiter waiter)
+void ImageCache::requestOnThread(const QUrl& url, Waiter waiter, bool useDisk)
 {
     if (std::optional<QImage> hit = cached(url, waiter.size)) {
         deliver(waiter, std::move(*hit));
@@ -196,9 +198,9 @@ void ImageCache::requestOnThread(const QUrl& url, Waiter waiter)
         pending->push_back(std::move(waiter));  // single flight: the running download serves this one too
         return;
     }
-    if (m_disk) {
+    if (m_disk && useDisk) {
         if (Result<QByteArray> data = m_disk->get(key)) {
-            decode(url, *data, {std::move(waiter)});
+            decode(url, *data, {std::move(waiter)}, Source::Disk);
             return;
         }
     }
@@ -218,16 +220,13 @@ void ImageCache::onDownloaded(const QByteArray& key, const QUrl& url, Result<net
 {
     std::vector<Waiter> waiters = m_pending.take(key);
     QByteArray data;
+    Source source = Source::Network;
     if (result && result->successful() && !result->body.isEmpty() && result->body.size() <= kMaxImageBytes) {
         data = result->body;
-        if (m_disk) {
-            if (auto stored = m_disk->put(key, data); !stored) {
-                qCDebug(lcCache) << "image not stored:" << stored.error().describe();
-            }
-        }
     } else if (m_fallback) {
         if (std::optional<QByteArray> stored = m_fallback(url)) {
             data = std::move(*stored);
+            source = Source::Fallback;
         }
     }
     if (data.isEmpty()) {
@@ -237,12 +236,12 @@ void ImageCache::onDownloaded(const QByteArray& key, const QUrl& url, Result<net
         }
         return;
     }
-    decode(url, data, std::move(waiters));
+    decode(url, data, std::move(waiters), source);
 }
 
-void ImageCache::decode(const QUrl& url, const QByteArray& data, std::vector<Waiter> waiters)
+void ImageCache::decode(const QUrl& url, const QByteArray& data, std::vector<Waiter> waiters, Source source)
 {
-    (void)QtConcurrent::run([this, mailbox = m_mailbox, url, data, waiters = std::move(waiters)] mutable {
+    (void)QtConcurrent::run([this, mailbox = m_mailbox, url, data, source, waiters = std::move(waiters)] mutable {
         // One decode per distinct size among the waiters.
         QHash<QByteArray, QImage> decoded;
         for (const Waiter& waiter : waiters) {
@@ -251,7 +250,26 @@ void ImageCache::decode(const QUrl& url, const QByteArray& data, std::vector<Wai
                 decoded.insert(key, decodeImage(data, waiter.size));
             }
         }
-        mailbox->post([this, url, decoded = std::move(decoded), waiters = std::move(waiters)] {
+        mailbox->post([this, url, data, source, decoded = std::move(decoded), waiters = std::move(waiters)] {
+            const bool usable = std::ranges::any_of(decoded, [](const QImage& image) { return !image.isNull(); });
+            const QByteArray diskKey = nameFor(url.toEncoded());
+            if (!usable && source == Source::Disk) {
+                // A stored blob that does not decode (damaged, or a block page an older version kept): drop it and
+                // download again instead of failing from disk in every session.
+                if (m_disk) {
+                    m_disk->remove(diskKey);
+                }
+                for (const Waiter& waiter : waiters) {
+                    requestOnThread(url, waiter, false);
+                }
+                return;
+            }
+            if (usable && source == Source::Network && m_disk) {
+                // Stored only once it decodes: a captive portal's HTML page must not become the cover for good.
+                if (auto stored = m_disk->put(diskKey, data); !stored) {
+                    qCDebug(lcCache) << "image not stored:" << stored.error().describe();
+                }
+            }
             for (const Waiter& waiter : waiters) {
                 const QByteArray key = memoryKey(url, waiter.size);
                 const QImage image = decoded.value(key);

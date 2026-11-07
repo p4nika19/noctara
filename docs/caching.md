@@ -74,7 +74,7 @@ They are never cached, in any tier. `AudioCache::open` refuses `TrackInfo::drm` 
 
 ## Images
 
-`ImageCache` keeps decoded `QImage`s in a RAM LRU (`cache.images.ram_mb`, 64 MB) keyed by URL and decode size, so a thumbnail and the full-screen cover are separate entries. The encoded bytes go into a disk LRU (`cache.images.disk_mb`, 512 MB). Concurrent requests for one URL share one download, and decoding runs on the thread pool: the image is scaled to fit the requested box, never enlarged. QML uses `image://cover/<percent-encoded URL>` (an async image provider).
+`ImageCache` keeps decoded `QImage`s in a RAM LRU (`cache.images.ram_mb`, 64 MB) keyed by URL and decode size, so a thumbnail and the full-screen cover are separate entries. The encoded bytes go into a disk LRU (`cache.images.disk_mb`, 512 MB) once they decode, so a block page is never kept as a cover; a stored blob that no longer decodes is dropped and downloaded again. Concurrent requests for one URL share one download, and decoding runs on the thread pool: the image is scaled to fit the requested box, never enlarged. QML uses `image://cover/<percent-encoded URL>` (an async image provider).
 
 ## API responses (HTTP cache)
 
