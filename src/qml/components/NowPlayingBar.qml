@@ -4,8 +4,8 @@ import Noctara
 
 // The floating "now playing" bar: cover and title, transport, the waveform scrubber with times, volume and the
 // queue. Liquid Glass applies here (one of the few surfaces that bend light). What it shows and its size follow
-// Layout → Player bar; narrow windows drop the volume slider first (the mute button stays). Clicking the cover
-// opens the full-screen player; right-click opens the player menu.
+// Layout → Player bar; narrow windows drop the volume slider first (the mute button stays), then the times beside
+// the scrubber. Clicking the cover opens the full-screen player; right-click opens the player menu.
 GlassPanel {
     id: bar
 
@@ -16,6 +16,10 @@ GlassPanel {
 
     readonly property real inset: Math.max(Theme.space.md, cornerInset)
     readonly property bool roomy: width > 900 * Theme.scale
+    // Between the transport and the volume controls; the times give up their room before the scrubber gets too short.
+    readonly property real scrubRoom: volume.x - transport.x - transport.width - Theme.space.lg * 2
+    readonly property bool showTimes: scrubRoom - elapsed.implicitWidth - total.implicitWidth - Theme.space.md * 2
+                                      >= 96 * Theme.scale
     readonly property real progress: Player.duration > 0 ? Math.min(1, Player.position / Player.duration) : 0
 
     level: 1
@@ -154,6 +158,8 @@ GlassPanel {
         anchors.left: transport.right
         anchors.leftMargin: Theme.space.lg
         anchors.verticalCenter: parent.verticalCenter
+        visible: bar.showTimes
+        width: bar.showTimes ? implicitWidth : 0
         text: Layout.playerTime && Format.revision >= 0 ? Format.duration(waveform.dragging ? waveform.shownProgress * Player.duration
                                                                        : Player.position) : ""
         font: Theme.font.numeric
@@ -162,9 +168,9 @@ GlassPanel {
     WaveformView {
         id: waveform
         anchors.left: elapsed.right
-        anchors.leftMargin: Theme.space.md
+        anchors.leftMargin: bar.showTimes ? Theme.space.md : 0
         anchors.right: total.left
-        anchors.rightMargin: Theme.space.md
+        anchors.rightMargin: bar.showTimes ? Theme.space.md : 0
         anchors.verticalCenter: parent.verticalCenter
         // Off: a plain line (no peaks, thin bars) instead of the waveform.
         implicitHeight: (Layout.playerWaveform ? 32 : 10) * Theme.scale
@@ -183,6 +189,8 @@ GlassPanel {
         anchors.right: volume.left
         anchors.rightMargin: Theme.space.lg
         anchors.verticalCenter: parent.verticalCenter
+        visible: bar.showTimes
+        width: bar.showTimes ? implicitWidth : 0
         text: Layout.playerTime && Format.revision >= 0 ? Format.duration(Player.duration) : ""
         font: Theme.font.numeric
         color: Theme.colors.textTertiary

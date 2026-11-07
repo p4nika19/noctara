@@ -22,6 +22,7 @@
 #include <QColor>
 #include <QJSEngine>
 #include <QQmlComponent>
+#include <QQmlContext>
 #include <QQmlEngine>
 #include <QQuickImageProvider>
 #include <QQuickItem>
@@ -426,7 +427,8 @@ void installStubs(stub::Factory player)
     stub::singleton("Graphics", QStringLiteral("({hardware: false, ndcYUp: true})"));
     stub::singleton("Format", QStringLiteral("({revision: 0, duration: ms => '0:00', error: code => ''})"));
     stub::singleton("Layout", QStringLiteral("({fullPlayerQueue: false, fullPlayerArt: 'large', "
-                                             "fullPlayerWaveform: false})"));
+                                             "fullPlayerWaveform: false, playerSize: 'normal', playerTime: true, "
+                                             "playerWaveform: true, playerVolume: true, playerQueueButton: true})"));
     stub::singleton("Artwork", QStringLiteral("({hasArtwork: false, revision: 0})"));
     if (player) {
         stub::singleton("Player", std::move(player));
@@ -649,6 +651,40 @@ TEST_SUITE("ui.components")
         const QPointF start = flyer->mapToScene(QPointF(0, 0));
         CHECK(start.x() == doctest::Approx(20));
         CHECK(start.y() == doctest::Approx(720));
+    }
+
+    TEST_CASE("a narrow player bar keeps room for the scrubber and never overlaps the times")
+    {
+        // 612 px: the minimum window width with the expanded navigation rail.
+        const WindowHarness harness(R"(Window {
+            width: 900; height: 200; visible: true
+            property Item bar: bar
+            NowPlayingBar { id: bar; width: 612; height: 80 }
+        })");
+        QQuickItem* bar = harness.item("bar");
+        const auto child = [&](const char* id) {
+            // The ids inside NowPlayingBar.qml live in the context of its own items.
+            QQmlContext* context = qmlContext(bar->property("coverItem").value<QObject*>());
+            REQUIRE(context != nullptr);
+            auto* item = qobject_cast<QQuickItem*>(context->objectForName(QString::fromLatin1(id)));
+            REQUIRE(item != nullptr);
+            return item;
+        };
+        const auto check = [&] {
+            QQuickItem* waveform = child("waveform");
+            QQuickItem* elapsed = child("elapsed");
+            QQuickItem* total = child("total");
+            CHECK(waveform->width() >= 48);
+            if (elapsed->isVisible() && total->isVisible()) {
+                CHECK(elapsed->x() + elapsed->width() <= total->x());
+            }
+            CHECK(waveform->x() + waveform->width() <= total->x() + (total->isVisible() ? 0 : total->width()));
+        };
+        check();
+        bar->setWidth(1200);  // wide again: the times come back
+        CHECK(child("elapsed")->isVisible());
+        CHECK(child("total")->isVisible());
+        check();
     }
 
     TEST_CASE("the navigation pill is hidden while the current page is not in the rail")
