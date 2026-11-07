@@ -132,7 +132,12 @@ Item {
             model: 8
             delegate: Column {
                 spacing: Theme.space.sm
-                Skeleton { width: root.cardWidth; height: width; radius: Theme.radius.md; loading: true }
+                Skeleton {
+                    width: root.cardWidth
+                    height: width
+                    radius: Theme.coverShape === "circle" ? width / 2 : (Theme.coverShape === "square" ? 0 : Theme.radius.md)
+                    loading: true
+                }
                 Skeleton { width: root.cardWidth * 0.75; height: 12 * Theme.scale; radius: height / 2; loading: true }
             }
         }

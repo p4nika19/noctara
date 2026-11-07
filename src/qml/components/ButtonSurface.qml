@@ -103,7 +103,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         anchors.margins: Theme.space.hairline
-        radius: root.radius
+        radius: Math.max(0, root.radius - Theme.space.hairline)
         visible: root.glassy
         gradient: Gradient {
             GradientStop {

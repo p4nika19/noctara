@@ -50,7 +50,9 @@ T.Popup {
     modal: false
     focus: true
     closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside | T.Popup.CloseOnReleaseOutsideParent
-    padding: Theme.space.xs
+    // Rows follow the menu's corners (concentric radii); a row rounded to a pill keeps clear of a large corner.
+    readonly property real rowHeight: Theme.space.controlHeightSmall + Theme.space.xxs
+    padding: Math.max(Theme.space.xs, Math.max(0, Theme.radius.md - rowHeight / 2) * (1 - Math.SQRT1_2))
     implicitWidth: Math.max(220 * Theme.scale, Math.min(380 * Theme.scale, list.widest + padding * 2))
     implicitHeight: list.implicitHeight + padding * 2
 
@@ -73,7 +75,7 @@ T.Popup {
                 readonly property bool separator: modelData.separator === true
                 readonly property bool available: modelData.enabled !== false
                 width: list.width
-                height: separator ? Theme.space.md : Theme.space.controlHeightSmall + Theme.space.xxs
+                height: separator ? Theme.space.md : root.rowHeight
                 Accessible.role: separator ? Accessible.Separator : Accessible.MenuItem
                 Accessible.name: modelData.text || ""
                 Accessible.checked: modelData.checked === true
@@ -86,9 +88,10 @@ T.Popup {
                     color: Theme.colors.divider
                 }
                 Rectangle {
+                    objectName: "highlight"
                     visible: !entry.separator
                     anchors.fill: parent
-                    radius: Theme.radius.sm
+                    radius: Math.min(height / 2, Math.max(0, Theme.radius.md - root.padding))
                     color: root.highlighted === entry.index && entry.available ? Theme.colors.stateHover
                                                                                : "transparent"
                 }
@@ -130,6 +133,9 @@ T.Popup {
                     enabled: !entry.separator && entry.available
                     hoverEnabled: true
                     onEntered: root.highlighted = entry.index
+                    // The pointer left the entry (to a separator, a disabled entry or out of the menu): nothing is
+                    // under it any more. Keyboard highlights are not affected, they never come with a hover.
+                    onExited: if (root.highlighted === entry.index) root.highlighted = -1
                     onClicked: root.trigger(entry.index)
                 }
             }

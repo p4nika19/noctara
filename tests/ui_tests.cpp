@@ -12,6 +12,7 @@
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
 #include "theme/Theme.hpp"
+#include "ui/CoverImageProvider.hpp"
 #include "ui/EffectsController.hpp"
 #include "ui/IconProvider.hpp"
 #include "ui/SettingsController.hpp"
@@ -728,6 +729,103 @@ TEST_SUITE("ui.components")
         REQUIRE(menu->property("highlighted").toInt() == -1);
         REQUIRE(QMetaObject::invokeMethod(menu, "step", Q_ARG(QVariant, QVariant(-1))));
         CHECK(menu->property("highlighted").toInt() == 2);
+    }
+
+    TEST_CASE("hovering a context menu entry highlights it and leaving the menu clears the highlight")
+    {
+        const WindowHarness harness(R"(Window {
+            width: 500; height: 500; visible: true
+            property QtObject menu: menu
+            ContextMenu { id: menu }
+        })");
+        QObject* menu = harness.object("menu");
+        QVariantList actions;
+        for (int i = 0; i < 3; ++i) {
+            actions.append(QVariantMap{{QStringLiteral("text"), QStringLiteral("Action %1").arg(i)}});
+        }
+        QVariant item = QVariant::fromValue<QObject*>(harness.window->contentItem());
+        REQUIRE(QMetaObject::invokeMethod(menu, "show", Q_ARG(QVariant, QVariant(actions)), Q_ARG(QVariant, item),
+                                          Q_ARG(QVariant, QVariant(QPointF(20, 20)))));
+        REQUIRE(test::waitUntil([&] { return menu->property("opened").toBool(); }));
+        auto* list = menu->property("contentItem").value<QQuickItem*>();
+        REQUIRE(list != nullptr);
+        QQuickItem* first = nullptr;
+        for (QQuickItem* child : list->childItems()) {
+            if (child->height() > 0 && (first == nullptr || child->y() < first->y())) {
+                first = child;
+            }
+        }
+        REQUIRE(first != nullptr);
+        QTest::mouseMove(harness.window.get(),
+                         first->mapToScene(QPointF(first->width() / 2, first->height() / 2)).toPoint());
+        CHECK(test::waitUntil([&] { return menu->property("highlighted").toInt() == 0; }));
+        QTest::mouseMove(harness.window.get(), QPoint(480, 480));
+        CHECK(test::waitUntil([&] { return menu->property("highlighted").toInt() == -1; }));
+    }
+
+    TEST_CASE("a context menu's rows follow its corners and stay inside them at large radii")
+    {
+        installStubs({});
+        QString theme = QString::fromUtf8(kThemeStub);
+        theme.replace(QStringLiteral("md: 10"), QStringLiteral("md: 40"));
+        stub::singleton("Theme", theme);
+        QQmlEngine engine;
+        engine.addImageProvider(QStringLiteral("icon"), new SolidIconProvider);  // NOLINT: owned by the engine
+        QQmlComponent component(&engine);
+        component.setData(R"(import QtQuick
+        import Noctara
+        Window {
+            width: 500; height: 500; visible: true
+            property QtObject menu: menu
+            ContextMenu { id: menu }
+        })",
+                          QUrl::fromLocalFile(QStringLiteral(NOCTARA_SOURCE_DIR "/src/qml/components/Harness.qml")));
+        std::unique_ptr<QObject> window(component.create());
+        REQUIRE_MESSAGE(window != nullptr, component.errorString());
+        QObject* menu = window->property("menu").value<QObject*>();
+        const QVariantList actions{QVariantMap{{QStringLiteral("text"), QStringLiteral("Play")}}};
+        QVariant item = QVariant::fromValue<QObject*>(qobject_cast<QQuickWindow*>(window.get())->contentItem());
+        REQUIRE(QMetaObject::invokeMethod(menu, "show", Q_ARG(QVariant, QVariant(actions)), Q_ARG(QVariant, item),
+                                          Q_ARG(QVariant, QVariant(QPointF(20, 20)))));
+        auto* list = menu->property("contentItem").value<QQuickItem*>();
+        const std::function<QQuickItem*(QQuickItem*)> find = [&](QQuickItem* parent) -> QQuickItem* {
+            for (QQuickItem* child : parent->childItems()) {
+                if (child->objectName() == u"highlight") {
+                    return child;
+                }
+                if (QQuickItem* found = find(child)) {
+                    return found;
+                }
+            }
+            return nullptr;
+        };
+        REQUIRE(test::waitUntil([&] { return find(list) != nullptr && find(list)->height() > 0; }));
+        const QQuickItem* highlight = find(list);
+        const double outer = 40;
+        const double padding = menu->property("padding").toDouble();
+        const double radius = highlight->property("radius").toDouble();
+        const double height = highlight->height();
+        CHECK(radius == doctest::Approx(std::min(height / 2, outer - padding)));
+        CHECK(radius > 6);  // grew with the menu's corners (it used to stay at the small token)
+        // The row's corner arc stays inside the menu's corner arc.
+        CHECK(std::sqrt(2.0) * (outer - padding - radius) + radius <= outer + 1e-6);
+    }
+
+    TEST_CASE("a wide cover is cropped to the item's shape before its corners are rounded")
+    {
+        QImage wide(200, 100, QImage::Format_ARGB32_Premultiplied);
+        wide.fill(Qt::red);
+        const QImage square = ui::maskedCover(wide, 0.25, QSize(50, 50));
+        REQUIRE(square.size() == QSize(100, 100));  // the centre of the wide image, as the item shows it
+        for (const QPoint corner : {QPoint(1, 1), QPoint(98, 1), QPoint(1, 98), QPoint(98, 98)}) {
+            INFO(corner.x() << "," << corner.y());
+            CHECK(qAlpha(square.pixel(corner)) == 0);
+        }
+        CHECK(qAlpha(square.pixel(50, 50)) == 255);
+        CHECK(qAlpha(square.pixel(50, 1)) == 255);  // the straight part of the edge stays
+        // Square shape (no rounding) and an unknown size leave the image as it is.
+        CHECK(ui::maskedCover(wide, 0, QSize(50, 50)).size() == wide.size());
+        CHECK(ui::maskedCover(wide, 0.25, QSize()).size() == wide.size());
     }
 
     TEST_CASE("a context menu is as wide as its own entries, not as the widest earlier menu")

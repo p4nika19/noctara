@@ -43,6 +43,8 @@ GlassPanel {
         anchors.verticalCenter: parent.verticalCenter
         height: bar.height - Theme.space.md * 2
         width: height
+        // Concentric with the bar's rounded end.
+        radius: Math.max(0, Math.min(bar.radius, bar.height / 2) - Theme.space.md)
         source: Player.coverUrl
         MouseArea {
             anchors.fill: parent

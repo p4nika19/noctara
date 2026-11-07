@@ -55,7 +55,6 @@ T.AbstractButton {
     Keys.onShortcutOverride: event => event.accepted = recording
 
     background: ButtonSurface {
-        radius: Theme.radius.sm
         hovered: control.hovered
         pressed: control.down
         active: control.recording

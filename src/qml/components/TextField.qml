@@ -41,7 +41,7 @@ T.TextField {
         Rectangle {
             anchors.fill: parent
             anchors.margins: Theme.space.hairline
-            radius: parent.radius
+            radius: Math.max(0, parent.radius - Theme.space.hairline)
             visible: Theme.glass.translucent
             gradient: Gradient {
                 GradientStop { position: 0.0; color: Theme.colors.sheen }

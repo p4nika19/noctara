@@ -89,7 +89,8 @@ Item {
     }
 
     StateLayer {
-        radius: Theme.radius.sm
+        // Concentric with the cover, which sits Theme.space.sm inside the row.
+        radius: Math.min(height / 2, Theme.radius.sm + Theme.space.sm)
         hovered: area.containsMouse
         pressed: area.pressed
     }

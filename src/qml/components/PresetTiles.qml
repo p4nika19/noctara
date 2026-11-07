@@ -27,8 +27,9 @@ Grid {
             Keys.onReturnPressed: SettingsUi.applyPreset(modelData.id)
 
             Rectangle {
+                id: tileBg
                 anchors.fill: parent
-                radius: Theme.radius.md * 0.6
+                radius: Theme.radius.sm
                 color: tile.selected ? Qt.rgba(Theme.colors.accent.r, Theme.colors.accent.g, Theme.colors.accent.b, 0.12)
                                      : (area.containsMouse ? Theme.colors.stateHover : Qt.rgba(1, 1, 1, Theme.dark ? 0.05 : 0.4))
                 border.width: Theme.space.hairline
@@ -42,7 +43,7 @@ Grid {
                 y: Theme.space.sm
                 width: parent.width - Theme.space.sm * 2
                 height: 44 * Theme.scale
-                radius: Theme.radius.md * 0.4
+                radius: Math.max(0, tileBg.radius - Theme.space.sm)  // concentric with the tile
                 color: tile.modelData.preview[2]
                 clip: true
                 border.width: Theme.space.hairline
@@ -65,7 +66,7 @@ Grid {
                 color: Theme.colors.textPrimary
                 elide: Text.ElideRight
             }
-            FocusRing { target: tile; targetRadius: Theme.radius.md * 0.6 }
+            FocusRing { target: tile; targetRadius: tileBg.radius }
             MouseArea {
                 id: area
                 anchors.fill: parent

@@ -55,14 +55,16 @@ ListView {
         Accessible.role: Accessible.ListItem
         Accessible.name: pending ? qsTr("Loading") : qsTr("%1, %2").arg(title).arg(subtitle)
 
+        // Concentric with the cover, which sits Theme.space.sm inside the row.
+        readonly property real rowRadius: Math.min(height / 2, Theme.radius.sm + Theme.space.sm)
         StateLayer {
-            radius: Theme.radius.sm
+            radius: row.rowRadius
             hovered: area.containsMouse
             pressed: area.pressed
         }
         Rectangle {
             anchors.fill: parent
-            radius: Theme.radius.sm
+            radius: row.rowRadius
             visible: row.current
             color: Qt.rgba(Theme.colors.accent.r, Theme.colors.accent.g, Theme.colors.accent.b, 0.16)
         }

@@ -82,7 +82,7 @@ Item {
         y: -height - Theme.space.xs
         width: hoverTime.implicitWidth + Theme.space.sm * 2
         height: hoverTime.implicitHeight + Theme.space.xs * 2
-        radius: Theme.radius.xs
+        radius: Theme.radius.sm  // like a tooltip
         color: Theme.colors.solidOverlay
         border.width: Theme.space.hairline
         border.color: Theme.colors.edge

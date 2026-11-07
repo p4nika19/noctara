@@ -126,7 +126,7 @@ FocusScope {
                 Shadow {
                     anchors.fill: parent
                     z: -1
-                    radius: Theme.radius.lg
+                    radius: flyer.cornerRadius
                     blur: 120 * Theme.scale
                     offsetY: 30 * Theme.scale
                     spread: -10 * Theme.scale

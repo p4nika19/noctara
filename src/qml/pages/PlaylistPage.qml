@@ -33,7 +33,7 @@ Item {
                     Shadow {
                         anchors.fill: parent
                         z: -1
-                        radius: Theme.radius.lg
+                        radius: playlistCover.cornerRadius
                         blur: 60 * Theme.scale
                         offsetY: 20 * Theme.scale
                         spread: -8 * Theme.scale
@@ -41,6 +41,7 @@ Item {
                                        Theme.glass.glowCover && !Theme.glass.flat ? Theme.glass.glow * 0.9 : 0)
                     }
                     CoverArt {
+                        id: playlistCover
                         anchors.fill: parent
                         radius: Theme.radius.lg
                         source: root.detail.artwork

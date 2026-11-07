@@ -53,12 +53,22 @@ private:
     QString m_error;
 };
 
-// Rounds the corners on the CPU (this runs on Qt's image loader thread), so covers have the same shape with and
-// without shader effects. `fraction` is the corner radius relative to the shorter side; 0.5 is a circle.
-QImage masked(const QImage& image, double fraction)
+}  // namespace
+
+QImage maskedCover(const QImage& source, double fraction, QSize box)
 {
-    if (fraction <= 0 || image.isNull()) {
-        return image;
+    if (fraction <= 0 || source.isNull()) {
+        return source;
+    }
+    // The item crops the image to its own shape (PreserveAspectCrop): crop first, or the rounded corners of the
+    // longer side would be cut off and two corners would stay square.
+    QImage image = source;
+    if (box.isValid() && !box.isEmpty()) {
+        const QSize fitted = box.scaled(source.size(), Qt::KeepAspectRatio);
+        if (fitted != source.size()) {
+            image = source.copy((source.width() - fitted.width()) / 2, (source.height() - fitted.height()) / 2,
+                                fitted.width(), fitted.height());
+        }
     }
     QImage result(image.size(), QImage::Format_ARGB32_Premultiplied);
     result.fill(Qt::transparent);
@@ -71,8 +81,6 @@ QImage masked(const QImage& image, double fraction)
     painter.end();
     return result;
 }
-
-}  // namespace
 
 CoverImageProvider::CoverImageProvider(cache::ImageCache& cache)
     : m_cache(cache)
@@ -91,9 +99,9 @@ QQuickImageResponse* CoverImageProvider::requestImageResponse(const QString& id,
         encoded = encoded.sliced(slash + 1);
     }
     const QUrl url(QUrl::fromPercentEncoding(encoded.toUtf8()));
-    m_cache.request(url, requestedSize, response, [response, fraction](Result<QImage> image) {
+    m_cache.request(url, requestedSize, response, [response, fraction, requestedSize](Result<QImage> image) {
         if (image) {
-            response->deliver(masked(*image, fraction));
+            response->deliver(maskedCover(*image, fraction, requestedSize));
         } else {
             response->failed(QString::fromStdString(image.error().describe()));
         }

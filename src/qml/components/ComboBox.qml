@@ -97,7 +97,8 @@ T.ComboBox {
             }
         }
         background: Rectangle {
-            radius: Math.min(Theme.radius.button, height / 2)
+            // A menu row, not a button: it follows the popup's corners (concentric radii).
+            radius: Math.min(height / 2, Math.max(0, Theme.radius.md - control.popup.padding))
             color: entry.highlighted ? Theme.colors.stateHover : "transparent"
         }
     }
@@ -108,7 +109,8 @@ T.ComboBox {
         width: Math.max(control.width, 340 * Theme.scale)
         x: control.width - width
         implicitHeight: Math.min(contentItem.implicitHeight + topPadding + bottomPadding, 360 * Theme.scale)
-        padding: Theme.space.xs
+        // Keeps a row rounded to a pill clear of a large corner.
+        padding: Math.max(Theme.space.xs, Math.max(0, Theme.radius.md - Theme.space.controlHeight / 2) * (1 - Math.SQRT1_2))
         contentItem: ListView {
             clip: true
             implicitHeight: contentHeight
