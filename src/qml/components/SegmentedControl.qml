@@ -123,8 +123,9 @@ FocusScope {
                     cursorShape: segment.available ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                     onClicked: if (segment.available) root.activated(segment.modelData.id)
                 }
-                Tooltip {
-                    visible: area.containsMouse && !segment.available && (segment.modelData.reason || "").length > 0
+                LazyTooltip {
+                    host: segment
+                    shown: area.containsMouse && !segment.available && (segment.modelData.reason || "").length > 0
                     text: segment.modelData.reason || ""
                 }
             }

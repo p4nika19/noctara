@@ -87,8 +87,9 @@ GlassPanel {
         Accessible.checked: selected
         onClicked: root.navigate(modelData.id)
 
-        Tooltip {
-            visible: item.hovered && !root.expanded
+        LazyTooltip {
+            host: item
+            shown: item.hovered && !root.expanded
             text: item.modelData.label
         }
 

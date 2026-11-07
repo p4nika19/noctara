@@ -650,6 +650,46 @@ TEST_SUITE("ui.components")
         CHECK(combo->property("currentIndex").toInt() == 2);
     }
 
+    TEST_CASE("a button's tooltip appears after its delay above the button and goes when the pointer leaves")
+    {
+        const WindowHarness harness(R"(Window {
+            width: 400; height: 300; visible: true
+            property Item button: button
+            IconButton { id: button; x: 150; y: 150; iconName: "heart"; text: "Like this track" }
+        })");
+        QQuickItem* button = harness.item("button");
+        const auto tooltip = [&]() -> QObject* {
+            for (QObject* child : button->findChildren<QObject*>()) {
+                if (child->inherits("QQuickToolTip")) {
+                    return child;
+                }
+            }
+            return nullptr;
+        };
+        QTest::mouseMove(harness.window.get(), QPoint(10, 10));
+        QElapsedTimer clock;
+        clock.start();
+        QTest::mouseMove(harness.window.get(), button->mapToScene(QPointF(10, 10)).toPoint());
+        REQUIRE(test::waitUntil([&] { return button->property("hovered").toBool(); }));
+        QTest::qWait(300);
+        CHECK((tooltip() == nullptr || !tooltip()->property("opened").toBool()));
+        REQUIRE(test::waitUntil([&] { return tooltip() != nullptr && tooltip()->property("opened").toBool(); }, 3000));
+        CHECK(clock.elapsed() >= 550);
+        QObject* tip = tooltip();
+        CHECK(tip->property("text").toString() == u"Like this track");
+        CHECK(tip->property("x").toReal() ==
+              doctest::Approx((button->width() - tip->property("implicitWidth").toReal()) / 2));
+        CHECK(tip->property("y").toReal() < 0);
+        QTest::mouseMove(harness.window.get(), QPoint(10, 10));
+        CHECK(test::waitUntil([&] { return !tip->property("visible").toBool(); }, 3000));
+        // A second hover shows the same tooltip again, after the delay again.
+        clock.restart();
+        QTest::mouseMove(harness.window.get(), button->mapToScene(QPointF(12, 12)).toPoint());
+        REQUIRE(test::waitUntil([&] { return tip->property("opened").toBool(); }, 3000));
+        CHECK(clock.elapsed() >= 550);
+        CHECK(tooltip() == tip);
+    }
+
     TEST_CASE("a context menu opened near the bottom stays inside the window")
     {
         const WindowHarness harness(R"(Window {
@@ -1250,6 +1290,43 @@ TEST_SUITE("ui.settings-panes")
         }
         const double perReuse = static_cast<double>(clock.nsecsElapsed()) / 1e3 / kReuses;
         MESSAGE("one row reuse: " << perReuse << " us");
+    }
+
+    // Measurement, skipped by default: creating 300 icon buttons and tags (what a list page's rows carry), each with
+    // a tooltip that is almost never shown. Run with --no-skip -tc="tooltip hosts*".
+    TEST_CASE("tooltip hosts benchmark" * doctest::skip())
+    {
+        installStubs({});
+        QQmlEngine engine;
+        engine.addImageProvider(QStringLiteral("icon"), new SolidIconProvider);  // NOLINT: owned by the engine
+        QQmlComponent component(&engine);
+        component.setData(R"(import QtQuick
+        import Noctara
+        Item {
+            width: 1200; height: 800
+            Flow {
+                anchors.fill: parent
+                Repeater {
+                    model: 150
+                    Row {
+                        IconButton { iconName: "heart"; text: "Like" }
+                        Tag { text: "Preview"; tooltip: "Only a preview" }
+                    }
+                }
+            }
+        })",
+                          QUrl::fromLocalFile(QStringLiteral(NOCTARA_SOURCE_DIR "/src/qml/components/Harness.qml")));
+        REQUIRE_MESSAGE(component.isReady(), component.errorString());
+        constexpr int kRounds = 10;
+        QElapsedTimer clock;
+        qint64 total = 0;
+        for (int round = 0; round < kRounds; ++round) {
+            clock.start();
+            std::unique_ptr<QObject> root(component.create());
+            REQUIRE(root != nullptr);
+            total += clock.nsecsElapsed();
+        }
+        MESSAGE("creating 300 tooltip hosts: " << static_cast<double>(total) / 1e6 / kRounds << " ms");
     }
 
     TEST_CASE("a number-field settings row shows its unit")

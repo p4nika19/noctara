@@ -45,8 +45,9 @@ T.AbstractButton {
         }
     }
 
-    Tooltip {
-        visible: control.hovered && control.text.length > 0
+    LazyTooltip {
+        host: control
+        shown: control.hovered && control.text.length > 0
         text: control.text
     }
 }

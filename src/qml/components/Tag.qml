@@ -30,8 +30,9 @@ Rectangle {
         enabled: root.tooltip.length > 0
     }
 
-    Tooltip {
-        visible: hover.hovered
+    LazyTooltip {
+        host: root
+        shown: hover.hovered
         text: root.tooltip
     }
 }
