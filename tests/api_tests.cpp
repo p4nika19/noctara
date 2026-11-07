@@ -456,21 +456,27 @@ TEST_SUITE("api.client")
     {
         Harness h;
         int limited = 1;
-        h.transport.setHandler([&](const net::Request&) -> Result<net::Response> {
+        QElapsedTimer clock;
+        qint64 secondSent = -1;
+        h.transport.setHandler([&](const net::Request& request) -> Result<net::Response> {
+            if (request.url.path().endsWith(u"/tracks/2")) {
+                secondSent = clock.elapsed();
+            }
             if (limited-- > 0) {
                 return FakeApi::reply(429, "{}", {{QByteArrayLiteral("retry-after"), QByteArrayLiteral("1")}});
             }
             return FakeApi::reply(200, trackJson(1));
         });
-        QElapsedTimer clock;
         clock.start();
         const auto first = run(h.client, endpoints::track(1), &h.context);
         REQUIRE(test::waitUntil([&] { return h.transport.count() == 1; }));
-        QCoreApplication::processEvents();
+        QCoreApplication::processEvents();                                   // the 429 is handled
         const auto second = run(h.client, endpoints::track(2), &h.context);  // arrives during the pause
+        QCoreApplication::processEvents();
+        CHECK(h.transport.count() == 1);  // held back, not sent
         CHECK(await(first));
         CHECK(await(second));
-        CHECK(clock.elapsed() >= 900);
+        CHECK(secondSent >= 900);
         CHECK(h.transport.count() == 3);
     }
 
