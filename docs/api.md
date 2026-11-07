@@ -78,6 +78,13 @@ closure that runs on `context`'s thread. `fetch(client, endpoint, context, done)
 | `search(q, kind)` | `/search`, `/search/tracks`, `/search/users`, `/search/playlists_without_albums`, `/search/albums` | optional |
 | `userTracks`, `userPlaylists`, `userLikes` | `/users/{id}/tracks`, `/playlists`, `/track_likes` | optional |
 | `related(id)` | `/tracks/{id}/related` | optional |
+| `trackDetail(id)` | `/tracks/{id}`, also reading `tag_list` and `sharing` (lists skip those) | optional |
+| `trackPlaylists(id)` | `/tracks/{id}/playlists_without_albums` | optional |
+| `comments(id)` | `/tracks/{id}/comments?threaded=0&filter_replies=0` | optional |
+| `likeTrack(me, id, like)` | `PUT` / `DELETE /users/{me}/track_likes/{id}` | required |
+| `playlistForEdit(id)` | `/playlists/{id}`, revalidated (never a cached copy) | required |
+| `setPlaylistTracks(id, ids)` | `PUT /playlists/{id}`, body `{"playlist":{"tracks":[ids]}}` | required |
+| `createPlaylist(title, private, ids)` | `POST /playlists`, body `{"playlist":{"title","sharing","tracks"}}` | required |
 | `stream()` | `/stream` (the feed) | required |
 | `history()` | `/me/play-history/tracks` | required |
 | `trending(genre)` | `/system-playlists/soundcloud:system-playlists:trending-by-genre:<genre>` | optional |
@@ -87,6 +94,14 @@ closure that runs on `context`'s thread. `fetch(client, endpoint, context, done)
 | `streamUrl(transcoding, track_authorization)` | the transcoding's URL → `{"url": signed media URL}` | optional |
 
 Lists ask for `limit=<library.loading.page_size>&linked_partitioning=1` and follow `next_href`.
+
+Writes (`endpoints::write`) need the account (`SignInRequired` before anything is sent), carry a compact JSON body
+(`content-type: application/json`), bypass the HTTP cache and are never shared like identical GETs; POST is not
+retried. A successful write drops the cached GET of the same URL (`cache::CachingTransport`). Adding a track to a
+playlist is read-modify-write, because SoundCloud replaces a playlist's tracks as a whole: `Catalog` reads the
+playlist with `playlistForEdit`, appends the track unless it is there, and writes the whole list back; changes to one
+playlist are made one after another, so two quick adds never lose one. Likes are shown at once and put back (with a
+notice) when SoundCloud refuses the change.
 
 ## Parsing
 
@@ -127,6 +142,12 @@ to the owner's avatar.
 `Catalog` (`ui::CatalogController`) owns the search model. Typing searches after a 350 ms pause, and Enter or a
 change of kind searches at once.
 
+`models::TrackDetail` (QML `TrackDetail`, `Catalog.track(id)`) is a track page: the header from `trackDetail`, the
+waveform, the track as a one-row `CollectionModel` (`self`, what Play and the queue use), related tracks, and, on first
+use, the playlists it is in and its comments (`models::CommentModel`, paged through the templated `endpoints::next`).
+`Catalog` also keeps the liked state (`isLiked`, `likedRevision`, `toggleLike`), the account's own playlists
+(`ownPlaylists`, from the library) and the playlist writes (`addToPlaylist`, `createPlaylist`).
+
 ## Verification status
 
 The endpoint shapes, `client_id` patterns and transcoding protocols above are taken from the site's behaviour as
@@ -144,4 +165,6 @@ start in `api/ClientId.cpp` (discovery) and `api/Parse.cpp` (field names). Known
   system playlists the web player shows. The endpoint stays isolated, and the UI will hide charts if it
   fails (slice h).
 - Whether api-v2 sends `Cache-Control` on listings is not known; the TTLs above apply when it does not.
-- Write endpoints (like, follow, repost) are not part of this slice; they arrive with the pages in slice (h).
+- The write endpoints (`likeTrack`, `setPlaylistTracks`, `createPlaylist`) follow what SoundCloud's web client sends;
+  they are covered by tests against the scripted transport only, because a live check would change a real account.
+  Following and reposting are not implemented.

@@ -517,7 +517,7 @@ constexpr auto kThemeStub = R"js(({
 constexpr auto kPlayerStub = R"js(({
     artworkUrl: 'https://example.com/cover.jpg', title: 'Title', artist: 'Artist', artistId: 0, context: '',
     duration: 0, position: 0, playing: false, canGoNext: false, shuffle: false, repeat: 0, volume: 1, muted: false,
-    waveform: [], cachedRanges: [], errorCode: 0, queue: null
+    waveform: [], cachedRanges: [], errorCode: 0, queue: null, hasTrack: false, trackId: ''
 }))js";
 
 void installStubs(stub::Factory player)
@@ -711,6 +711,33 @@ TEST_SUITE("ui.components")
         CHECK(menu->property("y").toReal() >= 0);
     }
 
+    TEST_CASE("a context menu longer than the window scrolls, and the keyboard keeps the highlight in view")
+    {
+        const WindowHarness harness(R"(Window {
+            width: 400; height: 400; visible: true
+            property QtObject menu: menu
+            ContextMenu { id: menu }
+        })");
+        QObject* menu = harness.object("menu");
+        QVariantList actions;
+        for (int i = 0; i < 40; ++i) {
+            actions.append(QVariantMap{{QStringLiteral("text"), QStringLiteral("Playlist %1").arg(i)}});
+        }
+        QTest::mouseMove(harness.window.get(), QPoint(395, 5));  // the pointer of earlier tests must not hover it
+        QVariant item = QVariant::fromValue<QObject*>(harness.window->contentItem());
+        REQUIRE(QMetaObject::invokeMethod(menu, "show", Q_ARG(QVariant, QVariant(actions)), Q_ARG(QVariant, item),
+                                          Q_ARG(QVariant, QVariant(QPointF(10, 10)))));
+        REQUIRE(test::waitUntil([&] { return menu->property("opened").toBool(); }));
+        CHECK(menu->property("y").toReal() >= 0);
+        CHECK(menu->property("y").toReal() + menu->property("height").toReal() <= 400);
+        auto* scroller = menu->property("contentItem").value<QQuickItem*>();
+        REQUIRE(scroller != nullptr);
+        CHECK(scroller->property("contentHeight").toReal() > scroller->height());
+        REQUIRE(QMetaObject::invokeMethod(menu, "step", Q_ARG(QVariant, QVariant(-1))));
+        CHECK(menu->property("highlighted").toInt() == 39);
+        CHECK(scroller->property("contentY").toReal() > 0);
+    }
+
     TEST_CASE("Up in a context menu with nothing highlighted highlights the last entry")
     {
         const WindowHarness harness(R"(Window {
@@ -749,13 +776,20 @@ TEST_SUITE("ui.components")
         REQUIRE(test::waitUntil([&] { return menu->property("opened").toBool(); }));
         auto* list = menu->property("contentItem").value<QQuickItem*>();
         REQUIRE(list != nullptr);
-        QQuickItem* first = nullptr;
-        for (QQuickItem* child : list->childItems()) {
-            if (child->height() > 0 && (first == nullptr || child->y() < first->y())) {
-                first = child;
+        // The first entry's highlight (entries come in order).
+        const std::function<QQuickItem*(QQuickItem*)> find = [&](QQuickItem* parent) -> QQuickItem* {
+            for (QQuickItem* child : parent->childItems()) {
+                if (child->objectName() == u"highlight") {
+                    return child;
+                }
+                if (QQuickItem* found = find(child)) {
+                    return found;
+                }
             }
-        }
-        REQUIRE(first != nullptr);
+            return nullptr;
+        };
+        REQUIRE(test::waitUntil([&] { return find(list) != nullptr && find(list)->height() > 0; }));
+        QQuickItem* first = find(list);
         QTest::mouseMove(harness.window.get(),
                          first->mapToScene(QPointF(first->width() / 2, first->height() / 2)).toPoint());
         CHECK(test::waitUntil([&] { return menu->property("highlighted").toInt() == 0; }));
@@ -1119,6 +1153,8 @@ void registerDetailTypes()
     static const bool registered = [] {
         qmlRegisterUncreatableType<models::UserDetail>("Noctara", 1, 0, "UserDetail", QStringLiteral("test"));
         qmlRegisterUncreatableType<models::CollectionModel>("Noctara", 1, 0, "CollectionModel", QStringLiteral("test"));
+        qmlRegisterUncreatableType<models::TrackDetail>("Noctara", 1, 0, "TrackDetail", QStringLiteral("test"));
+        qmlRegisterUncreatableType<models::CommentModel>("Noctara", 1, 0, "CommentModel", QStringLiteral("test"));
         return true;
     }();
     (void)registered;
@@ -1160,6 +1196,45 @@ TEST_SUITE("ui.pages")
         REQUIRE(harness.item("page") == page);
         CHECK(page->property("tab").toString() == QStringLiteral("playlists"));
         CHECK(test::waitUntil([&] { return client.asked(QStringLiteral("/users/2/playlists")); }, 1000));
+    }
+
+    TEST_CASE("a track page reused for another track loads that track's comments on the Comments tab")
+    {
+        registerDetailTypes();
+        stub::singleton("Catalog", QStringLiteral("({likedRevision: 0, isLiked: id => false, ensure: list => {}, "
+                                                  "toggleLike: id => {}})"));
+        stub::singleton("Account", QStringLiteral("({signedIn: false})"));
+        RecordingClient client;
+        models::TrackDetail first(client, 1, 20);
+        models::TrackDetail second(client, 2, 20);
+        QQmlEngine::setObjectOwnership(&first, QQmlEngine::CppOwnership);
+        QQmlEngine::setObjectOwnership(&second, QQmlEngine::CppOwnership);
+        CHECK(client.asked(QStringLiteral("/tracks/1")));
+        CHECK(client.asked(QStringLiteral("/tracks/1/related")));
+        const WindowHarness harness(R"(import "../pages"
+        Window {
+            id: root
+            width: 900; height: 700; visible: true
+            property QtObject track: null
+            property Item page: loader.item
+            Loader {
+                id: loader
+                anchors.fill: parent
+                active: root.track !== null
+                sourceComponent: Component { TrackPage { detail: root.track } }
+            }
+        })");
+        harness.window->setProperty("track", QVariant::fromValue<QObject*>(&first));
+        REQUIRE(test::waitUntil([&] { return harness.item("page") != nullptr; }));
+        QQuickItem* page = harness.item("page");
+        CHECK_FALSE(client.asked(QStringLiteral("/tracks/1/comments")));  // only on demand
+        page->setProperty("tab", QStringLiteral("comments"));
+        CHECK(client.asked(QStringLiteral("/tracks/1/comments")));
+
+        harness.window->setProperty("track", QVariant::fromValue<QObject*>(&second));
+        REQUIRE(harness.item("page") == page);
+        CHECK(page->property("tab").toString() == QStringLiteral("comments"));
+        CHECK(test::waitUntil([&] { return client.asked(QStringLiteral("/tracks/2/comments")); }, 1000));
     }
 
     TEST_CASE("the home page's date and greeting are current again when the page is shown")

@@ -4,6 +4,7 @@
 
 #include <QDateTime>
 #include <QString>
+#include <QStringList>
 
 #include <cstdint>
 #include <optional>
@@ -83,6 +84,9 @@ struct Track {
     QString trackAuthorization;  // passed along when resolving a transcoding
     QString publisherArtist;     // publisher metadata, when the label supplied it
     QString publisherAlbum;
+    // Only read for a track page (parse::trackDetail): lists do not need them.
+    QString tagList;         // raw "tag_list": space-separated, multi-word tags in double quotes (see splitTags)
+    bool isPrivate = false;  // "sharing": "private"
     std::vector<Transcoding> transcodings;
 
     [[nodiscard]] QString artist() const { return publisherArtist.isEmpty() ? user.username : publisherArtist; }
@@ -149,6 +153,18 @@ struct Entry {
     std::optional<UserRef> repostedBy;
 };
 
+// A comment on a track, optionally at a moment of it.
+struct Comment {
+    Id id = 0;
+    QString body;
+    UserRef user;
+    QDateTime createdAt;
+    std::int64_t timestampMs = -1;  // where in the track it was left; -1 for none
+};
+
+// The answer of a write request whose body does not matter (a like, an unlike).
+struct Done {};
+
 template <class T> struct Page {
     std::vector<T> items;
     QString next;  // next_href: the following page, empty at the end
@@ -160,6 +176,9 @@ struct Waveform {
 };
 
 [[nodiscard]] Id itemId(const Item& item) noexcept;
+
+// A track's tag_list as tags: words separated by spaces, a tag with spaces in double quotes ("deep house").
+[[nodiscard]] QStringList splitTags(const QString& tagList);
 
 // SoundCloud serves artwork in fixed sizes encoded in the file name ("…-large.jpg" is 100 px). Returns the
 // smallest variant that is at least `pixels` wide (up to 500 px), or `url` unchanged if it has no size suffix.

@@ -329,7 +329,7 @@
         <translation>Альбом</translation>
     </message>
     <message>
-        <location line="+84"/>
+        <location line="+85"/>
         <source>Not cacheable</source>
         <translation>Не кэшируется</translation>
     </message>
@@ -400,7 +400,7 @@
 <context>
     <name>CollectionView</name>
     <message>
-        <location filename="../src/qml/components/CollectionView.qml" line="+161"/>
+        <location filename="../src/qml/components/CollectionView.qml" line="+175"/>
         <source>Try again</source>
         <translation>Повторить</translation>
     </message>
@@ -434,12 +434,12 @@
 <context>
     <name>Dialog</name>
     <message>
-        <location filename="../src/qml/components/Dialog.qml" line="+11"/>
+        <location filename="../src/qml/components/Dialog.qml" line="+12"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+57"/>
         <source>Cancel</source>
         <translation>Отмена</translation>
     </message>
@@ -1052,7 +1052,7 @@
         <translation>Играет из «%1»</translation>
     </message>
     <message>
-        <location line="+125"/>
+        <location line="+146"/>
         <source>Shuffle: on</source>
         <translation>Перемешивание: вкл.</translation>
     </message>
@@ -1067,7 +1067,7 @@
         <translation>Предыдущий</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Pause</source>
         <translation>Пауза</translation>
     </message>
@@ -1097,7 +1097,7 @@
         <translation>Повтор: выкл.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+18"/>
         <source>Unmute</source>
         <translation>Включить звук</translation>
     </message>
@@ -1107,7 +1107,7 @@
         <translation>Выключить звук</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+13"/>
         <source>Volume</source>
         <translation>Громкость</translation>
     </message>
@@ -1120,7 +1120,7 @@
 <context>
     <name>Genres</name>
     <message>
-        <location filename="../src/ui/CatalogController.cpp" line="+42"/>
+        <location filename="../src/ui/CatalogController.cpp" line="+43"/>
         <source>All genres</source>
         <translation>Все жанры</translation>
     </message>
@@ -1505,7 +1505,7 @@
         <translation>Настройки</translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+71"/>
         <source>Link copied.</source>
         <translation>Ссылка скопирована.</translation>
     </message>
@@ -1520,35 +1520,70 @@
         <translation>Копировать ссылку</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+8"/>
+        <source>Open track page</source>
+        <translation>Открыть страницу трека</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Remove from likes</source>
+        <translation>Убрать из лайков</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Like</source>
+        <translation>Лайкнуть</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Add to playlist…</source>
+        <translation>Добавить в плейлист…</translation>
+    </message>
+    <message>
         <location line="+10"/>
+        <source>Loading your playlists…</source>
+        <translation>Загрузка ваших плейлистов…</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No playlists yet</source>
+        <translation>Плейлистов пока нет</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>New playlist…</source>
+        <translation>Новый плейлист…</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <location line="+12"/>
         <location line="+18"/>
         <location line="+16"/>
         <source>Play</source>
         <translation>Воспроизвести</translation>
     </message>
     <message>
-        <location line="-43"/>
-        <location line="+10"/>
+        <location line="-45"/>
+        <location line="+12"/>
         <location line="+18"/>
         <source>Play next</source>
         <translation>Играть следующим</translation>
     </message>
     <message>
-        <location line="-27"/>
-        <location line="+10"/>
+        <location line="-29"/>
+        <location line="+12"/>
         <source>Add to queue</source>
         <translation>Добавить в очередь</translation>
     </message>
     <message>
         <location line="-8"/>
         <location line="+29"/>
-        <location line="+27"/>
+        <location line="+29"/>
         <source>Go to artist</source>
         <translation>Перейти к исполнителю</translation>
     </message>
     <message>
-        <location line="-51"/>
+        <location line="-53"/>
         <source>Open</source>
         <translation>Открыть</translation>
     </message>
@@ -1628,7 +1663,7 @@
         <translation>Показать очередь</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Copy link at the current time</source>
         <translation>Копировать ссылку на текущий момент</translation>
     </message>
@@ -1651,6 +1686,26 @@
         <location line="+62"/>
         <source>Back</source>
         <translation>Назад</translation>
+    </message>
+    <message>
+        <location line="+98"/>
+        <source>New playlist</source>
+        <translation>Новый плейлист</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Create</source>
+        <translation>Создать</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Playlist name</source>
+        <translation>Название плейлиста</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Private: only you can see it</source>
+        <translation>Приватный: виден только вам</translation>
     </message>
 </context>
 <context>
@@ -1821,7 +1876,7 @@
         <translation>Сейчас играет</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+53"/>
         <source>Preview · %1</source>
         <translation>Фрагмент · %1</translation>
     </message>
@@ -2059,7 +2114,7 @@
         <translation>В этом плейлисте нет треков.</translation>
     </message>
     <message numerus="yes">
-        <location line="+66"/>
+        <location line="+67"/>
         <source>%n track(s)</source>
         <translation>
             <numerusform>%n трек</numerusform>
@@ -2233,7 +2288,7 @@
         <translation>%1, %2</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+45"/>
         <source>Loading…</source>
         <translation>Загрузка…</translation>
     </message>
@@ -4697,7 +4752,7 @@
         <translation>Нажмите новое сочетание</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+46"/>
         <source>Press keys…</source>
         <translation>Нажмите клавиши…</translation>
     </message>
@@ -4969,6 +5024,190 @@
     </message>
 </context>
 <context>
+    <name>TrackPage</name>
+    <message>
+        <location filename="../src/qml/pages/TrackPage.qml" line="+81"/>
+        <source>Track</source>
+        <translation>Трек</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Private</source>
+        <translation>Приватный</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Preview</source>
+        <translation>Фрагмент</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Only a 30-second preview is available to your account.</source>
+        <translation>Вашей учётной записи доступен только 30-секундный фрагмент.</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>from %1</source>
+        <translation>из «%1»</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+15"/>
+        <source>%n play(s)</source>
+        <translation>
+            <numerusform>%n прослушивание</numerusform>
+            <numerusform>%n прослушивания</numerusform>
+            <numerusform>%n прослушиваний</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 plays</source>
+        <translation>%1 прослушиваний</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n like(s)</source>
+        <translation>
+            <numerusform>%n лайк</numerusform>
+            <numerusform>%n лайка</numerusform>
+            <numerusform>%n лайков</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 likes</source>
+        <translation>%1 лайков</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n repost(s)</source>
+        <translation>
+            <numerusform>%n репост</numerusform>
+            <numerusform>%n репоста</numerusform>
+            <numerusform>%n репостов</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 reposts</source>
+        <translation>%1 репостов</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n comment(s)</source>
+        <translation>
+            <numerusform>%n комментарий</numerusform>
+            <numerusform>%n комментария</numerusform>
+            <numerusform>%n комментариев</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 comments</source>
+        <translation>%1 комментариев</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Pause</source>
+        <translation>Пауза</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Play</source>
+        <translation>Воспроизвести</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Remove from likes</source>
+        <translation>Убрать из лайков</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Like</source>
+        <translation>Лайкнуть</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Add to playlist…</source>
+        <translation>Добавить в плейлист…</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Play next</source>
+        <translation>Играть следующим</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Add to queue</source>
+        <translation>Добавить в очередь</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Open on SoundCloud</source>
+        <translation>Открыть в SoundCloud</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Copy link</source>
+        <translation>Копировать ссылку</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Try again</source>
+        <translation>Повторить</translation>
+    </message>
+    <message>
+        <location line="+51"/>
+        <source>Show less</source>
+        <translation>Свернуть</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show more</source>
+        <translation>Показать полностью</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Related tracks</source>
+        <translation>Похожие треки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>In playlists</source>
+        <translation>В плейлистах</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Comments</source>
+        <translation>Комментарии</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Not in any public playlist.</source>
+        <translation>Трек не входит ни в один открытый плейлист.</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No related tracks.</source>
+        <translation>Похожих треков нет.</translation>
+    </message>
+    <message>
+        <location line="+62"/>
+        <source>at %1</source>
+        <translation>на %1</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Loading comments…</source>
+        <translation>Загрузка комментариев…</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>No comments yet.</source>
+        <translation>Комментариев пока нет.</translation>
+    </message>
+</context>
+<context>
     <name>UserPage</name>
     <message>
         <location filename="../src/qml/pages/UserPage.qml" line="+20"/>
@@ -5185,6 +5424,50 @@
         <location line="+2"/>
         <source>Restart now</source>
         <translation>Перезапустить</translation>
+    </message>
+</context>
+<context>
+    <name>noctara::ui::CatalogController</name>
+    <message>
+        <location filename="../src/ui/CatalogController.cpp" line="+208"/>
+        <source>Sign in to like tracks.</source>
+        <translation>Войдите, чтобы ставить лайки.</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Could not change the like: %1</source>
+        <translation>Не удалось изменить лайк: %1</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <location line="+67"/>
+        <source>Sign in to add tracks to playlists.</source>
+        <translation>Войдите, чтобы добавлять треки в плейлисты.</translation>
+    </message>
+    <message>
+        <location line="-46"/>
+        <source>Could not add the track: %1</source>
+        <translation>Не удалось добавить трек: %1</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Already in “%1”.</source>
+        <translation>Трек уже есть в «%1».</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Added to “%1”.</source>
+        <translation>Добавлено в «%1».</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Could not create the playlist: %1</source>
+        <translation>Не удалось создать плейлист: %1</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Created “%1”.</source>
+        <translation>Плейлист «%1» создан.</translation>
     </message>
 </context>
 <context>

@@ -51,6 +51,31 @@ Id itemId(const Item& item) noexcept
     return std::visit([](const auto& value) { return value.id; }, item);
 }
 
+QStringList splitTags(const QString& tagList)
+{
+    QStringList tags;
+    QString current;
+    bool quoted = false;
+    const auto finish = [&] {
+        if (const QString tag = current.trimmed(); !tag.isEmpty() && !tags.contains(tag)) {
+            tags.append(tag);
+        }
+        current.clear();
+    };
+    for (const QChar c : tagList) {
+        if (c == u'"') {
+            finish();
+            quoted = !quoted;
+        } else if (c.isSpace() && !quoted) {
+            finish();
+        } else {
+            current.append(c);
+        }
+    }
+    finish();
+    return tags;
+}
+
 namespace {
 
 // "large", "t500x500" … : the size names SoundCloud uses before the artwork's extension.

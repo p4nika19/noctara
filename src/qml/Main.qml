@@ -67,6 +67,7 @@ Window {
     }
     function openPlaylist(id) { openDetail("playlist", id) }
     function openUser(id) { openDetail("user", id) }
+    function openTrack(id) { if (id > 0) openDetail("track", id) }
     // Leaves the innermost overlay: the full player, a panel, then the detail pages.
     function goBack() {
         if (cheatSheet)
@@ -116,6 +117,30 @@ Window {
             { text: qsTr("Copy link"), icon: "copy", enabled: permalink.length > 0, run: () => copyLink(permalink) }
         ]
     }
+    // Like / remove from likes, open the track's page and add it to a playlist: shared by the track menus.
+    function trackActions(trackId) {
+        Catalog.ensure("likes")
+        const liked = Catalog.likedRevision >= 0 && Catalog.isLiked(trackId)
+        return [
+            { text: qsTr("Open track page"), icon: "info", enabled: trackId > 0, run: () => openTrack(trackId) },
+            { text: liked ? qsTr("Remove from likes") : qsTr("Like"), icon: "heart", checked: liked,
+              enabled: Account.signedIn && trackId > 0, run: () => Catalog.toggleLike(trackId) },
+            { text: qsTr("Add to playlist…"), icon: "plus", enabled: Account.signedIn && trackId > 0,
+              run: () => showPlaylistMenu(trackId, contextMenu.origin) }
+        ]
+    }
+    // The account's playlists for a track, as a menu at `where` (window coordinates; a long list scrolls).
+    function showPlaylistMenu(trackId, where) {
+        const own = Catalog.ownPlaylists()
+        let actions = own.map(p => ({ text: p.title, icon: "list-music",
+                                      run: () => Catalog.addToPlaylist(p.id, trackId) }))
+        if (actions.length === 0)
+            actions = [{ text: Catalog.library.loading ? qsTr("Loading your playlists…") : qsTr("No playlists yet"),
+                         enabled: false }]
+        actions.push({ separator: true })
+        actions.push({ text: qsTr("New playlist…"), icon: "plus", run: () => newPlaylist.ask(trackId) })
+        playlistMenu.showAt(actions, where)
+    }
     // A row or card of a list; `item` carries the row's data (kind, itemId, ownerId, permalink…). The data is read
     // now: the menu does not block the list, so the delegate can be reused for another row before an entry is picked.
     function showCollectionMenu(model, index, context, item, point) {
@@ -127,10 +152,12 @@ Window {
                 { text: qsTr("Play"), icon: "play", run: () => Player.playCollection(model, index, context) },
                 { text: qsTr("Play next"), icon: "list-start", run: () => Player.enqueueCollection(model, index, true) },
                 { text: qsTr("Add to queue"), icon: "list-plus", run: () => Player.enqueueCollection(model, index, false) },
+                separator
+            ].concat(trackActions(itemId)).concat([
                 separator,
                 { text: qsTr("Go to artist"), icon: "user", enabled: ownerId > 0, run: () => openUser(ownerId) },
                 separator
-            ].concat(linkActions(permalink))
+            ]).concat(linkActions(permalink))
         } else if (item.kind === "playlist") {
             actions = [
                 { text: qsTr("Open"), icon: "list-music", run: () => openPlaylist(itemId) },
@@ -149,21 +176,28 @@ Window {
         }
         contextMenu.show(actions, item, point)
     }
-    function showQueueMenu(index, permalink, artistId, item, point) {
+    function showQueueMenu(index, permalink, artistId, trackId, item, point) {
         const current = Player.queue.currentIndex
-        contextMenu.show([
+        const separator = { separator: true }
+        const queueActions = [
             { text: qsTr("Play"), icon: "play", run: () => Player.playQueueItem(index) },
             { text: qsTr("Play next"), icon: "list-start", enabled: index !== current && index !== current + 1,
               run: () => Player.moveQueueItem(index, index > current ? current + 1 : current) },
             { text: qsTr("Remove from queue"), icon: "x", danger: true, run: () => Player.removeQueueItem(index) },
-            { separator: true },
+            separator
+        ]
+        const artistActions = [
+            separator,
             { text: qsTr("Go to artist"), icon: "user", enabled: artistId > 0, run: () => openUser(artistId) },
-            { separator: true }
-        ].concat(linkActions(permalink)).concat([
-            { separator: true },
+            separator
+        ]
+        const clearActions = [
+            separator,
             { text: qsTr("Clear upcoming tracks"), icon: "list-x", enabled: Player.queue.count > current + 1,
               run: () => Player.clearUpcoming() }
-        ]), item, point)
+        ]
+        contextMenu.show(queueActions.concat(trackActions(trackId), artistActions, linkActions(permalink), clearActions),
+                         item, point)
     }
     function showPlayerMenu(item, point) {
         const has = Player.hasTrack
@@ -183,10 +217,12 @@ Window {
                        : { text: qsTr("Full-screen player"), icon: "maximize-2", enabled: has, run: () => openFullPlayer() },
             { text: queuePanel ? qsTr("Hide the queue") : qsTr("Show the queue"), icon: "list-music",
               run: () => queuePanel = !queuePanel },
+            { separator: true }
+        ].concat(trackActions(has ? Number(Player.trackId) : 0)).concat([
             { separator: true },
             { text: qsTr("Go to artist"), icon: "user", enabled: Player.artistId > 0,
               run: () => openUser(Player.artistId) }
-        ].concat(linkActions(Player.permalink)).concat([
+        ]).concat(linkActions(Player.permalink)).concat([
             { text: qsTr("Copy link at the current time"), icon: "clock", enabled: Player.permalink.length > 0,
               run: () => copyLink(linkAt(Player.permalink, Player.position)) }
         ]), item, point)
@@ -433,7 +469,9 @@ Window {
                 active: window.detail !== null
                 // No page without a detail: `active` may be updated after this, and a user page made for a moment
                 // when a playlist opens would look up a user with the playlist's id.
-                sourceComponent: !window.detail ? null : window.detail.kind === "playlist" ? playlistPage : userPage
+                sourceComponent: !window.detail ? null
+                                 : window.detail.kind === "playlist" ? playlistPage
+                                 : window.detail.kind === "track" ? trackPage : userPage
             }
             Component {
                 id: playlistPage
@@ -442,6 +480,10 @@ Window {
             Component {
                 id: userPage
                 UserPage { detail: Catalog.user(window.detail.id) }
+            }
+            Component {
+                id: trackPage
+                TrackPage { detail: Catalog.track(window.detail.id) }
             }
         }
     }
@@ -503,6 +545,47 @@ Window {
     }
 
     ContextMenu { id: contextMenu }
+    ContextMenu { id: playlistMenu }
+    Dialog {
+        id: newPlaylist
+        property real trackId: 0
+        function ask(id) {
+            trackId = id
+            playlistName.text = ""
+            privatePlaylist.checked = false
+            open()
+        }
+        title: qsTr("New playlist")
+        confirmText: qsTr("Create")
+        confirmEnabled: playlistName.text.trim().length > 0
+        initialFocus: playlistName
+        onAccepted: Catalog.createPlaylist(playlistName.text, privatePlaylist.checked, trackId)
+        TextField {
+            id: playlistName
+            width: parent.width
+            placeholderText: qsTr("Playlist name")
+            onAccepted: if (newPlaylist.confirmEnabled) newPlaylist.accept()
+        }
+        Row {
+            spacing: Theme.space.md
+            Switch {
+                id: privatePlaylist
+                anchors.verticalCenter: parent.verticalCenter
+                Accessible.name: privateLabel.text
+            }
+            Text {
+                id: privateLabel
+                anchors.verticalCenter: parent.verticalCenter
+                text: qsTr("Private: only you can see it")
+                font: Theme.font.body
+                color: Theme.colors.textPrimary
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: privatePlaylist.toggle()
+                }
+            }
+        }
+    }
 
     ToastHost { anchors.fill: parent; z: 6 }
     ResizeEdges {

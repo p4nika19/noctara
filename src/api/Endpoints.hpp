@@ -61,6 +61,21 @@ inline constexpr std::size_t kMaxTrackIds = 50;
 // /me for a token that is not the session's yet, always answered by SoundCloud (never by the HTTP cache).
 [[nodiscard]] Endpoint<User> verifyToken(const QByteArray& token);
 [[nodiscard]] Endpoint<Playlist> playlist(Id id);
+// A track for its own page (with its tags).
+[[nodiscard]] Endpoint<Track> trackDetail(Id id);
+// Playlists (not albums) the track is in.
+[[nodiscard]] Endpoint<Page<Entry>> trackPlaylists(Id track, int limit);
+// The track's comments, newest first.
+[[nodiscard]] Endpoint<Page<Comment>> comments(Id track, int limit);
+
+// Writes, for the signed-in account (Auth::Required, never cached). The bodies follow what SoundCloud's web client
+// sends; see docs/api.md.
+[[nodiscard]] Endpoint<Done> likeTrack(Id me, Id track, bool like);
+// A playlist as SoundCloud has it now (revalidated, not from the cache): what a change is applied to.
+[[nodiscard]] Endpoint<Playlist> playlistForEdit(Id id);
+// Replaces the playlist's tracks; the answer is the updated playlist.
+[[nodiscard]] Endpoint<Playlist> setPlaylistTracks(Id playlist, std::span<const Id> tracks);
+[[nodiscard]] Endpoint<Playlist> createPlaylist(const QString& title, bool isPrivate, std::span<const Id> tracks);
 
 [[nodiscard]] Endpoint<Page<Entry>> search(const QString& query, SearchKind kind, int limit);
 [[nodiscard]] Endpoint<Page<Entry>> userTracks(Id user, int limit);
@@ -79,7 +94,13 @@ inline constexpr std::size_t kMaxTrackIds = 50;
 [[nodiscard]] Endpoint<Page<Entry>> trending(const QString& genre);
 // The page after `page`, from its next_href, with the same auth and freshness as the first request. A next_href
 // that does not point at an API host yields a request the client refuses.
-[[nodiscard]] Endpoint<Page<Entry>> next(const Endpoint<Page<Entry>>& first, const QString& href);
+template <class T> [[nodiscard]] Endpoint<Page<T>> next(const Endpoint<Page<T>>& first, const QString& href)
+{
+    Endpoint<Page<T>> endpoint = first;
+    const QUrl url(href);
+    endpoint.request.url = isApiHost(url) ? url : QUrl();
+    return endpoint;
+}
 
 [[nodiscard]] Endpoint<Waveform> waveform(const QString& url);
 // The signed, short-lived media URL of a transcoding. Never cached: the signature expires.

@@ -14,6 +14,7 @@
 #include "mock/FakeApi.hpp"
 
 #include "models/CollectionModel.hpp"
+#include "models/Details.hpp"
 #include "net/NetworkService.hpp"
 #include "net/ProxyRouter.hpp"
 #include "settings/Keys.hpp"
@@ -1140,5 +1141,149 @@ TEST_SUITE("models.sync")
         CHECK(h.transport.count() == 1);
         (void)model.data(model.index(0), models::CollectionModel::ThumbnailRole);
         CHECK(h.transport.count() == 1);  // asked once
+    }
+}
+
+TEST_SUITE("api.track-page")
+{
+    using namespace Qt::StringLiterals;
+
+    TEST_CASE("comments, a track's tags and privacy, and tag lists parse")
+    {
+        const auto page = parse::comments(R"({"collection":[
+            {"kind":"comment","id":11,"body":"great drop","created_at":"2024-01-02T03:04:05Z","timestamp":61000,
+             "user":{"id":5,"username":"fan","permalink":"fan","avatar_url":"https://i1.sndcdn.com/avatars-a-large.jpg"}},
+            {"kind":"comment","id":12,"body":"no moment","created_at":"2024-01-03T00:00:00Z","timestamp":null,
+             "user":{"id":6,"username":"other","permalink":"other"}},
+            {"kind":"comment","body":"no id: skipped"}],
+            "next_href":"https://api-v2.soundcloud.com/tracks/7/comments?offset=2"})");
+        REQUIRE_MESSAGE(page, test::describe(page));
+        REQUIRE(page->items.size() == 2);
+        CHECK(page->items[0].body == u"great drop");
+        CHECK(page->items[0].user.username == u"fan");
+        CHECK(page->items[0].timestampMs == 61000);
+        CHECK(page->items[1].timestampMs == -1);
+        CHECK(page->next.endsWith(u"offset=2"));
+
+        const auto track = parse::trackDetail(
+            trackJson(7, QStringLiteral("T"), R"(,"tag_list":"chill \"deep house\" Synthwave","sharing":"private")"));
+        REQUIRE_MESSAGE(track, test::describe(track));
+        CHECK(track->isPrivate);
+        CHECK(splitTags(track->tagList) == QStringList{u"chill"_s, u"deep house"_s, u"Synthwave"_s});
+        // Lists do not read them.
+        const auto listed =
+            parse::track(trackJson(7, QStringLiteral("T"), R"(,"tag_list":"chill","sharing":"private")"));
+        REQUIRE(listed);
+        CHECK(listed->tagList.isEmpty());
+        CHECK_FALSE(listed->isPrivate);
+        CHECK(splitTags(QStringLiteral("  a  \"b c\"\"d\" a ")) == QStringList{u"a"_s, u"b c"_s, u"d"_s});
+    }
+
+    TEST_CASE("writes need the account, carry a JSON body and never come from the cache")
+    {
+        const std::vector<Id> ids{1, 2, 9};
+        const auto like = endpoints::likeTrack(5, 7, true);
+        CHECK(like.request.method == net::Method::Put);
+        CHECK(like.request.url.path() == u"/users/5/track_likes/7");
+        CHECK(like.request.auth == Auth::Required);
+        CHECK(like.request.cache == net::CacheMode::Bypass);
+        CHECK(endpoints::likeTrack(5, 7, false).request.method == net::Method::Delete);
+
+        const auto set = endpoints::setPlaylistTracks(3, ids);
+        CHECK(set.request.method == net::Method::Put);
+        CHECK(set.request.url.path() == u"/playlists/3");
+        const QJsonObject body = QJsonDocument::fromJson(set.request.body).object();
+        CHECK(body[u"playlist"_s][u"tracks"_s].toArray() == QJsonArray{1, 2, 9});
+
+        const auto create = endpoints::createPlaylist(QStringLiteral("Night \"drive\""), true, ids);
+        CHECK(create.request.method == net::Method::Post);
+        CHECK(create.request.url.path() == u"/playlists");
+        const QJsonObject created = QJsonDocument::fromJson(create.request.body).object()[u"playlist"_s].toObject();
+        CHECK(created[u"title"_s].toString() == u"Night \"drive\"");
+        CHECK(created[u"sharing"_s].toString() == u"private");
+        CHECK(created[u"tracks"_s].toArray().size() == 3);
+
+        CHECK(endpoints::playlistForEdit(3).request.cache == net::CacheMode::Refresh);
+        const auto comments = endpoints::comments(7, 20);
+        CHECK(comments.request.url.path() == u"/tracks/7/comments");
+        const auto later =
+            endpoints::next(comments, QStringLiteral("https://api-v2.soundcloud.com/tracks/7/comments?offset=20"));
+        CHECK(later.request.url.query().contains(u"offset=20"));
+        CHECK(endpoints::next(comments, QStringLiteral("https://evil.example/x")).request.url.isEmpty());
+
+        // Signed out, nothing is sent; signed in, the token and the body go to SoundCloud.
+        Harness h;
+        h.transport.setHandler([](const net::Request&) -> Result<net::Response> {
+            return FakeApi::reply(200, R"({"kind":"playlist","id":3,"title":"P","tracks":[]})", jsonHeaders());
+        });
+        CHECK(test::errorOf(await(run(h.client, set, &h.context))) == ErrorCode::SignInRequired);
+        CHECK(h.transport.count() == 0);
+        h.session.setToken("secret-token");
+        const auto answer = await(run(h.client, set, &h.context));
+        REQUIRE_MESSAGE(answer, test::describe(answer));
+        REQUIRE(h.transport.count() == 1);
+        const net::Request sent = h.transport.requests().front();
+        CHECK(sent.method == net::Method::Put);
+        CHECK(FakeApi::header(sent, "authorization") == "OAuth secret-token");
+        CHECK(FakeApi::header(sent, "content-type").startsWith("application/json"));
+        CHECK(QJsonDocument::fromJson(sent.body).object()[u"playlist"_s][u"tracks"_s].toArray() == QJsonArray{1, 2, 9});
+        // Two identical writes are two requests (only reads are shared).
+        const auto first = run(h.client, set, &h.context);
+        const auto second = run(h.client, set, &h.context);
+        (void)await(first);
+        (void)await(second);
+        CHECK(h.transport.count() == 3);
+    }
+
+    TEST_CASE("a track page loads the track, its waveform, related tracks and, on demand, comments and playlists")
+    {
+        Harness h;
+        h.transport.setHandler([](const net::Request& request) -> Result<net::Response> {
+            const QString path = request.url.path();
+            if (path == u"/tracks/7") {
+                return FakeApi::reply(
+                    200,
+                    trackJson(7, QStringLiteral("Night Drive"), R"(,"tag_list":"synthwave night","sharing":"public")"),
+                    jsonHeaders());
+            }
+            if (path == u"/abc_m.json") {
+                return FakeApi::reply(200, R"({"width":4,"height":10,"samples":[0,5,10,5]})", jsonHeaders());
+            }
+            if (path == u"/tracks/7/related") {
+                return FakeApi::reply(200, "{\"collection\":[" + trackJson(8) + "],\"next_href\":null}", jsonHeaders());
+            }
+            if (path == u"/tracks/7/comments") {
+                return FakeApi::reply(200, R"({"collection":[{"kind":"comment","id":1,"body":"hi","timestamp":3000,
+                    "user":{"id":5,"username":"fan","permalink":"fan"}}],"next_href":null})",
+                                      jsonHeaders());
+            }
+            if (path == u"/tracks/7/playlists_without_albums") {
+                return FakeApi::reply(200, R"({"collection":[{"kind":"playlist","id":3,"title":"Mix","tracks":[]}],
+                    "next_href":null})",
+                                      jsonHeaders());
+            }
+            return FakeApi::reply(404, "{}");
+        });
+        models::TrackDetail detail(h.client, 7, 20);
+        REQUIRE(test::waitUntil([&] { return !detail.loading() && detail.self()->count() == 1; }));
+        CHECK(detail.title() == u"Night Drive");
+        CHECK(detail.artist() == u"The Artist");
+        CHECK(detail.artistId() == 42);
+        CHECK(detail.album() == u"Neon");
+        CHECK(detail.tags() == QStringList{u"night"_s});  // the genre is shown on its own
+        CHECK(detail.plays().toLongLong() == 123456);
+        CHECK_FALSE(detail.comments().isValid());  // hidden by SoundCloud: unknown, not 0
+        CHECK(detail.artwork().endsWith(u"-t500x500.jpg"));
+        REQUIRE(test::waitUntil([&] { return detail.waveform().size() == 4; }));
+        CHECK(detail.waveform().at(2) == doctest::Approx(1.0));
+        REQUIRE(test::waitUntil([&] { return detail.related()->count() == 1; }));
+        CHECK(detail.commentList()->count() == 0);  // not asked yet
+        detail.loadComments();
+        REQUIRE(test::waitUntil([&] { return detail.commentList()->count() == 1; }));
+        const QModelIndex first = detail.commentList()->index(0);
+        CHECK(first.data(models::CommentModel::BodyRole).toString() == u"hi");
+        CHECK(first.data(models::CommentModel::PositionRole).toLongLong() == 3000);
+        detail.loadPlaylists();
+        REQUIRE(test::waitUntil([&] { return detail.playlists()->count() == 1; }));
     }
 }

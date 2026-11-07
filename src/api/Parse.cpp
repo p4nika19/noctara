@@ -412,6 +412,54 @@ Result<Track> track(const QByteArray& json)
     return single<Track>(json, trackFrom);
 }
 
+Result<Track> trackDetail(const QByteArray& json)
+{
+    return single<Track>(json, [](element object) -> Result<Track> {
+        Result<Track> track = trackFrom(object);
+        if (track) {
+            track->tagList = text(object, "tag_list");
+            track->isPrivate = text(object, "sharing") == u"private";
+        }
+        return track;
+    });
+}
+
+Result<Page<Comment>> comments(const QByteArray& json)
+{
+    Result<element> root = document(json);
+    if (!root) {
+        return std::unexpected(root.error());
+    }
+    simdjson::dom::array list;
+    if (root->type() != element_type::OBJECT || (*root)["collection"].get_array().get(list) != simdjson::SUCCESS) {
+        return fail(ErrorCode::InvalidResponse, "expected a collection of comments");
+    }
+    Page<Comment> page;
+    page.next = link(*root, "next_href");
+    page.items.reserve(list.size());
+    for (const element entry : list) {
+        Result<Id> id = requiredId(entry);
+        if (!id) {
+            continue;
+        }
+        Comment comment;
+        comment.id = *id;
+        comment.body = text(entry, "body");
+        if (const auto user = field(entry, "user")) {
+            comment.user = userRef(*user);
+        }
+        comment.createdAt = timestamp(entry, "created_at");
+        comment.timestampMs = number(entry, "timestamp");
+        page.items.push_back(std::move(comment));
+    }
+    return page;
+}
+
+Result<Done> nothing(const QByteArray& /*json*/)
+{
+    return Done{};
+}
+
 Result<User> user(const QByteArray& json)
 {
     return single<User>(json, userFrom);

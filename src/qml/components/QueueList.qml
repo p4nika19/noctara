@@ -49,6 +49,7 @@ ListView {
         required property bool pending
         required property string permalink
         required property var artistId
+        required property var trackId
 
         width: ListView.view.width
         implicitHeight: Theme.space.rowHeight
@@ -75,7 +76,8 @@ ListView {
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             onClicked: mouse => {
                 if (mouse.button === Qt.RightButton)
-                    Window.window.showQueueMenu(row.index, row.permalink, row.artistId, row, Qt.point(mouse.x, mouse.y))
+                    Window.window.showQueueMenu(row.index, row.permalink, row.artistId, row.trackId, row,
+                                                Qt.point(mouse.x, mouse.y))
                 else
                     Player.playQueueItem(row.index)
             }

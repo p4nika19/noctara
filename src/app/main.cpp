@@ -243,6 +243,7 @@ void runSmokeTest(const QQmlApplicationEngine& engine, const ui::SettingsControl
     steps.append(QStringLiteral("queue"));
     steps.append(QStringLiteral("cheat-sheet"));
     steps.append(QStringLiteral("full-player"));
+    steps.append(QStringLiteral("track-page"));
     const auto index = std::make_shared<qsizetype>(0);
     auto* timer = new QTimer(root);  // NOLINT(cppcoreguidelines-owning-memory): owned by its QObject parent
     timer->setInterval(150);
@@ -268,6 +269,12 @@ void runSmokeTest(const QQmlApplicationEngine& engine, const ui::SettingsControl
         if (step == u"full-player") {
             root->setProperty("cheatSheet", false);
             root->setProperty("fullPlayer", true);
+            return;
+        }
+        if (step == u"track-page") {
+            // A detail page; without a network or account it shows its error state, which must render cleanly too.
+            root->setProperty("fullPlayer", false);
+            QMetaObject::invokeMethod(root, "openTrack", Q_ARG(QVariant, QVariant::fromValue<qint64>(1)));
             return;
         }
         root->setProperty("page", step.section(u'/', 0, 0));
@@ -416,6 +423,9 @@ int main(int argc, char** argv)
     QObject::connect(&storageUi, &ui::StorageController::clearingAll, &storageUi, [&snapshots] { snapshots.clear(); });
     ui::CatalogController catalog(soundcloud, account, snapshots);
     QObject::connect(&account, &ui::AccountController::notice, &appController, &ui::AppController::showToast);
+    QObject::connect(
+        &catalog, &ui::CatalogController::notice, &appController,
+        [&appController](const QString& kind, const QString& message) { appController.showToast(kind, message); });
 
     // Native playback: the audio cache feeds FFmpeg, the mixer feeds the default output device (opened on the
     // first track). Protected tracks play in the castlabs Electron helper, started on the first one.
@@ -541,6 +551,10 @@ int main(int argc, char** argv)
                                                        QStringLiteral("Provided by Catalog"));
     qmlRegisterUncreatableType<models::UserDetail>("Noctara", 1, 0, "UserDetail",
                                                    QStringLiteral("Provided by Catalog"));
+    qmlRegisterUncreatableType<models::TrackDetail>("Noctara", 1, 0, "TrackDetail",
+                                                    QStringLiteral("Provided by Catalog"));
+    qmlRegisterUncreatableType<models::CommentModel>("Noctara", 1, 0, "CommentModel",
+                                                     QStringLiteral("Provided by Catalog"));
     qmlRegisterUncreatableType<media::QueueModel>("Noctara", 1, 0, "QueueModel", QStringLiteral("Provided by Player"));
     qmlRegisterType<ui::WaveformItem>("Noctara", 1, 0, "WaveformItem");
     qmlRegisterUncreatableType<models::CollectionModel>("Noctara", 1, 0, "CollectionModel",
@@ -607,6 +621,12 @@ int main(int argc, char** argv)
                 }
                 if (target == u"full-player" || target == u"cheat-sheet") {
                     window->setProperty(target == u"full-player" ? "fullPlayer" : "cheatSheet", true);
+                    return;
+                }
+                if (target.startsWith(u"track:")) {  // track:<id> opens that track's page
+                    QMetaObject::invokeMethod(
+                        window, "openTrack",
+                        Q_ARG(QVariant, QVariant::fromValue<qint64>(target.sliced(6).toLongLong())));
                     return;
                 }
                 window->setProperty("page", target.section(u'/', 0, 0));

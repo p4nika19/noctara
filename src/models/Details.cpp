@@ -176,4 +176,122 @@ QVariant UserDetail::trackCount() const
     return count(m_user.trackCount);
 }
 
+TrackDetail::TrackDetail(api::IApiClient& client, api::Id id, int pageSize, QObject* parent)
+    : QObject(parent)
+    , m_client(client)
+    , m_id(id)
+    , m_pageSize(pageSize)
+    , m_self(client)
+    , m_related(client)
+    , m_playlists(client)
+    , m_comments(client)
+{
+    reload();
+}
+
+void TrackDetail::reload()
+{
+    m_request.cancel();
+    m_loading = true;
+    m_error = -1;
+    Q_EMIT changed();
+    m_request = api::fetch(m_client, api::endpoints::trackDetail(m_id), this, [this](Result<api::Track> track) {
+        m_loading = false;
+        if (!track) {
+            m_error = static_cast<int>(track.error().code);
+            Q_EMIT changed();
+            return;
+        }
+        const bool newWaveform = track->waveformUrl != m_track.waveformUrl;
+        m_track = std::move(*track);
+        m_self.setEntries({{.item = m_track, .at = {}, .repostedBy = std::nullopt}});
+        Q_EMIT changed();
+        if (newWaveform || m_waveform.isEmpty()) {
+            loadWaveform();
+        }
+    });
+    m_related.setSource([id = m_id](int limit) { return api::endpoints::related(id, limit); }, m_pageSize);
+    if (m_playlistsLoaded) {
+        m_playlistsLoaded = false;
+        loadPlaylists();
+    }
+    if (m_commentsLoaded) {
+        m_commentsLoaded = false;
+        loadComments();
+    }
+}
+
+void TrackDetail::loadWaveform()
+{
+    m_waveformRequest.cancel();
+    if (m_track.waveformUrl.isEmpty()) {
+        return;
+    }
+    m_waveformRequest = api::fetch(m_client, api::endpoints::waveform(m_track.waveformUrl), this,
+                                   [this](Result<api::Waveform> waveform) {
+                                       if (!waveform) {
+                                           return;  // the page simply shows no waveform
+                                       }
+                                       m_waveform = QList<float>(waveform->samples.begin(), waveform->samples.end());
+                                       Q_EMIT changed();
+                                   });
+}
+
+void TrackDetail::loadPlaylists()
+{
+    if (m_playlistsLoaded) {
+        return;
+    }
+    m_playlistsLoaded = true;
+    m_playlists.setSource([id = m_id](int limit) { return api::endpoints::trackPlaylists(id, limit); }, m_pageSize);
+}
+
+void TrackDetail::loadComments()
+{
+    if (m_commentsLoaded) {
+        return;
+    }
+    m_commentsLoaded = true;
+    m_comments.load(m_id, m_pageSize);
+}
+
+QString TrackDetail::artwork() const
+{
+    const QString& url = m_track.artwork();
+    return url.isEmpty() ? QString() : api::sizedArtwork(url, 500);
+}
+
+QVariant TrackDetail::plays() const
+{
+    return count(m_track.playbackCount);
+}
+
+QVariant TrackDetail::likes() const
+{
+    return count(m_track.likesCount);
+}
+
+QVariant TrackDetail::reposts() const
+{
+    return count(m_track.repostsCount);
+}
+
+QVariant TrackDetail::comments() const
+{
+    return count(m_track.commentCount);
+}
+
+QStringList TrackDetail::tags() const
+{
+    QStringList tags = api::splitTags(m_track.tagList);
+    // The genre is shown on its own.
+    tags.removeIf([this](const QString& tag) { return tag.compare(m_track.genre, Qt::CaseInsensitive) == 0; });
+    return tags;
+}
+
+QDateTime TrackDetail::released() const
+{
+    return m_track.releasedAt.isValid() ? m_track.releasedAt : m_track.createdAt;
+}
+
 }  // namespace noctara::models

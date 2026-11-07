@@ -15,6 +15,12 @@
 namespace noctara::api::parse {
 
 [[nodiscard]] Result<Track> track(const QByteArray& json);
+// A track for its own page: also its tags and whether it is private (lists skip those).
+[[nodiscard]] Result<Track> trackDetail(const QByteArray& json);
+// /tracks/{id}/comments: a page of comments (unknown objects are skipped).
+[[nodiscard]] Result<Page<Comment>> comments(const QByteArray& json);
+// A write whose answer carries nothing Noctara needs: any body is accepted.
+[[nodiscard]] Result<Done> nothing(const QByteArray& json);
 [[nodiscard]] Result<User> user(const QByteArray& json);
 [[nodiscard]] Result<Playlist> playlist(const QByteArray& json);
 // /resolve: whatever the permalink points at.

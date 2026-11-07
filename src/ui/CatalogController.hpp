@@ -6,9 +6,11 @@
 #include <QHash>
 #include <QObject>
 #include <QPointer>
+#include <QSet>
 #include <QString>
 #include <QTimer>
 
+#include <deque>
 #include <memory>
 
 namespace noctara::api {
@@ -38,6 +40,8 @@ class CatalogController : public QObject {
     Q_PROPERTY(QString chartGenre READ chartGenre NOTIFY chartChanged)
     // [{id, label}] with translated labels.
     Q_PROPERTY(QVariantList genres READ genres NOTIFY genresChanged)
+    // Bumped whenever the liked state of a track may have changed: bindings that call isLiked() read it.
+    Q_PROPERTY(int likedRevision READ likedRevision NOTIFY likedChanged)
 
 public:
     // `snapshots` keeps the account's likes, library and playlists between runs.
@@ -60,6 +64,20 @@ public:
     // Detail pages (owned here).
     Q_INVOKABLE noctara::models::PlaylistDetail* playlist(qint64 id);
     Q_INVOKABLE noctara::models::UserDetail* user(qint64 id);
+    Q_INVOKABLE noctara::models::TrackDetail* track(qint64 id);
+
+    // Likes of the signed-in account. toggleLike() shows the new state at once and puts it back if SoundCloud
+    // refuses (with a notice).
+    [[nodiscard]] int likedRevision() const noexcept { return m_likedRevision; }
+    Q_INVOKABLE bool isLiked(qint64 trackId) const;
+    Q_INVOKABLE void toggleLike(qint64 trackId);
+    // The account's own playlists (not albums, not liked ones), from the library: [{id, title, trackCount,
+    // artwork}]. Loads the library on first use.
+    Q_INVOKABLE QVariantList ownPlaylists();
+    // Adds the track at the end of one of the account's playlists (unless it is already there) or to a new one.
+    // Changes to one playlist are made one after another; the outcome is a notice.
+    Q_INVOKABLE void addToPlaylist(qint64 playlistId, qint64 trackId);
+    Q_INVOKABLE void createPlaylist(const QString& title, bool isPrivate, qint64 trackId);
     [[nodiscard]] const QString& query() const noexcept { return m_query; }
     [[nodiscard]] const QString& searchKind() const noexcept { return m_kind; }
 
@@ -76,6 +94,9 @@ Q_SIGNALS:
     void queryChanged();
     void chartChanged();
     void genresChanged();
+    void likedChanged();
+    // kind: "info", "success", "warning", "error" (App.showToast).
+    void notice(const QString& kind, const QString& message);
 
 private:
     void start();
@@ -84,7 +105,12 @@ private:
     [[nodiscard]] api::Id accountId();
     // The cached page for `id` (created with `make` when missing), kept among the most recently opened ones.
     template <class Detail, class Make>
-    Detail* detail(QHash<qint64, std::shared_ptr<Detail>>& cache, qint64 id, Make make);
+    Detail* detail(QHash<qint64, std::shared_ptr<Detail>>& cache, QList<qint64>& recent, qint64 id, Make make);
+    void likesChanged();
+    void writeNextToPlaylist(api::Id playlistId);
+    void finishPlaylistWrite(api::Id playlistId);
+    // A playlist changed by the account: the open page and the library show the new version.
+    void playlistUpdated(const api::Playlist& playlist);
 
     api::ApiService& m_api;
     AccountController& m_account;
@@ -101,8 +127,14 @@ private:
     QString m_chartGenre = QStringLiteral("all-genres");
     QHash<qint64, std::shared_ptr<models::PlaylistDetail>> m_playlists;
     QHash<qint64, std::shared_ptr<models::UserDetail>> m_users;
+    QHash<qint64, std::shared_ptr<models::TrackDetail>> m_tracks;
     QList<qint64> m_recentPlaylists;  // least recent first
     QList<qint64> m_recentUsers;
+    QList<qint64> m_recentTracks;
+    QSet<api::Id> m_likedIds;              // from the likes list
+    QHash<api::Id, bool> m_likeOverrides;  // toggled, SoundCloud's answer pending
+    int m_likedRevision = 0;
+    QHash<api::Id, std::deque<api::Id>> m_playlistWrites;  // playlist -> tracks to add, the first one in progress
     QString m_query;
     QString m_kind = QStringLiteral("all");
     QString m_started;  // query + kind of the search shown

@@ -23,11 +23,15 @@
 
 #include <QDir>
 #include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
 
 #include <atomic>
+#include <mutex>
 #include <optional>
 #include <thread>
 
@@ -578,6 +582,165 @@ TEST_SUITE("ui.catalog")
         snapshots.flush();
         CHECK(QFile::exists(dir.filePath(QStringLiteral("42/likes.json"))));
         CHECK(snapshots.lastAccount() == 42);
+    }
+}
+
+TEST_SUITE("ui.catalog-writes")
+{
+    // A signed-in account (id 1) with playlist 5 = [1, 2]; PUTs change it, so a later read sees the change.
+    struct WriteHarness {
+        settings::SettingsStore store{settings::Schema::builtin()};
+        FakeApi transport;
+        std::shared_ptr<std::mutex> lock = std::make_shared<std::mutex>();
+        std::shared_ptr<std::vector<qint64>> playlist =
+            std::make_shared<std::vector<qint64>>(std::vector<qint64>{1, 2});
+        std::shared_ptr<int> likeStatus = std::make_shared<int>(200);
+        api::Session session;
+        std::unique_ptr<api::ApiService> service;
+        auth::MemorySecretStore secrets;
+        QTemporaryDir dir;
+        std::unique_ptr<api::SnapshotStore> snapshots;
+        std::unique_ptr<ui::AccountController> account;
+        std::unique_ptr<ui::CatalogController> catalog;
+
+        WriteHarness()
+        {
+            REQUIRE(store.setUserValue(settings::keys::ClientId, QString::fromLatin1(kClientId)));
+            transport.setHandler([lock = lock, playlist = playlist,
+                                  likeStatus = likeStatus](const net::Request& request) -> Result<net::Response> {
+                const QString path = request.url.path();
+                const std::scoped_lock guard(*lock);
+                const auto playlistJson = [&] {
+                    QJsonArray tracks;
+                    for (const qint64 id : *playlist) {
+                        tracks.append(
+                            QJsonObject{{QStringLiteral("kind"), QStringLiteral("track")}, {QStringLiteral("id"), id}});
+                    }
+                    return QJsonDocument(
+                               QJsonObject{{QStringLiteral("kind"), QStringLiteral("playlist")},
+                                           {QStringLiteral("id"), 5},
+                                           {QStringLiteral("title"), QStringLiteral("Mix")},
+                                           {QStringLiteral("track_count"), static_cast<qint64>(playlist->size())},
+                                           {QStringLiteral("tracks"), tracks}})
+                        .toJson();
+                };
+                if (path == u"/me") {
+                    return FakeApi::reply(200, R"({"id":1,"username":"me","permalink":"me"})", jsonHeaders());
+                }
+                if (path == u"/playlists/5" && request.method == net::Method::Get) {
+                    return FakeApi::reply(200, playlistJson(), jsonHeaders());
+                }
+                if (path == u"/playlists/5" && request.method == net::Method::Put) {
+                    playlist->clear();
+                    for (const QJsonValue id :
+                         QJsonDocument::fromJson(request.body)[u"playlist"][u"tracks"].toArray()) {
+                        playlist->push_back(id.toInteger());
+                    }
+                    return FakeApi::reply(200, playlistJson(), jsonHeaders());
+                }
+                if (path == u"/playlists" && request.method == net::Method::Post) {
+                    return FakeApi::reply(201, R"({"kind":"playlist","id":6,"title":"New one","tracks":[{"id":9}]})",
+                                          jsonHeaders());
+                }
+                if (path.startsWith(u"/users/1/track_likes/")) {
+                    return FakeApi::reply(*likeStatus, "{}", jsonHeaders());
+                }
+                if (path == u"/tracks/9") {
+                    return FakeApi::reply(
+                        200, R"({"kind":"track","id":9,"title":"Nine","user":{"id":3,"username":"a"}})", jsonHeaders());
+                }
+                return FakeApi::reply(200, R"({"collection":[],"next_href":null})", jsonHeaders());
+            });
+            service = std::make_unique<api::ApiService>(store, transport, session, QString());
+            REQUIRE(dir.isValid());
+            snapshots = std::make_unique<api::SnapshotStore>(dir.path());
+            account = std::make_unique<ui::AccountController>(service->client(), session, secrets);
+            catalog = std::make_unique<ui::CatalogController>(*service, *account, *snapshots);
+            account->signInWithToken(QStringLiteral("token"));
+            REQUIRE(test::waitUntil([&] { return account->signedIn() && account->userId() == 1; }, 3000));
+        }
+        [[nodiscard]] std::vector<qint64> tracks() const
+        {
+            const std::scoped_lock guard(*lock);
+            return *playlist;
+        }
+        [[nodiscard]] int puts() const
+        {
+            return static_cast<int>(std::ranges::count_if(transport.requests(), [](const net::Request& r) {
+                return r.method == net::Method::Put && r.url.path() == u"/playlists/5";
+            }));
+        }
+    };
+
+    TEST_CASE("adding to a playlist writes the list as it is now, once per track, one change at a time")
+    {
+        WriteHarness h;
+        QSignalSpy notice(h.catalog.get(), &ui::CatalogController::notice);
+        h.catalog->addToPlaylist(5, 9);
+        h.catalog->addToPlaylist(5, 10);  // made while the first is in flight: must not lose it
+        REQUIRE(test::waitUntil([&] { return notice.count() == 2; }, 5000));
+        CHECK(h.tracks() == std::vector<qint64>{1, 2, 9, 10});
+        CHECK(h.puts() == 2);
+        CHECK(notice.at(0).at(0).toString() == u"success");
+        // Already there: nothing is written.
+        h.catalog->addToPlaylist(5, 2);
+        REQUIRE(test::waitUntil([&] { return notice.count() == 3; }, 5000));
+        CHECK(notice.at(2).at(0).toString() == u"info");
+        CHECK(h.puts() == 2);
+        // Every read before a write asked SoundCloud, not the HTTP cache.
+        for (const net::Request& request : h.transport.requests()) {
+            if (request.url.path() == u"/playlists/5" && request.method == net::Method::Get) {
+                CHECK(request.cache == net::CacheMode::Refresh);
+            }
+        }
+    }
+
+    TEST_CASE("a like shows at once and goes back when SoundCloud refuses it")
+    {
+        WriteHarness h;
+        QSignalSpy notice(h.catalog.get(), &ui::CatalogController::notice);
+        CHECK_FALSE(h.catalog->isLiked(9));
+        h.catalog->toggleLike(9);
+        CHECK(h.catalog->isLiked(9));  // before any answer
+        REQUIRE(test::waitUntil(
+            [&] {
+                return std::ranges::any_of(h.catalog->likes()->entries(),
+                                           [](const api::Entry& entry) { return api::itemId(entry.item) == 9; });
+            },
+            5000));
+        CHECK(h.catalog->isLiked(9));
+        CHECK(notice.isEmpty());
+
+        *h.likeStatus = 403;
+        h.catalog->toggleLike(9);  // unlike, refused
+        CHECK_FALSE(h.catalog->isLiked(9));
+        REQUIRE(test::waitUntil([&] { return notice.count() == 1; }, 5000));
+        CHECK(notice.at(0).at(0).toString() == u"error");
+        CHECK(h.catalog->isLiked(9));
+    }
+
+    TEST_CASE("a new playlist is created with the track")
+    {
+        WriteHarness h;
+        QSignalSpy notice(h.catalog.get(), &ui::CatalogController::notice);
+        h.catalog->createPlaylist(QStringLiteral("  New one "), true, 9);
+        REQUIRE(test::waitUntil([&] { return notice.count() == 1; }, 5000));
+        CHECK(notice.at(0).at(0).toString() == u"success");
+        const auto posts = std::ranges::count_if(h.transport.requests(), [](const net::Request& r) {
+            return r.method == net::Method::Post && r.url.path() == u"/playlists";
+        });
+        REQUIRE(posts == 1);
+        for (const net::Request& r : h.transport.requests()) {
+            if (r.method == net::Method::Post) {
+                const QJsonObject body = QJsonDocument::fromJson(r.body)[u"playlist"].toObject();
+                CHECK(body[u"title"].toString() == u"New one");
+                CHECK(body[u"sharing"].toString() == u"private");
+                CHECK(body[u"tracks"].toArray() == QJsonArray{9});
+            }
+        }
+        h.catalog->createPlaylist(QStringLiteral("   "), false, 9);  // a blank name sends nothing
+        QTest::qWait(100);
+        CHECK(notice.count() == 1);
     }
 }
 

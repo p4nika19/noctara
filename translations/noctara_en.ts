@@ -328,7 +328,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+84"/>
+        <location line="+85"/>
         <source>Not cacheable</source>
         <translation type="unfinished"></translation>
     </message>
@@ -399,7 +399,7 @@
 <context>
     <name>CollectionView</name>
     <message>
-        <location filename="../src/qml/components/CollectionView.qml" line="+161"/>
+        <location filename="../src/qml/components/CollectionView.qml" line="+175"/>
         <source>Try again</source>
         <translation type="unfinished"></translation>
     </message>
@@ -433,12 +433,12 @@
 <context>
     <name>Dialog</name>
     <message>
-        <location filename="../src/qml/components/Dialog.qml" line="+11"/>
+        <location filename="../src/qml/components/Dialog.qml" line="+12"/>
         <source>OK</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+57"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1045,7 +1045,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+125"/>
+        <location line="+146"/>
         <source>Shuffle: on</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1060,7 +1060,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Pause</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1090,7 +1090,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+18"/>
         <source>Unmute</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1100,7 +1100,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+13"/>
         <source>Volume</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1113,7 +1113,7 @@
 <context>
     <name>Genres</name>
     <message>
-        <location filename="../src/ui/CatalogController.cpp" line="+42"/>
+        <location filename="../src/ui/CatalogController.cpp" line="+43"/>
         <source>All genres</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1496,7 +1496,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+71"/>
         <source>Link copied.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1511,35 +1511,70 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+8"/>
+        <source>Open track page</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Remove from likes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Like</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Add to playlist…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+10"/>
+        <source>Loading your playlists…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No playlists yet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>New playlist…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <location line="+12"/>
         <location line="+18"/>
         <location line="+16"/>
         <source>Play</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-43"/>
-        <location line="+10"/>
+        <location line="-45"/>
+        <location line="+12"/>
         <location line="+18"/>
         <source>Play next</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-27"/>
-        <location line="+10"/>
+        <location line="-29"/>
+        <location line="+12"/>
         <source>Add to queue</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="-8"/>
         <location line="+29"/>
-        <location line="+27"/>
+        <location line="+29"/>
         <source>Go to artist</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-51"/>
+        <location line="-53"/>
         <source>Open</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1619,7 +1654,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Copy link at the current time</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1641,6 +1676,26 @@
     <message>
         <location line="+62"/>
         <source>Back</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+98"/>
+        <source>New playlist</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Create</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Playlist name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Private: only you can see it</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1812,7 +1867,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+53"/>
         <source>Preview · %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2050,7 +2105,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="+66"/>
+        <location line="+67"/>
         <source>%n track(s)</source>
         <translation type="unfinished">
             <numerusform>%n track</numerusform>
@@ -2222,7 +2277,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+45"/>
         <source>Loading…</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4686,7 +4741,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+46"/>
         <source>Press keys…</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4957,6 +5012,186 @@
     </message>
 </context>
 <context>
+    <name>TrackPage</name>
+    <message>
+        <location filename="../src/qml/pages/TrackPage.qml" line="+81"/>
+        <source>Track</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Private</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Preview</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Only a 30-second preview is available to your account.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>from %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+15"/>
+        <source>%n play(s)</source>
+        <translation>
+            <numerusform>%n play</numerusform>
+            <numerusform>%n plays</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 plays</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n like(s)</source>
+        <translation>
+            <numerusform>%n like</numerusform>
+            <numerusform>%n likes</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 likes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n repost(s)</source>
+        <translation>
+            <numerusform>%n repost</numerusform>
+            <numerusform>%n reposts</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 reposts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n comment(s)</source>
+        <translation>
+            <numerusform>%n comment</numerusform>
+            <numerusform>%n comments</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 comments</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Pause</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Play</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Remove from likes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Like</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Add to playlist…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Play next</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Add to queue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Open on SoundCloud</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Copy link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+51"/>
+        <source>Show less</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show more</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Related tracks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>In playlists</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Comments</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Not in any public playlist.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No related tracks.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+62"/>
+        <source>at %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Loading comments…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>No comments yet.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>UserPage</name>
     <message>
         <location filename="../src/qml/pages/UserPage.qml" line="+20"/>
@@ -5171,6 +5406,50 @@
     <message>
         <location line="+2"/>
         <source>Restart now</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>noctara::ui::CatalogController</name>
+    <message>
+        <location filename="../src/ui/CatalogController.cpp" line="+208"/>
+        <source>Sign in to like tracks.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Could not change the like: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <location line="+67"/>
+        <source>Sign in to add tracks to playlists.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-46"/>
+        <source>Could not add the track: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Already in “%1”.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Added to “%1”.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Could not create the playlist: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Created “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

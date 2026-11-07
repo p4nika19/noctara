@@ -63,12 +63,20 @@ GlassPanel {
         spacing: Theme.space.xxs
 
         Text {
-            width: parent.width
+            width: Math.min(implicitWidth, parent.width)
             text: Player.title
             font: Theme.font.bodyStrong
-            color: Theme.colors.textPrimary
+            color: titleArea.containsMouse ? Theme.colors.accent : Theme.colors.textPrimary
             elide: Text.ElideRight
             textFormat: Text.PlainText
+            MouseArea {
+                id: titleArea
+                anchors.fill: parent
+                enabled: Player.hasTrack
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: Window.window.openTrack(Number(Player.trackId))
+            }
         }
         Text {
             width: parent.width

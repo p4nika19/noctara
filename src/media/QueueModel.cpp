@@ -184,6 +184,7 @@ QVariant QueueModel::data(const QModelIndex& index, int role) const
     case UidRole: return QVariant::fromValue<quint64>(item.uid);
     case PermalinkRole: return track.permalinkUrl;
     case ArtistIdRole: return QVariant::fromValue<qint64>(track.user.id);
+    case TrackIdRole: return QVariant::fromValue<qint64>(track.id);
     default: return {};
     }
 }
@@ -194,7 +195,7 @@ QHash<int, QByteArray> QueueModel::roleNames() const
         {TitleRole, "title"},         {SubtitleRole, "subtitle"}, {ThumbnailRole, "thumbnail"},
         {DurationRole, "duration"},   {CurrentRole, "current"},   {ProtectedRole, "protectedMedia"},
         {PreviewRole, "preview"},     {PendingRole, "pending"},   {UidRole, "uid"},
-        {PermalinkRole, "permalink"}, {ArtistIdRole, "artistId"},
+        {PermalinkRole, "permalink"}, {ArtistIdRole, "artistId"}, {TrackIdRole, "trackId"},
     };
 }
 

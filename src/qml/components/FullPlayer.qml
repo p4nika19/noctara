@@ -145,11 +145,24 @@ FocusScope {
                     horizontalAlignment: Text.AlignHCenter
                     text: Player.title
                     font: Theme.font.headline
-                    color: Theme.colors.textPrimary
+                    color: titleArea.containsMouse ? Theme.colors.accent : Theme.colors.textPrimary
                     wrapMode: Text.Wrap
                     maximumLineCount: 2
                     elide: Text.ElideRight
                     textFormat: Text.PlainText
+                    MouseArea {
+                        id: titleArea
+                        anchors.centerIn: parent
+                        width: Math.min(parent.width, parent.implicitWidth)
+                        height: parent.height
+                        enabled: Player.hasTrack
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.closeRequested()
+                            Window.window.openTrack(Number(Player.trackId))
+                        }
+                    }
                 }
                 Text {
                     width: parent.width

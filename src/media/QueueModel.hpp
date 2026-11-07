@@ -29,6 +29,7 @@ public:
         UidRole,
         PermalinkRole,
         ArtistIdRole,
+        TrackIdRole,
     };
     Q_ENUM(Role)
 

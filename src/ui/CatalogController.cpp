@@ -2,6 +2,7 @@
 
 #include "api/ApiService.hpp"
 
+#include "i18n/ErrorMessages.hpp"
 #include "ui/AccountController.hpp"
 
 #include <QCoreApplication>
@@ -79,6 +80,8 @@ CatalogController::CatalogController(api::ApiService& api, AccountController& ac
     m_debounce.setInterval(kTypingPause);
     connect(&m_debounce, &QTimer::timeout, this, &CatalogController::start);
     connect(&m_account, &AccountController::changed, this, &CatalogController::accountChanged);
+    connect(&m_likes, &models::CollectionModel::listChanged, this, &CatalogController::likesChanged);
+    connect(&m_likes, &models::CollectionModel::countChanged, this, &CatalogController::likesChanged);
 }
 
 QVariantList CatalogController::genres() const
@@ -199,7 +202,8 @@ void CatalogController::setChartGenre(const QString& genre)
 }
 
 template <class Detail, class Make>
-Detail* CatalogController::detail(QHash<qint64, std::shared_ptr<Detail>>& cache, qint64 id, Make make)
+Detail* CatalogController::detail(QHash<qint64, std::shared_ptr<Detail>>& cache, QList<qint64>& recent, qint64 id,
+                                  Make make)
 {
     auto it = cache.find(id);
     if (it == cache.end()) {
@@ -208,7 +212,6 @@ Detail* CatalogController::detail(QHash<qint64, std::shared_ptr<Detail>>& cache,
         it = cache.insert(id, std::move(created));
     }
     Detail* detail = it->get();
-    QList<qint64>& recent = std::is_same_v<Detail, models::PlaylistDetail> ? m_recentPlaylists : m_recentUsers;
     recent.removeAll(id);
     recent.append(id);
     while (recent.size() > kKeptDetails) {
@@ -220,7 +223,7 @@ Detail* CatalogController::detail(QHash<qint64, std::shared_ptr<Detail>>& cache,
 
 models::PlaylistDetail* CatalogController::playlist(qint64 id)
 {
-    return detail(m_playlists, id, [&] {
+    return detail(m_playlists, m_recentPlaylists, id, [&] {
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): owned by the shared_ptr, deleted via deleteLater()
         return new models::PlaylistDetail(m_api.client(), id, &m_snapshots);
     });
@@ -228,10 +231,220 @@ models::PlaylistDetail* CatalogController::playlist(qint64 id)
 
 models::UserDetail* CatalogController::user(qint64 id)
 {
-    return detail(m_users, id, [&] {
+    return detail(m_users, m_recentUsers, id, [&] {
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): owned by the shared_ptr, deleted via deleteLater()
         return new models::UserDetail(m_api.client(), id, m_api.pageSize());
     });
+}
+
+models::TrackDetail* CatalogController::track(qint64 id)
+{
+    return detail(m_tracks, m_recentTracks, id, [&] {
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): owned by the shared_ptr, deleted via deleteLater()
+        return new models::TrackDetail(m_api.client(), id, m_api.pageSize());
+    });
+}
+
+void CatalogController::likesChanged()
+{
+    m_likedIds.clear();
+    for (const api::Entry& entry : m_likes.entries()) {
+        if (const auto* track = std::get_if<api::Track>(&entry.item)) {
+            m_likedIds.insert(track->id);
+        }
+    }
+    ++m_likedRevision;
+    Q_EMIT likedChanged();
+}
+
+bool CatalogController::isLiked(qint64 trackId) const
+{
+    const auto pending = m_likeOverrides.constFind(trackId);
+    return pending != m_likeOverrides.cend() ? *pending : m_likedIds.contains(trackId);
+}
+
+void CatalogController::toggleLike(qint64 trackId)
+{
+    const api::Id me = accountId();
+    if (me <= 0 || !m_account.signedIn()) {
+        Q_EMIT notice(QStringLiteral("info"), tr("Sign in to like tracks."));
+        return;
+    }
+    ensure(QStringLiteral("likes"));
+    const bool like = !isLiked(trackId);
+    m_likeOverrides.insert(trackId, like);
+    ++m_likedRevision;
+    Q_EMIT likedChanged();
+    api::fetch(m_api.client(), api::endpoints::likeTrack(me, trackId, like), this,
+               [this, trackId, like](Result<api::Done> done) {
+                   if (!done) {
+                       m_likeOverrides.remove(trackId);
+                       ++m_likedRevision;
+                       Q_EMIT likedChanged();
+                       Q_EMIT notice(QStringLiteral("error"),
+                                     tr("Could not change the like: %1").arg(i18n::errorMessage(done.error().code)));
+                       return;
+                   }
+                   if (!like) {
+                       std::vector<api::Entry> entries = m_likes.entries();
+                       std::erase_if(entries, [trackId](const api::Entry& entry) {
+                           const auto* track = std::get_if<api::Track>(&entry.item);
+                           return track != nullptr && track->id == trackId;
+                       });
+                       m_likeOverrides.remove(trackId);
+                       m_likes.applyEntries(std::move(entries));
+                       likesChanged();
+                       return;
+                   }
+                   // The new like goes on top of the list, as SoundCloud orders it.
+                   api::fetch(m_api.client(), api::endpoints::track(trackId), this,
+                              [this, trackId](Result<api::Track> track) {
+                                  m_likeOverrides.remove(trackId);
+                                  if (track) {
+                                      std::vector<api::Entry> entries = m_likes.entries();
+                                      entries.insert(entries.begin(), {.item = std::move(*track),
+                                                                       .at = QDateTime::currentDateTimeUtc(),
+                                                                       .repostedBy = std::nullopt});
+                                      m_likes.applyEntries(std::move(entries));
+                                  } else {
+                                      m_likes.reload();  // liked, but the track could not be read: sync instead
+                                  }
+                                  likesChanged();
+                              });
+               });
+}
+
+QVariantList CatalogController::ownPlaylists()
+{
+    ensure(QStringLiteral("library"));
+    const api::Id me = accountId();
+    QVariantList out;
+    for (const api::Entry& entry : m_library.entries()) {
+        const auto* playlist = std::get_if<api::Playlist>(&entry.item);
+        if (playlist == nullptr || playlist->album || playlist->user.id != me) {
+            continue;
+        }
+        out.append(QVariantMap{{QStringLiteral("id"), QVariant::fromValue<qint64>(playlist->id)},
+                               {QStringLiteral("title"), playlist->title},
+                               {QStringLiteral("trackCount"), QVariant::fromValue<qint64>(playlist->trackCount)}});
+    }
+    return out;
+}
+
+void CatalogController::addToPlaylist(qint64 playlistId, qint64 trackId)
+{
+    if (!m_account.signedIn()) {
+        Q_EMIT notice(QStringLiteral("info"), tr("Sign in to add tracks to playlists."));
+        return;
+    }
+    std::deque<api::Id>& queue = m_playlistWrites[playlistId];
+    queue.push_back(trackId);
+    if (queue.size() == 1) {
+        writeNextToPlaylist(playlistId);
+    }
+}
+
+// Read, then write the whole list back: SoundCloud replaces a playlist's tracks as a whole, so the change is made to
+// the list as it is now (never to a cached copy), and one change at a time.
+void CatalogController::writeNextToPlaylist(api::Id playlistId)
+{
+    const auto queue = m_playlistWrites.constFind(playlistId);
+    if (queue == m_playlistWrites.cend() || queue->empty()) {
+        m_playlistWrites.remove(playlistId);
+        return;
+    }
+    const api::Id trackId = queue->front();
+    const auto failed = [this](ErrorCode code) {
+        Q_EMIT notice(QStringLiteral("error"), tr("Could not add the track: %1").arg(i18n::errorMessage(code)));
+    };
+    api::fetch(m_api.client(), api::endpoints::playlistForEdit(playlistId), this,
+               [this, playlistId, trackId, failed](Result<api::Playlist> current) {
+                   if (!current) {
+                       failed(current.error().code);
+                       finishPlaylistWrite(playlistId);
+                       return;
+                   }
+                   std::vector<api::Id> ids;
+                   ids.reserve(current->tracks.size() + 1);
+                   for (const api::Track& track : current->tracks) {
+                       ids.push_back(track.id);
+                   }
+                   if (std::ranges::find(ids, trackId) != ids.end()) {
+                       Q_EMIT notice(QStringLiteral("info"), tr("Already in “%1”.").arg(current->title));
+                       finishPlaylistWrite(playlistId);
+                       return;
+                   }
+                   ids.push_back(trackId);
+                   api::fetch(m_api.client(), api::endpoints::setPlaylistTracks(playlistId, ids), this,
+                              [this, playlistId, failed](Result<api::Playlist> updated) {
+                                  if (!updated) {
+                                      failed(updated.error().code);
+                                  } else {
+                                      Q_EMIT notice(QStringLiteral("success"),
+                                                    tr("Added to “%1”.").arg(updated->title));
+                                      playlistUpdated(*updated);
+                                  }
+                                  finishPlaylistWrite(playlistId);
+                              });
+               });
+}
+
+void CatalogController::finishPlaylistWrite(api::Id playlistId)
+{
+    const auto queue = m_playlistWrites.find(playlistId);
+    if (queue != m_playlistWrites.end() && !queue->empty()) {
+        queue->pop_front();
+    }
+    writeNextToPlaylist(playlistId);
+}
+
+void CatalogController::createPlaylist(const QString& title, bool isPrivate, qint64 trackId)
+{
+    if (!m_account.signedIn()) {
+        Q_EMIT notice(QStringLiteral("info"), tr("Sign in to add tracks to playlists."));
+        return;
+    }
+    const QString name = title.trimmed();
+    if (name.isEmpty()) {
+        return;
+    }
+    const std::vector<api::Id> ids{trackId};
+    api::fetch(
+        m_api.client(), api::endpoints::createPlaylist(name, isPrivate, ids), this,
+        [this](Result<api::Playlist> created) {
+            if (!created) {
+                Q_EMIT notice(QStringLiteral("error"),
+                              tr("Could not create the playlist: %1").arg(i18n::errorMessage(created.error().code)));
+                return;
+            }
+            Q_EMIT notice(QStringLiteral("success"), tr("Created “%1”.").arg(created->title));
+            if (m_loaded.contains(QStringLiteral("library"))) {
+                std::vector<api::Entry> entries = m_library.entries();
+                entries.insert(
+                    entries.begin(),
+                    {.item = std::move(*created), .at = QDateTime::currentDateTimeUtc(), .repostedBy = std::nullopt});
+                m_library.applyEntries(std::move(entries));
+            }
+        });
+}
+
+void CatalogController::playlistUpdated(const api::Playlist& playlist)
+{
+    if (const auto page = m_playlists.constFind(playlist.id); page != m_playlists.cend()) {
+        (*page)->reload();  // the write dropped the cached copy, so this reads the new list
+    }
+    std::vector<api::Entry> entries = m_library.entries();
+    for (api::Entry& entry : entries) {
+        if (auto* listed = std::get_if<api::Playlist>(&entry.item); listed != nullptr && listed->id == playlist.id) {
+            // Library rows carry neither tracks nor artwork: keep them that way, with the new count and title.
+            listed->title = playlist.title;
+            listed->trackCount = playlist.trackCount;
+            listed->durationMs = playlist.durationMs;
+            listed->lastModified = playlist.lastModified;
+            m_library.applyEntries(std::move(entries));
+            return;
+        }
+    }
 }
 
 void CatalogController::search(const QString& text, const QString& kind)

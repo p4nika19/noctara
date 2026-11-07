@@ -2,6 +2,9 @@
 
 #include "api/Parse.hpp"
 
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QStringList>
 #include <QUrlQuery>
 
@@ -60,6 +63,32 @@ QString idPath(const char* prefix, Id id, const char* suffix = "")
     return QLatin1StringView(prefix) + QString::number(id) + QLatin1StringView(suffix);
 }
 
+// A change for the signed-in account: never answered from or stored in the HTTP cache (a successful write also
+// drops the cached GET of the same URL, see cache::CachingTransport).
+template <class T>
+Endpoint<T> write(net::Method method, QUrl url, const QJsonObject& body, Result<T> (*parse)(const QByteArray&))
+{
+    Endpoint<T> endpoint;
+    endpoint.request.method = method;
+    endpoint.request.url = std::move(url);
+    if (!body.isEmpty()) {
+        endpoint.request.body = QJsonDocument(body).toJson(QJsonDocument::Compact);
+    }
+    endpoint.request.auth = Auth::Required;
+    endpoint.request.cache = net::CacheMode::Bypass;
+    endpoint.parse = parse;
+    return endpoint;
+}
+
+QJsonArray idArray(std::span<const Id> ids)
+{
+    QJsonArray array;
+    for (const Id id : ids) {
+        array.append(static_cast<qint64>(id));
+    }
+    return array;
+}
+
 }  // namespace
 
 bool isApiHost(const QUrl& url)
@@ -113,6 +142,54 @@ Endpoint<User> verifyToken(const QByteArray& token)
 Endpoint<Playlist> playlist(Id id)
 {
     return get<Playlist>(apiUrl(idPath("/playlists/", id)), parse::playlist, kMetadata);
+}
+
+Endpoint<Track> trackDetail(Id id)
+{
+    return get<Track>(apiUrl(idPath("/tracks/", id)), parse::trackDetail, kMetadata);
+}
+
+Endpoint<Page<Entry>> trackPlaylists(Id track, int limit)
+{
+    return list(idPath("/tracks/", track, "/playlists_without_albums"), limit, kListing);
+}
+
+Endpoint<Page<Comment>> comments(Id track, int limit)
+{
+    QList<std::pair<QString, QString>> parameters{{QStringLiteral("threaded"), QStringLiteral("0")},
+                                                  {QStringLiteral("filter_replies"), QStringLiteral("0")}};
+    parameters.append(paging(limit));
+    return get<Page<Comment>>(apiUrl(idPath("/tracks/", track, "/comments"), parameters), parse::comments, kVolatile);
+}
+
+Endpoint<Done> likeTrack(Id me, Id track, bool like)
+{
+    return write<Done>(like ? net::Method::Put : net::Method::Delete,
+                       apiUrl(idPath("/users/", me, "/track_likes/") + QString::number(track)), {}, parse::nothing);
+}
+
+Endpoint<Playlist> playlistForEdit(Id id)
+{
+    Endpoint<Playlist> endpoint = playlist(id);
+    endpoint.request.cache = net::CacheMode::Refresh;
+    endpoint.request.auth = Auth::Required;
+    return endpoint;
+}
+
+Endpoint<Playlist> setPlaylistTracks(Id playlist, std::span<const Id> tracks)
+{
+    QJsonObject body{{QStringLiteral("tracks"), idArray(tracks)}};
+    return write<Playlist>(net::Method::Put, apiUrl(idPath("/playlists/", playlist)),
+                           QJsonObject{{QStringLiteral("playlist"), body}}, parse::playlist);
+}
+
+Endpoint<Playlist> createPlaylist(const QString& title, bool isPrivate, std::span<const Id> tracks)
+{
+    QJsonObject body{{QStringLiteral("title"), title},
+                     {QStringLiteral("sharing"), isPrivate ? QStringLiteral("private") : QStringLiteral("public")},
+                     {QStringLiteral("tracks"), idArray(tracks)}};
+    return write<Playlist>(net::Method::Post, apiUrl(QStringLiteral("/playlists")),
+                           QJsonObject{{QStringLiteral("playlist"), body}}, parse::playlist);
 }
 
 Endpoint<Page<Entry>> search(const QString& query, SearchKind kind, int limit)
@@ -176,14 +253,6 @@ Endpoint<Page<Entry>> trending(const QString& genre)
     return get<Page<Entry>>(
         apiUrl(QStringLiteral("/system-playlists/soundcloud:system-playlists:trending-by-genre:") + id),
         parse::playlistTracks, kListing);
-}
-
-Endpoint<Page<Entry>> next(const Endpoint<Page<Entry>>& first, const QString& href)
-{
-    Endpoint<Page<Entry>> endpoint = first;
-    const QUrl url(href);
-    endpoint.request.url = isApiHost(url) ? url : QUrl();
-    return endpoint;
 }
 
 Endpoint<Waveform> waveform(const QString& url)
