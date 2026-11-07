@@ -174,6 +174,26 @@ TEST_SUITE("theme.palette")
             }
         }
     }
+
+    TEST_CASE("a theme's own backdrop colour counts as a background for checks and enforcement")
+    {
+        const SchemeTones& tones = defaultTones(Scheme::Dark);
+        Palette palette = generatePalette({.scheme = Scheme::Dark, .glassOpacity = 0.5});
+        palette.backdrop = {{0x4c / 255.0, 0x56 / 255.0, 0x6a / 255.0}, 1.0};  // lighter than backdropMaxL
+
+        const auto failing = [](const std::vector<ContrastResult>& results) {
+            return std::ranges::count_if(results, [](const ContrastResult& r) { return !r.passes(); });
+        };
+        CHECK(failing(checkContrast(palette, Scheme::Dark, tones)) > 0);
+
+        const Palette fixed = enforceReadable(palette, Scheme::Dark, tones);
+        for (const color::Rgba& surface : {fixed.surfaceBase, fixed.surfaceRaised, fixed.surfaceOverlay}) {
+            const color::Srgb bg = color::composite(surface, fixed.backdrop.rgb);
+            CHECK(color::contrastRatio(color::composite(fixed.textSecondary, bg), bg) >= kContrastText - 1e-9);
+            CHECK(color::contrastRatio(color::composite(fixed.textTertiary, bg), bg) >= kContrastText - 1e-9);
+        }
+        CHECK(failing(checkContrast(fixed, Scheme::Dark, tones)) == 0);
+    }
 }
 
 TEST_SUITE("theme.object")

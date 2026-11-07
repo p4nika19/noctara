@@ -143,22 +143,26 @@ OkLch enforce(OkLch fg, std::span<const Srgb> backgrounds, double target, Scheme
     return fg;
 }
 
-// Opaque colours that text and icons may end up on: each glass tint over both backdrop bounds,
-// the solid surfaces, and the backdrop bounds themselves.
+// Opaque colours that text and icons may end up on: each glass tint over both backdrop bounds and
+// over the palette's own backdrop (a user theme may move it outside the bounds), the solid surfaces,
+// and the backdrops themselves.
 std::vector<Srgb> worstBackgrounds(const Palette& p, const SchemeTones& tones)
 {
     std::vector<Srgb> out;
     const Srgb lo = gray(tones.backdropMinL);
     const Srgb hi = gray(tones.backdropMaxL);
+    const Srgb base = p.backdrop.rgb;
     for (const Rgba* surface : {&p.surfaceBase, &p.surfaceRaised, &p.surfaceOverlay}) {
         out.push_back(color::composite(*surface, lo));
         out.push_back(color::composite(*surface, hi));
+        out.push_back(color::composite(*surface, base));
     }
     for (const Rgba* solid : {&p.solidBase, &p.solidRaised, &p.solidOverlay}) {
         out.push_back(solid->rgb);
     }
     out.push_back(lo);
     out.push_back(hi);
+    out.push_back(base);
     return out;
 }
 
