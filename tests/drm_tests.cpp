@@ -499,6 +499,39 @@ TEST_SUITE("drm.host")
         CHECK_FALSE(findHelper(profile.path(), {}));
     }
 
+    TEST_CASE("a helper that turns up after a missing one clears the failure")
+    {
+        QTemporaryDir profile;
+        const DrmHost::Options options = mockOptions(profile.path());
+        DrmHost::Options missing = options;
+        missing.command.reset();
+        DrmHost host(missing);
+        host.setMissingReason(Error{ErrorCode::ProtectedPlayerInstalling, "setting up the helper"});
+        CHECK_FALSE(host.send(ping()));
+        REQUIRE(host.status() == DrmHost::Status::Failed);
+        REQUIRE(host.lastError().code == ErrorCode::ProtectedPlayerInstalling);
+
+        QSignalSpy status(&host, &DrmHost::statusChanged);
+        host.setCommand(options.command);
+        CHECK(host.status() == DrmHost::Status::Stopped);
+        CHECK(host.lastError().code != ErrorCode::ProtectedPlayerInstalling);
+        CHECK(status.size() == 1);
+
+        // Any other failure is not cleared by a command.
+        host.setCommand(std::nullopt);
+        CHECK_FALSE(host.send(ping()));
+        host.setNetwork(planNetwork([] {
+            net::NetworkConfig config = directConfig();
+            config.transport.offline = true;
+            return config;
+        }()));
+        CHECK_FALSE(host.send(ping()));
+        REQUIRE(host.lastError().code == ErrorCode::Offline);
+        host.setCommand(options.command);
+        CHECK(host.status() == DrmHost::Status::Failed);
+        CHECK(host.lastError().code == ErrorCode::Offline);
+    }
+
     TEST_CASE("real drm helper: castlabs Electron starts headless with Widevine" * doctest::skip())
     {
         const auto command = helperIn(QStringLiteral(NOCTARA_SOURCE_DIR "/build/drm-helper"));

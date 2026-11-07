@@ -99,6 +99,12 @@ DrmHost::~DrmHost()
 void DrmHost::setCommand(std::optional<HelperCommand> command)
 {
     m_options.command = std::move(command);
+    // A failure that only said the helper was missing (or being set up) no longer holds.
+    if (m_options.command && !running() && m_status == Status::Failed &&
+        (m_error.code == ErrorCode::ProtectedPlayerMissing || m_error.code == ErrorCode::ProtectedPlayerInstalling)) {
+        m_error = Error{};
+        setStatus(Status::Stopped);
+    }
 }
 
 void DrmHost::setGpu(bool gpu)
