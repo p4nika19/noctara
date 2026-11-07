@@ -1049,16 +1049,21 @@ TEST_SUITE("media.backend")
         QSignalSpy failed(&backend, &IPlaybackBackend::failed);
         const QString url = QStringLiteral("https://cdn.test/changed.mp3");
         cache.origin.serve(url, {.body = fixture(QStringLiteral("sine.mp3")), .etag = "\"1\""});
-        cache.origin.failAfter(8000);  // the first response is cut; the cache asks again a moment later
+        // The first response stops at 8000 bytes until the test lets it go on, and is then cut; the cache asks again
+        // a moment later. Holding it keeps the retry from starting before the origin serves other media.
+        cache.origin.failAfter(8001);
+        cache.origin.pauseAfter(8000);
         backend.load({.info = trackInfo(QStringLiteral("changed"), cache::StreamProtocol::Progressive,
                                         QStringLiteral("audio/mpeg")),
                       .urls = Cache::urls(url)},
                      0, false);
         REQUIRE(test::waitUntil([&] { return cache.origin.count() == 1; }));
         (void)test::waitUntil([] { return false; }, 100);
+        REQUIRE(cache.origin.count() == 1);
         // The retry gets other media: the cache resets the entry under the reader the voice decodes from.
         cache.origin.serve(url, {.body = fixture(QStringLiteral("sine.mp3")), .etag = "\"2\""});
         cache.origin.failAfter(std::nullopt);
+        cache.origin.pauseAfter(std::nullopt);
         REQUIRE(pump(output, [&] { return !ended.isEmpty() || !failed.isEmpty(); }));
         CHECK_MESSAGE(failed.isEmpty(),
                       (failed.isEmpty() ? std::string() : failed.first().first().value<Error>().describe()));
