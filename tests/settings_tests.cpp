@@ -404,14 +404,13 @@ TEST_SUITE("settings.file")
         QSignalSpy issues(&file, &ConfigFile::reloadIssues);
 
         // A valid external edit is applied live.
-        REQUIRE(writeText(
-            path, "config_version = 6\n[appearance.theme]\nmode = \"light\"\n[appearance.glass]\ngrain = 0.5\n"));
+        const QByteArray header = "config_version = " + QByteArray::number(Schema::kConfigVersion) + '\n';
+        REQUIRE(writeText(path, header + "[appearance.theme]\nmode = \"light\"\n[appearance.glass]\ngrain = 0.5\n"));
         REQUIRE(test::waitUntil([&] { return store.stringValue(keys::ThemeMode) == QStringLiteral("light"); }));
         CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.5));
 
         // An invalid value keeps the last good one and reports the problem.
-        REQUIRE(writeText(path,
-                          "config_version = 6\n[appearance.theme]\nmode = \"light\"\n[appearance.glass]\ngrain = 7\n"));
+        REQUIRE(writeText(path, header + "[appearance.theme]\nmode = \"light\"\n[appearance.glass]\ngrain = 7\n"));
         REQUIRE(test::waitUntil([&] { return issues.count() > 0; }));
         CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.5));
 
