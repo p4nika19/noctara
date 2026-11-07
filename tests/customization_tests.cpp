@@ -174,6 +174,19 @@ rowHeight = 80
         CHECK(theme.space().rowHeight == doctest::Approx(rowBefore));
     }
 
+    TEST_CASE("a light accent container from a theme gets readable on-container text when contrast is enforced")
+    {
+        settings::SettingsStore store(settings::Schema::builtin());
+        REQUIRE(store.setUserValue(keys::ThemeMode, QStringLiteral("dark")));
+        REQUIRE(store.setUserValue(keys::AnimationSpeed, 0.0));
+        Theme theme(store, bundled());
+        std::vector<ThemeIssue> issues;
+        theme.setUserTheme(std::make_shared<const UserTheme>(
+            *parseUserTheme("[colors.dark]\naccentContainer = \"#e0e0e0\"\n", QStringLiteral("pale"), issues)));
+        CHECK(theme.colors().accentContainer.name() == QStringLiteral("#e0e0e0"));
+        CHECK(theme.contrastOk());
+    }
+
     TEST_CASE("a theme's accent seeds the palette when the cover art does not decide")
     {
         settings::SettingsStore store(settings::Schema::builtin());

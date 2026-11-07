@@ -344,6 +344,11 @@ Palette enforceReadable(const Palette& palette, Scheme scheme, const SchemeTones
     const Srgb accentStates[] = {p.accent.rgb, p.accentHover.rgb, p.accentPressed.rgb};
     const Scheme away = color::relativeLuminance(p.accent.rgb) > 0.18 ? Scheme::Light : Scheme::Dark;
     enforceRole(p.onAccent, accentStates, kContrastText, away);
+    // Text on the accent container, likewise away from the (possibly overridden) container.
+    const Srgb containerBg[] = {p.accentContainer.rgb};
+    const Scheme awayFromContainer =
+        color::relativeLuminance(p.accentContainer.rgb) > 0.18 ? Scheme::Light : Scheme::Dark;
+    enforceRole(p.onAccentContainer, containerBg, kContrastText, awayFromContainer);
     return p;
 }
 

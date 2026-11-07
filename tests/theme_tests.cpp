@@ -194,6 +194,23 @@ TEST_SUITE("theme.palette")
         }
         CHECK(failing(checkContrast(fixed, Scheme::Dark, tones)) == 0);
     }
+
+    TEST_CASE("a theme's light accent container gets readable on-container text when enforcing")
+    {
+        for (const Scheme scheme : {Scheme::Dark, Scheme::Light}) {
+            CAPTURE(std::string(scheme == Scheme::Dark ? "dark" : "light"));
+            const SchemeTones& tones = defaultTones(scheme);
+            Palette palette = generatePalette({.scheme = scheme});
+            // A light container in Midnight, a dark one in Frost: the generated on-container text vanishes on it.
+            palette.accentContainer = scheme == Scheme::Dark ? color::Rgba{{0xe0 / 255.0, 0xe0 / 255.0, 1.0}, 1.0}
+                                                             : color::Rgba{{0.1, 0.1, 0.2}, 1.0};
+            const Palette fixed = enforceReadable(palette, scheme, tones);
+            for (const ContrastResult& r : checkContrast(fixed, scheme, tones)) {
+                INFO("role=", std::string(r.role), " ratio=", r.ratio);
+                CHECK(r.passes());
+            }
+        }
+    }
 }
 
 TEST_SUITE("theme.object")
