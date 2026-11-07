@@ -484,6 +484,28 @@ TEST_SUITE("settings.file")
         CHECK(readWholeFile(path).value_or(QByteArray()).contains("\ngrain = 0.2"));
     }
 
+    TEST_CASE("importing an unreadable profile reports a read error, not a syntax error")
+    {
+        if (::geteuid() == 0) {
+            return;  // root reads the file regardless of its permissions
+        }
+        QTemporaryDir dir;
+        REQUIRE(dir.isValid());
+        const QString profile = dir.filePath(QStringLiteral("profile.toml"));
+        REQUIRE(writeText(profile, "config_version = 6\n"));
+        REQUIRE(QFile::setPermissions(profile, {}));
+
+        SettingsStore store(schema());
+        ConfigFile file(store, dir.filePath(QStringLiteral("config.toml")), {});
+        const auto imported = file.importFrom(profile);
+        REQUIRE_FALSE(imported.has_value());
+        CHECK(test::errorOf(imported) == ErrorCode::IoError);
+
+        const auto broken = dir.filePath(QStringLiteral("broken.toml"));
+        REQUIRE(writeText(broken, "this is = = not toml"));
+        CHECK(test::errorOf(file.importFrom(broken)) == ErrorCode::ConfigSyntaxError);
+    }
+
     TEST_CASE("the system config file is the first XDG_CONFIG_DIRS entry that has one")
     {
         QTemporaryDir dir;

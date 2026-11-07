@@ -288,9 +288,12 @@ Result<ConfigIssues> ConfigFile::importFrom(const QString& path)
         return fail(ErrorCode::NotFound, path.toStdString());
     }
     if (!loaded.parsed.syntaxOk) {
-        return fail(ErrorCode::ConfigSyntaxError, loaded.parsed.issues.isEmpty()
-                                                      ? std::string()
-                                                      : loaded.parsed.issues.front().logText().toStdString());
+        if (loaded.parsed.issues.isEmpty()) {
+            return fail(ErrorCode::ConfigSyntaxError);
+        }
+        // The first issue says why: a TOML syntax error, or a read error for a file that cannot be opened.
+        const ConfigIssue& issue = loaded.parsed.issues.front();
+        return fail(issue.code, issue.logText().toStdString());
     }
     m_unknownToml = loaded.parsed.unknownToml;
     m_store.replaceLayer(Layer::User, loaded.parsed.values);
