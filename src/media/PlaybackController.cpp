@@ -478,7 +478,7 @@ void PlaybackController::startCurrent(std::int64_t startMs, bool paused)
                 return;
             }
             if (now->track.stub) {
-                skipAfterError(ErrorCode::NotPlayable);
+                skipAfterError(ErrorCode::NotPlayable, !m_pendingPlay);
                 return;
             }
             startCurrent(startMs, !m_pendingPlay);  // paused or stopped meanwhile: it loads paused
@@ -489,7 +489,7 @@ void PlaybackController::startCurrent(std::int64_t startMs, bool paused)
     ErrorCode why = ErrorCode::NotPlayable;
     const std::optional<PlaybackSource> source = sourceFor(*item, &why);
     if (!source) {
-        skipAfterError(why);
+        skipAfterError(why, paused);
         return;
     }
     m_started = true;
@@ -627,7 +627,7 @@ void PlaybackController::onFailed(const Error& error)
     case ErrorCode::ProtectedPlayerMissing:
     case ErrorCode::ProtectedPlayerInstalling:
     case ErrorCode::ProtectedPlayerFailed:
-    case ErrorCode::ProtectedNetworkUnsupported: skipAfterError(error.code); return;
+    case ErrorCode::ProtectedNetworkUnsupported: skipAfterError(error.code, !m_pendingPlay); return;
     default:
         // A network problem: the track stays; playing again retries from where it stopped.
         m_error = static_cast<int>(error.code);
@@ -636,7 +636,7 @@ void PlaybackController::onFailed(const Error& error)
     }
 }
 
-void PlaybackController::skipAfterError(ErrorCode code)
+void PlaybackController::skipAfterError(ErrorCode code, bool paused)
 {
     m_error = static_cast<int>(code);
     m_started = false;
@@ -651,7 +651,7 @@ void PlaybackController::skipAfterError(ErrorCode code)
     const int previous = m_queue.current();
     if (m_queue.advance(true)) {
         m_queueModel.currentMoved(previous);
-        startCurrent(0, false);
+        startCurrent(0, paused);
     } else {
         m_active->stop();
     }
@@ -718,6 +718,7 @@ void PlaybackController::play()
         startCurrent(position(), false);
         return;
     }
+    m_pendingPlay = true;  // a track loaded paused: a failure from here on skips to one that plays
     m_active->play();
 }
 

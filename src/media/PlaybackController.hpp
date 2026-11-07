@@ -191,7 +191,8 @@ private:
     void onAdvanced();
     void onEnded();
     void onFailed(const Error& error);
-    void skipAfterError(ErrorCode code);
+    // Moves on past an item that cannot play; the next one starts paused when `paused`.
+    void skipAfterError(ErrorCode code, bool paused);
     void autoplay();
     void loadWaveform();
     void updateCachedRanges(bool force);
@@ -224,7 +225,7 @@ private:
     QObject m_requests;  // context of API answers; deleted with the controller, which drops them
     std::uint64_t m_trackSerial = 0;
     bool m_started = false;      // the current item was handed to a backend
-    bool m_pendingPlay = false;  // meant to play while the current item is still being prepared (hydrated)
+    bool m_pendingPlay = false;  // meant to play (while it is hydrated, and when an error skips it)
     bool m_ended = false;        // the queue played to its end
     bool m_nextPrepared = false;
     // The saved queue is still being looked up, or that failed: until a queue exists, it stays saved as it was.

@@ -1407,6 +1407,30 @@ TEST_SUITE("media.controller")
         CHECK_FALSE(player.backend.next.has_value());
     }
 
+    TEST_CASE("skipping an unplayable track keeps playback paused when it was paused")
+    {
+        Player player;
+        player.controller->playTracks({apiTrack(1), apiTrack(2, true), apiTrack(3), apiTrack(4), apiTrack(5)}, 0, {});
+        player.controller->pause();
+        player.controller->next();  // onto the protected track, which cannot play here
+        REQUIRE(player.backend.loads.size() == 2);
+        CHECK(player.loadedId(1) == u"3");
+        CHECK(player.backend.state() == BackendState::Paused);
+        CHECK_FALSE(player.controller->playing());
+
+        // A paused load that fails is skipped paused too; once play was pressed, the skip plays on.
+        Q_EMIT player.backend.failed(Error{.code = ErrorCode::NotFound, .detail = "gone"});
+        REQUIRE(player.backend.loads.size() == 3);
+        CHECK(player.loadedId(2) == u"4");
+        CHECK(player.backend.state() == BackendState::Paused);
+        player.controller->play();
+        Q_EMIT player.backend.failed(Error{.code = ErrorCode::NotFound, .detail = "gone"});
+        REQUIRE(player.backend.loads.size() == 4);
+        CHECK(player.loadedId(3) == u"5");
+        CHECK(player.backend.state() == BackendState::Playing);
+        CHECK(player.controller->playing());
+    }
+
     TEST_CASE("a following track that is looked up first disarms the one prepared before it")
     {
         Player player({}, {{3, apiTrack(3)}});
