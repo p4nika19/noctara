@@ -251,6 +251,21 @@ TEST_SUITE("cache.hls")
                                    base)) == ErrorCode::NotCacheable);
         CHECK(test::errorOf(parseHls("not a playlist", base)) == ErrorCode::ParseError);
     }
+
+    TEST_CASE("byte ranges whose end does not fit in 64 bits are rejected")
+    {
+        const QUrl base(QStringLiteral("https://cdn.test/"));
+        CHECK(test::errorOf(parseHls("#EXTM3U\n#EXTINF:1,\n#EXT-X-BYTERANGE:9223372036854775807@9223372036854775807\n"
+                                     "seg.ts\n#EXT-X-ENDLIST\n",
+                                     base)) == ErrorCode::ParseError);
+        // Without an offset the range follows the previous one, whose end is already at the limit.
+        CHECK(test::errorOf(parseHls("#EXTM3U\n#EXTINF:1,\n#EXT-X-BYTERANGE:9223372036854775806@1\nseg.ts\n"
+                                     "#EXTINF:1,\n#EXT-X-BYTERANGE:1\nseg.ts\n#EXT-X-ENDLIST\n",
+                                     base)) == ErrorCode::ParseError);
+        CHECK(test::errorOf(parseHls("#EXTM3U\n#EXT-X-MAP:URI=\"i.mp4\",BYTERANGE=\"2@9223372036854775807\"\n"
+                                     "#EXTINF:1,\nseg.ts\n#EXT-X-ENDLIST\n",
+                                     base)) == ErrorCode::ParseError);
+    }
 }
 
 TEST_SUITE("cache.http.policy")

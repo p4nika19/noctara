@@ -3,6 +3,7 @@
 #include <QList>
 
 #include <cmath>
+#include <limits>
 #include <numeric>
 
 namespace noctara::cache {
@@ -49,10 +50,14 @@ bool parseByteRange(QByteArrayView text, std::int64_t previousEnd, HlsSegment& s
     }
     if (at >= 0) {
         segment.rangeOffset = text.sliced(at + 1).toLongLong(&ok);
-        return ok && segment.rangeOffset >= 0;
+        if (!ok || segment.rangeOffset < 0) {
+            return false;
+        }
+    } else {
+        segment.rangeOffset = std::max<std::int64_t>(0, previousEnd);
     }
-    segment.rangeOffset = std::max<std::int64_t>(0, previousEnd);
-    return true;
+    // The end (offset + length) must be representable: it becomes the next range's offset and a Range header.
+    return segment.rangeOffset <= std::numeric_limits<std::int64_t>::max() - segment.rangeLength;
 }
 
 }  // namespace
