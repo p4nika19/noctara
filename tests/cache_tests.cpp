@@ -1433,7 +1433,9 @@ TEST_SUITE("cache.service")
             std::optional<CacheUsage> usage;
             REQUIRE(test::waitUntil([&] {
                 service.usage(&context, [&](CacheUsage u) { usage = u; });
-                test::waitUntil([&] { return usage.has_value(); });
+                if (!test::waitUntil([&] { return usage.has_value(); })) {
+                    return false;
+                }
                 const bool stored = usage->audio.completeBytes > 0;
                 usage.reset();
                 return stored;
