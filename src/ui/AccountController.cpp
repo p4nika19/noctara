@@ -175,11 +175,6 @@ void AccountController::signInWithToken(const QString& token)
     verifyCandidate(trimmed);
 }
 
-void AccountController::refresh()
-{
-    checkSession();
-}
-
 void AccountController::verifyCandidate(const QByteArray& token)
 {
     m_verify.cancel();

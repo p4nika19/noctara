@@ -76,8 +76,6 @@ public:
 
     Q_INVOKABLE void signInWithToken(const QString& token);
     Q_INVOKABLE void signOut();
-    // Re-checks the current session with SoundCloud (and expires it if the token stopped working).
-    Q_INVOKABLE void refresh();
     // Discovery reads profile metadata only. importBrowserToken() is called after explicit in-app consent.
     Q_INVOKABLE void discoverBrowsers();
     Q_INVOKABLE void importBrowserToken(const QString& profileId);

@@ -90,11 +90,6 @@ QStringList ThemesController::selectedIssues() const
     return out;
 }
 
-QString ThemesController::directory() const
-{
-    return m_library.directory();
-}
-
 void ThemesController::select(const QString& id)
 {
     if (const Result<void> set = m_settings.setUserValue(settings::keys::CustomTheme, id); !set) {
@@ -135,11 +130,6 @@ void ThemesController::exportTheme(const QString& id, const QUrl& file)
 void ThemesController::openFolder()
 {
     QDesktopServices::openUrl(QUrl::fromLocalFile(m_library.directory()));
-}
-
-void ThemesController::reload()
-{
-    m_library.rescan();
 }
 
 }  // namespace noctara::ui

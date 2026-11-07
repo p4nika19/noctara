@@ -156,7 +156,6 @@ void GraphicsInfo::watch(QQuickWindow* window)
                 qCCritical(lcGfx).noquote() << "scene graph error" << static_cast<int>(error) << message;
                 if (!m_deviceFailed) {
                     m_deviceFailed = true;
-                    Q_EMIT deviceFailedChanged();
                     Q_EMIT graphicsFailed(message);
                 }
             });

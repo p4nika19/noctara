@@ -59,7 +59,6 @@ public:
 
     // Returns an empty string on success, otherwise a translated error message.
     Q_INVOKABLE QString setValue(const QString& key, const QVariant& value);
-    Q_INVOKABLE QVariant value(const QString& key) const;
     Q_INVOKABLE void reset(const QString& key);
     Q_INVOKABLE void resetSection(const QString& sectionId);
     Q_INVOKABLE void resetCategory(const QString& categoryId);

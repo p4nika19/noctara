@@ -287,12 +287,6 @@ QString SettingsController::setValue(const QString& key, const QVariant& value)
     return {};
 }
 
-QVariant SettingsController::value(const QString& key) const
-{
-    const auto* def = m_store.schema().find(key.toStdString());
-    return def != nullptr ? m_store.value(def->key) : QVariant();
-}
-
 void SettingsController::reset(const QString& key)
 {
     if (const auto* def = m_store.schema().find(key.toStdString())) {

@@ -45,7 +45,6 @@ class GraphicsInfo : public QObject {
     Q_PROPERTY(bool ndcYUp READ ndcYUp CONSTANT)
     Q_PROPERTY(int adapterCount READ adapterCount CONSTANT)
     Q_PROPERTY(bool noticePending READ noticePending NOTIFY noticePendingChanged)
-    Q_PROPERTY(bool deviceFailed READ deviceFailed NOTIFY deviceFailedChanged)
 
 public:
     explicit GraphicsInfo(GraphicsDecision decision, QObject* parent = nullptr);
@@ -61,7 +60,6 @@ public:
     [[nodiscard]] bool ndcYUp() const noexcept { return m_decision.hardware && m_decision.api != Api::Vulkan; }
     [[nodiscard]] int adapterCount() const;
     [[nodiscard]] bool noticePending() const noexcept { return m_noticePending; }
-    [[nodiscard]] bool deviceFailed() const noexcept { return m_deviceFailed; }
 
     Q_INVOKABLE void acknowledgeNotice();
 
@@ -70,7 +68,6 @@ public:
 
 Q_SIGNALS:
     void noticePendingChanged();
-    void deviceFailedChanged();
     // Emitted when rendering cannot continue on the GPU; the app should switch to software and restart.
     void graphicsFailed(const QString& message);
 

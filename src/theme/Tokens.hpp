@@ -89,7 +89,6 @@ class SpacingTokens {
     Q_PROPERTY(qreal nowPlayingHeight MEMBER nowPlayingHeight CONSTANT)
     Q_PROPERTY(qreal rowHeight MEMBER rowHeight CONSTANT)
     Q_PROPERTY(qreal pageMargin MEMBER pageMargin CONSTANT)
-    Q_PROPERTY(qreal contentMaxWidth MEMBER contentMaxWidth CONSTANT)
     Q_PROPERTY(qreal focusRingWidth MEMBER focusRingWidth CONSTANT)
     Q_PROPERTY(qreal hairline MEMBER hairline CONSTANT)
 
@@ -112,7 +111,6 @@ public:
     qreal nowPlayingHeight = 80;
     qreal rowHeight = 56;
     qreal pageMargin = 32;
-    qreal contentMaxWidth = 1400;
     qreal focusRingWidth = 2;
     qreal hairline = 1;
 
@@ -151,7 +149,6 @@ class TypographyTokens {
     Q_PROPERTY(QFont bodyStrong MEMBER bodyStrong CONSTANT)
     Q_PROPERTY(QFont label MEMBER label CONSTANT)
     Q_PROPERTY(QFont caption MEMBER caption CONSTANT)
-    Q_PROPERTY(QFont overline MEMBER overline CONSTANT)
     Q_PROPERTY(QFont eyebrow MEMBER eyebrow CONSTANT)        // small uppercase kicker above headings
     Q_PROPERTY(QFont groupTitle MEMBER groupTitle CONSTANT)  // mono uppercase group labels
     Q_PROPERTY(QFont mono MEMBER mono CONSTANT)
@@ -167,7 +164,6 @@ public:
     QFont bodyStrong;
     QFont label;
     QFont caption;
-    QFont overline;
     QFont eyebrow;
     QFont groupTitle;
     QFont mono;  // timings, bitrate, counters, hex input (tabular)
@@ -187,8 +183,6 @@ class MotionTokens {
     Q_PROPERTY(int shimmer MEMBER shimmer CONSTANT)
     Q_PROPERTY(int easingStandard MEMBER easingStandard CONSTANT)
     Q_PROPERTY(int easingEmphasized MEMBER easingEmphasized CONSTANT)
-    Q_PROPERTY(int easingExit MEMBER easingExit CONSTANT)
-    Q_PROPERTY(qreal overshoot MEMBER overshoot CONSTANT)
     Q_PROPERTY(bool reduced MEMBER reduced CONSTANT)
     Q_PROPERTY(bool enabled MEMBER enabled CONSTANT)
 
@@ -202,8 +196,6 @@ public:
     int shimmer = 1400;
     int easingStandard = 0;  // QEasingCurve::Type, filled in by Theme
     int easingEmphasized = 0;
-    int easingExit = 0;
-    qreal overshoot = 1.2;  // OutBack amplitude for press "squash"/spring feel
     bool reduced = false;
     bool enabled = true;
     friend bool operator==(const MotionTokens&, const MotionTokens&) = default;

@@ -274,7 +274,6 @@ void Theme::updateFonts()
     m_font.bodyStrong = makeFont(bodyChain, 14 * factor, 650);
     m_font.label = makeFont(bodyChain, 13 * factor, 600);
     m_font.caption = makeFont(bodyChain, 12 * factor, 450);
-    m_font.overline = makeFont(bodyChain, 11 * factor, 650, false, 0.8 * factor);
     m_font.eyebrow = makeFont(bodyChain, 11 * factor, 800, false, 1.7 * factor);
     m_font.eyebrow.setCapitalization(QFont::AllUppercase);
     m_font.groupTitle = makeFont(monoChain, 11 * factor, 500, false, 1.5 * factor);
@@ -309,8 +308,6 @@ void Theme::updateMotion()
     motion.easingStandard = QEasingCurve::OutExpo;
     // Decelerating curves only: nothing travels past its target and springs back.
     motion.easingEmphasized = QEasingCurve::OutQuint;
-    motion.easingExit = QEasingCurve::InCubic;
-    motion.overshoot = 0.0;
     m_motion = motion;
     Q_EMIT motionChanged();
 }

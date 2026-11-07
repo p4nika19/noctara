@@ -31,7 +31,7 @@ SpacingTokens SpacingTokens::scaled(double factor) const
     for (qreal* value :
          {&out.xxs, &out.xs, &out.sm, &out.md, &out.lg, &out.xl, &out.xxl, &out.xxxl, &out.controlHeight,
           &out.controlHeightSmall, &out.iconSize, &out.iconSizeSmall, &out.iconSizeLarge, &out.navRailWidth,
-          &out.navRailWidthExpanded, &out.nowPlayingHeight, &out.rowHeight, &out.pageMargin, &out.contentMaxWidth}) {
+          &out.navRailWidthExpanded, &out.nowPlayingHeight, &out.rowHeight, &out.pageMargin}) {
         *value *= factor;
     }
     return out;
