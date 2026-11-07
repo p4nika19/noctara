@@ -133,7 +133,10 @@ TEST_SUITE("i18n")
     TEST_CASE("every error code has a translated Russian message")
     {
         Fixture f("ru");
-        for (int code = 0; code <= static_cast<int>(ErrorCode::Forbidden); ++code) {
+        constexpr auto kLast = static_cast<int>(ErrorCode::LicenseDenied);
+        // errorCodeName names every enumerator (-Wswitch), so a code added after kLast has a name: move kLast then.
+        REQUIRE(errorCodeName(static_cast<ErrorCode>(kLast + 1)) == "Unknown");
+        for (int code = 0; code <= kLast; ++code) {
             const auto error = static_cast<ErrorCode>(code);
             const QString russian = i18n::errorMessage(error);
             INFO(std::string(errorCodeName(error)));
