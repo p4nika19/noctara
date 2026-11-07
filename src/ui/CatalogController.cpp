@@ -97,6 +97,9 @@ void CatalogController::accountChanged()
     if (id == m_accountId || (id == 0 && m_account.signedIn())) {
         return;  // unchanged, or signed in but not confirmed yet (the remembered account stands in meanwhile)
     }
+    if (m_account.state() == AccountController::Verifying) {
+        return;  // a candidate token is being checked: the account changes only once it is accepted
+    }
     const qint64 previous = m_accountId;
     m_accountId = id;
     // Saved lists belong to one account: another account (or none) never sees them, and they are deleted.

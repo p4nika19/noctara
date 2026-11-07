@@ -15,6 +15,8 @@
 #include "ui/AccountController.hpp"
 #include "ui/CatalogController.hpp"
 
+#include <QDir>
+#include <QFile>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 
@@ -523,5 +525,51 @@ TEST_SUITE("ui.catalog")
         CHECK(test::waitUntil([&] { return streamWith("token-b"); }, 3000));
         CHECK(test::waitUntil([&] { return !catalog.feed()->loading(); }, 3000));
         CHECK(catalog.feed()->errorCode() == -1);
+    }
+
+    TEST_CASE("checking a candidate token keeps the saved lists of an unconfirmed saved session")
+    {
+        settings::SettingsStore store(settings::Schema::builtin());
+        REQUIRE(store.setUserValue(settings::keys::ClientId, QString::fromLatin1(kClientId)));
+        FakeApi transport;
+        transport.setHandler([](const net::Request& request) -> Result<net::Response> {
+            const QByteArray auth = FakeApi::header(request, QByteArrayLiteral("authorization"));
+            if (auth == "OAuth saved-token") {
+                return fail(ErrorCode::ConnectionFailed, "offline");  // the saved session stays unconfirmed
+            }
+            return FakeApi::reply(401, R"({"error":"401 - Unauthorized"})", jsonHeaders());
+        });
+        api::Session session;
+        api::ApiService service(store, transport, session, {});
+        auth::MemorySecretStore secrets;
+        secrets.write(QString::fromLatin1(kTokenKey), QStringLiteral("test"), "saved-token", &secrets,
+                      [](const Result<void>&) {});
+        QTemporaryDir dir;
+        REQUIRE(dir.isValid());
+        // A previous run left account 42's saved likes.
+        REQUIRE(QDir(dir.path()).mkpath(QStringLiteral("42")));
+        QFile remembered(dir.filePath(QStringLiteral("account")));
+        REQUIRE(remembered.open(QIODevice::WriteOnly));
+        remembered.write("42");
+        remembered.close();
+        QFile likes(dir.filePath(QStringLiteral("42/likes.json")));
+        REQUIRE(likes.open(QIODevice::WriteOnly));
+        likes.write(R"({"collection":[]})");
+        likes.close();
+        api::SnapshotStore snapshots(dir.path());
+        REQUIRE(snapshots.lastAccount() == 42);
+
+        ui::AccountController account(service.client(), session, secrets);
+        ui::CatalogController catalog(service, account, snapshots);
+        QSignalSpy notice(&account, &ui::AccountController::notice);
+        REQUIRE(test::waitUntil([&] { return account.signedIn(); }, 3000));
+        catalog.ensure(QStringLiteral("feed"));  // the remembered account stands in for the unconfirmed one
+
+        account.signInWithToken(QStringLiteral("wrong-token"));
+        REQUIRE(notice.wait(3000));
+        CHECK(account.signedIn());
+        snapshots.flush();
+        CHECK(QFile::exists(dir.filePath(QStringLiteral("42/likes.json"))));
+        CHECK(snapshots.lastAccount() == 42);
     }
 }
