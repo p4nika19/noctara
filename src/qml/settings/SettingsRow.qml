@@ -291,14 +291,25 @@ Item {
     }
     Component {
         id: numberFieldControl
-        TextField {
-            implicitWidth: 140 * Theme.scale
-            monospace: true
-            text: String(row.value)
-            inputMethodHints: Qt.ImhDigitsOnly
-            validator: IntValidator { bottom: row.minimum; top: row.maximum }
-            Accessible.name: row.label
-            onEditingFinished: if (acceptableInput && Number(text) !== Number(row.value)) row.commit(Number(text))
+        Row {
+            spacing: Theme.space.sm
+            TextField {
+                implicitWidth: 140 * Theme.scale
+                monospace: true
+                text: String(row.value)
+                inputMethodHints: Qt.ImhDigitsOnly
+                validator: IntValidator { bottom: row.minimum; top: row.maximum }
+                Accessible.name: row.label
+                onEditingFinished: if (acceptableInput && Number(text) !== Number(row.value)) row.commit(Number(text))
+            }
+            // The unit (MB, s, Mbit/s): the field alone does not say what the number means.
+            Text {
+                visible: row.unit.length > 0
+                anchors.verticalCenter: parent.verticalCenter
+                text: row.unit
+                font: Theme.font.mono
+                color: Theme.colors.textSecondary
+            }
         }
     }
     Component {

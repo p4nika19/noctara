@@ -1008,4 +1008,36 @@ TEST_SUITE("ui.settings-panes")
         REQUIRE(QMetaObject::invokeMethod(harness.window.get(), "calls", Q_RETURN_ARG(QVariant, calls)));
         CHECK(calls.toString() == QStringLiteral("save u:secret"));
     }
+
+    TEST_CASE("a number-field settings row shows its unit")
+    {
+        stub::singleton("Language", QStringLiteral("({localeName: 'en_US'})"));
+        stub::singleton("SettingsUi", QStringLiteral("({setValue: (key, value) => '', reset: key => {}})"));
+        stub::singleton("App", QStringLiteral("({showToast: (kind, text, action, id) => {}})"));
+        // 0..102400 MB in steps of 256 is too many steps for a slider, so the row edits it in a number field.
+        const WindowHarness harness(R"(import "../settings"
+        Window {
+            width: 600; height: 200; visible: true
+            property Item row: row
+            SettingsRow {
+                id: row
+                width: 600
+                key: "storage.audio.max_size_mb"; type: "int"; label: "Disk space for tracks"; description: ""
+                value: 2048; isDefault: true; options: []; minimum: 0; maximum: 102400; step: 256; unit: "MB"
+                requiresRestart: false; overridden: false; overrideHint: ""; shown: true; disabledReason: ""
+                section: "audio"; sectionLabel: "Audio"; sectionDescription: ""; categoryLabel: "Storage"
+                sectionStart: false; status: ""
+            }
+        })");
+        QQuickItem* row = harness.item("row");
+        REQUIRE(row->property("numberField").toBool());
+        bool unitShown = false;
+        for (auto* child : row->findChildren<QQuickItem*>()) {
+            if (child->isVisible() && child->inherits("QQuickText") &&
+                child->property("text").toString().contains(QStringLiteral("MB"))) {
+                unitShown = true;
+            }
+        }
+        CHECK(unitShown);
+    }
 }
