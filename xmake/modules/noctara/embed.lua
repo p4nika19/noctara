@@ -8,7 +8,18 @@ function find_qt_tool(target, name)
         if dir then table.insert(dirs, dir) end
     end
     local tool = find_file(name, dirs)
-    assert(tool and os.isexec(tool), name .. " not found in the Qt installation")
+    if not (tool and os.isexec(tool)) then
+        -- The tools ship in separate distribution packages; say which one is missing.
+        local packages = {
+            lrelease = "Arch: qt6-tools, Debian/Ubuntu: qt6-l10n-tools",
+            lupdate = "Arch: qt6-tools, Debian/Ubuntu: qt6-l10n-tools",
+            qsb = "Arch: qt6-shadertools, Debian/Ubuntu: qt6-shader-baker",
+            rcc = "Arch: qt6-base, Debian/Ubuntu: qt6-base-dev-tools",
+            moc = "Arch: qt6-base, Debian/Ubuntu: qt6-base-dev-tools",
+        }
+        local hint = packages[name] and (" (install " .. packages[name] .. "; see README.md)") or ""
+        raise(name .. " not found in the Qt installation" .. hint)
+    end
     return tool
 end
 
