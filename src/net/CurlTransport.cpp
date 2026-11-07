@@ -55,7 +55,10 @@ int defaultPort(const QUrl& url)
 
 QByteArray resolveEntry(const QString& host, int port, const std::vector<IpAddress>& addresses)
 {
-    QByteArray entry = host.toLatin1() + ':' + QByteArray::number(port) + ':';
+    // An IPv6 literal host needs its brackets: libcurl splits an entry at the first ':' outside them.
+    const auto literal = IpAddress::parse(host);
+    const QString name = literal && literal->family() == AddressFamily::V6 ? u'[' + host + u']' : host;
+    QByteArray entry = name.toLatin1() + ':' + QByteArray::number(port) + ':';
     for (std::size_t i = 0; i < addresses.size(); ++i) {
         entry += (i == 0 ? "" : ",") + addresses[i].toUrlHost().toLatin1();
     }

@@ -186,21 +186,33 @@ QByteArray Stream::readHead(QByteArray& rest)
     return data.left(end);
 }
 
-TcpServer::TcpServer(Handler handler, std::uint16_t port)
+TcpServer::TcpServer(Handler handler, std::uint16_t port, bool ipv6)
     : m_handler(std::move(handler))
 {
-    m_listen = ::socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    m_listen = ::socket(ipv6 ? AF_INET6 : AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
     const int one = 1;
     ::setsockopt(m_listen, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-    sockaddr_in address{};
-    address.sin_family = AF_INET;
-    address.sin_port = htons(port);
-    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    ::bind(m_listen, reinterpret_cast<sockaddr*>(&address), sizeof(address));
-    ::listen(m_listen, 64);
-    socklen_t length = sizeof(address);
-    ::getsockname(m_listen, reinterpret_cast<sockaddr*>(&address), &length);
-    m_port = ntohs(address.sin_port);
+    if (ipv6) {
+        sockaddr_in6 address{};
+        address.sin6_family = AF_INET6;
+        address.sin6_port = htons(port);
+        address.sin6_addr = in6addr_loopback;
+        ::bind(m_listen, reinterpret_cast<sockaddr*>(&address), sizeof(address));
+        ::listen(m_listen, 64);
+        socklen_t length = sizeof(address);
+        ::getsockname(m_listen, reinterpret_cast<sockaddr*>(&address), &length);
+        m_port = ntohs(address.sin6_port);
+    } else {
+        sockaddr_in address{};
+        address.sin_family = AF_INET;
+        address.sin_port = htons(port);
+        address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+        ::bind(m_listen, reinterpret_cast<sockaddr*>(&address), sizeof(address));
+        ::listen(m_listen, 64);
+        socklen_t length = sizeof(address);
+        ::getsockname(m_listen, reinterpret_cast<sockaddr*>(&address), &length);
+        m_port = ntohs(address.sin_port);
+    }
     m_wake = ::eventfd(0, EFD_CLOEXEC);
     m_acceptor = std::jthread([this](const std::stop_token& stop) {
         std::set<int> open;
@@ -292,20 +304,22 @@ TestCertificate::~TestCertificate()
     SSL_CTX_free(static_cast<SSL_CTX*>(m_context));
 }
 
-HttpServer::HttpServer(Handler handler, const TestCertificate* tls)
+HttpServer::HttpServer(Handler handler, const TestCertificate* tls, bool ipv6)
     : m_handler(std::move(handler))
     , m_tls(tls)
-    , m_server([this](int fd) {
-        if (m_tls != nullptr) {
-            TlsStream stream(fd, static_cast<SSL_CTX*>(m_tls->context()));
-            if (stream.ok()) {
-                serve(stream);
-            }
-        } else {
-            FdStream stream(fd);
-            serve(stream);
-        }
-    })
+    , m_server(
+          [this](int fd) {
+              if (m_tls != nullptr) {
+                  TlsStream stream(fd, static_cast<SSL_CTX*>(m_tls->context()));
+                  if (stream.ok()) {
+                      serve(stream);
+                  }
+              } else {
+                  FdStream stream(fd);
+                  serve(stream);
+              }
+          },
+          0, ipv6)
 {
 }
 
@@ -501,16 +515,19 @@ QByteArray DnsServer::answer(const QByteArray& query, bool truncate) const
     return out;
 }
 
-DohServer::DohServer(const DnsServer& table)
-    : m_http([&table](const HttpRequest& request) {
-        if (request.method != "POST" || request.target != "/dns-query" ||
-            request.headers.at("content-type") != "application/dns-message") {
-            return HttpReply{.status = 404, .headers = {}, .body = {}};
-        }
-        return HttpReply{.status = 200,
-                         .headers = {{"Content-Type", "application/dns-message"}},
-                         .body = table.answer(request.body, false)};
-    })
+DohServer::DohServer(const DnsServer& table, bool ipv6)
+    : m_ipv6(ipv6)
+    , m_http(
+          [&table](const HttpRequest& request) {
+              if (request.method != "POST" || request.target != "/dns-query" ||
+                  request.headers.at("content-type") != "application/dns-message") {
+                  return HttpReply{.status = 404, .headers = {}, .body = {}};
+              }
+              return HttpReply{.status = 200,
+                               .headers = {{"Content-Type", "application/dns-message"}},
+                               .body = table.answer(request.body, false)};
+          },
+          nullptr, ipv6)
 {
 }
 

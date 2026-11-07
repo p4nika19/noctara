@@ -46,7 +46,8 @@ public:
 class TcpServer {
 public:
     using Handler = std::function<void(int fd)>;
-    explicit TcpServer(Handler handler, std::uint16_t port = 0);
+    // Listens on 127.0.0.1, or on ::1 when `ipv6` is set.
+    explicit TcpServer(Handler handler, std::uint16_t port = 0, bool ipv6 = false);
     ~TcpServer();
     TcpServer(const TcpServer&) = delete;
     TcpServer& operator=(const TcpServer&) = delete;
@@ -103,7 +104,7 @@ struct HttpReply {
 class HttpServer {
 public:
     using Handler = std::function<HttpReply(const HttpRequest&)>;
-    explicit HttpServer(Handler handler, const TestCertificate* tls = nullptr);
+    explicit HttpServer(Handler handler, const TestCertificate* tls = nullptr, bool ipv6 = false);
 
     [[nodiscard]] std::uint16_t port() const noexcept { return m_server.port(); }
     [[nodiscard]] std::vector<HttpRequest> requests() const;
@@ -158,12 +159,16 @@ private:
 // RFC 8484 POST endpoint at /dns-query backed by a DnsServer table.
 class DohServer {
 public:
-    explicit DohServer(const DnsServer& table);
+    explicit DohServer(const DnsServer& table, bool ipv6 = false);
     [[nodiscard]] std::uint16_t port() const noexcept { return m_http.port(); }
-    [[nodiscard]] QString url() const { return QStringLiteral("http://127.0.0.1:%1/dns-query").arg(m_http.port()); }
+    [[nodiscard]] QString url() const
+    {
+        return QStringLiteral("http://%1:%2/dns-query").arg(m_ipv6 ? u"[::1]" : u"127.0.0.1").arg(m_http.port());
+    }
     [[nodiscard]] int queries() const noexcept { return static_cast<int>(m_http.requests().size()); }
 
 private:
+    bool m_ipv6;
     HttpServer m_http;
 };
 

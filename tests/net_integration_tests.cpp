@@ -349,6 +349,27 @@ TEST_SUITE("net.resolver")
         REQUIRE(fallback);
         CHECK(fallback->source == ResolverSource::SystemFallback);
     }
+
+    TEST_CASE("DoH at an IPv6 literal address answers in strict mode")
+    {
+        test::DnsServer table;
+        table.add(QStringLiteral("api.test"), QStringLiteral("192.0.2.45"));
+        const test::DohServer doh(table, true);
+        Network net;
+        DnsConfig config;
+        config.mode = DnsMode::Doh;
+        config.doh.url = QUrl(doh.url());
+        config.doh.allowInsecure = true;
+        config.fallbackToSystem = false;
+        net.resolver.setConfig(config);
+
+        const auto answer = resolveNow(net.resolver, QStringLiteral("api.test"));
+        REQUIRE_MESSAGE(answer, test::describe(answer));
+        CHECK(answer->source == ResolverSource::Doh);
+        CHECK(answer->addresses == std::vector{ip("192.0.2.45")});
+        CHECK(net.system.calls == 0);
+        CHECK(net.transport.unexpectedCurlResolves() == 0);
+    }
 }
 
 TEST_SUITE("net.transport")
