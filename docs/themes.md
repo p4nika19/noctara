@@ -38,7 +38,7 @@ textPrimary = "#f0fff8"
 [radius]                # px at 100 % zoom, 0–64
 lg = 32
 
-[space]                 # px at 100 % zoom, 0–160
+[space]                 # px at 100 % zoom, 0–160 (navRailWidth, navRailWidthExpanded: 0–400)
 rowHeight = 56
 
 [fonts]                 # family names; missing fonts fall back to the bundled ones

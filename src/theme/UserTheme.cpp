@@ -16,6 +16,7 @@ namespace {
 template <class Tokens, class Value> struct Field {
     std::string_view name;
     Value Tokens::* member;
+    double max = 0.0;  // 0: the table's limit
 };
 
 constexpr std::array kRadius{
@@ -23,6 +24,8 @@ constexpr std::array kRadius{
     Field<RadiusTokens, qreal>{"md", &RadiusTokens::md},         Field<RadiusTokens, qreal>{"lg", &RadiusTokens::lg},
     Field<RadiusTokens, qreal>{"button", &RadiusTokens::button},
 };
+
+constexpr double kMaxRailWidth = 400.0;  // the expanded rail is 220 px by default
 
 constexpr std::array kSpace{
     Field<SpacingTokens, qreal>{"xxs", &SpacingTokens::xxs},
@@ -38,8 +41,8 @@ constexpr std::array kSpace{
     Field<SpacingTokens, qreal>{"iconSize", &SpacingTokens::iconSize},
     Field<SpacingTokens, qreal>{"iconSizeSmall", &SpacingTokens::iconSizeSmall},
     Field<SpacingTokens, qreal>{"iconSizeLarge", &SpacingTokens::iconSizeLarge},
-    Field<SpacingTokens, qreal>{"navRailWidth", &SpacingTokens::navRailWidth},
-    Field<SpacingTokens, qreal>{"navRailWidthExpanded", &SpacingTokens::navRailWidthExpanded},
+    Field<SpacingTokens, qreal>{"navRailWidth", &SpacingTokens::navRailWidth, kMaxRailWidth},
+    Field<SpacingTokens, qreal>{"navRailWidthExpanded", &SpacingTokens::navRailWidthExpanded, kMaxRailWidth},
     Field<SpacingTokens, qreal>{"nowPlayingHeight", &SpacingTokens::nowPlayingHeight},
     Field<SpacingTokens, qreal>{"rowHeight", &SpacingTokens::rowHeight},
     Field<SpacingTokens, qreal>{"pageMargin", &SpacingTokens::pageMargin},
@@ -251,9 +254,10 @@ void readNumbers(const Reader& reader, const toml::table& table, const QString& 
 {
     for (const auto& [rawKey, node] : table) {
         const QString key = prefix + u'.' + qt(rawKey.str());
-        if (!known(fields, rawKey.str())) {
+        const auto field = std::ranges::find(fields, rawKey.str(), &Fields::value_type::name);
+        if (field == std::ranges::end(fields)) {
             reader.unknown(key, node);
-        } else if (const auto value = reader.number(key, node, 0.0, max)) {
+        } else if (const auto value = reader.number(key, node, 0.0, field->max > 0.0 ? field->max : max)) {
             out[std::string(rawKey.str())] = *value;
         }
     }

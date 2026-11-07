@@ -142,6 +142,22 @@ click = "x.wav"
         CHECK(broken[0].kind == ThemeIssue::Kind::Syntax);
     }
 
+    TEST_CASE("every space token accepts its own built-in value; the nav rail widths may grow beyond other tokens")
+    {
+        std::vector<ThemeIssue> issues;
+        const Result<UserTheme> parsed =
+            parseUserTheme("[space]\nnavRailWidth = 120\nnavRailWidthExpanded = 260\n", QStringLiteral("wide"), issues);
+        REQUIRE(parsed);
+        CHECK(issues.empty());
+        CHECK(parsed->space.at("navRailWidth") == doctest::Approx(120));
+        CHECK(parsed->space.at("navRailWidthExpanded") == doctest::Approx(260));
+        CHECK(SpacingTokens{}.navRailWidthExpanded <= 400);
+
+        // The general limit still applies to the other tokens, and the rail has a limit too.
+        CHECK(issuesOf("[space]\nrowHeight = 200\n").size() == 1);
+        CHECK(issuesOf("[space]\nnavRailWidthExpanded = 401\n").size() == 1);
+    }
+
     TEST_CASE("the theme applies to the Theme singleton; unreadable overrides are corrected when contrast is enforced")
     {
         settings::SettingsStore store(settings::Schema::builtin());
