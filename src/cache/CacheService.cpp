@@ -4,6 +4,7 @@
 #include "cache/HttpCache.hpp"
 #include "cache/MemoryPressure.hpp"
 #include "cache/Prefetch.hpp"
+#include "core/FileIo.hpp"
 #include "core/Handoff.hpp"
 #include "core/Log.hpp"
 #include "settings/Keys.hpp"
@@ -180,13 +181,18 @@ void CacheService::apply()
         handoff::runAndWait(m_anchor, [&] {
             m_core->lock.reset();
             const auto prepare = [&](const QString& root) -> Result<CacheLayout> {
+                // The lock comes first: preparing may wipe a layout of another version, which must never
+                // happen under an instance that is using those caches.
+                if (auto created = ensureDirectory(root); !created) {
+                    return std::unexpected(created.error());
+                }
+                Result<CacheLock> lock = CacheLock::acquire(CacheLayout{root});
+                if (!lock) {
+                    return std::unexpected(lock.error());
+                }
                 Result<CacheLayout> layout = prepareLayout(root);
                 if (!layout) {
                     return layout;
-                }
-                Result<CacheLock> lock = CacheLock::acquire(*layout);
-                if (!lock) {
-                    return std::unexpected(lock.error());
                 }
                 m_core->lock = std::move(*lock);
                 return layout;

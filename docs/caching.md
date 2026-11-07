@@ -27,7 +27,7 @@ Noctara keeps three caches: audio of regular tracks, images, and API responses. 
   library/<account>/ # saved lists: likes.json, library.json, playlist-<id>.json (see below)
 ```
 
-All directories are created with mode 0700 and files with 0600. A second instance cannot take the lock. It then runs with the RAM tiers only and the page explains why; its `library/` and `electron/` go to a private temporary directory (`CacheService::privateRoot`) that is removed when it quits, so its *Clear all* never touches the first instance's files. The GPU probe and the pipeline cache from `gfx` also live in the cache root, and they are kept when the cache layout changes.
+All directories are created with mode 0700 and files with 0600. The lock is taken before the layout version is checked, so a second instance never wipes caches in use. A second instance cannot take the lock. It then runs with the RAM tiers only and the page explains why; its `library/` and `electron/` go to a private temporary directory (`CacheService::privateRoot`) that is removed when it quits, so its *Clear all* never touches the first instance's files. The GPU probe and the pipeline cache from `gfx` also live in the cache root, and they are kept when the cache layout changes.
 
 ## Audio: two tiers
 

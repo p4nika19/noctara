@@ -24,7 +24,8 @@ struct CacheLayout {
 };
 
 // Creates the layout. If the version marker names another layout, the cache subdirectories are wiped first
-// (caches are disposable; other files in the root, such as the GPU pipeline cache, are kept).
+// (caches are disposable; other files in the root, such as the GPU pipeline cache, are kept). Take the
+// CacheLock first, so the wipe never runs under another instance using the caches.
 // Fails with PermissionDenied if the root is not a writable directory.
 [[nodiscard]] Result<CacheLayout> prepareLayout(const QString& root);
 

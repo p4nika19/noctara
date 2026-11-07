@@ -1260,6 +1260,27 @@ TEST_SUITE("cache.service")
         CHECK_FALSE(QFileInfo::exists(elsewhere));
     }
 
+    TEST_CASE("a second instance with another layout version never wipes the caches the first one holds")
+    {
+        QTemporaryDir dir;
+        test::FakeOrigin origin;
+        settings::SettingsStore store(settings::Schema::builtin());
+        const QString root = dir.filePath(QStringLiteral("cache"));
+        const Result<CacheLayout> layout = prepareLayout(root);
+        REQUIRE(layout);
+        const Result<CacheLock> held = CacheLock::acquire(*layout);  // the running instance
+        REQUIRE(held);
+        REQUIRE(writeFileAtomic(layout->versionFile(), "0\n"));
+        const QString stored = layout->audio() + QStringLiteral("/ab/abcdef/meta.json");
+        REQUIRE(ensureDirectory(QFileInfo(stored).path()));
+        REQUIRE(writeFileAtomic(stored, "{}"));
+
+        CacheService second(store, origin, root);
+        CHECK(second.status().problem == ErrorCode::CacheLocked);
+        CHECK(QFileInfo::exists(stored));
+        CHECK(readWholeFile(layout->versionFile()).value_or(QByteArray()).trimmed() == "0");
+    }
+
     TEST_CASE("clear on exit empties the caches when the service shuts down")
     {
         QTemporaryDir dir;
