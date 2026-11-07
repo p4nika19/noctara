@@ -702,6 +702,9 @@ TEST_SUITE("net.transport")
         Network net;
         net.useProxy(ProxyType::Http, proxy.port());
         CHECK(test::errorOf(net.get(QStringLiteral("http://example.test/"))) == ErrorCode::ProxyAuthRequired);
+        // "alice:s3cret!" encodes to the expected base64 plus a suffix: still the wrong password.
+        net.useProxy(ProxyType::Http, proxy.port(), QStringLiteral("alice"), QStringLiteral("s3cret!"));
+        CHECK(test::errorOf(net.get(QStringLiteral("http://example.test/"))) == ErrorCode::ProxyAuthRequired);
         net.useProxy(ProxyType::Http, proxy.port(), QStringLiteral("alice"), QStringLiteral("s3cret"));
         const auto ok = net.get(QStringLiteral("http://example.test/"));
         REQUIRE_MESSAGE(ok, test::describe(ok));

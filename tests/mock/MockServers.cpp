@@ -581,7 +581,15 @@ void HttpProxy::serve(int fd)
             const std::scoped_lock lock(m_mutex);
             m_lines.push_back(line);
         }
-        if (!m_auth.isEmpty() && !head.contains(QByteArray("Proxy-Authorization: Basic " + m_auth.toBase64()))) {
+        bool authorized = m_auth.isEmpty();
+        for (const QByteArray& header : head.split('\n')) {
+            const qsizetype colon = header.indexOf(':');
+            if (colon > 0 && header.left(colon).trimmed().toLower() == "proxy-authorization" &&
+                header.mid(colon + 1).trimmed() == "Basic " + m_auth.toBase64()) {
+                authorized = true;
+            }
+        }
+        if (!authorized) {
             stream.write(QByteArray("HTTP/1.1 407 Proxy Authentication Required\r\n"
                                     "Proxy-Authenticate: Basic realm=\"test\"\r\nContent-Length: 0\r\n\r\n"));
             continue;
