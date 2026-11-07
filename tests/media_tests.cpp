@@ -1098,11 +1098,10 @@ TEST_SUITE("media.backend")
         REQUIRE(test::waitUntil([&] { return !failed.isEmpty(); }));
         CHECK(failed.first().first().value<Error>().code == ErrorCode::NotCacheable);
         CHECK(cache.origin.count() == requests);
-        CHECK_FALSE(QDir(cache.layout.audio())
-                        .entryList(QDir::Dirs | QDir::NoDotAndDotDot)
-                        .join(u',')
-                        .contains(QString::fromLatin1(
-                            cache::TrackKey{QStringLiteral("drm"), QStringLiteral("hls/x/sq")}.name())));
+        // Entries live in a two-character shard: <audio>/<name[0..2)>/<name>.
+        const QByteArray name = protectedInfo.key.name();
+        CHECK_FALSE(QFileInfo::exists(cache.layout.audio() + u'/' + QString::fromLatin1(name.first(2)) + u'/' +
+                                      QString::fromLatin1(name)));
     }
 }
 
