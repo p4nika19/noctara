@@ -98,8 +98,9 @@ bool SettingsModel::conditionsHold(const Definition& def) const
         return true;
     }
     const QString current = m_store.value(def.visibleWhen->key).toString();
-    const bool matches =
-        std::ranges::any_of(def.visibleWhen->values, [&](std::string_view value) { return latin(value) == current; });
+    const bool matches = std::ranges::any_of(def.visibleWhen->values, [&](std::string_view value) {
+        return current == QLatin1StringView(value.data(), static_cast<qsizetype>(value.size()));
+    });
     const Definition* parent = m_store.schema().find(def.visibleWhen->key);
     return matches && (parent == nullptr || conditionsHold(*parent));
 }
@@ -128,8 +129,6 @@ QVariant SettingsModel::data(const QModelIndex& index, int role) const
     }
     const std::size_t schemaIndex = m_rows.at(static_cast<std::size_t>(index.row()));
     const Definition& def = m_store.schema().at(schemaIndex);
-    const settings::Section* section = m_store.schema().section(def.sectionId());
-
     switch (static_cast<Role>(role)) {
     case KeyRole: return latin(def.key);
     case TypeRole: return typeId(def.type);
@@ -163,8 +162,14 @@ QVariant SettingsModel::data(const QModelIndex& index, int role) const
     case ShownRole: return isShown(def);
     case DisabledReasonRole: return translated(m_availability.disabledSettings.value(latin(def.key), nullptr));
     case SectionRole: return latin(def.sectionId());
-    case SectionLabelRole: return section != nullptr ? translated(section->label) : QString();
-    case SectionDescriptionRole: return section != nullptr ? translated(section->description) : QString();
+    case SectionLabelRole: {
+        const settings::Section* section = m_store.schema().section(def.sectionId());
+        return section != nullptr ? translated(section->label) : QString();
+    }
+    case SectionDescriptionRole: {
+        const settings::Section* section = m_store.schema().section(def.sectionId());
+        return section != nullptr ? translated(section->description) : QString();
+    }
     case CategoryLabelRole: return translated(settings::categoryLabel(def.category));
     case StatusRole: return m_availability.statuses.value(latin(def.key));
     case SectionStartRole: {

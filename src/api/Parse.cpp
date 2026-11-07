@@ -48,13 +48,19 @@ std::optional<element> field(element object, std::string_view key)
     return value;
 }
 
-QString text(element object, std::string_view key)
+QString stringOf(element value)
 {
-    std::string_view value;
-    if (const auto found = field(object, key); found && found->get_string().get(value) == simdjson::SUCCESS) {
-        return QString::fromUtf8(value.data(), static_cast<qsizetype>(value.size()));
+    std::string_view string;
+    if (value.get_string().get(string) == simdjson::SUCCESS) {
+        return QString::fromUtf8(string.data(), static_cast<qsizetype>(string.size()));
     }
     return {};
+}
+
+QString text(element object, std::string_view key)
+{
+    const auto found = field(object, key);
+    return found ? stringOf(*found) : QString();
 }
 
 std::optional<std::int64_t> integer(element value)
@@ -140,7 +146,7 @@ QDateTime timestamp(element object, std::string_view key)
     if (auto fast = isoUtc(raw)) {
         return *fast;
     }
-    const QString value = text(object, key);
+    const QString value = QString::fromUtf8(raw.data(), static_cast<qsizetype>(raw.size()));
     QDateTime parsed = QDateTime::fromString(value, Qt::ISODateWithMs);
     if (!parsed.isValid()) {
         // older objects: "2014/05/12 09:34:12 +0000"
@@ -227,11 +233,12 @@ Result<Track> trackFrom(element object)
     }
     track.id = *id;
     track.policy = policy(text(object, "policy"));
-    if (!field(object, "title")) {
+    const auto title = field(object, "title");
+    if (!title) {
         track.stub = true;  // playlists list later tracks as {id, kind, policy, monetization_model}
         return track;
     }
-    track.title = text(object, "title");
+    track.title = stringOf(*title);
     if (const auto user = field(object, "user")) {
         track.user = userRef(*user);
     }
@@ -252,7 +259,10 @@ Result<Track> trackFrom(element object)
     track.likesCount = number(object, "likes_count");
     track.repostsCount = number(object, "reposts_count");
     track.commentCount = number(object, "comment_count");
-    track.streamable = !field(object, "streamable") || flag(object, "streamable");
+    bool streamable = false;
+    const auto streamableField = field(object, "streamable");
+    track.streamable =
+        !streamableField || (streamableField->get_bool().get(streamable) == simdjson::SUCCESS && streamable);
     track.trackAuthorization = text(object, "track_authorization");
     if (const auto publisher = field(object, "publisher_metadata")) {
         track.publisherArtist = text(*publisher, "artist");
