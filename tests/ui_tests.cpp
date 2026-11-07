@@ -1155,6 +1155,57 @@ TEST_SUITE("ui.settings-panes")
         MESSAGE("rows: " << list->property("count").toInt() << ", one slider step: " << perStep << " ms");
     }
 
+    // Measurement, skipped by default: one frame of an accent crossfade for 150 buttons (glass buttons with the
+    // control glow on, a third of them primary or active). Run with --no-skip -tc="button accent crossfade*".
+    TEST_CASE("button accent crossfade benchmark" * doctest::skip())
+    {
+        installStubs({});
+        QString theme = QString::fromUtf8(kThemeStub);
+        theme.replace(QStringLiteral("glowControls: false"), QStringLiteral("glowControls: true"))
+            .replace(QStringLiteral("glow: 0,"), QStringLiteral("glow: 0.5,"))
+            .replace(QStringLiteral("normal: 0,"), QStringLiteral("normal: 250,"))
+            .replace(QStringLiteral("buttons: 'plain'"), QStringLiteral("buttons: 'frosted'"))
+            .replace(QStringLiteral("flat: true"), QStringLiteral("flat: false"));
+        stub::singleton("Theme", theme);
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.setData(R"(import QtQuick
+        import Noctara
+        Window {
+            id: win
+            width: 1200; height: 800; visible: true
+            property color tone: "#3366ff"
+            Flow {
+                anchors.fill: parent
+                Repeater {
+                    model: 150
+                    ButtonSurface {
+                        required property int index
+                        width: 70; height: 36
+                        accent: win.tone
+                        material: index % 3 === 0 ? "primary" : (index % 3 === 1 ? "frosted" : "flat")
+                        active: index % 5 === 0
+                    }
+                }
+            }
+        })",
+                          QUrl::fromLocalFile(QStringLiteral(NOCTARA_SOURCE_DIR "/src/qml/components/Harness.qml")));
+        std::unique_ptr<QObject> window(component.create());
+        REQUIRE_MESSAGE(window != nullptr, component.errorString());
+        QCoreApplication::processEvents();
+        constexpr int kFrames = 90;
+        QElapsedTimer clock;
+        clock.start();
+        for (int frame = 0; frame < kFrames; ++frame) {
+            const double t = static_cast<double>(frame) / kFrames;
+            window->setProperty("tone", QColor::fromRgbF(static_cast<float>(0.2 + 0.6 * t), 0.4F,
+                                                          static_cast<float>(1.0 - 0.6 * t)));
+            QCoreApplication::processEvents();
+        }
+        const double perFrame = static_cast<double>(clock.nsecsElapsed()) / 1e6 / kFrames;
+        MESSAGE("150 buttons, one crossfade frame: " << perFrame << " ms");
+    }
+
     TEST_CASE("a number-field settings row shows its unit")
     {
         stub::singleton("Language", QStringLiteral("({localeName: 'en_US'})"));

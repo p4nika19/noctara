@@ -72,11 +72,14 @@ Item {
         spread: -4 * Theme.scale
         offsetY: root.accentFill ? 6 * Theme.scale : 0
         // Flat surfaces and outlines keep the halo for hover only: a constant glow would read as a shadow.
-        color: root.alpha(root.accent, !Theme.glass.glowControls ? 0
-                                       : Theme.glass.glow * (root.accentFill ? (Theme.glass.flat ? 0.55 : 0.85)
-                                                             : root.primary ? (root.hovered ? 0.7 : 0.35)
-                                                             : root.active || (root.hovered && root.material !== "flat") ? 0.7 : 0))
-        Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+        property real strength: !Theme.glass.glowControls ? 0
+                                : Theme.glass.glow * (root.accentFill ? (Theme.glass.flat ? 0.55 : 0.85)
+                                                      : root.primary ? (root.hovered ? 0.7 : 0.35)
+                                                      : root.active || (root.hovered && root.material !== "flat") ? 0.7 : 0)
+        // Only the strength animates; the hue follows the accent directly. Animating the colour restarted the
+        // animation of every button on each frame of an accent crossfade.
+        Behavior on strength { NumberAnimation { duration: Theme.motion.normal } }
+        color: root.alpha(root.accent, strength)
     }
 
     Rectangle {
