@@ -37,6 +37,10 @@ template <class T> std::string describe(const Result<T>& result)
 {
     return result ? std::string("ok") : result.error().describe();
 }
+inline std::string describe(const std::optional<Error>& error)
+{
+    return error ? error->describe() : std::string("ok");
+}
 
 // The error code of a result that is expected to fail; nullopt (never equal to a code) if it succeeded.
 template <class T> std::optional<ErrorCode> errorOf(const Result<T>& result)

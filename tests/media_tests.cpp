@@ -759,7 +759,7 @@ TEST_SUITE("media.decoder")
             const auto reader = cache.open(
                 trackInfo(QLatin1StringView(file), cache::StreamProtocol::Progressive, QLatin1StringView(mime)), url);
             const Decoded decoded = decodeAll(reader);
-            REQUIRE_MESSAGE(!decoded.error, decoded.error->describe());
+            REQUIRE_MESSAGE(!decoded.error, test::describe(decoded.error));
             CHECK(decoded.frames == doctest::Approx(2.0 * kDevice.sampleRate).epsilon(0.03));
             CHECK(decoded.peak > 0.05F);  // the fixtures are quiet sines
         }
@@ -773,7 +773,7 @@ TEST_SUITE("media.decoder")
         const auto reader = cache.open(
             trackInfo(QStringLiteral("seek"), cache::StreamProtocol::Progressive, QStringLiteral("audio/mpeg")), url);
         const Decoded decoded = decodeAll(reader, 0, {}, kDevice.sampleRate);
-        REQUIRE_MESSAGE(!decoded.error, decoded.error->describe());
+        REQUIRE_MESSAGE(!decoded.error, test::describe(decoded.error));
         CHECK(decoded.firstPosition == kDevice.sampleRate);
         CHECK(decoded.frames == doctest::Approx(1.0 * kDevice.sampleRate).epsilon(0.05));
     }
@@ -787,7 +787,7 @@ TEST_SUITE("media.decoder")
             const auto reader = cache.open(
                 trackInfo(QLatin1StringView(name), cache::StreamProtocol::Hls, QStringLiteral("audio/mpeg")), playlist);
             const Decoded whole = decodeAll(reader);
-            REQUIRE_MESSAGE(!whole.error, whole.error->describe());
+            REQUIRE_MESSAGE(!whole.error, test::describe(whole.error));
             CHECK(whole.frames == doctest::Approx(2.0 * kDevice.sampleRate).epsilon(0.04));
 
             // A seek opens the stream at the segment holding the target and drops what lies before it.
@@ -801,7 +801,7 @@ TEST_SUITE("media.decoder")
             }
             const Decoded tail = decodeAll(
                 reader, segment, {.frame = static_cast<std::int64_t>(start * kDevice.sampleRate), .trimTo = target});
-            REQUIRE_MESSAGE(!tail.error, tail.error->describe());
+            REQUIRE_MESSAGE(!tail.error, test::describe(tail.error));
             CHECK(tail.frames == doctest::Approx(0.8 * kDevice.sampleRate).epsilon(0.08));
         }
     }
