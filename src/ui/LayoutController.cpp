@@ -225,9 +225,11 @@ void LayoutController::restore(QQuickWindow& window) const
 void LayoutController::remember(const QQuickWindow& window, const QString& page)
 {
     WindowState state;
-    state.maximized = (window.windowStates() & Qt::WindowMaximized) != 0;
-    // While maximized the normal size is not known; keep the one from before.
-    state.geometry = state.maximized ? m_state.geometry : window.geometry();
+    // Full screen is not remembered: the window opens as it was before it went full screen.
+    const bool fullScreen = (window.windowStates() & Qt::WindowFullScreen) != 0;
+    state.maximized = (window.windowStates() & Qt::WindowMaximized) != 0 || (fullScreen && m_state.maximized);
+    // While maximized (or full screen) the normal size is not known; keep the one from before.
+    state.geometry = state.maximized || fullScreen ? m_state.geometry : window.geometry();
     state.page = page;
     if (m_statePath.isEmpty() ||
         (state.geometry == m_state.geometry && state.maximized == m_state.maximized && state.page == m_state.page)) {

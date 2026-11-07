@@ -462,6 +462,32 @@ TEST_SUITE("ui.layout")
         layout.restore(window);
         CHECK((window.windowStates() & Qt::WindowMaximized) != 0);
     }
+
+    TEST_CASE("quitting full screen keeps the normal geometry and the maximized state from before")
+    {
+        QTemporaryDir dir;
+        const QString path = dir.filePath(QStringLiteral("window.json"));
+        ui::WindowState saved;
+        saved.geometry = QRect(40, 50, 1000, 700);
+        saved.maximized = true;
+        saved.page = QStringLiteral("home");
+        write(path, saved.toJson());
+        settings::SettingsStore store(settings::Schema::builtin());
+        {
+            ui::LayoutController layout(store, path);
+            QQuickWindow window;
+            window.setWindowStates(Qt::WindowFullScreen);
+            window.setGeometry(QRect(0, 0, 1920, 1080));
+            REQUIRE((window.windowStates() & Qt::WindowFullScreen) != 0);
+            layout.remember(window, QStringLiteral("charts"));
+        }  // the controller waits for its writer
+        const Result<QByteArray> json = readWholeFile(path);
+        REQUIRE(json);
+        const ui::WindowState back = ui::WindowState::fromJson(*json);
+        CHECK(back.geometry == saved.geometry);
+        CHECK(back.maximized);
+        CHECK(back.page == u"charts");
+    }
 }
 
 TEST_SUITE("api.trending")
