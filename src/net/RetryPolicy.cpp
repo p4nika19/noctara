@@ -34,6 +34,9 @@ std::chrono::milliseconds RetryPolicy::delay(int retry, std::optional<std::chron
     const auto backoff = std::chrono::milliseconds(static_cast<std::int64_t>(
         std::min(static_cast<double>(baseDelay.count()) * exponent * factor, static_cast<double>(maxDelay.count()))));
     if (retryAfter) {
+        if (*retryAfter >= std::chrono::ceil<std::chrono::seconds>(maxDelay)) {
+            return maxDelay;  // before the conversion: a huge server value would overflow milliseconds
+        }
         return std::clamp(std::chrono::duration_cast<std::chrono::milliseconds>(*retryAfter), backoff, maxDelay);
     }
     return backoff;

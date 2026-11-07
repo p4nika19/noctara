@@ -354,6 +354,15 @@ TEST_SUITE("net.policy")
         CHECK_FALSE(parseRetryAfter("", now));
     }
 
+    TEST_CASE("a huge Retry-After is clamped to the maximum delay without overflowing")
+    {
+        const QDateTime now(QDate(2015, 10, 21), QTime(7, 28, 0), QTimeZone::UTC);
+        const auto huge = parseRetryAfter("99999999999999999", now);
+        REQUIRE(huge);
+        CHECK(RetryPolicy{}.delay(0, huge, 0.5) == RetryPolicy{}.maxDelay);
+        CHECK(RetryPolicy{}.delay(0, std::chrono::seconds::max(), 0.5) == RetryPolicy{}.maxDelay);
+    }
+
     TEST_CASE("token bucket limits the rate after a short burst")
     {
         TokenBucket bucket;
