@@ -224,9 +224,17 @@ void ConfigFile::saveNow()
     QtConcurrent::run(&m_io,
                       [path = m_userPath, content, backup] -> Result<void> {
                           if (backup) {
-                              const QString backupPath = path + QStringLiteral(".bak");
-                              QFile::remove(backupPath);
-                              QFile::copy(path, backupPath);
+                              // Never overwrite the file without a backup of it; the old .bak stays until the
+                              // new one is complete.
+                              auto old = readWholeFile(path);
+                              if (!old && old.error().code != ErrorCode::NotFound) {
+                                  return std::unexpected(old.error());
+                              }
+                              if (old) {
+                                  if (auto saved = writeFileAtomic(path + QStringLiteral(".bak"), *old); !saved) {
+                                      return saved;
+                                  }
+                              }
                           }
                           return writeFileAtomic(path, content);
                       })

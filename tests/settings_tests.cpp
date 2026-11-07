@@ -449,6 +449,41 @@ TEST_SUITE("settings.file")
         CHECK(readWholeFile(path)->contains("\ngrain = 0.4"));
     }
 
+    TEST_CASE("an unreadable config file is not overwritten when it cannot be backed up")
+    {
+        if (::geteuid() == 0) {
+            return;  // root reads the file regardless of its permissions
+        }
+        QTemporaryDir dir;
+        REQUIRE(dir.isValid());
+        const QString path = dir.filePath(QStringLiteral("config.toml"));
+        const QString backup = path + QStringLiteral(".bak");
+        const QByteArray original = "config_version = 6\n[appearance.glass]\ngrain = 0.7\n";
+        REQUIRE(writeText(path, original));
+        REQUIRE(writeText(backup, "older backup"));
+        const auto readable = QFileDevice::ReadOwner | QFileDevice::WriteOwner;
+        const auto restore = qScopeGuard([&] { QFile::setPermissions(path, readable); });
+        REQUIRE(QFile::setPermissions(path, {}));
+
+        SettingsStore store(schema());
+        ConfigFile file(store, path, {});
+        file.setSaveDelay(std::chrono::milliseconds(1));
+        CHECK_FALSE(file.load().isEmpty());
+        QSignalSpy failed(&file, &ConfigFile::saveFailed);
+        REQUIRE(store.setUserValue(keys::GlassGrain, 0.2).has_value());
+        file.flush();
+        REQUIRE(test::waitUntil([&] { return failed.count() == 1; }));
+
+        REQUIRE(QFile::setPermissions(path, readable));
+        CHECK(readWholeFile(path).value_or(QByteArray()) == original);
+        CHECK(readWholeFile(backup).value_or(QByteArray()) == "older backup");
+
+        // Once the file is readable again, the next save backs it up and writes the edit.
+        file.flush();
+        CHECK(readWholeFile(backup).value_or(QByteArray()) == original);
+        CHECK(readWholeFile(path).value_or(QByteArray()).contains("\ngrain = 0.2"));
+    }
+
     TEST_CASE("the system config file is the first XDG_CONFIG_DIRS entry that has one")
     {
         QTemporaryDir dir;
