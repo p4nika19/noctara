@@ -231,17 +231,18 @@ void NetworkController::updateRowStatuses()
 
 void NetworkController::loadCredentials()
 {
-    m_secrets.read(QString::fromLatin1(kCredentialsKey), this, [this](Result<std::optional<QByteArray>> secret) {
-        if (!secret || !*secret) {
-            Q_EMIT credentialsChanged();
-            return;
-        }
-        const QJsonObject object = QJsonDocument::fromJson(**secret).object();
-        m_username = object.value(QStringLiteral("username")).toString();
-        m_password = object.value(QStringLiteral("password")).toString();
-        m_service.setProxyCredentials(m_username, m_password);
-        Q_EMIT credentialsChanged();
-    });
+    m_secrets.read(QString::fromLatin1(kCredentialsKey), this,
+                   [this, generation = m_credentialsGeneration](Result<std::optional<QByteArray>> secret) {
+                       if (generation != m_credentialsGeneration || !secret || !*secret) {
+                           Q_EMIT credentialsChanged();
+                           return;
+                       }
+                       const QJsonObject object = QJsonDocument::fromJson(**secret).object();
+                       m_username = object.value(QStringLiteral("username")).toString();
+                       m_password = object.value(QStringLiteral("password")).toString();
+                       m_service.setProxyCredentials(m_username, m_password);
+                       Q_EMIT credentialsChanged();
+                   });
 }
 
 void NetworkController::saveProxyCredentials(const QString& username, const QString& password)
@@ -250,6 +251,7 @@ void NetworkController::saveProxyCredentials(const QString& username, const QStr
         forgetProxyCredentials();
         return;
     }
+    ++m_credentialsGeneration;
     m_username = username;
     m_password = password;
     m_service.setProxyCredentials(username, password);
@@ -275,6 +277,7 @@ void NetworkController::saveProxyCredentials(const QString& username, const QStr
 
 void NetworkController::forgetProxyCredentials()
 {
+    ++m_credentialsGeneration;
     m_username.clear();
     m_password.clear();
     m_service.setProxyCredentials({}, {});

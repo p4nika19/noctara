@@ -10,15 +10,21 @@
 #include "mock/FakeApi.hpp"
 
 #include "auth/SecretStore.hpp"
+#include "i18n/LanguageManager.hpp"
+#include "net/NetworkService.hpp"
+#include "settings/ConfigFile.hpp"
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
 #include "ui/AccountController.hpp"
 #include "ui/CatalogController.hpp"
+#include "ui/NetworkController.hpp"
+#include "ui/SettingsController.hpp"
 
 #include <QDir>
 #include <QFile>
 #include <QSignalSpy>
 #include <QTemporaryDir>
+#include <QTest>
 
 #include <atomic>
 #include <optional>
@@ -571,5 +577,85 @@ TEST_SUITE("ui.catalog")
         snapshots.flush();
         CHECK(QFile::exists(dir.filePath(QStringLiteral("42/likes.json"))));
         CHECK(snapshots.lastAccount() == 42);
+    }
+}
+
+TEST_SUITE("ui.network-credentials")
+{
+    // A keyring whose startup read answers only on release(), with what it held when the read was made.
+    class HeldReadSecretStore final : public QObject, public auth::ISecretStore {
+    public:
+        void read(const QString&, QObject* context, ReadCallback callback) override
+        {
+            m_held.emplace_back(QPointer(context), std::move(callback));
+        }
+        void write(const QString&, const QString&, const QByteArray&, QObject*, WriteCallback callback) override
+        {
+            callback({});
+        }
+        void remove(const QString&, QObject*, WriteCallback callback) override { callback({}); }
+        [[nodiscard]] bool persistent() const noexcept override { return true; }
+        [[nodiscard]] bool keyringBacked() const noexcept override { return true; }
+
+        void release(const QByteArray& stored)
+        {
+            for (auto& [context, callback] : std::exchange(m_held, {})) {
+                if (context != nullptr) {
+                    callback(std::optional<QByteArray>(stored));
+                }
+            }
+        }
+
+    private:
+        std::vector<std::pair<QPointer<QObject>, ReadCallback>> m_held;
+    };
+
+    struct NetworkHarness {
+        QTemporaryDir dir;
+        settings::SettingsStore store{settings::Schema::builtin()};
+        settings::ConfigFile config{store, dir.filePath(QStringLiteral("config.toml")), {}};
+        i18n::LanguageManager languages{store};
+        ui::SettingsController settingsUi{store, config, languages};
+        // Not System mode, so the controller starts no proxy lookup that could outlive the test.
+        bool noProxy = store.setUserValue(settings::keys::ProxyMode, QStringLiteral("none")).has_value();
+        net::NetworkService network{store, {}, false};
+        HeldReadSecretStore secrets;
+        ui::NetworkController controller{network, nullptr, secrets, languages, settingsUi};
+
+        void releaseOldCredentials()
+        {
+            secrets.release(R"({"username":"old","password":"old"})");
+            QCoreApplication::processEvents();
+        }
+    };
+
+    TEST_CASE("a slow startup read does not bring back credentials saved meanwhile")
+    {
+        NetworkHarness h;
+        REQUIRE(h.noProxy);
+        h.controller.saveProxyCredentials(QStringLiteral("new"), QStringLiteral("pw"));
+        h.releaseOldCredentials();
+        CHECK(h.controller.proxyUsername() == u"new");
+        CHECK(test::waitUntil([&] { return h.network.config().proxy.manual.username == u"new"; }, 2000));
+        QTest::qWait(300);  // a late apply of the stale read would land here
+        CHECK(h.network.config().proxy.manual.username == u"new");
+    }
+
+    TEST_CASE("a slow startup read does not bring back credentials forgotten meanwhile")
+    {
+        NetworkHarness h;
+        h.controller.forgetProxyCredentials();
+        h.releaseOldCredentials();
+        CHECK_FALSE(h.controller.hasProxyCredentials());
+        QTest::qWait(300);
+        CHECK(h.network.config().proxy.manual.username.isEmpty());
+    }
+
+    TEST_CASE("the startup read applies stored credentials when nothing changed meanwhile")
+    {
+        NetworkHarness h;
+        h.releaseOldCredentials();
+        CHECK(h.controller.proxyUsername() == u"old");
+        CHECK(test::waitUntil([&] { return h.network.config().proxy.manual.username == u"old"; }, 2000));
     }
 }
