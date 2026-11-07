@@ -21,6 +21,15 @@ Item {
         "network.proxy.port": proxyCredentials,
     })
 
+    // A category whose rows are all advanced leaves the sidebar when advanced settings are hidden.
+    Connections {
+        target: SettingsUi
+        function onCategoriesChanged() {
+            if (!SettingsUi.categories.some(c => c.id === root.category))
+                root.categoryRequested("general")
+        }
+    }
+
     GlassPanel {
         id: sidebar
         level: 1

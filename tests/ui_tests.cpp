@@ -90,6 +90,7 @@ TEST_SUITE("ui.settings")
         settings::ConfigFile config(store, dir.filePath(QStringLiteral("config.toml")), {});
         i18n::LanguageManager languages(store);
         ui::SettingsController controller(store, config, languages);
+        controller.setShowAdvanced(true);  // every row, advanced ones included
 
         std::set<QString> seen;
         for (const QVariant& entry : controller.categories()) {
@@ -112,6 +113,46 @@ TEST_SUITE("ui.settings")
                 CHECK(seen.contains(QString::fromLatin1(def.key.data(), static_cast<qsizetype>(def.key.size()))));
             }
         }
+    }
+
+    TEST_CASE("the sidebar lists only categories with a row to show")
+    {
+        QTemporaryDir dir;
+        settings::SettingsStore store(settings::Schema::builtin());
+        settings::ConfigFile config(store, dir.filePath(QStringLiteral("config.toml")), {});
+        i18n::LanguageManager languages(store);
+        ui::SettingsController controller(store, config, languages);
+        const auto ids = [&] {
+            std::set<QString> out;
+            for (const QVariant& entry : controller.categories()) {
+                out.insert(entry.toMap().value(QStringLiteral("id")).toString());
+            }
+            return out;
+        };
+        const auto checkEveryPageShowsARow = [&] {
+            for (const QString& id : ids()) {
+                if (id == u"about" || id == u"accounts") {
+                    continue;  // custom panes
+                }
+                ui::SettingsModel* page = controller.page(id);
+                REQUIRE(page != nullptr);
+                bool shown = false;
+                for (int row = 0; row < page->rowCount(); ++row) {
+                    shown = shown || page->data(page->index(row), ui::SettingsModel::ShownRole).toBool();
+                }
+                CHECK_MESSAGE(shown, id.toStdString());
+            }
+        };
+
+        checkEveryPageShowsARow();  // e.g. Library & Content, whose only row is advanced, is left out
+        const std::size_t basic = ids().size();
+
+        int changes = 0;
+        QObject::connect(&controller, &ui::SettingsController::categoriesChanged, [&] { ++changes; });
+        controller.setShowAdvanced(true);
+        CHECK(changes == 1);
+        CHECK(ids().size() > basic);
+        checkEveryPageShowsARow();
     }
 
     TEST_CASE("edits, validation messages, search and restart tracking")

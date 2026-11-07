@@ -88,7 +88,7 @@ QVariantList SettingsController::categories() const
     for (int c = 0; c < settings::kCategoryCount; ++c) {
         const auto category = static_cast<Category>(c);
         const bool hasRows = std::ranges::any_of(m_store.schema().definitions(), [&](const settings::Definition& def) {
-            return def.category == category && !def.configOnly();
+            return def.category == category && !def.configOnly() && (m_showAdvanced || !def.advanced());
         });
         // Accounts and About have no generated rows; they are shown as custom panes (see SettingsView.qml).
         if (!hasRows && category != Category::About && category != Category::Accounts) {
@@ -120,6 +120,7 @@ void SettingsController::setShowAdvanced(bool show)
     m_search->setShowAdvanced(show);
     rebuildSearch();
     Q_EMIT showAdvancedChanged();
+    Q_EMIT categoriesChanged();  // a category whose rows are all advanced comes and goes
 }
 
 SettingsModel* SettingsController::page(const QString& categoryId)
