@@ -26,3 +26,11 @@ race:noctara::net::CallbackChannel::metaObject
 # libdbus (QtDBus' connection thread) is uninstrumented: TSan sees only its pthread mutexes, so a mutex block it
 # frees and reallocates, or its own lock ordering, is reported against the GUI thread's dbus_connection_* calls.
 called_from_lib:libdbus-1.so.3
+# QtDBus is uninstrumented as well: messages built on its connection thread are freed on the GUI thread (pending call
+# replies), and libdbus' mutex is taken inside libdbus (ignored above) while dbus_message_unref is tail-called from
+# QtDBus, so TSan sees the matching unlock come from libQt6DBus. Reports with a QtDBus frame are hidden.
+race:libQt6DBus.so.6
+mutex:libQt6DBus.so.6
+# The raster paint engine splits large fills across Qt's own thread pool (qdrawhelper.cpp); the runnable's hand-off
+# happens inside uninstrumented Qt, so its delete on the pool thread is reported against its new on the GUI thread.
+race:qdrawhelper.cpp
