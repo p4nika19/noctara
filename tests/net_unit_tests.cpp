@@ -376,6 +376,18 @@ TEST_SUITE("net.policy")
         CHECK(bucket.tryConsume(16'000, t0 + 100ms));
     }
 
+    TEST_CASE("token bucket refills to the burst after a long idle period at a high rate")
+    {
+        TokenBucket bucket;
+        const auto t0 = TokenBucket::Clock::time_point{};
+        bucket.setRate(125'000'000, t0);  // 1000 Mbit/s, the largest setting
+        const auto later = t0 + std::chrono::hours(24);
+        CHECK(bucket.tryConsume(1, later));
+        CHECK(bucket.waitTime(later) == 0ms);
+        CHECK(bucket.tryConsume(40'000'000, later));  // the burst is a quarter second
+        CHECK_FALSE(bucket.tryConsume(1, later));
+    }
+
     TEST_CASE("redaction removes credentials and every query value")
     {
         const QString url = redactUrl(QUrl(QStringLiteral(

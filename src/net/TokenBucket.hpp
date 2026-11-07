@@ -53,7 +53,13 @@ private:
         if (elapsed <= 0) {
             return;
         }
-        m_tokens = std::min(burst(), m_tokens + m_rate * elapsed / 1'000'000);
+        // Saturate first: after a long idle period m_rate * elapsed would overflow.
+        const std::int64_t untilFull = m_rate > 0 ? (burst() - m_tokens) * 1'000'000 / m_rate + 1 : 0;
+        if (m_rate > 0 && elapsed >= untilFull) {
+            m_tokens = burst();
+        } else {
+            m_tokens = std::min(burst(), m_tokens + m_rate * elapsed / 1'000'000);
+        }
         m_last = now;
     }
 
