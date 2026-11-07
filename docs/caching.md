@@ -81,7 +81,7 @@ They are never cached, in any tier. `AudioCache::open` refuses `TrackInfo::drm` 
 `CachingTransport` wraps the network transport and is what the API client uses (`CacheService::transport()`). It follows RFC 9111 for `GET`:
 
 - Responses with `no-store` are never stored, and a stored copy is removed when one arrives. Range requests, streamed bodies and `CacheMode::Bypass` pass straight through. Bodies over 4 MiB are not stored.
-- **Freshness:** `max-age`, else `Expires − Date`, else the request's `cacheTtl`: short for volatile endpoints (feed, likes), long for immutable ones (track metadata, waveforms). `no-cache` always revalidates.
+- **Freshness:** `max-age`, else `Expires − Date` (an `Expires` that is not a date, such as `0`, means already expired), else the request's `cacheTtl`: short for volatile endpoints (feed, likes), long for immutable ones (track metadata, waveforms). `no-cache` always revalidates.
 - **Stale entries** are revalidated with `If-None-Match` / `If-Modified-Since`. A 304 refreshes the stored headers and serves the stored body.
 - When the network fails (offline mode, outage, 5xx), a stale copy is served with `Response::stale` set. `CacheMode::OnlyIfCached` never touches the network.
 - Keys include a digest of the `Authorization` header, so one account never sees another's data. `Vary` is honoured, and a successful `POST`/`PUT`/`DELETE` invalidates the URL.

@@ -317,6 +317,24 @@ TEST_SUITE("cache.http.policy")
         CHECK_FALSE(isFresh(stored, 1001));
     }
 
+    TEST_CASE("an Expires value that is not a date means already expired")
+    {
+        for (const QByteArray& value : {QByteArray("0"), QByteArray("-1"), QByteArray(""), QByteArray("soon GMT")}) {
+            CAPTURE(value);
+            StoredResponse stored;
+            stored.storedAt = 1000;
+            stored.ttlFallback = 30;
+            stored.headers = {{"cache-control", "private"}, {"expires", value}};
+            CHECK(freshnessLifetime(stored) == 0);
+            CHECK_FALSE(isFresh(stored, 1000));
+        }
+        StoredResponse badDate;
+        badDate.storedAt = 1000;
+        badDate.ttlFallback = 30;
+        badDate.headers = {{"date", "0"}};
+        CHECK(freshnessLifetime(badDate) == 30);  // a broken Date alone says nothing about freshness
+    }
+
     TEST_CASE("keys separate accounts; Vary must match")
     {
         net::Request a;

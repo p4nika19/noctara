@@ -29,14 +29,20 @@ QByteArray headerOf(const net::Headers& headers, QByteArrayView name)
     return {};
 }
 
+bool hasHeader(const net::Headers& headers, QByteArrayView name)
+{
+    return std::ranges::any_of(headers, [&](const auto& pair) { return pair.first == name; });
+}
+
 std::optional<std::int64_t> httpDate(const QByteArray& value)
 {
-    if (value.isEmpty()) {
+    // IMF-fixdate, e.g. "Sun, 06 Nov 1994 08:49:37 GMT".
+    const QByteArray trimmed = value.trimmed();
+    if (!trimmed.endsWith(" GMT")) {
         return std::nullopt;
     }
-    // IMF-fixdate, e.g. "Sun, 06 Nov 1994 08:49:37 GMT".
-    const QDateTime when = QLocale::c().toDateTime(QString::fromLatin1(value.trimmed()).chopped(4),
-                                                   QStringLiteral("ddd, dd MMM yyyy HH:mm:ss"));
+    const QDateTime when =
+        QLocale::c().toDateTime(QString::fromLatin1(trimmed.chopped(4)), QStringLiteral("ddd, dd MMM yyyy HH:mm:ss"));
     if (!when.isValid()) {
         return std::nullopt;
     }
@@ -187,8 +193,12 @@ std::int64_t freshnessLifetime(const StoredResponse& stored)
     if (control.maxAge) {
         return *control.maxAge;
     }
-    const std::optional<std::int64_t> expires = httpDate(stored.header("expires"));
-    if (expires) {
+    if (hasHeader(stored.headers, "expires")) {
+        // RFC 9111 section 5.3: an Expires value that is not a valid date ("0", "-1") means already expired.
+        const std::optional<std::int64_t> expires = httpDate(stored.header("expires"));
+        if (!expires) {
+            return 0;
+        }
         const std::int64_t date = httpDate(stored.header("date")).value_or(stored.storedAt);
         return std::max<std::int64_t>(0, *expires - date);
     }
