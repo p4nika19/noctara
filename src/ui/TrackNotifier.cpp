@@ -32,6 +32,10 @@ void TrackNotifier::trackChanged()
         !m_settings.boolValue(settings::keys::TrackNotifications) || (m_windowActive && m_windowActive())) {
         return;
     }
+    // A track known only by id has no title yet: its trackChanged after the lookup announces it.
+    if (m_player.title().isEmpty()) {
+        return;
+    }
     m_shownFor = id;
     const QString title = m_player.title();
     const QString artist = m_player.artist();
@@ -48,6 +52,10 @@ void TrackNotifier::trackChanged()
 
 void TrackNotifier::send(const QString& title, const QString& artist, const QString& cover)
 {
+    if (m_sender) {
+        m_sender(title, artist, cover);
+        return;
+    }
     QDBusMessage call = QDBusMessage::createMethodCall(
         QStringLiteral("org.freedesktop.Notifications"), QStringLiteral("/org/freedesktop/Notifications"),
         QStringLiteral("org.freedesktop.Notifications"), QStringLiteral("Notify"));

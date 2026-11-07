@@ -25,6 +25,10 @@ public:
     TrackNotifier(media::PlaybackController& player, settings::SettingsStore& settings, media::CoverFiles* covers,
                   std::function<bool()> windowActive, QObject* parent = nullptr);
 
+    using Sender = std::function<void(const QString& title, const QString& artist, const QString& cover)>;
+    // Replaces the D-Bus Notify call (tests).
+    void setSender(Sender sender) { m_sender = std::move(sender); }
+
 private:
     void trackChanged();
     void send(const QString& title, const QString& artist, const QString& cover);
@@ -33,6 +37,7 @@ private:
     settings::SettingsStore& m_settings;
     media::CoverFiles* m_covers;
     std::function<bool()> m_windowActive;
+    Sender m_sender;
     QString m_shownFor;  // track id of the last notification
     uint m_replaces = 0;
 };

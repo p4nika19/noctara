@@ -26,6 +26,7 @@
 #include "models/CollectionModel.hpp"
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
+#include "ui/TrackNotifier.hpp"
 #include "ui/WaveformItem.hpp"
 
 #include <QBuffer>
@@ -1399,6 +1400,26 @@ TEST_SUITE("media.controller")
         REQUIRE(test::waitUntil([&] { return !player.backend.loads.empty(); }));
         CHECK(player.loadedId(0) == u"7");
         CHECK(player.controller->title() == u"Track 7");
+    }
+
+    TEST_CASE("a track known only by id is announced once it is fetched, with its title")
+    {
+        Player player;
+        REQUIRE(player.store.setUserValue(settings::keys::TrackNotifications, true));
+        ui::TrackNotifier notifier(*player.controller, player.store, nullptr, [] { return false; });
+        std::vector<std::pair<QString, QString>> sent;
+        notifier.setSender(
+            [&](const QString& title, const QString& artist, const QString&) { sent.emplace_back(title, artist); });
+        api::Track stub;
+        stub.id = 7;
+        stub.stub = true;
+        player.client.known.emplace(7, apiTrack(7));
+        player.controller->playTracks({stub}, 0, {});
+        REQUIRE(test::waitUntil([&] { return !player.backend.loads.empty(); }));
+        QCoreApplication::processEvents();
+        REQUIRE(sent.size() == 1);
+        CHECK(sent.front().first == u"Track 7");
+        CHECK(sent.front().second == u"Artist");
     }
 
     TEST_CASE("a following track the lookup does not return is asked for once, then left to be skipped")
