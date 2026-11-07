@@ -137,7 +137,10 @@ QVariant SettingsModel::data(const QModelIndex& index, int role) const
     case DescriptionRole: return translated(def.description);
     case ValueRole: return m_store.value(schemaIndex);
     case DefaultValueRole: return def.defaultValue;
-    case IsDefaultRole: return m_store.value(schemaIndex) == def.defaultValue;
+    // "Nothing to reset": a reset falls back to the system config's value, else the built-in default.
+    case IsDefaultRole:
+        return m_store.value(schemaIndex) ==
+               m_store.layerValue(settings::Layer::System, schemaIndex).value_or(def.defaultValue);
     case OptionsRole: return options(def);
     case MinRole: return def.min;
     case MaxRole: return def.max;

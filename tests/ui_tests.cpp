@@ -155,6 +155,36 @@ TEST_SUITE("ui.settings")
         checkEveryPageShowsARow();
     }
 
+    TEST_CASE("a value from the system config counts as the default: reset has nothing to undo")
+    {
+        QTemporaryDir dir;
+        settings::SettingsStore store(settings::Schema::builtin());
+        settings::ConfigFile config(store, dir.filePath(QStringLiteral("config.toml")), {});
+        i18n::LanguageManager languages(store);
+        ui::SettingsController controller(store, config, languages);
+        const std::size_t style = *store.schema().indexOf(settings::keys::GlassStyle);
+        store.replaceLayer(settings::Layer::System, {{style, QStringLiteral("solid")}});
+        ui::SettingsModel* page = controller.page(QStringLiteral("appearance"));
+        REQUIRE(page != nullptr);
+        const auto isDefault = [page] {
+            for (int row = 0; row < page->rowCount(); ++row) {
+                if (page->data(page->index(row), ui::SettingsModel::KeyRole).toString() ==
+                    QLatin1StringView(settings::keys::GlassStyle)) {
+                    return page->data(page->index(row), ui::SettingsModel::IsDefaultRole).toBool();
+                }
+            }
+            FAIL("missing row");
+            return false;
+        };
+
+        CHECK(isDefault());  // no reset button: resetting would leave "solid" in place
+        REQUIRE(store.setUserValue(settings::keys::GlassStyle, QStringLiteral("gaussian")).has_value());
+        CHECK_FALSE(isDefault());
+        controller.reset(QString::fromLatin1(settings::keys::GlassStyle));
+        CHECK(store.stringValue(settings::keys::GlassStyle) == u"solid");
+        CHECK(isDefault());
+    }
+
     TEST_CASE("edits, validation messages, search and restart tracking")
     {
         QTemporaryDir dir;
