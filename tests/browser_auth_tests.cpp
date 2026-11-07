@@ -373,9 +373,10 @@ TEST_SUITE("auth.browser-cookies")
         }
         SUBCASE("locked keyring")
         {
-            FakeKeyring keyring{.answer = fail(ErrorCode::PermissionDenied, "locked")};
+            // A code the generic "cannot decrypt" fallback never uses, so only a passed-on error matches.
+            FakeKeyring keyring{.answer = fail(ErrorCode::Unsupported, "locked")};
             auth::BrowserCookieSource source(home.path(), keyring.provider());
-            CHECK(test::errorOf(importToken(source, chromiumProfile(database))) == ErrorCode::PermissionDenied);
+            CHECK(test::errorOf(importToken(source, chromiumProfile(database))) == ErrorCode::Unsupported);
             CHECK(keyring.calls == 1);
         }
     }
