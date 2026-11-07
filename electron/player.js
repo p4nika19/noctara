@@ -100,7 +100,8 @@ window.noctara.onCommand((command) => {
     case 'load': load(command); break;
     case 'play':
       wantPlay = true;
-      if (current && hls && audio.readyState > 0) playNow();
+      // Also before any media data (a paused load whose manifest is parsed): play() then waits for it.
+      if (current && hls) playNow();
       break;
     case 'pause': wantPlay = false; audio.pause(); break;
     case 'seek': audio.currentTime = command.ms / 1000; position(); break;
