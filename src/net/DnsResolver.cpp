@@ -170,7 +170,13 @@ void DnsResolver::start(const QString& rawHost, ResolveCallback callback, bool u
         }
     }
     if (!overrides.empty()) {
-        deliverLater(std::move(callback), Resolution{ordered(std::move(overrides)), ResolverSource::Override, {}, {}});
+        auto addresses = ordered(std::move(overrides));
+        if (addresses.empty()) {
+            deliverLater(std::move(callback),
+                         fail(ErrorCode::DnsResolutionFailed, "no address of the allowed IP version"));
+        } else {
+            deliverLater(std::move(callback), Resolution{std::move(addresses), ResolverSource::Override, {}, {}});
+        }
         return;
     }
     if (useCache) {

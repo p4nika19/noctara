@@ -219,6 +219,18 @@ TEST_SUITE("net.resolver")
         CHECK(system.calls == 0);
     }
 
+    TEST_CASE("a host override with no address of the allowed IP version fails the lookup")
+    {
+        FakeSystemResolver system;
+        DnsResolver resolver(system);
+        DnsConfig config;
+        config.overrides = {{QStringLiteral("fixed.test"), ip("2001:db8::9")}};
+        config.family = IpFamilyPreference::V4Only;
+        resolver.setConfig(config);
+        CHECK(test::errorOf(resolveNow(resolver, QStringLiteral("fixed.test"))) == ErrorCode::DnsResolutionFailed);
+        CHECK(system.calls == 0);
+    }
+
     TEST_CASE("custom servers: answers, failover, TCP on truncation, family filter, single flight")
     {
         test::DnsServer server;
