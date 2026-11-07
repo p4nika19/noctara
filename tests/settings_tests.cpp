@@ -506,6 +506,31 @@ TEST_SUITE("settings.file")
         CHECK(test::errorOf(file.importFrom(broken)) == ErrorCode::ConfigSyntaxError);
     }
 
+    TEST_CASE("values dropped from an imported profile are logged")
+    {
+        QTemporaryDir dir;
+        REQUIRE(dir.isValid());
+        const QString profile = dir.filePath(QStringLiteral("profile.toml"));
+        REQUIRE(writeText(profile, "config_version = 6\n[appearance.glass]\ngrain = 7\n"));
+
+        static QStringList warnings;  // importFrom runs on this thread
+        warnings.clear();
+        const QtMessageHandler previous =
+            qInstallMessageHandler([](QtMsgType type, const QMessageLogContext&, const QString& message) {
+                if (type == QtWarningMsg) {
+                    warnings.append(message);
+                }
+            });
+        const auto restore = qScopeGuard([&] { qInstallMessageHandler(previous); });
+
+        SettingsStore store(schema());
+        ConfigFile file(store, dir.filePath(QStringLiteral("config.toml")), {});
+        const auto imported = file.importFrom(profile);
+        REQUIRE(imported.has_value());
+        CHECK_FALSE(imported->isEmpty());
+        CHECK(std::ranges::any_of(warnings, [](const QString& line) { return line.contains(u"grain"); }));
+    }
+
     TEST_CASE("the system config file is the first XDG_CONFIG_DIRS entry that has one")
     {
         QTemporaryDir dir;

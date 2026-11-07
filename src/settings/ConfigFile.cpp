@@ -287,6 +287,7 @@ Result<ConfigIssues> ConfigFile::importFrom(const QString& path)
     if (!loaded.exists) {
         return fail(ErrorCode::NotFound, path.toStdString());
     }
+    logIssues(loaded.parsed.issues);  // dropped values fall back to their defaults: say which, as load() does
     if (!loaded.parsed.syntaxOk) {
         if (loaded.parsed.issues.isEmpty()) {
             return fail(ErrorCode::ConfigSyntaxError);
