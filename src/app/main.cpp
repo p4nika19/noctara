@@ -203,6 +203,11 @@ ui::Availability availability(const gfx::GraphicsDecision& decision, const net::
         availability.disabledOptions[QStringLiteral("network.connection.http_version")].insert(
             QStringLiteral("3"), QT_TRANSLATE_NOOP("Settings", "The installed libcurl was built without HTTP/3."));
     }
+    if (!curl.httpsProxy) {
+        availability.disabledOptions[QStringLiteral("network.proxy.type")].insert(
+            QStringLiteral("https"),
+            QT_TRANSLATE_NOOP("Settings", "The installed libcurl was built without support for HTTPS proxies."));
+    }
     if (!decision.hardware) {
         static const char* const reason =
             QT_TRANSLATE_NOOP("Settings", "Needs hardware acceleration, which is currently off.");
