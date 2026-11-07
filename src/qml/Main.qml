@@ -116,9 +116,11 @@ Window {
             { text: qsTr("Copy link"), icon: "copy", enabled: permalink.length > 0, run: () => copyLink(permalink) }
         ]
     }
-    // A row or card of a list; `item` carries the row's data (kind, itemId, ownerId, permalink…).
+    // A row or card of a list; `item` carries the row's data (kind, itemId, ownerId, permalink…). The data is read
+    // now: the menu does not block the list, so the delegate can be reused for another row before an entry is picked.
     function showCollectionMenu(model, index, context, item, point) {
         const separator = { separator: true }
+        const itemId = item.itemId, ownerId = item.ownerId, permalink = item.permalink
         let actions = []
         if (item.kind === "track") {
             actions = [
@@ -126,24 +128,24 @@ Window {
                 { text: qsTr("Play next"), icon: "list-start", run: () => Player.enqueueCollection(model, index, true) },
                 { text: qsTr("Add to queue"), icon: "list-plus", run: () => Player.enqueueCollection(model, index, false) },
                 separator,
-                { text: qsTr("Go to artist"), icon: "user", enabled: item.ownerId > 0, run: () => openUser(item.ownerId) },
+                { text: qsTr("Go to artist"), icon: "user", enabled: ownerId > 0, run: () => openUser(ownerId) },
                 separator
-            ].concat(linkActions(item.permalink))
+            ].concat(linkActions(permalink))
         } else if (item.kind === "playlist") {
             actions = [
-                { text: qsTr("Open"), icon: "list-music", run: () => openPlaylist(item.itemId) },
+                { text: qsTr("Open"), icon: "list-music", run: () => openPlaylist(itemId) },
                 { text: qsTr("Play"), icon: "play", run: () => Player.playCollection(model, index, "") },
                 { text: qsTr("Play next"), icon: "list-start", run: () => Player.enqueueCollection(model, index, true) },
                 { text: qsTr("Add to queue"), icon: "list-plus", run: () => Player.enqueueCollection(model, index, false) },
                 separator,
-                { text: qsTr("Go to owner"), icon: "user", enabled: item.ownerId > 0, run: () => openUser(item.ownerId) },
+                { text: qsTr("Go to owner"), icon: "user", enabled: ownerId > 0, run: () => openUser(ownerId) },
                 separator
-            ].concat(linkActions(item.permalink))
+            ].concat(linkActions(permalink))
         } else {
             actions = [
-                { text: qsTr("Open profile"), icon: "user", run: () => openUser(item.itemId) },
+                { text: qsTr("Open profile"), icon: "user", run: () => openUser(itemId) },
                 separator
-            ].concat(linkActions(item.permalink))
+            ].concat(linkActions(permalink))
         }
         contextMenu.show(actions, item, point)
     }
