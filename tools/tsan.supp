@@ -23,3 +23,6 @@ race:g_wakeup_free
 # comment in Qt's ~QObject). With the lock inside uninstrumented Qt, the read of a CallbackChannel's vptr there is
 # reported against its delete on the owner thread (image://cover shutdown test).
 race:noctara::net::CallbackChannel::metaObject
+# libdbus (QtDBus' connection thread) is uninstrumented: TSan sees only its pthread mutexes, so a mutex block it
+# frees and reallocates, or its own lock ordering, is reported against the GUI thread's dbus_connection_* calls.
+called_from_lib:libdbus-1.so.3

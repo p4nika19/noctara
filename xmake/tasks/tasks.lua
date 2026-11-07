@@ -239,7 +239,10 @@ task("test-tsan")
         -- registry abort (it creates several pools in turn) is reported as skipped by name; a data race fails.
         local perCase = {["auth.browser-cookies"] = true, ["auth.encrypted-secret-store"] = true,
                          ["auth.secret-chain"] = true, ["media.controller"] = true, ["media.backend"] = true,
-                         ["theme.library"] = true, ["shutdown"] = true, ["drm.installer"] = true}
+                         ["theme.library"] = true, ["shutdown"] = true, ["drm.installer"] = true,
+                         ["media.mpris"] = true, ["ui.catalog"] = true, ["ui.components"] = true,
+                         ["ui.effects"] = true, ["ui.keyboard"] = true, ["ui.network-credentials"] = true,
+                         ["ui.pages"] = true, ["ui.settings-panes"] = true}
         local envs = {TSAN_OPTIONS = "halt_on_error=1 suppressions=" .. path.join(os.projectdir(), "tools", "tsan.supp")}
         local function names(args)
             local result = {}
