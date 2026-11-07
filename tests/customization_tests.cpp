@@ -6,6 +6,7 @@
 #include "api/Parse.hpp"
 
 #include "core/FileIo.hpp"
+#include "i18n/ErrorMessages.hpp"
 #include "i18n/LanguageManager.hpp"
 #include "settings/ConfigFile.hpp"
 #include "settings/Keys.hpp"
@@ -17,6 +18,7 @@
 #include "ui/KeyboardController.hpp"
 #include "ui/LayoutController.hpp"
 #include "ui/SettingsController.hpp"
+#include "ui/ThemesController.hpp"
 
 #include <QCoreApplication>
 #include <QFile>
@@ -340,6 +342,35 @@ TEST_SUITE("theme.library")
         CHECK_FALSE(droppedToBuiltin);
         REQUIRE(library.active() != nullptr);
         CHECK(library.active()->name == u"Paper");
+    }
+
+    TEST_CASE("an import whose theme cannot be selected does not report it as applied")
+    {
+        QTemporaryDir dir;
+        const QString folder = dir.filePath(QStringLiteral("themes"));
+        REQUIRE(ensureDirectory(folder));
+        const QString outside = dir.filePath(QStringLiteral("paper.toml"));
+        write(outside, "[theme]\nname = \"Paper\"\n");
+
+        settings::SettingsStore store(settings::Schema::builtin());
+        const std::size_t custom = *store.schema().indexOf(keys::CustomTheme);
+        store.replaceLayer(settings::Layer::Environment, {{custom, QStringLiteral("")}});  // pinned
+        i18n::LanguageManager languages(store);
+        ThemeLibrary library(store, folder);
+        ui::ThemesController themes(library, store, languages);
+        std::vector<std::pair<QString, QString>> notices;
+        QObject::connect(&themes, &ui::ThemesController::notice,
+                         [&](const QString& kind, const QString& message) { notices.emplace_back(kind, message); });
+
+        themes.importFile(QUrl::fromLocalFile(outside));
+        REQUIRE(test::waitUntil([&] { return !notices.empty(); }, 5000));
+        QCoreApplication::processEvents();
+        REQUIRE(notices.size() == 1);
+        CHECK(notices.front().first == u"warning");
+        // The reason, not "Theme imported and applied." (the suite may run in another language).
+        CHECK(notices.front().second.contains(i18n::errorMessage(ErrorCode::ConfigOverridden)));
+        CHECK(store.stringValue(keys::CustomTheme).isEmpty());
+        CHECK(std::ranges::find(library.themes(), QStringLiteral("paper"), &ThemeEntry::id) != library.themes().end());
     }
 }
 

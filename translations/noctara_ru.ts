@@ -4611,7 +4611,7 @@
         <translation>О программе</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsModel.cpp" line="+154"/>
+        <location filename="../src/ui/SettingsModel.cpp" line="+157"/>
         <source>Set by a command-line flag for this session.</source>
         <translation>Задано флагом командной строки на этот сеанс.</translation>
     </message>
@@ -4653,7 +4653,7 @@
 <context>
     <name>SettingsView</name>
     <message>
-        <location filename="../src/qml/settings/SettingsView.qml" line="+39"/>
+        <location filename="../src/qml/settings/SettingsView.qml" line="+48"/>
         <source>Search settings</source>
         <translation>Поиск настроек</translation>
     </message>
@@ -5289,13 +5289,13 @@
     </message>
     <message>
         <location line="+0"/>
-        <location line="+216"/>
+        <location line="+219"/>
         <location line="+27"/>
         <source>direct</source>
         <translation>напрямую</translation>
     </message>
     <message>
-        <location line="-227"/>
+        <location line="-230"/>
         <source>With SOCKS4 and SOCKS5 Noctara looks up server names itself, using the DNS settings above, and sends only addresses to the proxy. Choose SOCKS5 with remote DNS to let the proxy look them up.</source>
         <translation>С SOCKS4 и SOCKS5 Noctara сама определяет адреса серверов по настройкам DNS выше и передаёт прокси только адреса. Выберите «SOCKS5 с удалённым DNS», чтобы это делал прокси.</translation>
     </message>
@@ -5345,7 +5345,7 @@
         <translation>Этот файл не существует, поэтому защищённые соединения не будут работать.</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+33"/>
         <source>Noctara proxy credentials</source>
         <translation>Учётные данные прокси Noctara</translation>
     </message>
@@ -5365,7 +5365,7 @@
         <translation>Учётные данные прокси сохранены в зашифрованном локальном хранилище Noctara, так как системная связка ключей недоступна.</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+47"/>
         <source>DNS cache cleared.</source>
         <translation>Кэш DNS очищен.</translation>
     </message>
@@ -5563,7 +5563,13 @@
         <translation>Этот файл — не корректная тема (синтаксическая ошибка TOML).</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
+        <source>Theme imported but not applied. %1</source>
+        <extracomment>%1 = why the theme could not be selected, a full sentence</extracomment>
+        <translation>Тема импортирована, но не применена. %1</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Theme imported and applied.</source>
         <translation>Тема импортирована и применена.</translation>
     </message>

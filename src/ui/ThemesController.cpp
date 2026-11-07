@@ -111,7 +111,12 @@ void ThemesController::importFile(const QUrl& file)
                                                        : i18n::errorMessage(id.error().code));
             return;
         }
-        select(*id);
+        if (const Result<void> set = m_settings.setUserValue(settings::keys::CustomTheme, *id); !set) {
+            //: %1 = why the theme could not be selected, a full sentence
+            Q_EMIT notice(QStringLiteral("warning"),
+                          tr("Theme imported but not applied. %1").arg(i18n::errorMessage(set.error().code)));
+            return;
+        }
         Q_EMIT notice(QStringLiteral("info"), tr("Theme imported and applied."));
     });
 }
