@@ -1152,7 +1152,7 @@ void PlaybackController::saveSession()
             m_session.queue.push_back(m_queue.items()[static_cast<std::size_t>(i)].track.id);
         }
         m_session.current = m_queue.current() - first;
-        m_session.positionMs = position();
+        m_session.positionMs = m_ended ? 0 : position();  // played to its end: Play starts it over
         m_session.context = context();
     }
     m_store.save(m_session);

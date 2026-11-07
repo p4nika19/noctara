@@ -1545,6 +1545,25 @@ TEST_SUITE("media.controller")
         CHECK(restored.backend.startPositions[0] == 42'000);
     }
 
+    TEST_CASE("a queue that played to its end plays its last track from the start after a restart")
+    {
+        QTemporaryDir dir;
+        const QString path = dir.filePath(QStringLiteral("session.json"));
+        {
+            Player player(path);
+            REQUIRE(player.store.setUserValue(settings::keys::Autoplay, false));
+            player.controller->playTracks({apiTrack(1)}, 0, {});
+            Q_EMIT player.backend.ended();
+            REQUIRE(player.controller->position() == 200'000);
+        }
+        Player restored(path, {{1, apiTrack(1)}});
+        REQUIRE(test::waitUntil([&] { return restored.controller->hasTrack(); }));
+        CHECK(restored.controller->position() == 0);
+        restored.controller->play();
+        REQUIRE(restored.backend.loads.size() == 1);
+        CHECK(restored.backend.startPositions[0] == 0);
+    }
+
     TEST_CASE("a saved queue that could not be looked up (offline) is kept for the next start")
     {
         QTemporaryDir dir;
