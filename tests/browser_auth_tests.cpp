@@ -514,6 +514,20 @@ TEST_SUITE("auth.browser-cookies")
             REQUIRE(profiles->size() == 1);
             CHECK(test::errorOf(importToken(source, profiles->constFirst())) == ErrorCode::NotFound);
         }
+        const qint64 future = QDateTime::currentSecsSinceEpoch() + 3600;
+        for (const qint64 expiry : {future, future * 1000}) {
+            CAPTURE(expiry);
+            QTemporaryDir home;
+            makeFirefoxProfile(home.path() + QStringLiteral("/.mozilla/firefox"), QByteArrayLiteral("live"),
+                               QByteArrayLiteral(".soundcloud.com"), expiry);
+            auth::BrowserCookieSource source(home.path(), {});
+            auto profiles = discover(source);
+            REQUIRE(profiles);
+            REQUIRE(profiles->size() == 1);
+            auto token = importToken(source, profiles->constFirst());
+            REQUIRE_MESSAGE(token, test::describe(token));
+            CHECK(*token == QByteArrayLiteral("live"));
+        }
     }
 
     TEST_CASE("imports Firefox from the XDG mozilla profile layout")
