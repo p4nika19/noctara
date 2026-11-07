@@ -27,7 +27,7 @@ std::int64_t NativeBackend::ringFrames() const
     return static_cast<std::int64_t>(rate) * (kRingMs + m_crossfadeMs) / 1000;
 }
 
-bool NativeBackend::ensureOutput()
+bool NativeBackend::ensureOutput(std::optional<std::int64_t> resumeAt)
 {
     if (m_output.running()) {
         return true;
@@ -37,8 +37,21 @@ bool NativeBackend::ensureOutput()
         fail(format.error());
         return false;
     }
+    cache::AudioReaderPtr current;
+    cache::AudioReaderPtr next;
     if (!m_format || *m_format != *format) {
-        // Voices decode for one format: a new one means new voices (restartOutput reopens them).
+        // Voices decode for one format: a device with another one decodes again, from where playback was.
+        const std::int64_t at = resumeAt.value_or(position());
+        current = m_current.voice ? m_current.voice->reader() : nullptr;
+        next = m_next.voice ? m_next.voice->reader() : nullptr;
+        if (m_mixer) {
+            m_mixer->setVoices(nullptr, nullptr);
+        }
+        m_current.voice.reset();
+        m_next.voice.reset();
+        if (current) {
+            m_startMs = at;
+        }
         m_mixer = std::make_unique<Mixer>(*format);
         m_format = *format;
         m_advancesSeen = 0;
@@ -53,39 +66,20 @@ bool NativeBackend::ensureOutput()
         return false;
     }
     m_suspended = false;
+    if (current) {
+        attach(m_current, current);
+    }
+    if (next) {
+        attach(m_next, next);
+    }
     return true;
 }
 
 void NativeBackend::restartOutput()
 {
-    const std::int64_t at = position();
+    const std::int64_t at = position();  // what was heard: the device's latency is gone once it stops
     m_output.stop();
-    Result<AudioFormat> format = m_output.preferredFormat();
-    if (!format) {
-        fail(format.error());
-        return;
-    }
-    if (m_format && *format != *m_format) {
-        // A device with another rate: decode again for it, from where playback was.
-        const cache::AudioReaderPtr current = m_current.voice ? m_current.voice->reader() : nullptr;
-        const cache::AudioReaderPtr next = m_next.voice ? m_next.voice->reader() : nullptr;
-        if (m_mixer) {
-            m_mixer->setVoices(nullptr, nullptr);
-        }
-        m_current.voice.reset();
-        m_next.voice.reset();
-        m_format.reset();
-        if (!ensureOutput()) {
-            return;
-        }
-        m_startMs = at;
-        if (current) {
-            attach(m_current, current);
-        }
-        if (next) {
-            attach(m_next, next);
-        }
-    } else if (!ensureOutput()) {
+    if (!ensureOutput(at)) {
         return;
     }
     if (m_paused || m_state == BackendState::Ended) {

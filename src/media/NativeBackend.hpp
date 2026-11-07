@@ -61,7 +61,9 @@ private:
     void attach(Slot& slot, const cache::AudioReaderPtr& reader);
     // Opens the current source again after its cache entry was reset under `voice`.
     void reopenCurrent(const Voice* voice, const Error& error);
-    [[nodiscard]] bool ensureOutput();
+    // Starts the device. A device format other than the voices' decodes them again, from `resumeAt` (default: the
+    // position).
+    [[nodiscard]] bool ensureOutput(std::optional<std::int64_t> resumeAt = std::nullopt);
     void restartOutput();
     // Takes over the moves the mixer made to the next voice; `report` emits advanced() for each. True if any.
     bool syncAdvances(bool report = true);

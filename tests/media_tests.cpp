@@ -224,6 +224,11 @@ public:
         return audible;
     }
 
+    // The device went away (or changed): the backend's lost handler runs, as QtAudioOutput would call it.
+    void loseDevice() const { lost(); }
+    // The default device now prefers `format`.
+    void setFormat(AudioFormat format) { m_format = format; }
+
     bool suspended = false;
     bool unavailable = false;  // no device: preferredFormat() fails
     int starts = 0;
@@ -947,6 +952,30 @@ TEST_SUITE("media.backend")
         backend.play();
         CHECK(pump(output, [&] { return backend.state() == BackendState::Playing; }, nullptr, 5000));
         CHECK(cache.origin.count() > 0);
+    }
+
+    TEST_CASE("a device lost with none to replace it, then one with another rate: play decodes again for it")
+    {
+        Cache cache;
+        FakeOutput output;
+        NativeBackend backend(*cache.audio, output);
+        QSignalSpy ended(&backend, &IPlaybackBackend::ended);
+        cache.origin.serve(QStringLiteral("https://cdn.test/s.mp3"), {.body = fixture(QStringLiteral("sine.mp3"))});
+        backend.load(
+            {.info = trackInfo(QStringLiteral("s"), cache::StreamProtocol::Progressive, QStringLiteral("audio/mpeg")),
+             .urls = Cache::urls(QStringLiteral("https://cdn.test/s.mp3"))},
+            0, false);
+        REQUIRE(pump(output, [&] { return backend.position() > 300; }));
+        output.unavailable = true;  // the only device disappears: the restart cannot open another
+        output.loseDevice();
+        REQUIRE(backend.state() == BackendState::Failed);
+        output.unavailable = false;
+        output.setFormat({.sampleRate = 44100, .channels = 2});  // the new default runs at 44.1 kHz
+        backend.play();
+        std::int64_t audible = 0;
+        CHECK(pump(output, [&] { return !ended.isEmpty(); }, &audible, 8000));
+        CHECK(audible > 44100);
+        CHECK(backend.state() == BackendState::Ended);
     }
 
     TEST_CASE("seeking after a network failure plays on from the target and leaves the failed state")
