@@ -687,6 +687,36 @@ TEST_SUITE("ui.components")
         check();
     }
 
+    TEST_CASE("the keypad Delete key clears a shortcut like the main Delete key")
+    {
+        // Like the real KeyboardController: only Ctrl/Shift/Alt/Meta count, so keypad Delete would read as "Del".
+        stub::singleton("Shortcuts", QStringLiteral("({fromKeyEvent: (key, mods) => key === Qt.Key_Delete ? 'Del' "
+                                                    ": 'Key' + key, display: text => text})"));
+        const WindowHarness harness(R"(Window {
+            id: window
+            width: 300; height: 100; visible: true
+            property Item recorder: recorder
+            property var picks: []
+            ShortcutRecorder {
+                id: recorder
+                value: "Ctrl+K"
+                onPicked: sequence => window.picks = window.picks.concat([sequence])
+            }
+        })");
+        QQuickItem* recorder = harness.item("recorder");
+        harness.window->requestActivate();
+        recorder->forceActiveFocus();
+        REQUIRE(test::waitUntil([&] { return recorder->hasActiveFocus(); }));
+        for (const auto modifiers : {Qt::KeyboardModifiers(Qt::KeypadModifier), Qt::KeyboardModifiers()}) {
+            recorder->setProperty("recording", true);
+            QTest::keyClick(harness.window.get(), Qt::Key_Delete, modifiers);
+            CHECK_FALSE(recorder->property("recording").toBool());
+        }
+        const QStringList picks = harness.window->property("picks").toStringList();
+        const QStringList cleared{QString(), QString()};
+        CHECK_MESSAGE(picks == cleared, "picked: ", picks.join(u',').toStdString());
+    }
+
     TEST_CASE("the navigation pill is hidden while the current page is not in the rail")
     {
         const WindowHarness harness(R"(Window {

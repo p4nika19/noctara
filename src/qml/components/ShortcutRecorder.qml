@@ -34,11 +34,13 @@ T.AbstractButton {
             return
         }
         event.accepted = true
-        if (event.modifiers === Qt.NoModifier && event.key === Qt.Key_Escape) {
+        // Keys on the keypad (Delete with NumLock off) carry the keypad modifier.
+        const plain = (event.modifiers & ~Qt.KeypadModifier) === Qt.NoModifier
+        if (plain && event.key === Qt.Key_Escape) {
             recording = false
             return
         }
-        if (event.modifiers === Qt.NoModifier && (event.key === Qt.Key_Backspace || event.key === Qt.Key_Delete)) {
+        if (plain && (event.key === Qt.Key_Backspace || event.key === Qt.Key_Delete)) {
             recording = false
             control.picked("")
             return
