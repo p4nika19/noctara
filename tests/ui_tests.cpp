@@ -1406,4 +1406,32 @@ TEST_SUITE("ui.settings-panes")
         }
         CHECK(named);
     }
+
+    TEST_CASE("the glass names on the about page follow a live language switch")
+    {
+        stub::singleton("App", QStringLiteral("({version: '1.0', licenseText: id => ''})"));
+        stub::singleton("SettingsUi", QStringLiteral("({configPath: '/tmp/config.toml', openConfigFile: () => {}})"));
+        settings::SettingsStore store{settings::Schema::builtin()};
+        REQUIRE(store.setUserValue(settings::keys::Language, QStringLiteral("en")).has_value());
+        i18n::LanguageManager languages{store};
+        WindowHarness harness(R"(import "../settings"
+        Window {
+            width: 700; height: 800; visible: true
+            property Item pane: pane
+            AboutPane { id: pane; anchors.fill: parent }
+        })");
+        const auto shows = [&](const QString& needle) {
+            const auto children = harness.item("pane")->findChildren<QQuickItem*>();
+            return std::ranges::any_of(children, [&](QQuickItem* child) {
+                return child->inherits("QQuickText") && child->property("text").toString().contains(needle);
+            });
+        };
+        CHECK(shows(QStringLiteral("Solid (no blur) / flat")));
+        REQUIRE(store.setUserValue(settings::keys::Language, QStringLiteral("ru")).has_value());
+        harness.engine.retranslate();
+        CHECK(shows(QStringLiteral("Сплошной (без размытия) / плоский")));
+        REQUIRE(store.setUserValue(settings::keys::Language, QStringLiteral("en")).has_value());
+        harness.engine.retranslate();
+        CHECK(shows(QStringLiteral("Solid (no blur) / flat")));
+    }
 }

@@ -13,20 +13,7 @@ Column {
 
     readonly property var locale: Qt.locale(Language.localeName)
 
-    function styleName(style) {
-        switch (style) {
-        case "kawase": return qsTr("Dual Kawase blur")
-        case "gaussian": return qsTr("Gaussian blur")
-        default: return qsTr("Solid (no blur)")
-        }
-    }
-    function surfaceName(surface) {
-        switch (surface) {
-        case "liquid": return qsTr("Liquid Glass")
-        case "flat": return qsTr("flat")
-        default: return qsTr("frosted")
-        }
-    }
+    readonly property GlassNames glassNames: GlassNames {}
     function qualityName(quality) {
         return quality === 0 ? qsTr("low quality") : quality === 1 ? qsTr("medium quality") : qsTr("high quality")
     }
@@ -49,7 +36,7 @@ Column {
     InfoRow {
         width: root.width
         name: qsTr("Glass")
-        info: [root.styleName(Theme.glass.style), root.surfaceName(Theme.glass.surface)]
+        info: [root.glassNames.styleName(Theme.glass.style), root.glassNames.surfaceName(Theme.glass.surface)]
               .concat(Theme.glass.blurred ? [root.qualityName(Theme.glass.quality)] : []).join(" · ")
     }
     InfoRow {

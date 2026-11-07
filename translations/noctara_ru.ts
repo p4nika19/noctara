@@ -4,37 +4,7 @@
 <context>
     <name>AboutPane</name>
     <message>
-        <location filename="../src/qml/settings/AboutPane.qml" line="+16"/>
-        <source>Dual Kawase blur</source>
-        <translation>Размытие Dual Kawase</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Gaussian blur</source>
-        <translation>Размытие по Гауссу</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Solid (no blur)</source>
-        <translation>Сплошной (без размытия)</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Liquid Glass</source>
-        <translation>Жидкое стекло</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>flat</source>
-        <translation>плоский</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>frosted</source>
-        <translation>матовое стекло</translation>
-    </message>
-    <message>
-        <location line="+37"/>
+        <location filename="../src/qml/settings/AboutPane.qml" line="+48"/>
         <source>Version %1</source>
         <extracomment>%1 = version number</extracomment>
         <translation>Версия %1</translation>
@@ -335,7 +305,7 @@
         <translation>%1, %2</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+31"/>
         <source>%1 followers</source>
         <translation>Подписчиков: %1</translation>
     </message>
@@ -379,7 +349,7 @@
         <translation>Вашей учётной записи доступен только 30-секундный фрагмент.</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+29"/>
         <source>Add to queue</source>
         <translation>Добавить в очередь</translation>
     </message>
@@ -1251,6 +1221,39 @@
     </message>
 </context>
 <context>
+    <name>GlassNames</name>
+    <message>
+        <location filename="../src/qml/settings/GlassNames.qml" line="+7"/>
+        <source>Dual Kawase blur</source>
+        <translation>Размытие Dual Kawase</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Gaussian blur</source>
+        <translation>Размытие по Гауссу</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Solid (no blur)</source>
+        <translation>Сплошной (без размытия)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Liquid Glass</source>
+        <translation>Жидкое стекло</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>flat</source>
+        <translation>плоский</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>frosted</source>
+        <translation>матовое стекло</translation>
+    </message>
+</context>
+<context>
     <name>HistoryPage</name>
     <message>
         <location filename="../src/qml/pages/HistoryPage.qml" line="+18"/>
@@ -1931,36 +1934,6 @@
     <name>PerformanceHeader</name>
     <message>
         <location filename="../src/qml/settings/PerformanceHeader.qml" line="+18"/>
-        <source>Dual Kawase blur</source>
-        <translation>Размытие Dual Kawase</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Gaussian blur</source>
-        <translation>Размытие по Гауссу</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Liquid Glass</source>
-        <translation>Жидкое стекло</translation>
-    </message>
-    <message>
-        <location line="-5"/>
-        <source>Solid (no blur)</source>
-        <translation>Сплошной (без размытия)</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>flat</source>
-        <translation>плоский</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>frosted</source>
-        <translation>матовое стекло</translation>
-    </message>
-    <message>
-        <location line="+4"/>
         <source>low quality</source>
         <translation>низкое качество</translation>
     </message>
@@ -4633,7 +4606,7 @@
         <translation>О программе</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsModel.cpp" line="+152"/>
+        <location filename="../src/ui/SettingsModel.cpp" line="+158"/>
         <source>Set by a command-line flag for this session.</source>
         <translation>Задано флагом командной строки на этот сеанс.</translation>
     </message>
@@ -5535,7 +5508,7 @@
         <translation>Последние запросы:</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+38"/>
         <source>Network report copied. Passwords and tokens are not included.</source>
         <translation>Сетевой отчёт скопирован. Пароли и токены в него не входят.</translation>
     </message>

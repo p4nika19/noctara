@@ -4,37 +4,7 @@
 <context>
     <name>AboutPane</name>
     <message>
-        <location filename="../src/qml/settings/AboutPane.qml" line="+16"/>
-        <source>Dual Kawase blur</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Gaussian blur</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Solid (no blur)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Liquid Glass</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>flat</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>frosted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+37"/>
+        <location filename="../src/qml/settings/AboutPane.qml" line="+48"/>
         <source>Version %1</source>
         <extracomment>%1 = version number</extracomment>
         <translation type="unfinished"></translation>
@@ -335,7 +305,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+31"/>
         <source>%1 followers</source>
         <translation type="unfinished"></translation>
     </message>
@@ -378,7 +348,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+29"/>
         <source>Add to queue</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1244,6 +1214,39 @@
     </message>
 </context>
 <context>
+    <name>GlassNames</name>
+    <message>
+        <location filename="../src/qml/settings/GlassNames.qml" line="+7"/>
+        <source>Dual Kawase blur</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Gaussian blur</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Solid (no blur)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Liquid Glass</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>flat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>frosted</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>HistoryPage</name>
     <message>
         <location filename="../src/qml/pages/HistoryPage.qml" line="+18"/>
@@ -1922,36 +1925,6 @@
     <name>PerformanceHeader</name>
     <message>
         <location filename="../src/qml/settings/PerformanceHeader.qml" line="+18"/>
-        <source>Dual Kawase blur</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Gaussian blur</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Liquid Glass</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="-5"/>
-        <source>Solid (no blur)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>flat</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>frosted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+4"/>
         <source>low quality</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4622,7 +4595,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsModel.cpp" line="+152"/>
+        <location filename="../src/ui/SettingsModel.cpp" line="+158"/>
         <source>Set by a command-line flag for this session.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5522,7 +5495,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+38"/>
         <source>Network report copied. Passwords and tokens are not included.</source>
         <translation type="unfinished"></translation>
     </message>
