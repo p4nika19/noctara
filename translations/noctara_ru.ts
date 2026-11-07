@@ -1892,19 +1892,19 @@
         <translation>Текущая палитра</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+37"/>
         <source>Accent</source>
         <comment>palette colour</comment>
         <translation>Акцент</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+4"/>
         <source>Light</source>
         <comment>palette colour: the lighter companion of the accent</comment>
         <translation>Свет</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+4"/>
         <source>Shadow</source>
         <comment>palette colour: the deep shade of the accent</comment>
         <translation>Тень</translation>
@@ -1913,7 +1913,7 @@
 <context>
     <name>PerformanceHeader</name>
     <message>
-        <location filename="../src/qml/settings/PerformanceHeader.qml" line="+17"/>
+        <location filename="../src/qml/settings/PerformanceHeader.qml" line="+18"/>
         <source>Dual Kawase blur</source>
         <translation>Размытие Dual Kawase</translation>
     </message>
@@ -1958,12 +1958,12 @@
         <translation>высокое качество</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+7"/>
         <source>Right now</source>
         <translation>Сейчас</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Renderer</source>
         <translation>Отрисовка</translation>
     </message>
@@ -1973,29 +1973,29 @@
         <translation>Программная (ЦП)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Glass</source>
         <translation>Стекло</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Frame rate</source>
         <translation>Частота кадров</translation>
     </message>
     <message>
         <location line="+3"/>
-        <location line="+14"/>
+        <location line="+16"/>
         <source>%1 fps</source>
         <extracomment>%1 = frames per second</extracomment>
         <translation>%1 кадр/с</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-15"/>
         <source>Idle: nothing is being redrawn</source>
         <translation>Простой: ничего не перерисовывается</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>GPU time per frame</source>
         <translation>Время ГП на кадр</translation>
     </message>
@@ -2011,7 +2011,7 @@
         <translation>Пока нет данных</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Frame rate limit</source>
         <translation>Ограничение частоты кадров</translation>
     </message>
@@ -4611,7 +4611,7 @@
         <translation>О программе</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsModel.cpp" line="+157"/>
+        <location filename="../src/ui/SettingsModel.cpp" line="+156"/>
         <source>Set by a command-line flag for this session.</source>
         <translation>Задано флагом командной строки на этот сеанс.</translation>
     </message>

@@ -1,6 +1,7 @@
 import QtQuick
 import Noctara
 import "../components"
+import "network"
 
 // Top of the Performance page: what is rendering, what the glass effects cost right now and why they may be
 // reduced (quality governor, energy saving, software rendering). Updates once per second while frames are drawn.
@@ -31,28 +32,6 @@ Column {
     }
     function number(value, decimals) { return value.toLocaleString(root.locale, "f", decimals) }
 
-    component InfoRow: Row {
-        property string name
-        property string info
-        property color infoColor: Theme.colors.textPrimary
-        width: root.width
-        spacing: Theme.space.md
-        Text {
-            width: Math.min(200 * Theme.scale, parent.width * 0.35)
-            text: parent.name
-            font: Theme.font.label
-            color: Theme.colors.textSecondary
-            wrapMode: Text.Wrap
-        }
-        Text {
-            width: parent.width - Math.min(200 * Theme.scale, parent.width * 0.35) - parent.spacing
-            text: parent.info
-            font: Theme.font.mono
-            color: parent.infoColor
-            wrapMode: Text.Wrap
-        }
-    }
-
     Text {
         topPadding: Theme.space.lg
         bottomPadding: Theme.space.xs
@@ -62,16 +41,19 @@ Column {
         Accessible.role: Accessible.Heading
     }
     InfoRow {
+        width: root.width
         name: qsTr("Renderer")
         info: Graphics.hardware ? Graphics.api + (Graphics.deviceName.length > 0 ? " · " + Graphics.deviceName : "")
                                 : qsTr("Software (CPU)")
     }
     InfoRow {
+        width: root.width
         name: qsTr("Glass")
         info: [root.styleName(Theme.glass.style), root.surfaceName(Theme.glass.surface)]
               .concat(Theme.glass.blurred ? [root.qualityName(Theme.glass.quality)] : []).join(" · ")
     }
     InfoRow {
+        width: root.width
         name: qsTr("Frame rate")
         info: Performance.fps >= 1
               //: %1 = frames per second
@@ -79,6 +61,7 @@ Column {
               : qsTr("Idle: nothing is being redrawn")
     }
     InfoRow {
+        width: root.width
         visible: Graphics.hardware
         name: qsTr("GPU time per frame")
         info: Performance.gpuFrameMs >= 0
@@ -87,6 +70,7 @@ Column {
               : qsTr("Not reported yet")
     }
     InfoRow {
+        width: root.width
         visible: Performance.frameCap > 0
         name: qsTr("Frame rate limit")
         info: qsTr("%1 fps").arg(Performance.frameCap)

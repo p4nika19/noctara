@@ -15,14 +15,12 @@ Item {
 
     required property Item source
     // Texture provider with the blurred backdrop, sampled by the glass panels.
-    readonly property Item output: gaussian ? vertical : upSources[0]
+    readonly property Item output: gaussian ? vertical : up0
 
     readonly property bool gaussian: Theme.glass.style === "gaussian"
     readonly property int iterations: gaussian ? 0 : Math.max(1, Math.min(5, Theme.glass.blurIterations))
     readonly property size captureSize: Qt.size(Math.max(1, Math.ceil(width / Theme.glass.blurDownsample)),
                                                 Math.max(1, Math.ceil(height / Theme.glass.blurDownsample)))
-    readonly property var downSources: [down1, down2, down3, down4, down5]
-    readonly property var upSources: [up0, up1, up2, up3, up4]
 
     function levelSize(level) {
         const f = Math.pow(2, level)
