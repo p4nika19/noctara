@@ -59,14 +59,14 @@ Window {
 
     // --- Navigation ------------------------------------------------------------------------------
 
-    function openPlaylist(id) {
-        details = details.concat([{ kind: "playlist", id: id }])
+    // Opening the detail already on top only closes the full player: a duplicate entry would make Back look dead.
+    function openDetail(kind, id) {
+        if (!detail || detail.kind !== kind || detail.id !== id)
+            details = details.concat([{ kind: kind, id: id }])
         fullPlayer = false
     }
-    function openUser(id) {
-        details = details.concat([{ kind: "user", id: id }])
-        fullPlayer = false
-    }
+    function openPlaylist(id) { openDetail("playlist", id) }
+    function openUser(id) { openDetail("user", id) }
     // Leaves the innermost overlay: the full player, a panel, then the detail pages.
     function goBack() {
         if (cheatSheet)
