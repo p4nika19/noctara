@@ -4,13 +4,9 @@ task("i18n-update")
     set_category("plugin")
     set_menu {usage = "xmake i18n-update", description = "Extract translatable strings into translations/*.ts (lupdate)"}
     on_run(function ()
-        import("lib.detect.find_file")
-        local lupdate = find_file("lupdate", {"/usr/lib/qt6/bin", "/usr/bin"})
-        local sources = {"src", "tools"}
-        for _, ts in ipairs(os.files(path.join(os.projectdir(), "translations", "*.ts"))) do
-            os.execv(lupdate, table.join({"-locations", "relative", "-no-obsolete", "-extensions", "cpp,hpp,qml,js"},
-                sources, {"-ts", ts}), {curdir = os.projectdir()})
-        end
+        import("noctara.i18n")
+        local files = os.files(path.join(os.projectdir(), "translations", "*.ts"))
+        os.execv(i18n.lupdate(), i18n.lupdate_args(files), {curdir = os.projectdir()})
     end)
 task_end()
 
@@ -34,16 +30,20 @@ task("i18n-check")
     set_category("plugin")
     set_menu {usage = "xmake i18n-check", description = "Verify translations are complete and in sync with sources"}
     on_run(function ()
-        import("lib.detect.find_file")
-        local lupdate = find_file("lupdate", {"/usr/lib/qt6/bin", "/usr/bin"})
+        import("noctara.i18n")
         local tmpdir = os.tmpfile() .. ".i18n"
         os.mkdir(tmpdir)
         local failed = false
-        for _, ts in ipairs(os.files(path.join(os.projectdir(), "translations", "*.ts"))) do
+        local files = os.files(path.join(os.projectdir(), "translations", "*.ts"))
+        local copies = {}
+        for _, ts in ipairs(files) do
             local copy = path.join(tmpdir, path.filename(ts))
             os.cp(ts, copy)
-            os.iorunv(lupdate, {"-locations", "relative", "-no-obsolete", "-extensions", "cpp,hpp,qml,js",
-                "src", "tools", "-ts", copy}, {curdir = os.projectdir()})
+            table.insert(copies, copy)
+        end
+        os.iorunv(i18n.lupdate(), i18n.lupdate_args(copies), {curdir = os.projectdir()})
+        for _, ts in ipairs(files) do
+            local copy = path.join(tmpdir, path.filename(ts))
             local fresh = io.readfile(copy)
             local original = io.readfile(ts)
             local function strip(s) return (s:gsub("<location[^>]*/>%s*", "")) end
