@@ -38,6 +38,30 @@ Item {
     Accessible.role: Accessible.ListItem
     Accessible.name: pending ? qsTr("Loading") : qsTr("%1, %2").arg(title).arg(subtitle)
 
+    // Play/like/repost counter. Fixed instances: a Repeater over a model built from the row's numbers destroyed and
+    // recreated all three (icons included) each time a reused row took another track's numbers.
+    component Stat: Row {
+        id: stat
+        property string icon
+        property var value
+        property bool shown
+        anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+        spacing: Theme.space.xs
+        visible: shown && value !== undefined
+        Icon {
+            anchors.verticalCenter: parent.verticalCenter
+            name: stat.icon
+            size: Theme.space.iconSizeSmall
+            color: Theme.targetColors.iconSecondary
+        }
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: Format.revision >= 0 && stat.value !== undefined ? Format.count(stat.value) : ""
+            font: Theme.font.numeric
+            color: Theme.colors.textTertiary
+        }
+    }
+
     readonly property string meta: {
         if (Format.revision < 0 || pending) {
             return ""
@@ -153,31 +177,20 @@ Item {
             text: qsTr("Preview")
             tooltip: qsTr("Only a 30-second preview is available to your account.")
         }
-        Repeater {
-            model: [
-                { icon: "play", value: root.plays, shown: Layout.rowPlays && root.kind === "track" },
-                { icon: "heart", value: root.likes, shown: Layout.rowLikes && root.kind !== "user" },
-                { icon: "repeat", value: root.reposts, shown: Layout.rowReposts && root.kind !== "user" }
-            ]
-            delegate: Row {
-                required property var modelData
-                anchors.verticalCenter: parent ? parent.verticalCenter : undefined
-                spacing: Theme.space.xs
-                visible: modelData.shown && modelData.value !== undefined
-                Icon {
-                    anchors.verticalCenter: parent.verticalCenter
-                    name: parent.modelData.icon
-                    size: Theme.space.iconSizeSmall
-                    color: Theme.targetColors.iconSecondary
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Format.revision >= 0 && parent.modelData.value !== undefined
-                          ? Format.count(parent.modelData.value) : ""
-                    font: Theme.font.numeric
-                    color: Theme.colors.textTertiary
-                }
-            }
+        Stat {
+            icon: "play"
+            value: root.plays
+            shown: Layout.rowPlays && root.kind === "track"
+        }
+        Stat {
+            icon: "heart"
+            value: root.likes
+            shown: Layout.rowLikes && root.kind !== "user"
+        }
+        Stat {
+            icon: "repeat"
+            value: root.reposts
+            shown: Layout.rowReposts && root.kind !== "user"
         }
         IconButton {
             anchors.verticalCenter: parent.verticalCenter

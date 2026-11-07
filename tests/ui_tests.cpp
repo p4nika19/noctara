@@ -1198,12 +1198,58 @@ TEST_SUITE("ui.settings-panes")
         clock.start();
         for (int frame = 0; frame < kFrames; ++frame) {
             const double t = static_cast<double>(frame) / kFrames;
-            window->setProperty("tone", QColor::fromRgbF(static_cast<float>(0.2 + 0.6 * t), 0.4F,
-                                                          static_cast<float>(1.0 - 0.6 * t)));
+            window->setProperty(
+                "tone", QColor::fromRgbF(static_cast<float>(0.2 + 0.6 * t), 0.4F, static_cast<float>(1.0 - 0.6 * t)));
             QCoreApplication::processEvents();
         }
         const double perFrame = static_cast<double>(clock.nsecsElapsed()) / 1e6 / kFrames;
         MESSAGE("150 buttons, one crossfade frame: " << perFrame << " ms");
+    }
+
+    // Measurement, skipped by default: a list row taking another track's numbers, as when the list reuses it while
+    // scrolling (plays, likes and reposts change one after the other). Run with --no-skip -tc="row reuse*".
+    TEST_CASE("row reuse benchmark" * doctest::skip())
+    {
+        installStubs({});
+        stub::singleton("Layout",
+                        QStringLiteral("({rowPlays: true, rowLikes: true, rowReposts: true, rowDuration: true,"
+                                       " rowCover: true, density: 'comfortable'})"));
+        stub::singleton("Format", QStringLiteral("({revision: 0, duration: ms => '0:00', error: code => '',"
+                                                 " count: n => String(n)})"));
+        QQmlEngine engine;
+        engine.addImageProvider(QStringLiteral("icon"), new SolidIconProvider);  // NOLINT: owned by the engine
+        QQmlComponent component(&engine);
+        component.setData(R"(import QtQuick
+        import Noctara
+        Window {
+            id: win
+            width: 900; height: 200; visible: true
+            property int plays: 1
+            property int likes: 1
+            property int reposts: 1
+            CatalogRow {
+                width: 900
+                index: 0; kind: "track"; itemId: 1; ownerId: 2; permalink: ""; title: "Title"; subtitle: "Artist"
+                thumbnail: ""; duration: 1000; followers: undefined; trackCount: undefined; repostedBy: ""
+                protectedMedia: false; preview: false; verified: false; album: false; pending: false
+                plays: win.plays; likes: win.likes; reposts: win.reposts
+            }
+        })",
+                          QUrl::fromLocalFile(QStringLiteral(NOCTARA_SOURCE_DIR "/src/qml/components/Harness.qml")));
+        std::unique_ptr<QObject> window(component.create());
+        REQUIRE_MESSAGE(window != nullptr, component.errorString());
+        QCoreApplication::processEvents();
+        constexpr int kReuses = 300;
+        QElapsedTimer clock;
+        clock.start();
+        for (int reuse = 0; reuse < kReuses; ++reuse) {
+            window->setProperty("plays", 1000 + reuse);
+            window->setProperty("likes", 100 + reuse);
+            window->setProperty("reposts", 10 + reuse);
+            QCoreApplication::processEvents();
+        }
+        const double perReuse = static_cast<double>(clock.nsecsElapsed()) / 1e3 / kReuses;
+        MESSAGE("one row reuse: " << perReuse << " us");
     }
 
     TEST_CASE("a number-field settings row shows its unit")
