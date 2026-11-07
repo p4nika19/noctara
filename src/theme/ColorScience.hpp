@@ -60,6 +60,8 @@ struct Rgba {
 // WCAG 2.x relative luminance and contrast ratio (1..21).
 [[nodiscard]] double relativeLuminance(Srgb color) noexcept;
 [[nodiscard]] double contrastRatio(Srgb a, Srgb b) noexcept;
+// The same ratio from two relative luminances, for callers that test many colours against one background.
+[[nodiscard]] double contrastRatioOfLuminance(double la, double lb) noexcept;
 
 // Source-over compositing as performed by the scene graph (gamma-encoded space, straight alpha).
 [[nodiscard]] Srgb composite(Rgba foreground, Srgb background) noexcept;

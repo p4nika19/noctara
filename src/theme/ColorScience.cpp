@@ -101,8 +101,8 @@ Srgb toSrgbGamutMapped(OkLch color) noexcept
 {
     color.L = clamp01(color.L);
     color.C = std::max(0.0, color.C);
-    if (inGamut(toLinear(toOkLab(color)))) {
-        return clamp(toSrgb(toLinear(toOkLab(color))));
+    if (const LinearRgb linear = toLinear(toOkLab(color)); inGamut(linear)) {
+        return clamp(toSrgb(linear));
     }
     double low = 0.0;
     double high = color.C;
@@ -125,8 +125,11 @@ double relativeLuminance(Srgb color) noexcept
 
 double contrastRatio(Srgb a, Srgb b) noexcept
 {
-    const double la = relativeLuminance(a);
-    const double lb = relativeLuminance(b);
+    return contrastRatioOfLuminance(relativeLuminance(a), relativeLuminance(b));
+}
+
+double contrastRatioOfLuminance(double la, double lb) noexcept
+{
     return (std::max(la, lb) + 0.05) / (std::min(la, lb) + 0.05);
 }
 

@@ -107,27 +107,40 @@ Srgb gray(double lightness)
     return color::toSrgbGamutMapped(OkLch{lightness, 0.0, 0.0});
 }
 
-double minContrast(Srgb fg, std::span<const Srgb> backgrounds)
+// A background with its relative luminance computed once: enforce() tests up to 400 tones against the same set.
+struct Background {
+    Srgb rgb;
+    double luminance;
+};
+
+Background background(Srgb rgb)
 {
+    return {rgb, color::relativeLuminance(rgb)};
+}
+
+double minContrast(Srgb fg, std::span<const Background> backgrounds)
+{
+    const double luminance = color::relativeLuminance(fg);
     double worst = 21.0;
-    for (const Srgb& bg : backgrounds) {
-        worst = std::min(worst, color::contrastRatio(fg, bg));
+    for (const Background& bg : backgrounds) {
+        worst = std::min(worst, color::contrastRatioOfLuminance(luminance, bg.luminance));
     }
     return worst;
 }
 
 // Contrast of a possibly translucent foreground as drawn: composited over each background first.
-double minContrast(Rgba fg, std::span<const Srgb> backgrounds)
+double minContrast(Rgba fg, std::span<const Background> backgrounds)
 {
     double worst = 21.0;
-    for (const Srgb& bg : backgrounds) {
-        worst = std::min(worst, color::contrastRatio(color::composite(fg, bg), bg));
+    for (const Background& bg : backgrounds) {
+        worst = std::min(worst, color::contrastRatioOfLuminance(color::relativeLuminance(color::composite(fg, bg.rgb)),
+                                                                bg.luminance));
     }
     return worst;
 }
 
 // Moves lightness away from the backgrounds until the target ratio holds (or L saturates).
-OkLch enforce(OkLch fg, std::span<const Srgb> backgrounds, double target, Scheme scheme)
+OkLch enforce(OkLch fg, std::span<const Background> backgrounds, double target, Scheme scheme)
 {
     const double direction = scheme == Scheme::Dark ? 1.0 : -1.0;
     for (int i = 0; i < 400; ++i) {
@@ -146,29 +159,29 @@ OkLch enforce(OkLch fg, std::span<const Srgb> backgrounds, double target, Scheme
 // Opaque colours that text and icons may end up on: each glass tint over both backdrop bounds and
 // over the palette's own backdrop (a user theme may move it outside the bounds), the solid surfaces,
 // and the backdrops themselves.
-std::vector<Srgb> worstBackgrounds(const Palette& p, const SchemeTones& tones)
+std::vector<Background> worstBackgrounds(const Palette& p, const SchemeTones& tones)
 {
-    std::vector<Srgb> out;
+    std::vector<Background> out;
     const Srgb lo = gray(tones.backdropMinL);
     const Srgb hi = gray(tones.backdropMaxL);
     const Srgb base = p.backdrop.rgb;
     for (const Rgba* surface : {&p.surfaceBase, &p.surfaceRaised, &p.surfaceOverlay}) {
-        out.push_back(color::composite(*surface, lo));
-        out.push_back(color::composite(*surface, hi));
-        out.push_back(color::composite(*surface, base));
+        out.push_back(background(color::composite(*surface, lo)));
+        out.push_back(background(color::composite(*surface, hi)));
+        out.push_back(background(color::composite(*surface, base)));
     }
     for (const Rgba* solid : {&p.solidBase, &p.solidRaised, &p.solidOverlay}) {
-        out.push_back(solid->rgb);
+        out.push_back(background(solid->rgb));
     }
-    out.push_back(lo);
-    out.push_back(hi);
-    out.push_back(base);
+    out.push_back(background(lo));
+    out.push_back(background(hi));
+    out.push_back(background(base));
     return out;
 }
 
 // Makes a role readable as drawn: a translucent one first gains opacity (its colour kept), then the
 // lightness moves in `direction` until the target ratio holds.
-void enforceRole(Rgba& role, std::span<const Srgb> backgrounds, double required, Scheme direction)
+void enforceRole(Rgba& role, std::span<const Background> backgrounds, double required, Scheme direction)
 {
     if (minContrast(role, backgrounds) + 1e-9 >= required) {
         return;
@@ -249,7 +262,7 @@ Palette generatePalette(const PaletteRequest& request)
         p.shadow = rgba({t.shadowL, t.shadowChroma, achromatic ? nh : seed.h}, t.shadowAlpha);
     }
 
-    const std::vector<Srgb> backgrounds = worstBackgrounds(p, t);
+    const std::vector<Background> backgrounds = worstBackgrounds(p, t);
 
     const OkLch textPrimary = enforce({t.textL[0], nc * 0.5, nh}, backgrounds, kContrastText, scheme);
     const OkLch textSecondary = enforce({t.textL[1], nc * 0.6, nh}, backgrounds, kContrastText, scheme);
@@ -268,9 +281,9 @@ Palette generatePalette(const PaletteRequest& request)
     // itself is used for fills, icons and selection (graphical, 3:1) so it can stay saturated; small accent
     // text uses accentText, which meets 4.5:1.
     OkLch accent{std::clamp(seed.L, t.accentMinL, t.accentMaxL), std::min(seed.C, t.accentMaxC), seed.h};
-    std::vector<Srgb> accentBackgrounds = backgrounds;
+    std::vector<Background> accentBackgrounds = backgrounds;
     if (scheme == Scheme::Light) {
-        accentBackgrounds.push_back(gray(1.0));  // onAccent is white in Frost
+        accentBackgrounds.push_back(background(gray(1.0)));  // onAccent is white in Frost
     }
     accent = enforce(accent, backgrounds, kContrastGraphic, scheme);
     if (scheme == Scheme::Light) {
@@ -284,14 +297,15 @@ Palette generatePalette(const PaletteRequest& request)
     p.accentHover = rgba(accentHover);
     p.accentPressed = rgba(accentPressed);
 
-    const Srgb accentStates[] = {p.accent.rgb, p.accentHover.rgb, p.accentPressed.rgb};
+    const Background accentStates[] = {background(p.accent.rgb), background(p.accentHover.rgb),
+                                       background(p.accentPressed.rgb)};
     const OkLch onAccentStart = scheme == Scheme::Dark ? OkLch{0.16, nc, nh} : OkLch{1.0, 0.0, 0.0};
     // On-accent moves away from the accent: darker in Midnight, lighter (already white) in Frost.
     p.onAccent = rgba(
         enforce(onAccentStart, accentStates, kContrastText, scheme == Scheme::Dark ? Scheme::Light : Scheme::Dark));
 
     p.accentContainer = rgba({t.containerL, accent.C * t.containerChromaScale, accent.h});
-    const Srgb containerBg[] = {p.accentContainer.rgb};
+    const Background containerBg[] = {background(p.accentContainer.rgb)};
     p.onAccentContainer = rgba(enforce({t.onContainerL, accent.C * 0.4, accent.h}, containerBg, kContrastText, scheme));
 
     // Companion colours from the artifact: a lighter partner hue (gradients, aurora) and a deep shade.
@@ -324,7 +338,7 @@ Palette generatePalette(const PaletteRequest& request)
 Palette enforceReadable(const Palette& palette, Scheme scheme, const SchemeTones& tones)
 {
     Palette p = palette;
-    const std::vector<Srgb> backgrounds = worstBackgrounds(p, tones);
+    const std::vector<Background> backgrounds = worstBackgrounds(p, tones);
     const auto fix = [&](Rgba& role, double required) {
         enforceRole(role, backgrounds, required, scheme);
     };
@@ -341,11 +355,12 @@ Palette enforceReadable(const Palette& palette, Scheme scheme, const SchemeTones
     fix(p.warning, kContrastText);
     fix(p.success, kContrastText);
     // Text on the accent: away from the accent states, towards whichever end reads better.
-    const Srgb accentStates[] = {p.accent.rgb, p.accentHover.rgb, p.accentPressed.rgb};
+    const Background accentStates[] = {background(p.accent.rgb), background(p.accentHover.rgb),
+                                       background(p.accentPressed.rgb)};
     const Scheme away = color::relativeLuminance(p.accent.rgb) > 0.18 ? Scheme::Light : Scheme::Dark;
     enforceRole(p.onAccent, accentStates, kContrastText, away);
     // Text on the accent container, likewise away from the (possibly overridden) container.
-    const Srgb containerBg[] = {p.accentContainer.rgb};
+    const Background containerBg[] = {background(p.accentContainer.rgb)};
     const Scheme awayFromContainer =
         color::relativeLuminance(p.accentContainer.rgb) > 0.18 ? Scheme::Light : Scheme::Dark;
     enforceRole(p.onAccentContainer, containerBg, kContrastText, awayFromContainer);
@@ -354,7 +369,7 @@ Palette enforceReadable(const Palette& palette, Scheme scheme, const SchemeTones
 
 std::vector<ContrastResult> checkContrast(const Palette& p, Scheme /*scheme*/, const SchemeTones& tones)
 {
-    const std::vector<Srgb> backgrounds = worstBackgrounds(p, tones);
+    const std::vector<Background> backgrounds = worstBackgrounds(p, tones);
     std::vector<ContrastResult> results;
     const auto against = [&](std::string_view role, const Rgba& fg, double required) {
         results.push_back({role, minContrast(fg, backgrounds), required});
@@ -372,9 +387,10 @@ std::vector<ContrastResult> checkContrast(const Palette& p, Scheme /*scheme*/, c
     against("warning", p.warning, kContrastText);
     against("success", p.success, kContrastText);
 
-    const Srgb accentStates[] = {p.accent.rgb, p.accentHover.rgb, p.accentPressed.rgb};
+    const Background accentStates[] = {background(p.accent.rgb), background(p.accentHover.rgb),
+                                       background(p.accentPressed.rgb)};
     results.push_back({"onAccent", minContrast(p.onAccent, accentStates), kContrastText});
-    const Srgb containerBg[] = {p.accentContainer.rgb};
+    const Background containerBg[] = {background(p.accentContainer.rgb)};
     results.push_back({"onAccentContainer", minContrast(p.onAccentContainer, containerBg), kContrastText});
     return results;
 }

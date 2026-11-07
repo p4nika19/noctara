@@ -22,6 +22,7 @@ namespace keys = settings::keys;
 
 constexpr int kAnalysisSize = 64;
 constexpr int kBlurSize = 32;
+constexpr int kBackdropSize = 256;  // blurredBackdrop's default size
 constexpr int kSourceSize = 128;
 constexpr int kClusters = 6;
 constexpr int kIterations = 10;
@@ -109,6 +110,8 @@ std::vector<Cluster> cluster(const std::vector<color::OkLab>& pixels)
 
     std::vector<std::size_t> assignment(pixels.size(), 0);
     for (int iteration = 0; iteration < kIterations; ++iteration) {
+        // Once no pixel changes cluster, the centres are a fixed point: later iterations would repeat this one.
+        bool changed = iteration == 0;
         std::vector<color::OkLab> sums(clusters.size());
         for (auto& c : clusters) {
             c.count = 0;
@@ -123,6 +126,7 @@ std::vector<Cluster> cluster(const std::vector<color::OkLab>& pixels)
                     best = k;
                 }
             }
+            changed = changed || assignment[i] != best;
             assignment[i] = best;
             ++clusters[best].count;
             sums[best].L += pixels[i].L;
@@ -134,6 +138,9 @@ std::vector<Cluster> cluster(const std::vector<color::OkLab>& pixels)
                 const auto count = static_cast<double>(clusters[k].count);
                 clusters[k].centre = {sums[k].L / count, sums[k].a / count, sums[k].b / count};
             }
+        }
+        if (!changed) {
+            break;
         }
     }
     return clusters;
@@ -255,12 +262,17 @@ ArtworkAnalysis analyseArtwork(const QImage& image, Extraction mode)
     return analysis;
 }
 
-QImage blurredBackdrop(const QImage& image, Scheme scheme, int size)
+namespace {
+
+// The artwork in OKLab, blurred at very low resolution: shared by the two schemes' backdrops.
+struct BlurredLab {
+    std::vector<double> lightness;
+    std::vector<double> a;
+    std::vector<double> b;
+};
+
+BlurredLab blurLab(const QImage& image)
 {
-    NOCTARA_TRACE_SCOPE("accent: blurred backdrop");
-    if (image.isNull() || size <= 0) {
-        return {};
-    }
     // Cover the square (crop to the centre), then blur at very low resolution: the backdrop is soft anyway.
     const QImage covered = image.scaled(kBlurSize, kBlurSize, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
     const QImage square =
@@ -287,7 +299,11 @@ QImage blurredBackdrop(const QImage& image, Scheme scheme, int size)
     for (auto* channel : {&lightness, &a, &b}) {
         boxBlur(*channel, kBlurSize, kBlurSize, 3);
     }
+    return {std::move(lightness), std::move(a), std::move(b)};
+}
 
+QImage remapBackdrop(const BlurredLab& lab, Scheme scheme, int size)
+{
     // Remap into the scheme's legible backdrop range: contrast enforcement assumes exactly these bounds.
     const SchemeTones& tones = defaultTones(scheme);
     const double chromaScale = scheme == Scheme::Dark ? 0.85 : 0.3;
@@ -297,14 +313,26 @@ QImage blurredBackdrop(const QImage& image, Scheme scheme, int size)
         for (int x = 0; x < kBlurSize; ++x) {
             const std::size_t i = pixelIndex(x, y, kBlurSize);
             const double mapped =
-                tones.backdropMinL + std::clamp(lightness[i], 0.0, 1.0) * (tones.backdropMaxL - tones.backdropMinL);
-            const color::OkLch lch = color::toOkLch(color::OkLab{mapped, a[i] * chromaScale, b[i] * chromaScale});
+                tones.backdropMinL + std::clamp(lab.lightness[i], 0.0, 1.0) * (tones.backdropMaxL - tones.backdropMinL);
+            const color::OkLch lch =
+                color::toOkLch(color::OkLab{mapped, lab.a[i] * chromaScale, lab.b[i] * chromaScale});
             const color::Srgb rgb = color::toSrgbGamutMapped(lch);
             line[x] = qRgb(static_cast<int>(std::lround(rgb.r * 255.0)),  // NOLINT: Qt scan line
                            static_cast<int>(std::lround(rgb.g * 255.0)), static_cast<int>(std::lround(rgb.b * 255.0)));
         }
     }
     return out.scaled(size, size, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+}
+
+}  // namespace
+
+QImage blurredBackdrop(const QImage& image, Scheme scheme, int size)
+{
+    NOCTARA_TRACE_SCOPE("accent: blurred backdrop");
+    if (image.isNull() || size <= 0) {
+        return {};
+    }
+    return remapBackdrop(blurLab(image), scheme, size);
 }
 
 AccentEngine::AccentEngine(settings::SettingsStore& settings, QObject* parent)
@@ -388,8 +416,12 @@ void AccentEngine::start()
         result.key = key;
         result.mode = mode;
         result.analysis = analyseArtwork(source, mode);
-        result.dark = blurredBackdrop(source, Scheme::Dark);
-        result.light = blurredBackdrop(source, Scheme::Light);
+        if (!source.isNull()) {
+            NOCTARA_TRACE_SCOPE("accent: blurred backdrop");
+            const BlurredLab lab = blurLab(source);
+            result.dark = remapBackdrop(lab, Scheme::Dark, kBackdropSize);
+            result.light = remapBackdrop(lab, Scheme::Light, kBackdropSize);
+        }
         qCDebug(lcTheme) << "artwork analysed in" << timer.nsecsElapsed() / 1000 << "us";
         return result;
     }));
