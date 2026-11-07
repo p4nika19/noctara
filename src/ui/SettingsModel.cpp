@@ -69,8 +69,14 @@ void SettingsModel::refreshAll()
 
 void SettingsModel::onValueChanged(const QString& /*key*/)
 {
-    // A change can alter its own row and the visibility of dependent rows; pages are small.
-    refreshAll();
+    // A change can alter its own row and the visibility of dependent rows, so every row is told, but only about the
+    // roles a value can change. Labels, options, reasons and statuses have their own full refresh (language,
+    // availability, row status, advanced rows): re-reading them here rebuilt every option list and made the
+    // segmented controls recreate their segments on each step of a slider.
+    if (!m_rows.empty()) {
+        Q_EMIT dataChanged(index(0), index(count() - 1),
+                           {ValueRole, IsDefaultRole, OverriddenRole, OverrideHintRole, ShownRole, SectionStartRole});
+    }
 }
 
 int SettingsModel::rowCount(const QModelIndex& parent) const

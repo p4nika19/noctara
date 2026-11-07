@@ -21,6 +21,7 @@
 #include <QAbstractItemModelTester>
 #include <QColor>
 #include <QDateTime>
+#include <QElapsedTimer>
 #include <QJSEngine>
 #include <QQmlComponent>
 #include <QQmlContext>
@@ -28,6 +29,7 @@
 #include <QQuickImageProvider>
 #include <QQuickItem>
 #include <QQuickWindow>
+#include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
 
@@ -234,6 +236,35 @@ TEST_SUITE("ui.settings")
         CHECK_FALSE(shown("appearance.text.heading_font"));  // advanced
         controller.setShowAdvanced(true);
         CHECK(shown("appearance.text.heading_font"));
+    }
+
+    TEST_CASE("a value change refreshes only value-dependent roles; a language change refreshes every role")
+    {
+        QTemporaryDir dir;
+        settings::SettingsStore store(settings::Schema::builtin());
+        settings::ConfigFile config(store, dir.filePath(QStringLiteral("config.toml")), {});
+        i18n::LanguageManager languages(store);
+        ui::SettingsController controller(store, config, languages);
+        ui::SettingsModel* page = controller.page(QStringLiteral("appearance"));
+        REQUIRE(page != nullptr);
+        QSignalSpy changed(page, &QAbstractItemModel::dataChanged);
+
+        REQUIRE(store.setUserValue(settings::keys::GlassOpacity, 0.3).has_value());
+        REQUIRE(changed.count() == 1);
+        const auto roles = changed.at(0).at(2).value<QList<int>>();
+        CHECK(std::set<int>(roles.begin(), roles.end()) ==
+              std::set<int>{ui::SettingsModel::ValueRole, ui::SettingsModel::IsDefaultRole,
+                            ui::SettingsModel::OverriddenRole, ui::SettingsModel::OverrideHintRole,
+                            ui::SettingsModel::ShownRole, ui::SettingsModel::SectionStartRole});
+        CHECK(changed.at(0).at(0).value<QModelIndex>().row() == 0);
+        CHECK(changed.at(0).at(1).value<QModelIndex>().row() == page->rowCount() - 1);
+
+        changed.clear();
+        const QString other = languages.language() == u"ru" ? QStringLiteral("en") : QStringLiteral("ru");
+        REQUIRE(store.setUserValue(settings::keys::Language, other).has_value());
+        const bool fullRefresh = std::ranges::any_of(
+            changed, [](const QList<QVariant>& args) { return args.at(2).value<QList<int>>().isEmpty(); });
+        CHECK(fullRefresh);
     }
 }
 
@@ -1080,6 +1111,48 @@ TEST_SUITE("ui.settings-panes")
         REQUIRE(QMetaObject::invokeMethod(password, "accepted"));
         REQUIRE(QMetaObject::invokeMethod(harness.window.get(), "calls", Q_RETURN_ARG(QVariant, calls)));
         CHECK(calls.toString() == QStringLiteral("save u:secret"));
+    }
+
+    // Measurement, skipped by default: what one committed slider step costs a settings page that is on screen
+    // (every row of the Appearance page as a delegate). Run with --no-skip -tc="settings page slider step*".
+    TEST_CASE("settings page slider step benchmark" * doctest::skip())
+    {
+        stub::singleton("Language", QStringLiteral("({localeName: 'en_US'})"));
+        stub::singleton("SettingsUi", QStringLiteral("({setValue: (key, value) => '', reset: key => {}})"));
+        stub::singleton("App", QStringLiteral("({showToast: (kind, text, action, id) => {}})"));
+        settings::SettingsStore store{settings::Schema::builtin()};
+        QTemporaryDir dir;
+        settings::ConfigFile config{store, dir.filePath(QStringLiteral("config.toml")), {}};
+        i18n::LanguageManager languages{store};
+        ui::SettingsController controller{store, config, languages};
+        ui::SettingsModel* model = controller.page(QStringLiteral("appearance"));
+        REQUIRE(model != nullptr);
+        const WindowHarness harness(R"(import "../settings"
+        Window {
+            id: win
+            width: 900; height: 4000; visible: true
+            property var rows
+            property Item list: list
+            ListView {
+                id: list
+                anchors.fill: parent
+                model: win.rows
+                delegate: SettingsRow { width: 900 }
+            }
+        })");
+        harness.window->setProperty("rows", QVariant::fromValue<QObject*>(model));
+        QQuickItem* list = harness.item("list");
+        REQUIRE(test::waitUntil([&] { return list->property("count").toInt() > 10; }));
+        QCoreApplication::processEvents();
+        constexpr int kSteps = 60;
+        QElapsedTimer clock;
+        clock.start();
+        for (int step = 0; step < kSteps; ++step) {
+            REQUIRE(store.setUserValue(settings::keys::GlassOpacity, 0.2 + 0.01 * step));
+            QCoreApplication::processEvents();
+        }
+        const double perStep = static_cast<double>(clock.nsecsElapsed()) / 1e6 / kSteps;
+        MESSAGE("rows: " << list->property("count").toInt() << ", one slider step: " << perStep << " ms");
     }
 
     TEST_CASE("a number-field settings row shows its unit")
