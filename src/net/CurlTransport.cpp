@@ -648,8 +648,8 @@ std::size_t CurlTransport::onWrite(char* data, std::size_t size, std::size_t cou
     }
     if (transfer->streaming) {
         transfer->deliveredData = true;
-        transfer->post([callbacks = transfer->callbacks, chunk = QByteArray(data, static_cast<qsizetype>(bytes))] {
-            callbacks.onData(chunk);
+        transfer->post([onData = transfer->callbacks.onData, chunk = QByteArray(data, static_cast<qsizetype>(bytes))] {
+            onData(chunk);
         });
     } else {
         transfer->response.body.append(data, static_cast<qsizetype>(bytes));
@@ -690,7 +690,7 @@ std::size_t CurlTransport::onHeader(char* data, std::size_t size, std::size_t co
     transfer->finalHeaders = true;
     transfer->streaming = transfer->callbacks.onData && response.successful();
     if (transfer->callbacks.onResponse) {
-        transfer->post([callbacks = transfer->callbacks, head = response] { callbacks.onResponse(head); });
+        transfer->post([onResponse = transfer->callbacks.onResponse, head = response] { onResponse(head); });
     }
     return bytes;
 }
