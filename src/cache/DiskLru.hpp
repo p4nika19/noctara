@@ -24,7 +24,6 @@ public:
 
     // Loads the index (or rebuilds it from the directory). Cheap to call again.
     void load();
-    [[nodiscard]] bool loaded() const noexcept { return m_loaded; }
 
     [[nodiscard]] Result<QByteArray> get(const QByteArray& name);
     [[nodiscard]] bool contains(const QByteArray& name) const { return m_ledger.contains(name); }
@@ -36,7 +35,6 @@ public:
     void setBudget(std::int64_t bytes);
 
     [[nodiscard]] std::int64_t bytes() const noexcept { return m_ledger.totalBytes(); }
-    [[nodiscard]] std::int64_t budget() const noexcept { return m_budget; }
     [[nodiscard]] qsizetype count() const noexcept { return m_ledger.size(); }
     [[nodiscard]] const QString& directory() const noexcept { return m_directory; }
 

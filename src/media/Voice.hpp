@@ -37,7 +37,6 @@ public:
 
     [[nodiscard]] const std::shared_ptr<PcmRing>& ring() const noexcept { return m_ring; }
     [[nodiscard]] const cache::AudioReaderPtr& reader() const noexcept { return m_reader; }
-    [[nodiscard]] AudioFormat format() const noexcept { return m_format; }
     // The mixer gets nothing until decoding continues at `ms`.
     void seek(std::int64_t ms);
     // Waiting for the network right now.
@@ -57,7 +56,6 @@ private:
     void run();
     // Waits until a seek or shutdown stops `token`.
     void park(const std::stop_token& token);
-    [[nodiscard]] Result<std::unique_ptr<Decoder>> openAt(StreamSource& source, std::int64_t frame);
     [[nodiscard]] std::pair<int, std::int64_t> segmentFor(std::int64_t frame, const std::stop_token& token) const;
 
     cache::AudioReaderPtr m_reader;

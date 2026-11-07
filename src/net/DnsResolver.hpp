@@ -38,7 +38,6 @@ public:
 
     void setDohSender(DohSender sender);
     void setConfig(const DnsConfig& config);  // flushes the cache when anything DNS-related changed
-    [[nodiscard]] const DnsConfig& config() const noexcept { return m_config; }
 
     void resolve(const QString& host, ResolveCallback callback) override;
     // Skips the cache (but stores the answer): used by "Test DNS".

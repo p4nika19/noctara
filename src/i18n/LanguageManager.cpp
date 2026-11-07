@@ -11,17 +11,14 @@ namespace noctara::i18n {
 
 namespace {
 
+// Registry of shipped languages. Adding a language = a translations/noctara_<code>.ts file + one entry here
+// (and an enum option in the settings schema).
 constexpr LanguageInfo kLanguages[] = {
     {"en", "English"},
     {"ru", "Русский"},
 };
 
 }  // namespace
-
-std::span<const LanguageInfo> availableLanguages() noexcept
-{
-    return kLanguages;
-}
 
 QString matchLanguage(const QStringList& uiLanguages)
 {

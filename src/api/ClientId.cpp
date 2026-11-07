@@ -151,7 +151,6 @@ void ClientIdProvider::setOverride(const QString& id)
     }
     m_override = id;
     m_rejected.remove(id);
-    Q_EMIT changed();
 }
 
 QString ClientIdProvider::current() const
@@ -198,7 +197,6 @@ void ClientIdProvider::invalidate(const QString& id)
         m_known.clear();
         m_knownSource = Source::None;
     }
-    Q_EMIT changed();
 }
 
 void ClientIdProvider::discover()
@@ -261,7 +259,6 @@ void ClientIdProvider::finish(Result<QString> result)
         m_knownSource = Source::Discovered;
         m_lastFailure.reset();
         store(m_known);
-        Q_EMIT changed();
     } else {
         qCWarning(lcApi).noquote() << "client_id discovery failed:"
                                    << QString::fromStdString(result.error().describe());

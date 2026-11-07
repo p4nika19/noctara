@@ -21,8 +21,6 @@ enum class Rcode : std::uint8_t { NoError = 0, FormErr = 1, ServFail = 2, NxDoma
 inline constexpr std::uint16_t kUdpPayloadSize = 1232;  // avoids IP fragmentation (DNS flag day 2020)
 inline constexpr qsizetype kPaddingBlock = 128;         // RFC 8467 recommendation for queries
 
-[[nodiscard]] RecordType recordTypeFor(AddressFamily family) noexcept;
-
 // `name` is an ASCII host name without trailing dot. `pad` pads the message to a multiple of 128 bytes.
 [[nodiscard]] Result<QByteArray> encodeQuery(QByteArrayView name, RecordType type, std::uint16_t id, bool pad);
 

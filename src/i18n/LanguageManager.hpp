@@ -19,10 +19,6 @@ struct LanguageInfo {
     const char* nativeName;  // endonym, UTF-8, never translated
 };
 
-// Registry of shipped languages. Adding a language = a translations/noctara_<code>.ts file + one entry here
-// (and an enum option in the settings schema).
-[[nodiscard]] std::span<const LanguageInfo> availableLanguages() noexcept;
-
 // Picks the first supported language from a list of UI languages (e.g. QLocale::uiLanguages()).
 [[nodiscard]] QString matchLanguage(const QStringList& uiLanguages);
 

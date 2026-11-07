@@ -54,7 +54,6 @@ public:
     [[nodiscard]] static BypassList fromNoProxy(QStringView value);
 
     [[nodiscard]] bool matches(QStringView host) const;
-    [[nodiscard]] bool empty() const noexcept { return m_domains.empty() && m_networks.empty() && !m_all && !m_local; }
 
 private:
     struct Domain {

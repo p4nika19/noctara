@@ -317,16 +317,6 @@ void readGlass(const Reader& reader, const toml::table& table, UserTheme& theme)
     }
 }
 
-template <class Fields> std::vector<std::string_view> namesOf(const Fields& fields)
-{
-    std::vector<std::string_view> names;
-    names.reserve(std::size(fields));
-    for (const auto& field : fields) {
-        names.push_back(field.name);
-    }
-    return names;
-}
-
 }  // namespace
 
 Result<UserTheme> parseUserTheme(QByteArrayView toml, const QString& id, std::vector<ThemeIssue>& issues)
@@ -380,31 +370,6 @@ Result<UserTheme> parseUserTheme(QByteArrayView toml, const QString& id, std::ve
         theme.name = id;
     }
     return theme;
-}
-
-std::vector<std::string_view> colorTokenNames()
-{
-    return namesOf(paletteRoles());
-}
-
-std::vector<std::string_view> radiusTokenNames()
-{
-    return namesOf(kRadius);
-}
-
-std::vector<std::string_view> spaceTokenNames()
-{
-    return namesOf(kSpace);
-}
-
-std::vector<std::string_view> motionTokenNames()
-{
-    return namesOf(kMotion);
-}
-
-std::vector<std::string_view> glassTokenNames()
-{
-    return namesOf(kGlass);
 }
 
 void applyColors(const UserTheme& theme, Scheme scheme, Palette& palette)

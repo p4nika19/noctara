@@ -234,7 +234,7 @@ void ApiClient::onFinished(const std::shared_ptr<Flight>& flight, Result<net::Re
     }
     const net::Response& response = *result;
     if (response.successful()) {
-        complete(flight, Payload{response.body, response.fromCache, response.stale});
+        complete(flight, Payload{response.body, response.stale});
         return;
     }
     const bool canRepeat = flight->attempts < kMaxAttempts;

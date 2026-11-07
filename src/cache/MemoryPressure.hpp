@@ -19,8 +19,6 @@ class MemoryPressureMonitor : public QObject {
 public:
     explicit MemoryPressureMonitor(QObject* parent = nullptr);
 
-    [[nodiscard]] bool available() const noexcept { return m_fd.valid(); }
-
 Q_SIGNALS:
     void pressure();  // at most every few seconds
 

@@ -1099,7 +1099,6 @@ void AudioCache::launchProgressive(Live& live, int piece)
     };
     cancelFetch(live);  // never orphan a running transfer
     live.fetch = std::move(fetch);
-    ++m_networkRequests;
     live.fetch->handle = m_transport.send(std::move(request), this, std::move(callbacks));
 }
 
@@ -1395,7 +1394,6 @@ void AudioCache::fetchPlaylist(Live& live)
     const std::uint64_t id = fetch.id;
     cancelFetch(live);  // never orphan a running transfer
     live.fetch = std::move(fetch);
-    ++m_networkRequests;
     net::Callbacks callbacks;
     callbacks.onFinished = [this, name, id](Result<net::Response> result) {
         Live* l = this->live(name);
@@ -1489,7 +1487,6 @@ void AudioCache::launchSegment(Live& live, int piece)
     const std::uint64_t id = fetch.id;
     cancelFetch(live);  // never orphan a running transfer
     live.fetch = std::move(fetch);
-    ++m_networkRequests;
     net::Callbacks callbacks;
     callbacks.onFinished = [this, name, id](Result<net::Response> result) {
         onFetchFinished(name, id, std::move(result));
@@ -1789,7 +1786,6 @@ void AudioCache::fetchCovers(Live& live)
         r.url = url;
         r.cache = net::CacheMode::Bypass;
         ++live.coverFetches;
-        ++m_networkRequests;
         net::Callbacks callbacks;
         callbacks.onFinished = [this, name = entry.name, thumb](Result<net::Response> result) {
             storeCover(name, thumb, std::move(result));

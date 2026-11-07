@@ -58,12 +58,6 @@ void LruLedger::clear()
     m_total = 0;
 }
 
-const LruLedger::Item* LruLedger::find(const QByteArray& name) const
-{
-    const auto it = m_items.constFind(name);
-    return it == m_items.cend() ? nullptr : &*it;
-}
-
 std::vector<QByteArray> LruLedger::victims(std::int64_t bytesToFree, const QByteArray& keep) const
 {
     struct Candidate {

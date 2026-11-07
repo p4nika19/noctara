@@ -161,12 +161,4 @@ std::uint32_t toArgb32(const Rgba& color) noexcept
            channel(color.rgb.b);
 }
 
-Rgba fromArgb32(std::uint32_t argb) noexcept
-{
-    const auto channel = [argb](unsigned shift) {
-        return static_cast<double>((argb >> shift) & 0xffU) / 255.0;
-    };
-    return {{channel(16), channel(8), channel(0)}, channel(24)};
-}
-
 }  // namespace noctara::color

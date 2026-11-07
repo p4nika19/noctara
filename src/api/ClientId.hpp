@@ -58,9 +58,6 @@ public:
     static constexpr int kMaxScripts = 8;
     static constexpr std::chrono::seconds kRetryAfterFailure{30};
 
-Q_SIGNALS:
-    void changed();
-
 private:
     void discover();
     void fetchScript();

@@ -208,7 +208,6 @@ void ImageCache::requestOnThread(const QUrl& url, Waiter waiter, bool useDisk)
     net::Request request;
     request.url = url;
     request.cache = net::CacheMode::Bypass;  // stored here, not in the HTTP cache
-    ++m_networkRequests;
     net::Callbacks callbacks;
     callbacks.onFinished = [this, key, url](Result<net::Response> result) {
         onDownloaded(key, url, std::move(result));

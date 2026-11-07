@@ -102,8 +102,6 @@ public:
     // Downloads the entry in the background (up to `maxBytes`, -1 = all) while this reader is open.
     void prefetch(std::int64_t maxBytes = -1);
 
-    [[nodiscard]] std::uint64_t id() const noexcept { return m_id; }
-
 private:
     void request(int piece);
 
@@ -142,7 +140,6 @@ public:
     void setConfig(const AudioCacheConfig& config);
     // Loads the disk index (or rebuilds it); called once, after startup. Eviction waits for it.
     void loadIndex();
-    [[nodiscard]] bool indexLoaded() const noexcept { return m_indexLoaded; }
 
     // Any thread. Opens (or creates) the entry for `info` and hands a reader to `done` on `context`'s thread.
     // DRM tracks are refused with ErrorCode::NotCacheable before anything is created.
@@ -157,8 +154,6 @@ public:
     // A stored cover by its source URL (the image cache asks when offline).
     [[nodiscard]] std::optional<QByteArray> coverFor(const QUrl& url) const;
     void flush();
-
-    [[nodiscard]] std::int64_t networkRequests() const noexcept { return m_networkRequests; }
 
     static constexpr int kMaxEmbeddedCoverSide = 1200;
 
@@ -243,7 +238,6 @@ private:
     std::uint64_t m_nextReader = 1;
     std::uint64_t m_nextFetch = 1;
     std::uint32_t m_nextGeneration = 1;
-    std::int64_t m_networkRequests = 0;
     std::int64_t m_bytesSinceSpaceCheck = 0;
     bool m_indexLoaded = false;
     bool m_indexDirty = false;

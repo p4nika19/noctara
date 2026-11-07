@@ -53,13 +53,6 @@ struct UserTheme {
 // other problem is reported in `issues` and leaves that token at its built-in value.
 [[nodiscard]] Result<UserTheme> parseUserTheme(QByteArrayView toml, const QString& id, std::vector<ThemeIssue>& issues);
 
-// The token names a theme may set, by table, for documentation and the editor.
-[[nodiscard]] std::vector<std::string_view> colorTokenNames();
-[[nodiscard]] std::vector<std::string_view> radiusTokenNames();
-[[nodiscard]] std::vector<std::string_view> spaceTokenNames();
-[[nodiscard]] std::vector<std::string_view> motionTokenNames();
-[[nodiscard]] std::vector<std::string_view> glassTokenNames();
-
 // Apply a theme's overrides (sizes before the UI scale, durations before the animation speed).
 void applyColors(const UserTheme& theme, Scheme scheme, Palette& palette);
 void applyRadius(const UserTheme& theme, RadiusTokens& radius);

@@ -36,8 +36,6 @@ public:
     // Tries to take the lock without waiting.
     [[nodiscard]] static Result<CacheLock> acquire(const CacheLayout& layout);
 
-    [[nodiscard]] bool held() const noexcept { return m_fd.valid(); }
-
 private:
     explicit CacheLock(UniqueFd fd)
         : m_fd(std::move(fd))

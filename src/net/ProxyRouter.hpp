@@ -85,12 +85,8 @@ public:
     ProxyRouter(QHash<QString, QString> environment, IDesktopProxy* desktop, QObject* parent = nullptr);
 
     void setConfig(const ProxyConfig& config);
-    [[nodiscard]] const ProxyConfig& config() const noexcept { return m_config; }
 
     void route(const QUrl& url, std::function<void(Result<ProxyRoute>)> callback) override;
-
-    // What System mode currently uses, for the settings status line.
-    [[nodiscard]] ProxySource systemSource() const;
 
 private:
     QHash<QString, QString> m_environment;

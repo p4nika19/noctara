@@ -35,8 +35,6 @@ public:
     [[nodiscard]] bool held() const;
     [[nodiscard]] std::int64_t position() const;  // stream frame of the next frame read
     [[nodiscard]] std::int64_t origin() const;    // the frame of the last reset()
-    [[nodiscard]] int channels() const noexcept { return m_channels; }
-    [[nodiscard]] std::int64_t capacity() const noexcept { return m_capacity; }
 
 private:
     const int m_channels;

@@ -66,8 +66,6 @@ public:
     void request(const QUrl& url, QSize size, QObject* context, Callback done);
     [[nodiscard]] std::optional<QImage> cached(const QUrl& url, QSize size);
 
-    [[nodiscard]] std::int64_t networkRequests() const noexcept { return m_networkRequests; }
-
 private:
     struct Waiter {
         QSize size;
@@ -92,7 +90,6 @@ private:
     std::unique_ptr<DiskLru> m_disk;
     Fallback m_fallback;
     QHash<QByteArray, std::vector<Waiter>> m_pending;  // URL -> waiting requests (one download each)
-    std::int64_t m_networkRequests = 0;
 
     // RAM tier (any thread).
     mutable std::mutex m_mutex;

@@ -42,11 +42,9 @@ public:
     Theme(settings::SettingsStore& settings, FontFamilies bundledFonts, QObject* parent = nullptr);
 
     [[nodiscard]] bool dark() const noexcept { return m_scheme == Scheme::Dark; }
-    [[nodiscard]] Scheme scheme() const noexcept { return m_scheme; }
     [[nodiscard]] QString schemeName() const;
     [[nodiscard]] const ThemeColors& colors() const noexcept { return m_colors; }
     [[nodiscard]] const ThemeColors& targetColors() const noexcept { return m_targetColors; }
-    [[nodiscard]] const Palette& palette() const noexcept { return m_displayed; }
     [[nodiscard]] const SpacingTokens& space() const noexcept { return m_space; }
     [[nodiscard]] const RadiusTokens& radius() const noexcept { return m_radius; }
     [[nodiscard]] const ElevationTokens& elevation() const noexcept { return m_elevation; }
@@ -63,7 +61,6 @@ public:
     // A user theme's overrides (null: the built-in look). Applied on top of the generated palette and tokens;
     // the colours crossfade unless `animate` is false (startup, before the window shows).
     void setUserTheme(std::shared_ptr<const UserTheme> theme, bool animate = true);
-    [[nodiscard]] const std::shared_ptr<const UserTheme>& userTheme() const noexcept { return m_userTheme; }
 
     // False in the software renderer: blur styles fall back to Solid.
     void setBlurAvailable(bool available);

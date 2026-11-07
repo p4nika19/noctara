@@ -37,7 +37,6 @@ public:
 
     // Opens a portal session and binds `actions` (once per session); false closes the session.
     void setEnabled(bool enabled, std::vector<Action> actions);
-    [[nodiscard]] bool active() const noexcept { return !m_session.isEmpty(); }
     [[nodiscard]] static bool available();
 
 Q_SIGNALS:

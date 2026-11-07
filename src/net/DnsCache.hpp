@@ -32,7 +32,6 @@ public:
     explicit DnsCache(std::size_t capacity = 1024);
 
     void setLimits(const Limits& limits) noexcept { m_limits = limits; }
-    [[nodiscard]] const Limits& limits() const noexcept { return m_limits; }
 
     [[nodiscard]] std::optional<Entry> lookup(const QString& host, Clock::time_point now);
     void storeAddresses(const QString& host, std::vector<IpAddress> addresses, std::chrono::seconds ttl,

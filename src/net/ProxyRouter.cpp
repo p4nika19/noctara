@@ -95,14 +95,6 @@ void ProxyRouter::setConfig(const ProxyConfig& config)
     m_bypass = BypassList(config.bypass, config.bypassLocal);
 }
 
-ProxySource ProxyRouter::systemSource() const
-{
-    if (hasEnvironmentProxy(m_environment)) {
-        return ProxySource::Environment;
-    }
-    return m_desktop != nullptr ? ProxySource::Desktop : ProxySource::None;
-}
-
 void ProxyRouter::route(const QUrl& url, std::function<void(Result<ProxyRoute>)> callback)
 {
     const auto later = [this, callback](Result<ProxyRoute> result) {

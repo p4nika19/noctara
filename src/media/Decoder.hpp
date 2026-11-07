@@ -45,7 +45,6 @@ public:
     [[nodiscard]] std::int64_t position() const noexcept { return m_position; }
     // As the container reports it; nullopt when unknown.
     [[nodiscard]] std::optional<std::int64_t> durationMs() const noexcept { return m_durationMs; }
-    [[nodiscard]] AudioFormat output() const noexcept { return m_output; }
 
     // Recoverable errors in a row (damaged packets are skipped) before decoding gives up.
     static constexpr int kMaxBadPackets = 32;

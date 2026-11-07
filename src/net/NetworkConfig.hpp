@@ -98,9 +98,6 @@ struct DohPreset {
     std::span<const char* const> bootstrap;
 };
 
-[[nodiscard]] std::span<const DnsPreset> dnsPresets() noexcept;
-[[nodiscard]] std::span<const DohPreset> dohPresets() noexcept;
-
 // The hosts Noctara talks to; used by "Test DNS" and "Test connection".
 [[nodiscard]] std::span<const char* const> serviceHosts() noexcept;
 

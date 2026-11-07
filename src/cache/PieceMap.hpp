@@ -45,9 +45,7 @@ public:
     [[nodiscard]] std::uint64_t checksum(int piece) const noexcept;
     void mark(int piece, std::uint32_t size, std::uint64_t checksum);
     void unmark(int piece);
-    void clear();
 
-    [[nodiscard]] int presentCount() const noexcept { return m_present; }
     // Every piece is stored. Never true while the length (progressive) or the playlist (HLS, no pieces) is unknown.
     [[nodiscard]] bool complete() const noexcept;
     [[nodiscard]] std::int64_t storedBytes() const noexcept { return m_storedBytes; }

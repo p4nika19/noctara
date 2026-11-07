@@ -27,7 +27,6 @@ public:
     void clear();
 
     [[nodiscard]] bool contains(const QByteArray& name) const { return m_items.contains(name); }
-    [[nodiscard]] const Item* find(const QByteArray& name) const;
     [[nodiscard]] std::int64_t totalBytes() const noexcept { return m_total; }
     [[nodiscard]] qsizetype size() const noexcept { return m_items.size(); }
     [[nodiscard]] const QHash<QByteArray, Item>& items() const noexcept { return m_items; }

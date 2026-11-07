@@ -169,11 +169,6 @@ Result<RawRecord> readRecord(Reader& reader)
 
 }  // namespace
 
-RecordType recordTypeFor(AddressFamily family) noexcept
-{
-    return family == AddressFamily::V4 ? RecordType::A : RecordType::Aaaa;
-}
-
 Result<QByteArray> encodeQuery(QByteArrayView name, RecordType type, std::uint16_t id, bool pad)
 {
     if (name.isEmpty() || name.size() > 253) {

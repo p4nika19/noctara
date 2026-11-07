@@ -70,6 +70,5 @@ struct Rgba {
 [[nodiscard]] Rgba mix(const Rgba& from, const Rgba& to, double t) noexcept;
 
 [[nodiscard]] std::uint32_t toArgb32(const Rgba& color) noexcept;
-[[nodiscard]] Rgba fromArgb32(std::uint32_t argb) noexcept;
 
 }  // namespace noctara::color

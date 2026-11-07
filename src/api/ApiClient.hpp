@@ -23,7 +23,6 @@ class Session;
 
 struct Payload {
     QByteArray body;
-    bool fromCache = false;
     bool stale = false;  // served from the HTTP cache past its freshness because the network was unavailable
 };
 

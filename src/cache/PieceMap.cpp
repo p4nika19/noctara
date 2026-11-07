@@ -133,15 +133,6 @@ void PieceMap::unmark(int piece)
     slot = Piece{};
 }
 
-void PieceMap::clear()
-{
-    for (Piece& piece : m_pieces) {
-        piece = Piece{};
-    }
-    m_present = 0;
-    m_storedBytes = 0;
-}
-
 bool PieceMap::complete() const noexcept
 {
     if (m_layout == Layout::Hls && m_pieces.empty()) {

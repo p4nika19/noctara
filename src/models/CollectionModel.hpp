@@ -87,7 +87,6 @@ public:
     [[nodiscard]] int errorCode() const noexcept { return m_error; }
     [[nodiscard]] bool stale() const noexcept { return m_stale; }
     [[nodiscard]] bool complete() const noexcept;
-    [[nodiscard]] bool synced() const noexcept { return m_store != nullptr; }
     [[nodiscard]] const std::vector<api::Entry>& entries() const noexcept { return m_entries; }
 
     [[nodiscard]] int rowCount(const QModelIndex& parent = {}) const override;

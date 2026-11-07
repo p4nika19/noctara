@@ -50,7 +50,6 @@ class GraphicsInfo : public QObject {
 public:
     explicit GraphicsInfo(GraphicsDecision decision, QObject* parent = nullptr);
 
-    [[nodiscard]] const GraphicsDecision& decision() const noexcept { return m_decision; }
     [[nodiscard]] bool hardware() const noexcept { return m_decision.hardware; }
     [[nodiscard]] bool safeMode() const noexcept { return m_decision.safeMode; }
     [[nodiscard]] QString api() const;

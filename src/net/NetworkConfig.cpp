@@ -164,16 +164,6 @@ NetworkConfig configFromSettings(const settings::SettingsStore& store)
     return {dnsFromSettings(store), proxyFromSettings(store), transportFromSettings(store)};
 }
 
-std::span<const DnsPreset> dnsPresets() noexcept
-{
-    return kDnsPresets;
-}
-
-std::span<const DohPreset> dohPresets() noexcept
-{
-    return kDohPresets;
-}
-
 std::span<const char* const> serviceHosts() noexcept
 {
     return kServiceHosts;
