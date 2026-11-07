@@ -875,6 +875,26 @@ TEST_SUITE("ui.components")
         CHECK_MESSAGE(requests - before <= 1, "cover requests during the flight: ", requests - before);
     }
 
+    TEST_CASE("the full player's volume slider and scrubber are centred on the play button")
+    {
+        const WindowHarness harness(R"(Window {
+            width: 1000; height: 800; visible: true
+            property Item player: player
+            FullPlayer { id: player; anchors.fill: parent; sourceRect: Qt.rect(20, 720, 64, 64) }
+        })");
+        QQuickItem* player = harness.item("player");
+        player->setProperty("open", true);
+        REQUIRE(test::waitUntil([&] { return player->property("shown").toReal() == 1.0; }));
+        const auto centre = [&](const char* name) {
+            const auto* item = player->findChild<QQuickItem*>(QString::fromLatin1(name));
+            REQUIRE(item != nullptr);
+            return item->mapToScene(QPointF(item->width() / 2, 0)).x();
+        };
+        const double axis = centre("playButton");
+        CHECK(centre("volumeSlider") == doctest::Approx(axis).epsilon(0.002));
+        CHECK(centre("scrubber") == doctest::Approx(axis).epsilon(0.002));
+    }
+
     TEST_CASE("the full player's flying cover starts on the bar's cover when the player sits below a title bar")
     {
         const WindowHarness harness(R"(Window {

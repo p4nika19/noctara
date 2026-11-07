@@ -179,8 +179,13 @@ FocusScope {
                 width: parent.width
                 height: Math.max(waveform.implicitHeight, Theme.font.numeric.pixelSize * 1.6)
                 opacity: root.shown
+                // Both times reserve the same width, so the scrubber stays centred under the controls (and does not
+                // shift when the elapsed time gains a digit).
+                readonly property real timeWidth: Math.max(elapsed.implicitWidth, total.implicitWidth)
                 Text {
                     id: elapsed
+                    width: parent.timeWidth
+                    horizontalAlignment: Text.AlignRight
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
                     text: Format.revision >= 0 ? Format.duration(waveform.dragging ? waveform.shownProgress * Player.duration
@@ -190,6 +195,7 @@ FocusScope {
                 }
                 WaveformView {
                     id: waveform
+                    objectName: "scrubber"
                     anchors.left: elapsed.right
                     anchors.right: total.left
                     anchors.margins: Theme.space.md
@@ -204,6 +210,8 @@ FocusScope {
                 }
                 Text {
                     id: total
+                    width: parent.timeWidth
+                    horizontalAlignment: Text.AlignLeft
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     text: Format.revision >= 0 ? Format.duration(Player.duration) : ""
@@ -233,6 +241,7 @@ FocusScope {
                     onClicked: Player.previous()
                 }
                 IconButton {
+                    objectName: "playButton"
                     anchors.verticalCenter: parent.verticalCenter
                     material: "primary"
                     iconName: Player.playing ? "pause" : "play"
@@ -261,11 +270,16 @@ FocusScope {
                     onClicked: Player.cycleRepeat()
                 }
             }
-            Row {
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: Theme.space.sm
+            // The volume track sits on the play button's axis; the mute button hangs to its left (centring the two
+            // as one group put the track half a button off-centre).
+            Item {
+                width: parent.width
+                height: Math.max(muteButton.height, volumeSlider.height)
                 opacity: root.shown
-                IconButton {
+                IconButton {  // declared first: Tab goes mute → slider
+                    id: muteButton
+                    anchors.right: volumeSlider.left
+                    anchors.rightMargin: Theme.space.sm
                     anchors.verticalCenter: parent.verticalCenter
                     material: "flat"
                     iconSize: Theme.space.iconSizeSmall
@@ -274,8 +288,12 @@ FocusScope {
                     onClicked: Player.toggleMute()
                 }
                 Slider {
+                    id: volumeSlider
+                    objectName: "volumeSlider"
+                    anchors.horizontalCenter: parent.horizontalCenter
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 180 * Theme.scale
+                    // Narrower in a very narrow player, so the mute button stays inside the column.
+                    width: Math.min(180 * Theme.scale, parent.width - 2 * (muteButton.width + Theme.space.sm))
                     from: 0
                     to: 1
                     value: Player.muted ? 0 : Player.volume
