@@ -335,11 +335,29 @@ TEST_SUITE("settings.overrides")
         CHECK(fromEnv.values.size() == 1);
         CHECK(fromEnv.issues.size() == 1);
 
-        const auto fromCli =
-            collectCommandLine(schema(), {QStringLiteral("appearance.glass.grain=0.1"), QStringLiteral("bogus=1")},
-                               {QStringLiteral("gpu=off"), QStringLiteral("nope=1")});
+        using Kind = CommandLineOverride::Kind;
+        const auto fromCli = collectCommandLine(schema(), {{Kind::Set, QStringLiteral("appearance.glass.grain=0.1")},
+                                                           {Kind::Set, QStringLiteral("bogus=1")},
+                                                           {Kind::Alias, QStringLiteral("gpu=off")},
+                                                           {Kind::Alias, QStringLiteral("nope=1")}});
         CHECK(fromCli.values.size() == 2);
         CHECK(fromCli.issues.size() == 2);
+    }
+
+    TEST_CASE("the later of an alias and a --set for one key wins")
+    {
+        using Kind = CommandLineOverride::Kind;
+        const auto mode = [](const OverrideSet& set) {
+            REQUIRE(set.values.size() == 1);
+            CHECK(set.values.front().first == idx(keys::ThemeMode));
+            return set.values.front().second.toString();
+        };
+        CHECK(mode(collectCommandLine(schema(), {{Kind::Alias, QStringLiteral("theme=dark")},
+                                                 {Kind::Set, QStringLiteral("appearance.theme.mode=light")}})) ==
+              QStringLiteral("light"));
+        CHECK(mode(collectCommandLine(schema(), {{Kind::Set, QStringLiteral("appearance.theme.mode=light")},
+                                                 {Kind::Alias, QStringLiteral("theme=dark")}})) ==
+              QStringLiteral("dark"));
     }
 }
 

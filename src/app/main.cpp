@@ -60,6 +60,7 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QElapsedTimer>
+#include <QHash>
 #include <QIcon>
 #include <QImage>
 #include <QPointer>
@@ -69,6 +70,7 @@
 #include <QStandardPaths>
 #include <QTimer>
 
+#include <algorithm>
 #include <csignal>
 #include <cstdio>
 #include <memory>
@@ -92,14 +94,13 @@ struct CommandLine {
     bool resetConfig = false;
     bool safeMode = false;
     bool pgoScenario = false;
-    QString screenshot;      // dev/testing: render, save the window image, quit
-    QString page;            // dev/testing: initial page id
-    QString navigate;        // dev/testing: pages to switch to after startup, comma-separated
-    QString artwork;         // dev/testing: image file used as the current track's artwork
-    QString play;            // dev/testing: a SoundCloud link to play after startup
-    bool smokeTest = false;  // visit every page and settings category; fail on any warning
-    QStringList assignments;
-    QStringList aliases;
+    QString screenshot;                              // dev/testing: render, save the window image, quit
+    QString page;                                    // dev/testing: initial page id
+    QString navigate;                                // dev/testing: pages to switch to after startup, comma-separated
+    QString artwork;                                 // dev/testing: image file used as the current track's artwork
+    QString play;                                    // dev/testing: a SoundCloud link to play after startup
+    bool smokeTest = false;                          // visit every page and settings category; fail on any warning
+    QList<settings::CommandLineOverride> overrides;  // --set and the schema's aliases, in command-line order
 };
 
 CommandLine parseCommandLine(const QCoreApplication& app, const settings::Schema& schema)
@@ -166,14 +167,25 @@ CommandLine parseCommandLine(const QCoreApplication& app, const settings::Schema
     cli.navigate = parser.value(navigate);
     cli.artwork = parser.value(artwork);
     cli.play = parser.value(play);
-    cli.assignments = parser.values(set);
-    for (const QCommandLineOption& option : aliasOptions) {
-        if (parser.isSet(option)) {
-            cli.aliases.append(option.names().front() + u'=' + parser.value(option));
+    // Walk the flags in the order they were given, so the later of two flags for one setting wins.
+    using Kind = settings::CommandLineOverride::Kind;
+    QHash<QString, qsizetype> occurrence;
+    for (const QString& name : parser.optionNames()) {
+        const qsizetype nth = occurrence[name]++;
+        if (set.names().contains(name)) {
+            const QStringList values = parser.values(set);
+            if (nth < values.size()) {
+                cli.overrides.append({Kind::Set, values.at(nth)});
+            }
+        } else if (disableGpu.names().contains(name)) {
+            cli.overrides.append({Kind::Alias, QStringLiteral("gpu=off")});
+        } else if (std::ranges::any_of(
+                       aliasOptions, [&](const QCommandLineOption& option) { return option.names().contains(name); })) {
+            const QStringList values = parser.values(name);
+            if (nth < values.size()) {
+                cli.overrides.append({Kind::Alias, name + u'=' + values.at(nth)});
+            }
         }
-    }
-    if (parser.isSet(disableGpu)) {
-        cli.aliases.append(QStringLiteral("gpu=off"));
     }
     return cli;
 }
@@ -307,7 +319,7 @@ int main(int argc, char** argv)
     }
     settings::ConfigIssues issues = config.load();
     const auto environment = settings::collectEnvironment(schema, QProcessEnvironment::systemEnvironment());
-    const auto commandLine = settings::collectCommandLine(schema, cli.assignments, cli.aliases);
+    const auto commandLine = settings::collectCommandLine(schema, cli.overrides);
     store.replaceLayer(settings::Layer::Environment, environment.values);
     store.replaceLayer(settings::Layer::CommandLine, commandLine.values);
     issues.append(environment.issues);
