@@ -82,7 +82,9 @@ private:
     void accountChanged();
     void load(const QString& list);
     [[nodiscard]] api::Id accountId();
-    template <class Detail> void keep(QHash<qint64, std::shared_ptr<Detail>>& cache, qint64 id);
+    // The cached page for `id` (created with `make` when missing), kept among the most recently opened ones.
+    template <class Detail, class Make>
+    Detail* detail(QHash<qint64, std::shared_ptr<Detail>>& cache, qint64 id, Make make);
 
     api::ApiService& m_api;
     AccountController& m_account;

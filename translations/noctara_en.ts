@@ -4540,7 +4540,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings/Schema.cpp" line="+142"/>
+        <location filename="../src/settings/Schema.cpp" line="+139"/>
         <source>General</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4600,7 +4600,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsModel.cpp" line="+156"/>
+        <location filename="../src/ui/SettingsModel.cpp" line="+152"/>
         <source>Set by a command-line flag for this session.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5111,7 +5111,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+73"/>
+        <location line="+78"/>
         <source>Your SoundCloud session has expired. Please sign in again.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5121,7 +5121,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+6"/>
         <source>Signed out of SoundCloud.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5182,7 +5182,7 @@
 <context>
     <name>noctara::ui::KeyboardController</name>
     <message>
-        <location filename="../src/ui/KeyboardController.cpp" line="+81"/>
+        <location filename="../src/ui/KeyboardController.cpp" line="+77"/>
         <source>Media keys</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5230,7 +5230,7 @@
 <context>
     <name>noctara::ui::NetworkController</name>
     <message>
-        <location filename="../src/ui/NetworkController.cpp" line="+34"/>
+        <location filename="../src/ui/NetworkController.cpp" line="+30"/>
         <source>%1 ms</source>
         <extracomment>Duration in milliseconds, e.g. &quot;42 ms&quot;</extracomment>
         <translation type="unfinished"></translation>
@@ -5457,17 +5457,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+13"/>
         <source>DNS test:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+3"/>
         <source>Connection test:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+2"/>
         <source>Recent requests:</source>
         <translation type="unfinished"></translation>
     </message>

@@ -271,11 +271,8 @@ void AccountController::checkSession()
     });
 }
 
-void AccountController::expire()
+void AccountController::endSession(State state)
 {
-    if (m_session.token().isEmpty()) {
-        return;
-    }
     ++m_generation;
     m_verify.cancel();
     m_check.cancel();
@@ -284,22 +281,22 @@ void AccountController::expire()
     clearAccount();
     m_session.clear();
     m_secrets.remove(QString::fromLatin1(kTokenKey), this, [this](const Result<void>&) { Q_EMIT changed(); });
-    setState(Expired);
+    setState(state);
+}
+
+void AccountController::expire()
+{
+    if (m_session.token().isEmpty()) {
+        return;
+    }
+    endSession(Expired);
     Q_EMIT notice(QStringLiteral("warning"), tr("Your SoundCloud session has expired. Please sign in again."),
                   tr("Sign in"), QStringLiteral("open-accounts"));
 }
 
 void AccountController::signOut()
 {
-    ++m_generation;
-    m_verify.cancel();
-    m_check.cancel();
-    m_retry.stop();
-    setBusy(false);
-    clearAccount();
-    m_session.clear();
-    m_secrets.remove(QString::fromLatin1(kTokenKey), this, [this](const Result<void>&) { Q_EMIT changed(); });
-    setState(SignedOut);
+    endSession(SignedOut);
     Q_EMIT notice(QStringLiteral("info"), tr("Signed out of SoundCloud."));
 }
 

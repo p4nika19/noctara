@@ -9,6 +9,21 @@
 
 namespace noctara::media {
 
+QString repeatName(Repeat repeat)
+{
+    switch (repeat) {
+    case Repeat::All: return QStringLiteral("all");
+    case Repeat::One: return QStringLiteral("one");
+    case Repeat::Off: break;
+    }
+    return QStringLiteral("off");
+}
+
+Repeat repeatFromName(QStringView name)
+{
+    return name == u"all" ? Repeat::All : (name == u"one" ? Repeat::One : Repeat::Off);
+}
+
 std::uint64_t PlaybackQueue::assign(std::vector<QueueItem>& items)
 {
     const std::uint64_t first = m_nextUid;

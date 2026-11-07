@@ -95,6 +95,8 @@ private:
     void loadStored();
     void verifyCandidate(const QByteArray& token);
     void checkSession();
+    // Forgets the account and its saved token (sign-out or expiry), ending in `state`.
+    void endSession(State state);
     void expire();
     void saveToken(const QByteArray& token);
     void applyUser(const api::User& user);

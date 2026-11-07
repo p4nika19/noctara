@@ -10,20 +10,6 @@
 
 namespace noctara::media {
 
-namespace {
-
-QString repeatName(Repeat repeat)
-{
-    switch (repeat) {
-    case Repeat::All: return QStringLiteral("all");
-    case Repeat::One: return QStringLiteral("one");
-    case Repeat::Off: break;
-    }
-    return QStringLiteral("off");
-}
-
-}  // namespace
-
 QByteArray SessionState::toJson() const
 {
     QJsonArray ids;
@@ -52,8 +38,7 @@ SessionState SessionState::fromJson(const QByteArray& json)
     state.volume = std::clamp(object.value(QStringLiteral("volume")).toDouble(state.volume), 0.0, 1.0);
     state.muted = object.value(QStringLiteral("muted")).toBool();
     state.shuffle = object.value(QStringLiteral("shuffle")).toBool();
-    const QString repeat = object.value(QStringLiteral("repeat")).toString();
-    state.repeat = repeat == u"all" ? Repeat::All : (repeat == u"one" ? Repeat::One : Repeat::Off);
+    state.repeat = repeatFromName(object.value(QStringLiteral("repeat")).toString());
     for (const QJsonValue id : object.value(QStringLiteral("queue")).toArray()) {
         if (id.isDouble() && id.toInteger() > 0 && state.queue.size() < kMaxQueue) {
             state.queue.push_back(id.toInteger());

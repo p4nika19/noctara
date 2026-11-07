@@ -993,17 +993,12 @@ void PlaybackController::toggleShuffle()
 
 QString PlaybackController::repeat() const
 {
-    switch (m_queue.repeat()) {
-    case Repeat::All: return QStringLiteral("all");
-    case Repeat::One: return QStringLiteral("one");
-    case Repeat::Off: break;
-    }
-    return QStringLiteral("off");
+    return repeatName(m_queue.repeat());
 }
 
 void PlaybackController::setRepeat(const QString& repeat)
 {
-    const Repeat mode = repeat == u"all" ? Repeat::All : (repeat == u"one" ? Repeat::One : Repeat::Off);
+    const Repeat mode = repeatFromName(repeat);
     if (mode == m_queue.repeat()) {
         return;
     }

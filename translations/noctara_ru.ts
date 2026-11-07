@@ -4551,7 +4551,7 @@
         <translation>Пусто — определяется автоматически по веб-плееру SoundCloud. Указывайте вручную, только если это перестало работать; он не секретный и не связан с вашей учётной записью.</translation>
     </message>
     <message>
-        <location filename="../src/settings/Schema.cpp" line="+142"/>
+        <location filename="../src/settings/Schema.cpp" line="+139"/>
         <source>General</source>
         <translation>Общие</translation>
     </message>
@@ -4611,7 +4611,7 @@
         <translation>О программе</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsModel.cpp" line="+156"/>
+        <location filename="../src/ui/SettingsModel.cpp" line="+152"/>
         <source>Set by a command-line flag for this session.</source>
         <translation>Задано флагом командной строки на этот сеанс.</translation>
     </message>
@@ -5124,7 +5124,7 @@
         <translation>Токен не принят. Скопируйте значение oauth_token целиком и попробуйте снова.</translation>
     </message>
     <message>
-        <location line="+73"/>
+        <location line="+78"/>
         <source>Your SoundCloud session has expired. Please sign in again.</source>
         <translation>Срок сессии SoundCloud истёк. Войдите снова.</translation>
     </message>
@@ -5134,7 +5134,7 @@
         <translation>Войти</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+6"/>
         <source>Signed out of SoundCloud.</source>
         <translation>Выход из SoundCloud выполнен.</translation>
     </message>
@@ -5195,7 +5195,7 @@
 <context>
     <name>noctara::ui::KeyboardController</name>
     <message>
-        <location filename="../src/ui/KeyboardController.cpp" line="+81"/>
+        <location filename="../src/ui/KeyboardController.cpp" line="+77"/>
         <source>Media keys</source>
         <translation>Мультимедийные клавиши</translation>
     </message>
@@ -5243,7 +5243,7 @@
 <context>
     <name>noctara::ui::NetworkController</name>
     <message>
-        <location filename="../src/ui/NetworkController.cpp" line="+34"/>
+        <location filename="../src/ui/NetworkController.cpp" line="+30"/>
         <source>%1 ms</source>
         <extracomment>Duration in milliseconds, e.g. &quot;42 ms&quot;</extracomment>
         <translation>%1 мс</translation>
@@ -5470,17 +5470,17 @@
         <translation>Свой набор сертификатов: %1</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+13"/>
         <source>DNS test:</source>
         <translation>Проверка DNS:</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+3"/>
         <source>Connection test:</source>
         <translation>Проверка соединения:</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+2"/>
         <source>Recent requests:</source>
         <translation>Последние запросы:</translation>
     </message>

@@ -12,6 +12,9 @@
 namespace noctara::media {
 
 enum class Repeat : std::uint8_t { Off, All, One };
+// "off", "all", "one": the QML property values and the saved session's spelling. Unknown names are Off.
+[[nodiscard]] QString repeatName(Repeat repeat);
+[[nodiscard]] Repeat repeatFromName(QStringView name);
 
 struct QueueItem {
     api::Track track;

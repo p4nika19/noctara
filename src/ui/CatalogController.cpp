@@ -198,8 +198,16 @@ void CatalogController::setChartGenre(const QString& genre)
     load(QStringLiteral("charts"));
 }
 
-template <class Detail> void CatalogController::keep(QHash<qint64, std::shared_ptr<Detail>>& cache, qint64 id)
+template <class Detail, class Make>
+Detail* CatalogController::detail(QHash<qint64, std::shared_ptr<Detail>>& cache, qint64 id, Make make)
 {
+    auto it = cache.find(id);
+    if (it == cache.end()) {
+        auto created = std::shared_ptr<Detail>(make(), [](Detail* d) { d->deleteLater(); });
+        QQmlEngine::setObjectOwnership(created.get(), QQmlEngine::CppOwnership);
+        it = cache.insert(id, std::move(created));
+    }
+    Detail* detail = it->get();
     QList<qint64>& recent = std::is_same_v<Detail, models::PlaylistDetail> ? m_recentPlaylists : m_recentUsers;
     recent.removeAll(id);
     recent.append(id);
@@ -207,37 +215,23 @@ template <class Detail> void CatalogController::keep(QHash<qint64, std::shared_p
         // The deleter uses deleteLater(): QML may still hold the oldest page until the event loop runs.
         cache.remove(recent.takeFirst());
     }
+    return detail;
 }
 
 models::PlaylistDetail* CatalogController::playlist(qint64 id)
 {
-    auto it = m_playlists.find(id);
-    if (it == m_playlists.end()) {
+    return detail(m_playlists, id, [&] {
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): owned by the shared_ptr, deleted via deleteLater()
-        auto detail =
-            std::shared_ptr<models::PlaylistDetail>(new models::PlaylistDetail(m_api.client(), id, &m_snapshots),
-                                                    [](models::PlaylistDetail* d) { d->deleteLater(); });
-        QQmlEngine::setObjectOwnership(detail.get(), QQmlEngine::CppOwnership);
-        it = m_playlists.insert(id, std::move(detail));
-    }
-    models::PlaylistDetail* detail = it->get();
-    keep(m_playlists, id);
-    return detail;
+        return new models::PlaylistDetail(m_api.client(), id, &m_snapshots);
+    });
 }
 
 models::UserDetail* CatalogController::user(qint64 id)
 {
-    auto it = m_users.find(id);
-    if (it == m_users.end()) {
+    return detail(m_users, id, [&] {
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): owned by the shared_ptr, deleted via deleteLater()
-        auto detail = std::shared_ptr<models::UserDetail>(new models::UserDetail(m_api.client(), id, m_api.pageSize()),
-                                                          [](models::UserDetail* d) { d->deleteLater(); });
-        QQmlEngine::setObjectOwnership(detail.get(), QQmlEngine::CppOwnership);
-        it = m_users.insert(id, std::move(detail));
-    }
-    models::UserDetail* detail = it->get();
-    keep(m_users, id);
-    return detail;
+        return new models::UserDetail(m_api.client(), id, m_api.pageSize());
+    });
 }
 
 void CatalogController::search(const QString& text, const QString& kind)

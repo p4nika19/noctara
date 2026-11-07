@@ -2,6 +2,7 @@
 
 #include "auth/SecretStore.hpp"
 #include "core/Log.hpp"
+#include "core/Strings.hpp"
 #include "i18n/ErrorMessages.hpp"
 #include "i18n/LanguageManager.hpp"
 #include "net/DnsUpstream.hpp"
@@ -22,11 +23,6 @@ namespace noctara::ui {
 namespace {
 
 namespace keys = settings::keys;
-
-QString latin(std::string_view text)
-{
-    return QString::fromLatin1(text.data(), static_cast<qsizetype>(text.size()));
-}
 
 QString milliseconds(double value)
 {
@@ -407,9 +403,9 @@ QString NetworkController::report() const
     lines << tr("Minimum TLS version: %1")
                  .arg(config.transport.tls13Only ? QStringLiteral("1.3") : QStringLiteral("1.2"));
     lines << tr("Custom CA bundle: %1").arg(config.transport.caBundle.isEmpty() ? tr("no") : tr("yes"));
-    if (!m_dnsResults.empty()) {
-        lines << QString() << tr("DNS test:");
-        for (const QVariant& item : dnsResults()) {
+    const auto appendResults = [&lines](const QString& title, const QVariantList& results) {
+        lines << QString() << title;
+        for (const QVariant& item : results) {
             const QVariantMap map = item.toMap();
             lines << QStringLiteral("  %1: %2 %3 %4")
                          .arg(map.value(QStringLiteral("host")).toString(),
@@ -417,17 +413,12 @@ QString NetworkController::report() const
                               map.value(QStringLiteral("via")).toString(),
                               map.value(QStringLiteral("latency")).toString());
         }
+    };
+    if (!m_dnsResults.empty()) {
+        appendResults(tr("DNS test:"), dnsResults());
     }
     if (!m_connectionResults.empty()) {
-        lines << QString() << tr("Connection test:");
-        for (const QVariant& item : connectionResults()) {
-            const QVariantMap map = item.toMap();
-            lines << QStringLiteral("  %1: %2 %3 %4")
-                         .arg(map.value(QStringLiteral("host")).toString(),
-                              map.value(QStringLiteral("detail")).toString(),
-                              map.value(QStringLiteral("via")).toString(),
-                              map.value(QStringLiteral("latency")).toString());
-        }
+        appendResults(tr("Connection test:"), connectionResults());
     }
     lines << QString() << tr("Recent requests:");
     for (const net::RequestRecord& record : m_service.recentRequests()) {
