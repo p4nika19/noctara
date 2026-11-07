@@ -73,18 +73,35 @@ QVariantList KeyboardController::cheatSheet() const
 
 QVariantMap KeyboardController::conflicts() const
 {
+    // Compare the parsed sequences, so "ctrl+k" and "Ctrl+K" are the same.
+    const auto normalized = [](const QString& keys) {
+        return QKeySequence::fromString(keys, QKeySequence::PortableText).toString(QKeySequence::PortableText);
+    };
+    // The fixed shortcuts in Main.qml: a remapped action on one of these keys makes both ambiguous.
+    const QString media = tr("Media keys");
+    const QString volume = tr("Volume keys");
+    const std::pair<const char*, QString> fixed[] = {
+        {"F11", tr("Full screen")}, {"Escape", tr("Back")},
+        {"Media Play", media},      {"Toggle Media Play/Pause", media},
+        {"Media Pause", media},     {"Media Next", media},
+        {"Media Previous", media},  {"Volume Up", volume},
+        {"Volume Down", volume},    {"Volume Mute", volume},
+    };
+    QHash<QString, QString> reserved;
+    for (const auto& [keys, label] : fixed) {
+        reserved.insert(normalized(QString::fromLatin1(keys)), label);
+    }
     QHash<QString, QStringList> byKeys;
     forEachShortcut(m_settings.schema(), [&](const settings::Definition& def, const QString&) {
         const QString keys = m_settings.stringValue(def.key);
         if (!keys.isEmpty()) {
-            // Compare the parsed sequences, so "ctrl+k" and "Ctrl+K" are the same.
-            byKeys[QKeySequence::fromString(keys, QKeySequence::PortableText).toString(QKeySequence::PortableText)]
-                .append(latin(def.key));
+            byKeys[normalized(keys)].append(latin(def.key));
         }
     });
     QVariantMap out;
     for (auto it = byKeys.cbegin(); it != byKeys.cend(); ++it) {
-        if (it.value().size() < 2) {
+        const auto fixedLabel = reserved.constFind(it.key());
+        if (it.value().size() < 2 && fixedLabel == reserved.cend()) {
             continue;
         }
         for (const QString& key : it.value()) {
@@ -94,6 +111,9 @@ QVariantMap KeyboardController::conflicts() const
                     const settings::Definition* def = m_settings.schema().find(other.toStdString());
                     others.append(QCoreApplication::translate("Settings", def->label));
                 }
+            }
+            if (fixedLabel != reserved.cend()) {
+                others.append(*fixedLabel);
             }
             out.insert(key, others);
         }

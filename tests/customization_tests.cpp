@@ -18,6 +18,7 @@
 #include "ui/LayoutController.hpp"
 #include "ui/SettingsController.hpp"
 
+#include <QCoreApplication>
 #include <QFile>
 #include <QQuickWindow>
 #include <QSignalSpy>
@@ -387,6 +388,36 @@ TEST_SUITE("ui.keyboard")
         const QVariantList sheet = keyboard.cheatSheet();
         CHECK(sheet.size() >= 15);
         CHECK_FALSE(sheet.first().toMap().value(QStringLiteral("label")).toString().isEmpty());
+    }
+
+    TEST_CASE("a shortcut on one of the fixed keys (full screen, media and volume keys) is flagged")
+    {
+        QTemporaryDir dir;
+        settings::SettingsStore store(settings::Schema::builtin());
+        settings::ConfigFile config(store, dir.filePath(QStringLiteral("config.toml")), {});
+        i18n::LanguageManager languages(store);
+        ui::SettingsController settingsUi(store, config, languages);
+        ui::KeyboardController keyboard(store, languages, settingsUi);
+        // Another suite may have left a translator installed.
+        const auto fixedLabel = [](const char* label) {
+            return QCoreApplication::translate("noctara::ui::KeyboardController", label);
+        };
+
+        REQUIRE(store.setUserValue("keyboard.shortcuts.full_player", QStringLiteral("F11")));
+        CHECK(keyboard.conflicts().value(QStringLiteral("keyboard.shortcuts.full_player")).toStringList() ==
+              QStringList{fixedLabel("Full screen")});
+        CHECK_FALSE(settingsUi.rowStatus(QStringLiteral("keyboard.shortcuts.full_player")).isEmpty());
+
+        REQUIRE(store.setUserValue("keyboard.shortcuts.next", QStringLiteral("Media Next")));
+        CHECK(keyboard.conflicts().value(QStringLiteral("keyboard.shortcuts.next")).toStringList() ==
+              QStringList{fixedLabel("Media keys")});
+        REQUIRE(store.setUserValue("keyboard.shortcuts.mute", QStringLiteral("Volume Mute")));
+        CHECK(keyboard.conflicts().value(QStringLiteral("keyboard.shortcuts.mute")).toStringList() ==
+              QStringList{fixedLabel("Volume keys")});
+
+        REQUIRE(store.setUserValue("keyboard.shortcuts.full_player", QStringLiteral("Ctrl+F11")));
+        CHECK(settingsUi.rowStatus(QStringLiteral("keyboard.shortcuts.full_player")).isEmpty());
+        CHECK_FALSE(keyboard.conflicts().contains(QStringLiteral("keyboard.shortcuts.full_player")));
     }
 }
 

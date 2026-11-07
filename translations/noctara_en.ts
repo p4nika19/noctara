@@ -2304,7 +2304,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+192"/>
+        <location filename="../src/app/main.cpp" line="+204"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2319,7 +2319,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings/BuiltinSchema.cpp" line="+187"/>
+        <location filename="../src/settings/BuiltinSchema.cpp" line="+188"/>
         <location line="+111"/>
         <source>Language</source>
         <translation type="unfinished"></translation>
@@ -5028,12 +5028,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+57"/>
         <source>Noctara SoundCloud session</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-130"/>
+        <location line="-133"/>
         <source>Could not inspect the installed browser profiles.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5091,7 +5091,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+60"/>
         <source>Signed in, but no persistent secret store is available, so you will need to sign in again after Noctara quits.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5182,7 +5182,27 @@
 <context>
     <name>noctara::ui::KeyboardController</name>
     <message>
-        <location filename="../src/ui/KeyboardController.cpp" line="+113"/>
+        <location filename="../src/ui/KeyboardController.cpp" line="+81"/>
+        <source>Media keys</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Volume keys</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Full screen</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Back</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+49"/>
         <source>Also used by: %1. Only one of them works.</source>
         <translation type="unfinished"></translation>
     </message>
