@@ -45,6 +45,11 @@ Item {
         // Bound by mode, not by visibility: dropping the model of a hidden page cancels delegates mid-creation.
         model: root.mode === "list" ? root.model : null
         header: root.header
+        // A header that grows once its data arrives must not push a view that sits at its start down.
+        property bool atStart: true
+        readonly property real headerExtent: headerItem ? headerItem.height : 0
+        onContentYChanged: atStart = atYBeginning
+        onHeaderExtentChanged: if (atStart) positionViewAtBeginning()
         ScrollBar.vertical: ScrollBar {}
         delegate: CatalogRow {
             width: ListView.view.width
@@ -72,6 +77,10 @@ Item {
         boundsBehavior: Flickable.StopAtBounds
         model: root.mode === "grid" ? root.model : null
         header: root.header
+        property bool atStart: true
+        readonly property real headerExtent: headerItem ? headerItem.height : 0
+        onContentYChanged: atStart = atYBeginning
+        onHeaderExtentChanged: if (atStart) positionViewAtBeginning()
         cellWidth: Math.floor(width / root.columns)
         cellHeight: cellWidth - Theme.space.lg + Theme.font.bodyStrong.pixelSize * 1.4
                     + Theme.font.caption.pixelSize * 1.4 + Theme.space.xl
