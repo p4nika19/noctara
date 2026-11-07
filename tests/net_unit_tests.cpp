@@ -288,6 +288,16 @@ TEST_SUITE("net.proxy")
         CHECK(BypassList::fromNoProxy(u"localhost, .internal  192.168.0.0/16").matches(u"svc.internal"));
     }
 
+    TEST_CASE("bypass rules and hosts written with a trailing dot still match")
+    {
+        CHECK(BypassList({QStringLiteral("example.com.")}, false).matches(u"api.example.com"));
+        CHECK(BypassList({QStringLiteral("*.cdn.test.")}, false).matches(u"a.cdn.test"));
+        CHECK(BypassList({QStringLiteral("example.com")}, false).matches(u"api.example.com."));
+        CHECK(BypassList({QStringLiteral("example.com")}, false).matches(u"example.com."));
+        CHECK(BypassList({}, true).matches(u"localhost."));
+        CHECK_FALSE(BypassList({QStringLiteral("example.com.")}, false).matches(u"example.org"));
+    }
+
     TEST_CASE("environment variables pick the proxy per scheme and honour no_proxy")
     {
         QHash<QString, QString> env{{QStringLiteral("https_proxy"), QStringLiteral("http://secure.proxy:3128")},

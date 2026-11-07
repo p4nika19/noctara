@@ -31,6 +31,15 @@ QString hostWithoutBrackets(QStringView host)
     return host.toString();
 }
 
+// "example.com." is the same name as "example.com".
+QString withoutTrailingDot(QString name)
+{
+    if (name.endsWith(u'.')) {
+        name.chop(1);
+    }
+    return name;
+}
+
 QString variable(const QHash<QString, QString>& environment, const QString& lower, bool upperAllowed)
 {
     if (const QString value = environment.value(lower).trimmed(); !value.isEmpty()) {
@@ -138,10 +147,10 @@ BypassList::BypassList(const QStringList& rules, bool bypassLocal)
         } else if (auto cidr = Cidr::parse(rule)) {
             m_networks.push_back(*cidr);
         } else if (rule.startsWith(u"*.")) {
-            m_domains.push_back({rule.sliced(2), false});
+            m_domains.push_back({withoutTrailingDot(rule.sliced(2)), false});
         } else {
             // A leading dot is how NO_PROXY spells "this domain and its subdomains"; same as a bare name.
-            m_domains.push_back({rule.startsWith(u'.') ? rule.sliced(1) : rule, true});
+            m_domains.push_back({withoutTrailingDot(rule.startsWith(u'.') ? rule.sliced(1) : rule), true});
         }
     }
 }
@@ -157,7 +166,7 @@ bool BypassList::matches(QStringView host) const
     if (m_all) {
         return true;
     }
-    const QString name = hostWithoutBrackets(host).toLower();
+    const QString name = withoutTrailingDot(hostWithoutBrackets(host).toLower());
     if (const auto address = IpAddress::parse(name)) {
         return (m_local && address->isLocal()) ||
                std::ranges::any_of(m_networks, [&](const Cidr& cidr) { return cidr.contains(*address); });
