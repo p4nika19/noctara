@@ -730,6 +730,47 @@ TEST_SUITE("cache.audio")
         CHECK(*payloadHashOfFile(data) == refreshed->info().payloadHash);
     }
 
+    TEST_CASE("metadata that changes while a tagging pass runs is tagged by another pass")
+    {
+        // The copy for tagging waits until the test lets it go, so the metadata can change meanwhile.
+        class SlowCopies : public FileOps {
+        public:
+            Result<void> copyFile(const QString& from, const QString& to) override
+            {
+                ++copies;
+                while (!go.load()) {
+                    std::this_thread::sleep_for(5ms);
+                }
+                return FileOps::copyFile(from, to);
+            }
+            std::atomic<int> copies{0};
+            std::atomic<bool> go{false};
+        };
+        SlowCopies disk;
+        Audio audio(disk);
+        audio.config.embedTags = true;
+        audio.cache->setConfig(audio.config);
+        const QByteArray mp3 = *readWholeFile(QStringLiteral(NOCTARA_SOURCE_DIR "/tests/fixtures/audio/sine.mp3"));
+        audio.origin.serve(QString::fromLatin1(kTrackUrl), {.body = mp3});
+        TrackInfo info = track(QStringLiteral("retitled"));
+        AudioReaderPtr first = audio.open(info);
+        CHECK(Audio::readAll(*first) == mp3);
+        REQUIRE(test::waitUntil([&] { return disk.copies.load() >= 1; }, 5000));
+
+        info.title = QStringLiteral("Новое имя");
+        info.sourceUpdatedAt = QStringLiteral("2025-01-01T00:00:00Z");
+        AudioReaderPtr second = audio.open(info);  // new metadata while the first pass still runs
+        disk.go = true;
+        const QString data = audio.entryDir(info) + QStringLiteral("/data");
+        CHECK(test::waitUntil(
+            [&] {
+                const Result<TagData> tags = readTags(data);
+                return tags && tags->title == info.title;
+            },
+            5000));
+        CHECK(disk.copies.load() == 2);
+    }
+
     TEST_CASE("a tagging pass that keeps failing is not retried until the metadata changes")
     {
         // Every copy for tagging fails (I/O error), so every tagging pass fails the same way.

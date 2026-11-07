@@ -1732,7 +1732,7 @@ void AudioCache::onTagged(const QByteArray& name, std::uint32_t generation, Resu
     if (!map) {
         if (map.error().code == ErrorCode::Unsupported) {
             const std::scoped_lock lock(entry.mutex);
-            entry.info.taggedFor = tagSignature(entry.info);  // sidecar only for this container
+            entry.info.taggedFor = l->tagAttemptFor;  // sidecar only for this container
         } else {
             l->tagFailedFor = l->tagAttemptFor;  // the same pass would fail the same way
             qCInfo(lcCache) << "tagging skipped, the entry is unchanged:" << map.error().describe();
@@ -1746,7 +1746,7 @@ void AudioCache::onTagged(const QByteArray& name, std::uint32_t generation, Resu
             ::open(QFile::encodeName(path(entry.dir, "data")).constData(), O_RDONLY | O_CLOEXEC));
         const std::scoped_lock lock(entry.mutex);
         entry.current = std::move(next);
-        entry.info.taggedFor = tagSignature(entry.info);
+        entry.info.taggedFor = l->tagAttemptFor;  // what was written, not what may have changed meanwhile
     }
     writeSidecar(entry);
     persistMap(entry);
