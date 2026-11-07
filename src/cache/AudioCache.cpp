@@ -1534,7 +1534,9 @@ void AudioCache::storePiece(Live& live, int piece, const QByteArray& data)
                 return m_ops.writeFile(path(entry.dir, "seg") + u'/' + QString::fromLatin1(hlsPieceName(piece)), data);
             }
             if (!live.writeFd) {
-                const QString file = path(entry.dir, "data.part");
+                // A finished file that lost a piece (corrupt on disk) is repaired in place: it is what readers use.
+                const QString finished = path(entry.dir, "data");
+                const QString file = QFileInfo::exists(finished) ? finished : path(entry.dir, "data.part");
                 live.writeFd.reset(::open(QFile::encodeName(file).constData(), O_RDWR | O_CREAT | O_CLOEXEC, 0600));
                 if (!live.writeFd) {
                     return fail(errorCodeFromErrno(errno), "cannot create the data file");

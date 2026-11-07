@@ -442,6 +442,16 @@ TEST_SUITE("cache.audio")
             CHECK(audio.origin.count() >= 1);  // the damaged piece came from the network again
         }
         audio.settle();
+        // The repair went into the file the entry reads from: the next session needs no network.
+        CHECK_FALSE(QFileInfo::exists(audio.entryDir(info) + QStringLiteral("/data.part")));
+        audio.restart();
+        audio.origin.reset();
+        {
+            AudioReaderPtr reader = audio.open(info);
+            CHECK(Audio::readAll(*reader) == content);
+            CHECK(audio.origin.count() == 0);
+        }
+        audio.settle();
         REQUIRE(QFile::resize(data, 100'000));
         audio.restart();
         audio.origin.reset();
