@@ -60,6 +60,12 @@ QByteArray undash(const QByteArray& value)
     return value == "-" ? QByteArray() : value;
 }
 
+// Statuses a signed media URL answers once it expired: worth asking the UrlProvider for a fresh one.
+bool urlExpired(int status)
+{
+    return status == 401 || status == 403 || status == 404 || status == 410;
+}
+
 QString tagSignature(const TrackInfo& info)
 {
     return info.sourceUpdatedAt + u'|' + QString::fromLatin1(info.coverHash);
@@ -1219,7 +1225,7 @@ void AudioCache::onFetchFinished(const QByteArray& name, std::uint64_t fetchId, 
     }
     const net::Response& response = *result;
     const bool hls = l->entry->info.protocol == StreamProtocol::Hls;
-    if (response.status == 401 || response.status == 403 || response.status == 404 || response.status == 410) {
+    if (urlExpired(response.status)) {
         const int resume = l->fetch->next;
         l->fetch.reset();
         if (!l->urlRefreshed) {
@@ -1387,7 +1393,7 @@ void AudioCache::fetchPlaylist(Live& live)
             return;
         }
         if (!result || !result->successful()) {
-            if (result && (result->status == 403 || result->status == 410) && !l->urlRefreshed) {
+            if (result && urlExpired(result->status) && !l->urlRefreshed) {
                 l->urlRefreshed = true;
                 l->fetch.reset();
                 withUrl(*l, true, [this](Live& again) { fetchPlaylist(again); });

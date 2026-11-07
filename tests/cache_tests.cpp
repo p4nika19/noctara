@@ -545,6 +545,28 @@ TEST_SUITE("cache.audio")
         CHECK(audio.origin.count() == 0);
     }
 
+    TEST_CASE("an expired HLS playlist URL is refreshed on every status that means expiry")
+    {
+        for (const int status : {401, 403, 404, 410}) {
+            CAPTURE(status);
+            Audio audio;
+            const QString expired = QStringLiteral("https://cdn.test/hls/old.m3u8?sig=old");
+            const QString fresh = QStringLiteral("https://cdn.test/hls/new.m3u8?sig=new");
+            const QByteArray segment = randomBytes(20'000, 120);
+            audio.origin.serve(expired, {.status = status});
+            audio.origin.serve(fresh, {.body = "#EXTM3U\n#EXT-X-TARGETDURATION:10\n#EXTINF:10.0,\ns1.ts\n"
+                                               "#EXT-X-ENDLIST\n"});
+            audio.origin.serve(QStringLiteral("https://cdn.test/hls/s1.ts"), {.body = segment});
+            Result<AudioReaderPtr> reader =
+                audio.tryOpen(track(QStringLiteral("hls-expired"), StreamProtocol::Hls), audio.urls(expired, fresh));
+            REQUIRE(reader);
+            const AudioReader::Piece piece = Audio::piece(**reader, 0);
+            CHECK_MESSAGE(piece.status == AudioReader::Status::Ready, piece.error.describe());
+            CHECK(piece.data == segment);
+            CHECK(audio.refreshCalls == 1);
+        }
+    }
+
     TEST_CASE("an HLS entry whose playlist has not arrived yet is not complete")
     {
         Audio audio;
