@@ -7,6 +7,7 @@
 #include <QCoreApplication>
 #include <QDeadlineTimer>
 #include <QString>
+#include <QTimer>
 
 #include <optional>
 #include <ostream>
@@ -57,15 +58,20 @@ inline constexpr int kTimeoutScale = 10;
 inline constexpr int kTimeoutScale = 1;
 #endif
 
-// Spins the event loop until `predicate` holds or the timeout (scaled by kTimeoutScale) elapses.
+// Runs the event loop until `predicate` holds or the timeout (scaled by kTimeoutScale) elapses. While no events
+// arrive the thread sleeps; a short timer still wakes it to re-check conditions that change without an event (for
+// example state set by another thread).
 template <class Predicate> bool waitUntil(Predicate predicate, int timeoutMs = 3000)
 {
     QDeadlineTimer deadline(static_cast<qint64>(timeoutMs) * kTimeoutScale);
+    QTimer wake;
+    wake.setTimerType(Qt::PreciseTimer);
+    wake.start(2);
     while (!predicate()) {
         if (deadline.hasExpired()) {
             return false;
         }
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 20);
+        QCoreApplication::processEvents(QEventLoop::AllEvents | QEventLoop::WaitForMoreEvents);
     }
     return true;
 }
