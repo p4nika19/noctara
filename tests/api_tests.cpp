@@ -250,6 +250,39 @@ TEST_SUITE("api.parse")
         CHECK(sizedArtwork(odd, 300) == odd);
         CHECK(sizedArtwork({}, 300).isEmpty());
     }
+
+    TEST_CASE("artwork sizes: unusual URLs")
+    {
+        // Locks in what the suffix pattern did for inputs SoundCloud does not normally send.
+        const QString base = QStringLiteral("https://i1.sndcdn.com/a-b");
+        const auto sized = [&](const QString& suffix, int pixels = 300) {
+            return sizedArtwork(base + suffix, pixels);
+        };
+        CHECK(sized(QStringLiteral("-original.png")) == base + u"-t300x300.png");
+        CHECK(sized(QStringLiteral("-t500x500.jpeg"), 60) == base + u"-t67x67.jpeg");
+        CHECK(sized(QStringLiteral("-badge.jpg"), 67) == base + u"-t67x67.jpg");
+        CHECK(sized(QStringLiteral("-badge.jpg"), 68) == base + u"-large.jpg");
+        CHECK(sized(QStringLiteral("-t1x2.jpg"), 0) == base + u"-t67x67.jpg");
+        CHECK(sized(QStringLiteral("-large.jpg\n")) == base + u"-t300x300.jpg\n");  // $ before a final newline
+        CHECK(sized(QStringLiteral("-tiny.png-large.jpg")) == base + u"-tiny.png-t300x300.jpg");
+        CHECK(sizedArtwork(QStringLiteral("https://ex.com/обложка-small.png"), 500) ==
+              u"https://ex.com/обложка-t500x500.png");
+        for (const QString& suffix :
+             {QStringLiteral("-large.jpg?x=1"), QStringLiteral("-LARGE.jpg"), QStringLiteral("-large.JPG"),
+              QStringLiteral("-large.jpg.png"), QStringLiteral("-large.x.jpg"), QStringLiteral("-.jpg"),
+              QStringLiteral("-t12x.jpg"), QStringLiteral("-tx1.jpg"), QStringLiteral("-t1x1x1.jpg"),
+              QStringLiteral("-large.gif"), QStringLiteral("-large.jpg\n\n"), QStringLiteral("-large.jpg "),
+              QStringLiteral("-t\u0663x\u0663.jpg"), QStringLiteral("large.jpg"), QStringLiteral("-large"),
+              QStringLiteral("-big.jpg"), QStringLiteral("-large.jpg\r"), QStringLiteral("-large.jpg\r\n")}) {
+            INFO(suffix.toStdString());
+            CHECK(sized(suffix) == base + suffix);
+        }
+        CHECK(sizedArtwork(QStringLiteral("-large.jpg"), 300) == u"-t300x300.jpg");
+        CHECK(sizedArtwork(QStringLiteral(".jpg"), 300) == u".jpg");
+        // Invalid UTF-16 (a lone surrogate) never matched the pattern.
+        const QString broken = base + QChar(0xD800) + QStringLiteral("-large.jpg");
+        CHECK(sizedArtwork(broken, 300) == broken);
+    }
 }
 
 TEST_SUITE("api.endpoints")
