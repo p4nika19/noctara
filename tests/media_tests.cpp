@@ -32,6 +32,7 @@
 #include <QDir>
 #include <QElapsedTimer>
 #include <QFileInfo>
+#include <QPointer>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 
@@ -308,6 +309,14 @@ public:
 
 class FakeBackend : public IPlaybackBackend {
 public:
+    FakeBackend() = default;
+    FakeBackend(const FakeBackend&) = delete;
+    FakeBackend& operator=(const FakeBackend&) = delete;
+    FakeBackend(FakeBackend&&) = delete;
+    FakeBackend& operator=(FakeBackend&&) = delete;
+    // The controller calls its backends from its destructor: it must be gone before they are.
+    ~FakeBackend() override { CHECK_MESSAGE(usedBy.isNull(), "a backend was destroyed before its controller"); }
+
     void load(const PlaybackSource& source, std::int64_t startMs, bool paused) override
     {
         loads.push_back(source);
@@ -349,6 +358,7 @@ public:
     std::optional<PlaybackSource> next;
     double gain = -1;
     std::int64_t crossfade = -1;
+    QPointer<QObject> usedBy;
 
 private:
     BackendState m_state = BackendState::Idle;
@@ -379,9 +389,8 @@ struct Player {
     settings::SettingsStore store{settings::Schema::builtin()};
     FakeClient client;
     FakeBackend backend;
-    std::unique_ptr<PlaybackController> controller;
-
     FakeBackend protectedBackend;
+    std::unique_ptr<PlaybackController> controller;  // destroyed first: its destructor stops the backends
 
     explicit Player(const QString& statePath = {}, std::map<api::Id, api::Track> known = {}, bool withProtected = false)
     {
@@ -393,6 +402,8 @@ struct Player {
                                              .native = backend,
                                              .protectedBackend = withProtected ? &protectedBackend : nullptr,
                                              .statePath = statePath});
+        backend.usedBy = controller.get();
+        protectedBackend.usedBy = controller.get();
     }
     [[nodiscard]] QString loadedId(std::size_t index) const { return backend.loads.at(index).info.key.trackId; }
 };
