@@ -47,7 +47,8 @@ public:
 
     // Reads the folder again (also done automatically when it changes).
     void rescan();
-    // Copies a theme file into the folder after checking it parses; delivers the new id on `context`'s thread.
+    // Copies a theme file into the folder after checking it parses; delivers the new id on `context`'s thread
+    // (which must be the library's) once the folder has been scanned again, so themes() already lists it.
     void importFile(const QString& path, QObject* context, std::function<void(Result<QString>)> done);
     // Copies a theme's file to `path`.
     void exportTheme(const QString& id, const QString& path, QObject* context, std::function<void(Result<void>)> done);
@@ -70,6 +71,7 @@ private:
     std::shared_ptr<const UserTheme> m_active;
     QFileSystemWatcher m_watcher;
     QTimer m_debounce;
+    std::vector<std::function<void()>> m_afterScan;  // run once the next current scan is applied
     quint64 m_generation = 0;
     bool m_scanned = false;
 };

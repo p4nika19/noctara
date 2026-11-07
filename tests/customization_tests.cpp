@@ -269,6 +269,41 @@ TEST_SUITE("theme.library")
         REQUIRE(test::waitUntil([&] { return library.active() == nullptr; }, 5000));
         CHECK(library.selectedEntry() == nullptr);
     }
+
+    TEST_CASE("an imported theme is listed before the import reports done, so selecting it never drops the active "
+              "theme")
+    {
+        QTemporaryDir dir;
+        const QString folder = dir.filePath(QStringLiteral("themes"));
+        REQUIRE(ensureDirectory(folder));
+        write(folder + QStringLiteral("/aurora.toml"), QByteArray(kAurora));
+        const QString outside = dir.filePath(QStringLiteral("paper.toml"));
+        write(outside, "[theme]\nname = \"Paper\"\n");
+
+        settings::SettingsStore store(settings::Schema::builtin());
+        REQUIRE(store.setUserValue(keys::CustomTheme, QStringLiteral("aurora")));
+        ThemeLibrary library(store, folder);
+        REQUIRE(test::waitUntil([&] { return library.active() != nullptr; }));
+
+        bool droppedToBuiltin = false;
+        QObject::connect(&library, &ThemeLibrary::activeChanged, &library,
+                         [&] { droppedToBuiltin = droppedToBuiltin || library.active() == nullptr; });
+        QObject context;
+        bool listed = false;
+        bool done = false;
+        // What ThemesController::importFile does: select the new id as soon as the import is done.
+        library.importFile(outside, &context, [&](Result<QString> id) {
+            REQUIRE(id);
+            listed = std::ranges::find(library.themes(), *id, &ThemeEntry::id) != library.themes().end();
+            REQUIRE(store.setUserValue(keys::CustomTheme, *id));
+            done = true;
+        });
+        REQUIRE(test::waitUntil([&] { return done; }, 5000));
+        CHECK(listed);
+        CHECK_FALSE(droppedToBuiltin);
+        REQUIRE(library.active() != nullptr);
+        CHECK(library.active()->name == u"Paper");
+    }
 }
 
 TEST_SUITE("ui.keyboard")

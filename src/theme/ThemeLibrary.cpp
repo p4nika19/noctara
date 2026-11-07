@@ -8,10 +8,12 @@
 
 #include <QDir>
 #include <QFileInfo>
+#include <QPointer>
 #include <QRegularExpression>
 #include <QtConcurrentRun>
 
 #include <algorithm>
+#include <utility>
 
 namespace noctara::theme {
 
@@ -129,6 +131,9 @@ void ThemeLibrary::applyScan(std::vector<ThemeEntry> themes, quint64 generation)
     watch();
     Q_EMIT themesChanged();
     updateActive();
+    for (const std::function<void()>& callback : std::exchange(m_afterScan, {})) {
+        callback();
+    }
 }
 
 void ThemeLibrary::watch()
@@ -187,9 +192,18 @@ void ThemeLibrary::importFile(const QString& path, QObject* context, std::functi
             return std::unexpected(written.error());
         }
         return id;
-    }).then(context, [this, done = std::move(done)](Result<QString> result) {
+    }).then(context, [this, guard = QPointer<QObject>(context), done = std::move(done)](Result<QString> result) {
         rescan();
-        done(std::move(result));
+        if (!result) {
+            done(std::move(result));
+            return;
+        }
+        // Delivered once the scan that lists the new file is applied, so selecting the id finds it.
+        m_afterScan.emplace_back([guard, done, result = std::move(result)] mutable {
+            if (guard) {
+                done(std::move(result));
+            }
+        });
     });
 }
 
