@@ -1,8 +1,10 @@
 #include "media/PlaybackQueue.hpp"
 
 #include <QRandomGenerator>
+#include <QSet>
 
 #include <algorithm>
+#include <numeric>
 #include <unordered_map>
 
 namespace noctara::media {
@@ -91,22 +93,59 @@ std::vector<std::uint64_t> PlaybackQueue::addUpcoming(std::vector<QueueItem> ite
     assign(items);
     std::vector<std::uint64_t> uids;
     uids.reserve(items.size());
-    for (QueueItem& item : items) {
-        uids.push_back(item.uid);
-        if (!m_shuffle) {
+    if (!m_shuffle) {
+        for (QueueItem& item : items) {
+            uids.push_back(item.uid);
             m_items.push_back(std::move(item));
-            continue;
         }
-        m_original.push_back(item.uid);
-        const int first = m_current + 1;
-        const auto slots = static_cast<quint32>(size() - first + 1);
-        const int at = first + static_cast<int>(QRandomGenerator::global()->bounded(slots));
-        m_items.insert(m_items.begin() + at, std::move(item));
+    } else if (!items.empty()) {
+        // Each item goes to a random slot among the upcoming ones, as if inserted one at a time. The order is
+        // planned on indices first so every track moves once (inserting tracks one by one was O(upcoming x added)).
+        const auto first = static_cast<std::size_t>(m_current + 1);
+        const std::size_t existing = m_items.size() - first;
+        std::vector<std::size_t> order(existing);
+        std::iota(order.begin(), order.end(), std::size_t{0});
+        order.reserve(existing + items.size());
+        for (std::size_t added = 0; added < items.size(); ++added) {
+            uids.push_back(items[added].uid);
+            m_original.push_back(items[added].uid);
+            const auto slots = static_cast<quint32>(order.size() + 1);
+            order.insert(order.begin() + QRandomGenerator::global()->bounded(slots), existing + added);
+        }
+        m_items.resize(first + order.size());
+        // Back to front: an upcoming item only moves later, so its old slot has not been overwritten yet.
+        for (std::size_t slot = order.size(); slot-- > 0;) {
+            const std::size_t from = order[slot];
+            if (from >= existing) {
+                m_items[first + slot] = std::move(items[from - existing]);
+            } else if (from != slot) {
+                m_items[first + slot] = std::move(m_items[first + from]);
+            }
+        }
     }
     if (m_current < 0 && !m_items.empty()) {
         m_current = 0;
     }
     return uids;
+}
+
+void PlaybackQueue::removeUpcoming()
+{
+    const auto first = static_cast<std::size_t>(m_current + 1);
+    if (first >= m_items.size()) {
+        return;
+    }
+    if (!m_original.empty()) {
+        QSet<std::uint64_t> gone;
+        for (auto it = m_items.begin() + static_cast<std::ptrdiff_t>(first); it != m_items.end(); ++it) {
+            gone.insert(it->uid);
+        }
+        std::erase_if(m_original, [&gone](std::uint64_t uid) { return gone.contains(uid); });
+    }
+    m_items.erase(m_items.begin() + static_cast<std::ptrdiff_t>(first), m_items.end());
+    if (m_items.empty()) {
+        m_current = -1;
+    }
 }
 
 bool PlaybackQueue::remove(int index)

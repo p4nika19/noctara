@@ -836,9 +836,7 @@ void PlaybackController::moveQueueItem(int from, int to)
 void PlaybackController::clearUpcoming()
 {
     unfollow();  // the list's later tracks would otherwise come back
-    while (m_queue.size() > m_queue.current() + 1) {
-        (void)m_queue.remove(m_queue.size() - 1);
-    }
+    m_queue.removeUpcoming();
     queueEdited();
 }
 

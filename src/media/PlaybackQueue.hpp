@@ -37,6 +37,8 @@ public:
     // order they go at the end. Returns their uids.
     std::vector<std::uint64_t> addUpcoming(std::vector<QueueItem> items);
     bool remove(int index);
+    // Everything after the current item.
+    void removeUpcoming();
     bool move(int from, int to);
     void clear();
     // Makes `index` current.

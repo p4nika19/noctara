@@ -236,9 +236,17 @@ void CollectionModel::onSyncPage(Result<api::Page<api::Entry>> page, int generat
     std::vector<api::Entry> added;
     for (api::Entry& entry : page->items) {
         const quint64 key = identity(entry);
-        if (!m_freshSeen.contains(key)) {
-            m_freshSeen.insert(key);
-            added.push_back(entry);
+        if (m_freshSeen.contains(key)) {
+            continue;
+        }
+        m_freshSeen.insert(key);
+        // The fresh list is applied only over a snapshot, which reads `added` only for the first page's head.
+        if (!m_showingSnapshot) {
+            added.push_back(std::move(entry));
+        } else {
+            if (m_syncPages == 1) {
+                added.push_back(entry);
+            }
             m_fresh.push_back(std::move(entry));
         }
     }
