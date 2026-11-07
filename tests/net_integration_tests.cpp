@@ -653,9 +653,10 @@ TEST_SUITE("net.transport")
             request.url = QUrl(QStringLiteral("http://app.test:%1/").arg(slow.port()));
             net.transport.send(request, context.get(),
                                {.onResponse = {}, .onData = {}, .onFinished = [&](auto) { called = true; }});
+            REQUIRE(test::waitUntil([&] { return net.transport.activeTransfers() == 1; }));  // it has started
             context.reset();  // the receiver is gone: no callback, and the transfer is abandoned
             CHECK(test::waitUntil([&] { return net.transport.activeTransfers() == 0; }, 5000));
-            CHECK_FALSE(called);
+            CHECK_FALSE(test::waitUntil([&] { return called; }, 700));  // past the server's late reply
         }
 
         TransportConfig config;
