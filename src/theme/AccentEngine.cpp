@@ -110,8 +110,6 @@ std::vector<Cluster> cluster(const std::vector<color::OkLab>& pixels)
 
     std::vector<std::size_t> assignment(pixels.size(), 0);
     for (int iteration = 0; iteration < kIterations; ++iteration) {
-        // Once no pixel changes cluster, the centres are a fixed point: later iterations would repeat this one.
-        bool changed = iteration == 0;
         std::vector<color::OkLab> sums(clusters.size());
         for (auto& c : clusters) {
             c.count = 0;
@@ -126,7 +124,6 @@ std::vector<Cluster> cluster(const std::vector<color::OkLab>& pixels)
                     best = k;
                 }
             }
-            changed = changed || assignment[i] != best;
             assignment[i] = best;
             ++clusters[best].count;
             sums[best].L += pixels[i].L;
@@ -138,9 +135,6 @@ std::vector<Cluster> cluster(const std::vector<color::OkLab>& pixels)
                 const auto count = static_cast<double>(clusters[k].count);
                 clusters[k].centre = {sums[k].L / count, sums[k].a / count, sums[k].b / count};
             }
-        }
-        if (!changed) {
-            break;
         }
     }
     return clusters;
