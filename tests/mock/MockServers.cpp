@@ -420,7 +420,10 @@ DnsServer::DnsServer()
                     return;
                 }
                 ++m_tcpQueries;
-                const QByteArray reply = answer(query, false);
+                QByteArray reply = answer(query, false);
+                if (m_wrongTcpId && reply.size() >= 2) {
+                    reply[1] = static_cast<char>(static_cast<std::uint8_t>(reply[1]) + 1U);
+                }
                 QByteArray framed;
                 put16(framed, static_cast<std::uint16_t>(reply.size()));
                 FdStream(fd).write(framed + reply);

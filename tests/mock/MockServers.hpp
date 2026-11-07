@@ -132,6 +132,8 @@ public:
 
     void add(const QString& name, const QString& address, std::uint32_t ttl = 300);
     void setTruncateUdp(bool truncate) { m_truncate = truncate; }
+    // Answers TCP queries with an id that does not match the query's.
+    void setWrongTcpId(bool wrong) { m_wrongTcpId = wrong; }
     [[nodiscard]] std::uint16_t port() const noexcept { return m_port; }
     [[nodiscard]] int udpQueries() const noexcept { return m_udpQueries.load(); }
     [[nodiscard]] int tcpQueries() const noexcept { return m_tcpQueries.load(); }
@@ -147,6 +149,7 @@ private:
     mutable std::mutex m_mutex;
     std::multimap<QString, Record> m_records;
     std::atomic<bool> m_truncate{false};
+    std::atomic<bool> m_wrongTcpId{false};
     std::atomic<int> m_udpQueries{0};
     std::atomic<int> m_tcpQueries{0};
     int m_udp = -1;

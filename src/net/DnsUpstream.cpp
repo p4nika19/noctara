@@ -153,7 +153,12 @@ private:
         if (m_received.size() >= 2) {
             const auto length = messageId(m_received);  // same big-endian 16-bit layout
             if (m_received.size() >= 2 + static_cast<qsizetype>(length)) {
-                finish(m_received.mid(2, length));
+                const QByteArray message = m_received.mid(2, length);
+                if (message.size() < 12 || messageId(message) != m_id) {
+                    finish(fail(ErrorCode::ParseError, "DNS: TCP answer id does not match the query"));
+                    return;
+                }
+                finish(message);
             }
         }
     }

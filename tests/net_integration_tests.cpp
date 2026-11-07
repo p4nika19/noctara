@@ -269,6 +269,27 @@ TEST_SUITE("net.resolver")
         CHECK(system.calls == 0);
     }
 
+    TEST_CASE("a TCP answer whose id does not match the query moves on to the next server")
+    {
+        test::DnsServer wrong;
+        wrong.add(QStringLiteral("api.test"), QStringLiteral("192.0.2.66"), 120);
+        wrong.setTruncateUdp(true);
+        wrong.setWrongTcpId(true);
+        test::DnsServer good;
+        good.add(QStringLiteral("api.test"), QStringLiteral("192.0.2.1"), 120);
+        FakeSystemResolver system;
+        DnsResolver resolver(system);
+        DnsConfig config = customServers({wrong.port(), good.port()}, false);
+        config.family = IpFamilyPreference::V4Only;
+        resolver.setConfig(config);
+        const auto answer = resolveNow(resolver, QStringLiteral("api.test"));
+        REQUIRE_MESSAGE(answer, test::describe(answer));
+        CHECK(wrong.tcpQueries() >= 1);
+        CHECK(answer->addresses == std::vector{ip("192.0.2.1")});
+        CHECK(answer->server == QStringLiteral("127.0.0.1:%1").arg(good.port()));
+        CHECK(system.calls == 0);
+    }
+
     TEST_CASE("a name that does not exist is cached negatively and never falls back")
     {
         test::DnsServer server;
