@@ -207,6 +207,27 @@ TEST_SUITE("cache.memory")
         tier.setBudget(1000);
         CHECK(tier.stats().bytes == 0);
     }
+
+    TEST_CASE("moving an entry between the inactive and active lists keeps its pieces' LRU order")
+    {
+        MemoryTier tier(1 << 20);
+        const QByteArray piece(1000, 'x');
+        tier.insert({1, 1, 0}, piece);  // inactive; piece 2 is the most recently used
+        tier.insert({1, 1, 1}, piece);
+        tier.insert({1, 1, 2}, piece);
+        tier.setActive(1, true);
+        tier.setBudget(2000);
+        CHECK_FALSE(tier.contains({1, 1, 0}));
+        CHECK(tier.contains({1, 1, 1}));
+        CHECK(tier.contains({1, 1, 2}));
+
+        tier.setBudget(1 << 20);
+        tier.insert({1, 1, 3}, piece);
+        tier.setActive(1, false);
+        tier.setBudget(1000);
+        CHECK(tier.contains({1, 1, 3}));
+        CHECK_FALSE(tier.contains({1, 1, 1}));
+    }
 }
 
 TEST_SUITE("cache.hls")

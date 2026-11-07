@@ -64,14 +64,16 @@ void MemoryTier::setActive(std::uint64_t entry, bool active)
     // Move the entry's pieces between the lists, keeping their relative order.
     List& from = active ? m_cold : m_hot;
     List& to = active ? m_hot : m_cold;
+    List moved;  // collected in order, then put in front as one group
     for (auto it = from.begin(); it != from.end();) {
         const auto next = std::next(it);
         if (it->key.entry == entry) {
             it->hot = active;
-            to.splice(to.begin(), from, it);
+            moved.splice(moved.end(), from, it);
         }
         it = next;
     }
+    to.splice(to.begin(), moved);
 }
 
 void MemoryTier::dropEntry(std::uint64_t entry)
