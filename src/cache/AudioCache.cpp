@@ -1568,7 +1568,8 @@ void AudioCache::storePiece(Live& live, int piece, const QByteArray& data)
     if (!onDisk && !entry.dir.isEmpty()) {
         live.volatilePieces.insert(piece);
     }
-    live.retries = 0;  // progress: a flaky connection may keep resuming
+    live.retries = 0;           // progress: a flaky connection may keep resuming
+    live.urlRefreshed = false;  // and the URL that delivered it may expire again later
     m_memory.insert(PieceKey{entry.id, entry.current->id, static_cast<std::uint32_t>(piece)}, data);
     entry.changed.notify_all();
     if (onDisk) {

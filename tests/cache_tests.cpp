@@ -349,6 +349,37 @@ TEST_SUITE("cache.audio")
         CHECK(audio.refreshCalls == 1);
     }
 
+    TEST_CASE("every expiry of the stream URL is refreshed as long as downloads progress in between")
+    {
+        Audio audio;
+        audio.cache->setLayout(std::nullopt);  // RAM only: evicted pieces are fetched again
+        const QByteArray content = randomBytes(150'000, 66);
+        const QStringList urls{
+            QStringLiteral("https://cdn.test/t.mp3?sig=a"), QStringLiteral("https://cdn.test/t.mp3?sig=b"),
+            QStringLiteral("https://cdn.test/t.mp3?sig=c"), QStringLiteral("https://cdn.test/t.mp3?sig=d")};
+        audio.origin.forbid(urls[0]);
+        for (qsizetype i = 1; i < urls.size(); ++i) {
+            audio.origin.serve(urls[i], {.body = content});
+        }
+        int refreshes = 0;
+        const UrlProvider provider = [&](bool refresh, UrlCallback done) {
+            refreshes += refresh ? 1 : 0;
+            done(QUrl(urls[std::min<qsizetype>(refreshes, urls.size() - 1)]));
+        };
+        Result<AudioReaderPtr> reader = audio.tryOpen(track(QStringLiteral("expiring")), provider);
+        REQUIRE(reader);
+        CHECK(Audio::readAll(**reader) == content);
+        CHECK(refreshes == 1);
+        for (int round = 2; round <= 3; ++round) {
+            audio.origin.forbid(urls[round - 1]);  // the URL in use expired, too
+            audio.memory.clear();
+            const AudioReader::Piece piece = Audio::piece(**reader, round - 2);  // a new piece each round
+            CHECK_MESSAGE(piece.status == AudioReader::Status::Ready,
+                          "round " << round << ": " << piece.error.describe());
+            CHECK(refreshes == round);
+        }
+    }
+
     TEST_CASE("a stream that keeps failing reports the error instead of hanging")
     {
         Audio audio;
