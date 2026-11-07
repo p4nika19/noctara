@@ -361,6 +361,7 @@ int main(int argc, char** argv)
     theme::ThemeLibrary themeLibrary(store, paths.themesDir());
     QObject::connect(&themeLibrary, &theme::ThemeLibrary::activeChanged, &theme,
                      [&theme, &themeLibrary] { theme.setUserTheme(themeLibrary.active()); });
+    theme.setUserTheme(themeLibrary.active(), false);  // read by the constructor: in place before the first frame
 
     theme::AccentEngine accent(store);
     QObject::connect(&accent, &theme::AccentEngine::seedChanged, &theme,

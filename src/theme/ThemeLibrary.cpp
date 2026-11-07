@@ -43,6 +43,15 @@ QString safeId(const QString& base)
     return id.isEmpty() ? QStringLiteral("theme") : id;
 }
 
+std::vector<ThemeEntry> scanFolder(const QString& directory)
+{
+    // Created so it can be opened and watched; without it there is simply nothing to list.
+    if (const Result<void> made = ensureDirectory(directory); !made) {
+        qCInfo(lcTheme).noquote() << "no themes folder:" << QString::fromStdString(made.error().describe());
+    }
+    return scanThemes(directory);
+}
+
 }  // namespace
 
 std::vector<ThemeEntry> scanThemes(const QString& directory)
@@ -88,7 +97,10 @@ ThemeLibrary::ThemeLibrary(settings::SettingsStore& settings, QString directory,
             updateActive();
         }
     });
-    rescan();
+    // The first scan runs here, so the selected theme is active before the window's first frame (the files are
+    // small and capped); every later one runs off the GUI thread.
+    const quint64 generation = ++m_generation;
+    applyScan(scanFolder(m_directory), generation);
 }
 
 const ThemeEntry* ThemeLibrary::selectedEntry() const
@@ -107,11 +119,7 @@ void ThemeLibrary::rescan()
 {
     const quint64 generation = ++m_generation;
     (void)QtConcurrent::run([directory = m_directory] {
-        // Created so it can be opened and watched; without it there is simply nothing to list.
-        if (const Result<void> made = ensureDirectory(directory); !made) {
-            qCInfo(lcTheme).noquote() << "no themes folder:" << QString::fromStdString(made.error().describe());
-        }
-        return scanThemes(directory);
+        return scanFolder(directory);
     }).then(this, [this, generation](std::vector<ThemeEntry> themes) { applyScan(std::move(themes), generation); });
 }
 

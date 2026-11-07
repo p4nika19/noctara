@@ -27,9 +27,9 @@ struct ThemeEntry {
     std::shared_ptr<const UserTheme> theme;  // null when the file could not be used (syntax error, unreadable)
 };
 
-// The user themes in <config>/themes/*.toml. Files are parsed off the GUI thread, re-read when they change (hot
-// reload), and the one named by appearance.theme.custom is active. Themes are data only: nothing in them is ever
-// executed. GUI thread.
+// The user themes in <config>/themes/*.toml. The constructor reads the folder once, so the selected theme is
+// active before the first frame; later scans parse off the GUI thread when files change (hot reload). The one named
+// by appearance.theme.custom is active. Themes are data only: nothing in them is ever executed. GUI thread.
 class ThemeLibrary : public QObject {
     Q_OBJECT
 

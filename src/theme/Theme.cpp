@@ -389,7 +389,7 @@ void Theme::setArtworkSeed(std::optional<color::OkLch> seed)
     }
 }
 
-void Theme::setUserTheme(std::shared_ptr<const UserTheme> theme)
+void Theme::setUserTheme(std::shared_ptr<const UserTheme> theme, bool animate)
 {
     if (theme == m_userTheme) {
         return;
@@ -399,7 +399,7 @@ void Theme::setUserTheme(std::shared_ptr<const UserTheme> theme)
     updateFonts();
     updateMotion();
     updateGlass();
-    updatePalette(m_motion.theme);
+    updatePalette(animate ? m_motion.theme : 0);
 }
 
 void Theme::setBlurAvailable(bool available)

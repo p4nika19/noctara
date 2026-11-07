@@ -270,6 +270,26 @@ TEST_SUITE("theme.library")
         CHECK(library.selectedEntry() == nullptr);
     }
 
+    TEST_CASE("the selected theme is active as soon as the library exists and applies without a crossfade")
+    {
+        QTemporaryDir dir;
+        const QString folder = dir.filePath(QStringLiteral("themes"));
+        REQUIRE(ensureDirectory(folder));
+        write(folder + QStringLiteral("/aurora.toml"), QByteArray(kAurora));
+
+        settings::SettingsStore store(settings::Schema::builtin());
+        REQUIRE(store.setUserValue(keys::ThemeMode, QStringLiteral("dark")));
+        REQUIRE(store.setUserValue(keys::CustomTheme, QStringLiteral("aurora")));
+        Theme theme(store, bundled());  // animations at their normal speed
+        // Startup, as in main.cpp: nothing has run the event loop yet, the window is about to be shown.
+        ThemeLibrary library(store, folder);
+        CHECK(library.scanned());
+        REQUIRE(library.active() != nullptr);
+        theme.setUserTheme(library.active(), false);
+        CHECK(theme.colors().backdrop.name() == QStringLiteral("#06110d"));
+        CHECK(theme.radius().button == doctest::Approx(12 * theme.scale()));
+    }
+
     TEST_CASE("an imported theme is listed before the import reports done, so selecting it never drops the active "
               "theme")
     {
