@@ -152,6 +152,15 @@ Flickable {
             visible: !root.signedIn
             property string selectedProfile
 
+            // Keeps a listed profile selected, so Import is usable right away: after a scan, and when the pane is
+            // recreated (every settings category switch) while the profiles of an earlier scan are still listed.
+            function preselectProfile() {
+                const profiles = Account.browserProfiles
+                if (!profiles.some(entry => entry.id === selectedProfile))
+                    selectedProfile = profiles.length > 0 ? profiles[0].id : ""
+            }
+            Component.onCompleted: preselectProfile()
+
             Text {
                 width: parent.width
                 text: qsTr("Sign in to SoundCloud")
@@ -232,14 +241,9 @@ Flickable {
                 enabled: !Account.browserBusy
                 onPicked: id => signInColumn.selectedProfile = id
             }
-            // Preselect the first profile after a scan, so Import is usable right away.
             Connections {
                 target: Account
-                function onBrowserProfilesChanged() {
-                    const profiles = Account.browserProfiles
-                    if (!profiles.some(entry => entry.id === signInColumn.selectedProfile))
-                        signInColumn.selectedProfile = profiles.length > 0 ? profiles[0].id : ""
-                }
+                function onBrowserProfilesChanged() { signInColumn.preselectProfile() }
             }
 
             Item { width: 1; height: Theme.space.xs }

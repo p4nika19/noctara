@@ -396,7 +396,7 @@ constexpr auto kThemeStub = R"js(({
     font: {
         body: Qt.font({pixelSize: 14}), bodyStrong: Qt.font({pixelSize: 14, bold: true}),
         caption: Qt.font({pixelSize: 12}), display: Qt.font({pixelSize: 32}), eyebrow: Qt.font({pixelSize: 11}),
-        headline: Qt.font({pixelSize: 24}), label: Qt.font({pixelSize: 14}), mono: Qt.font({pixelSize: 13}),
+        groupTitle: Qt.font({pixelSize: 11}), headline: Qt.font({pixelSize: 24}), label: Qt.font({pixelSize: 14}), mono: Qt.font({pixelSize: 13}),
         monoSmall: Qt.font({pixelSize: 11}), numeric: Qt.font({pixelSize: 13}), subtitle: Qt.font({pixelSize: 16}),
         title: Qt.font({pixelSize: 20})
     },
@@ -1039,5 +1039,31 @@ TEST_SUITE("ui.settings-panes")
             }
         }
         CHECK(unitShown);
+    }
+
+    TEST_CASE("the accounts pane preselects a browser profile found before it was created")
+    {
+        // The settings Loader recreates the pane on every category switch; the profiles from an earlier scan stay.
+        stub::singleton("Account", QStringLiteral(R"js(({
+            signedIn: false, state: 0, busy: false, browserBusy: false, persistent: true,
+            keyringAvailable: true, displayName: '', username: '', avatarUrl: '', permalinkUrl: '',
+            browserProfiles: [{id: 'p1', label: 'Firefox', encrypted: false}],
+            discoverBrowsers: () => {}, importBrowserToken: id => {}, signInWithToken: token => {}, signOut: () => {}
+        }))js"));
+        const WindowHarness harness(R"(import "../settings"
+        Window {
+            width: 700; height: 800; visible: true
+            property Item pane: pane
+            AccountsPane { id: pane; anchors.fill: parent }
+        })");
+        QQuickItem* import = nullptr;
+        for (auto* child : harness.item("pane")->findChildren<QQuickItem*>()) {
+            if (child->property("text").toString() == QStringLiteral("Import session…") &&
+                child->property("variant").toString() == QStringLiteral("primary")) {
+                import = child;
+            }
+        }
+        REQUIRE(import != nullptr);
+        CHECK(import->isEnabled());
     }
 }
