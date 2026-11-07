@@ -17,7 +17,7 @@ namespace noctara::ui {
 // Rounds the corners of a cover on the CPU, so covers have the same shape with and without shader effects.
 // `fraction` is the corner radius relative to the shorter side (0.5: a circle); the image is first cropped to the
 // shape of `box`, the size the item shows it at.
-[[nodiscard]] QImage maskedCover(const QImage& image, double fraction, QSize box);
+[[nodiscard]] QImage maskedCover(const QImage& source, double fraction, QSize box);
 
 class CoverImageProvider : public QQuickAsyncImageProvider {
 public:
