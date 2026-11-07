@@ -29,6 +29,18 @@ QByteArray headerOf(const net::Headers& headers, QByteArrayView name)
     return {};
 }
 
+// RFC 9110 section 5.3: repeated field lines of a list field mean one comma-separated list.
+QByteArray joinedHeader(const net::Headers& headers, QByteArrayView name)
+{
+    QByteArray joined;
+    for (const auto& [key, value] : headers) {
+        if (key == name) {
+            joined += joined.isEmpty() ? value : ", " + value;
+        }
+    }
+    return joined;
+}
+
 bool hasHeader(const net::Headers& headers, QByteArrayView name)
 {
     return std::ranges::any_of(headers, [&](const auto& pair) { return pair.first == name; });
@@ -52,7 +64,7 @@ std::optional<std::int64_t> httpDate(const QByteArray& value)
 QList<QByteArray> varyNames(const net::Headers& headers)
 {
     QList<QByteArray> names;
-    for (const QByteArray& name : headerOf(headers, "vary").split(',')) {
+    for (const QByteArray& name : joinedHeader(headers, "vary").split(',')) {
         if (const QByteArray trimmed = name.trimmed().toLower(); !trimmed.isEmpty()) {
             names.append(trimmed);
         }
@@ -165,11 +177,11 @@ bool isStorable(const net::Request& request, const net::Response& response)
     if (request.method != net::Method::Get || request.range || request.cache == net::CacheMode::Bypass) {
         return false;
     }
-    if (parseCacheControl(headerOf(request.headers, "cache-control")).noStore ||
-        parseCacheControl(response.header("cache-control")).noStore) {
+    if (parseCacheControl(joinedHeader(request.headers, "cache-control")).noStore ||
+        parseCacheControl(joinedHeader(response.headers, "cache-control")).noStore) {
         return false;
     }
-    if (response.header("vary").trimmed() == "*") {
+    if (varyNames(response.headers).contains("*")) {
         return false;
     }
     switch (response.status) {
@@ -186,7 +198,7 @@ bool isStorable(const net::Request& request, const net::Response& response)
 
 std::int64_t freshnessLifetime(const StoredResponse& stored)
 {
-    const CacheControl control = parseCacheControl(stored.header("cache-control"));
+    const CacheControl control = parseCacheControl(joinedHeader(stored.headers, "cache-control"));
     if (control.noCache) {
         return 0;
     }
@@ -380,10 +392,18 @@ void CachingTransport::forward(const std::shared_ptr<Pending>& pending, std::opt
         if (result && result->status == 304 && old) {
             // Revalidated: refresh the stored headers and serve the stored body.
             StoredResponse refreshed = *old;
+            const auto updated = [](const QByteArray& name) {
+                return name == "cache-control" || name == "expires" || name == "date" || name == "etag" ||
+                       name == "last-modified" || name == "age";
+            };
+            // Drop every old line of a field first: the 304 may repeat it, and all its lines count.
             for (const auto& [name, value] : result->headers) {
-                if (name == "cache-control" || name == "expires" || name == "date" || name == "etag" ||
-                    name == "last-modified" || name == "age") {
+                if (updated(name)) {
                     refreshed.headers.removeIf([&](const auto& pair) { return pair.first == name; });
+                }
+            }
+            for (const auto& [name, value] : result->headers) {
+                if (updated(name)) {
                     refreshed.headers.append({name, value});
                 }
             }
@@ -430,7 +450,7 @@ void CachingTransport::forward(const std::shared_ptr<Pending>& pending, std::opt
                 if (auto stored = m_disk->put(pending->key, store.serialize()); !stored) {
                     qCDebug(lcCache) << "response not stored:" << stored.error().describe();
                 }
-            } else if (parseCacheControl(result->header("cache-control")).noStore) {
+            } else if (parseCacheControl(joinedHeader(result->headers, "cache-control")).noStore) {
                 m_disk->remove(pending->key);
             }
         }

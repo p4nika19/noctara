@@ -317,6 +317,27 @@ TEST_SUITE("cache.http.policy")
         CHECK_FALSE(isFresh(stored, 1001));
     }
 
+    TEST_CASE("repeated Cache-Control and Vary field lines are combined")
+    {
+        net::Request get;
+        get.url = QUrl(QStringLiteral("https://api.test/tracks/1"));
+        net::Response response;
+        response.status = 200;
+        response.body = "{}";
+        response.headers = {{"cache-control", "private"}, {"cache-control", "no-store"}};
+        CHECK_FALSE(isStorable(get, response));
+        response.headers = {{"vary", "accept"}, {"vary", "*"}};
+        CHECK_FALSE(isStorable(get, response));
+
+        StoredResponse stored;
+        stored.storedAt = 1000;
+        stored.ttlFallback = 30;
+        stored.headers = {{"cache-control", "private"}, {"cache-control", "no-cache"}};
+        CHECK(freshnessLifetime(stored) == 0);
+        stored.headers = {{"cache-control", "private"}, {"cache-control", "max-age=5"}};
+        CHECK(freshnessLifetime(stored) == 5);
+    }
+
     TEST_CASE("an Expires value that is not a date means already expired")
     {
         for (const QByteArray& value : {QByteArray("0"), QByteArray("-1"), QByteArray(""), QByteArray("soon GMT")}) {

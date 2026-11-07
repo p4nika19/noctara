@@ -1144,6 +1144,23 @@ TEST_SUITE("cache.http")
         CHECK(conditional);
     }
 
+    TEST_CASE("a 304 with repeated Cache-Control lines keeps all of them")
+    {
+        Http http;
+        const QString url = QStringLiteral("https://api.test/tracks/2");
+        http.origin.serve(url, {.body = "{\"id\":2}", .etag = "\"e2\""});
+        CHECK(http.get(url, net::CacheMode::Default, 3600s)->body == "{\"id\":2}");
+        http.origin.serve(url, {.body = {},
+                                .etag = "\"e2\"",
+                                .headers = {{"cache-control", "no-cache"}, {"cache-control", "private"}},
+                                .status = 304});
+        CHECK(http.get(url, net::CacheMode::Refresh, 3600s)->fromCache);
+        REQUIRE(http.origin.count() == 2);
+        // no-cache came on the first line: the refreshed copy must still be revalidated.
+        (void)http.get(url, net::CacheMode::Default, 3600s);
+        CHECK(http.origin.count() == 3);
+    }
+
     TEST_CASE("the fallback TTL applies only without server freshness; no-store is never kept")
     {
         Http http;
