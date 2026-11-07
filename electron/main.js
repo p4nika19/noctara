@@ -140,6 +140,8 @@ app.on('session-created', (created) => {
   created.setSpellCheckerDictionaryDownloadURL('http://127.0.0.1:9/');  // never Google's CDN
 });
 
+let quitting = false;
+app.on('before-quit', () => { quitting = true; });
 app.on('window-all-closed', () => app.quit());
 // Nothing may open windows, navigate or attach devtools.
 app.on('web-contents-created', (_event, contents) => {
@@ -217,6 +219,13 @@ app.whenReady().then(async () => {
     },
   });
 
+  // The page's renderer died (killed, crashed): this process would keep answering pings for a page that no longer
+  // plays. Exiting lets Noctara see a crash, restart the helper and resume the track.
+  player.webContents.on('render-process-gone', (_event, details) => {
+    if (quitting) return;
+    log('error', `the player page is gone: ${details.reason}`);
+    app.exit(1);
+  });
   ipcMain.on('noctara:event', (event, message) => {
     if (event.sender === player.webContents) send(message);
   });

@@ -66,7 +66,9 @@ so a late event from a replaced track never moves the current one.
   the Widevine component is ready (on the very first start that includes downloading it, hence a start timeout of
   3 minutes).
 - Heartbeat: once ready, Noctara sends `ping` every 5 s; when the helper has said nothing for 15 s it is considered
-  hung and its process group is killed. Any message counts as a sign of life.
+  hung and its process group is killed. Any message counts as a sign of life. The main process answers `ping`, so
+  it watches the player page itself: when the page's renderer is gone it logs why and exits with code 1, which
+  Noctara handles like any crash (restart, the track resumes).
 - Clean shutdown: `shutdown`, close stdin, wait up to 2 s, then `SIGKILL` to the process group. See
   [drm-helper.md](drm-helper.md#processes-and-shutdown).
 
