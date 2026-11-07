@@ -116,10 +116,11 @@ std::vector<std::uint64_t> PlaybackQueue::addUpcoming(std::vector<QueueItem> ite
     } else if (!items.empty()) {
         // Each item goes to a random slot among the upcoming ones, as if inserted one at a time. The order is
         // planned on indices first so every track moves once (inserting tracks one by one was O(upcoming x added)).
-        const auto first = static_cast<std::size_t>(m_current + 1);
+        const int next = m_current + 1;
+        const auto first = static_cast<std::size_t>(next);
         const std::size_t existing = m_items.size() - first;
         std::vector<std::size_t> order(existing);
-        std::iota(order.begin(), order.end(), std::size_t{0});
+        std::ranges::iota(order, std::size_t{0});
         order.reserve(existing + items.size());
         for (std::size_t added = 0; added < items.size(); ++added) {
             uids.push_back(items[added].uid);
@@ -146,7 +147,8 @@ std::vector<std::uint64_t> PlaybackQueue::addUpcoming(std::vector<QueueItem> ite
 
 void PlaybackQueue::removeUpcoming()
 {
-    const auto first = static_cast<std::size_t>(m_current + 1);
+    const int next = m_current + 1;
+    const auto first = static_cast<std::size_t>(next);
     if (first >= m_items.size()) {
         return;
     }
