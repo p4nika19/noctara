@@ -898,6 +898,34 @@ TEST_SUITE("media.backend")
         CHECK(backend.state() == BackendState::Playing);
     }
 
+    TEST_CASE("seeking back during a crossfade starts the next track over: its blended start is heard again")
+    {
+        Cache cache;
+        FakeOutput output;
+        NativeBackend backend(*cache.audio, output);
+        QSignalSpy ended(&backend, &IPlaybackBackend::ended);
+        for (const char* name : {"a.mp3", "b.mp3"}) {
+            cache.origin.serve(QStringLiteral("https://cdn.test/") + QLatin1StringView(name),
+                               {.body = fixture(QStringLiteral("sine.mp3"))});
+        }
+        const auto source = [](const char* name) {
+            return PlaybackSource{.info = trackInfo(QLatin1StringView(name), cache::StreamProtocol::Progressive,
+                                                    QStringLiteral("audio/mpeg")),
+                                  .urls = Cache::urls(QStringLiteral("https://cdn.test/") + QLatin1StringView(name))};
+        };
+        backend.setCrossfade(1000);
+        backend.load(source("a.mp3"), 0, false);
+        std::int64_t audible = 0;
+        REQUIRE(pump(output, [&] { return backend.state() == BackendState::Playing; }, &audible));
+        backend.setNext(source("b.mp3"));
+        // Half a second into the blend (it begins one second before a's end), back into a.
+        REQUIRE(pump(output, [&] { return backend.position() > 1500; }, &audible));
+        backend.seek(500);
+        REQUIRE(pump(output, [&] { return !ended.isEmpty(); }, &audible));
+        // a up to 1.5 s, then a from 0.5 s with the second blend, then the rest of b from its start: 4 s.
+        CHECK(audible == doctest::Approx(4.0 * kDevice.sampleRate).epsilon(0.05));
+    }
+
     TEST_CASE("loading the track the mixer just moved on to keeps it playing and reports no stale advance")
     {
         Cache cache;

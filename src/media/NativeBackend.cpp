@@ -377,6 +377,13 @@ void NativeBackend::seek(std::int64_t ms)
         m_mixer->interrupt();
     }
     m_current.voice->seek(ms);
+    if (m_next.voice) {
+        // An abandoned crossfade already consumed the start of the next track: it begins again.
+        const PcmRing& next = *m_next.voice->ring();
+        if (!next.held() && next.position() > next.origin()) {
+            m_next.voice->seek(0);
+        }
+    }
     if (m_state == BackendState::Ended || m_state == BackendState::Failed) {
         // After a failure the voice decodes again from the target: Loading until it delivers (tick()).
         const BackendState playing = m_state == BackendState::Failed ? BackendState::Loading : BackendState::Playing;
