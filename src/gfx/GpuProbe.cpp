@@ -11,6 +11,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QOffscreenSurface>
+#include <QRegularExpression>
 #include <QVulkanFunctions>
 #include <QVulkanInstance>
 
@@ -170,7 +171,7 @@ ProbeResult probeRhi(Api api, DevicePreference preference)
     return result;
 }
 
-QString graphicsStackFingerprint()
+QString graphicsStackFingerprint(const QString& root)
 {
     QCryptographicHash hash(QCryptographicHash::Sha256);
     hash.addData(qVersion());
@@ -181,24 +182,56 @@ QString graphicsStackFingerprint()
         hash.addData(variable);
         hash.addData(qgetenv(variable));
     }
-    const QStringList icdDirs{QStringLiteral("/usr/share/vulkan/icd.d"), QStringLiteral("/etc/vulkan/icd.d")};
+    const QStringList icdDirs{root + QStringLiteral("/usr/share/vulkan/icd.d"),
+                              root + QStringLiteral("/etc/vulkan/icd.d")};
     for (const QString& dir : icdDirs) {
         for (const QFileInfo& info : QDir(dir).entryInfoList({QStringLiteral("*.json")}, QDir::Files, QDir::Name)) {
             hashFileStat(hash, info);
         }
     }
-    const QStringList libraries{
-        QStringLiteral("/usr/lib/libGLX.so.0"),         QStringLiteral("/usr/lib/libEGL.so.1"),
-        QStringLiteral("/usr/lib/libvulkan.so.1"),      QStringLiteral("/usr/lib/libgallium.so"),
-        QStringLiteral("/usr/lib/libnvidia-glcore.so"), QStringLiteral("/proc/driver/nvidia/version")};
-    for (const QString& library : libraries) {
-        const QFileInfo info(library);
-        if (info.exists()) {
+    // GL/EGL/Vulkan loaders and drivers, in the library directories of Arch, Fedora (lib64) and Debian
+    // (multiarch). Mesa's gallium drivers carry the version in the name (libgallium-26.2.6.so).
+    QStringList libDirs{root + QStringLiteral("/usr/lib"), root + QStringLiteral("/usr/lib64")};
+    for (const QFileInfo& dir :
+         QDir(root + QStringLiteral("/usr/lib"))
+             .entryInfoList({QStringLiteral("*-linux-gnu")}, QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
+        libDirs.append(dir.absoluteFilePath());
+    }
+    const QStringList libraries{QStringLiteral("libGLX.so.0"),        QStringLiteral("libEGL.so.1"),
+                                QStringLiteral("libvulkan.so.1"),     QStringLiteral("libGLX_mesa.so.0"),
+                                QStringLiteral("libEGL_mesa.so.0"),   QStringLiteral("libgallium*.so"),
+                                QStringLiteral("libnvidia-glcore.so")};
+    for (const QString& dir : libDirs) {
+        for (const QFileInfo& info : QDir(dir).entryInfoList(libraries, QDir::Files, QDir::Name)) {
             hashFileStat(hash, QFileInfo(info.canonicalFilePath()));
         }
     }
+    if (const QFileInfo nvidia(root + QStringLiteral("/proc/driver/nvidia/version")); nvidia.exists()) {
+        hashFileStat(hash, nvidia);
+    }
+    // The GPUs present: a cached Vulkan device index is only valid for the same set of physical devices.
+    const QDir drm(root + QStringLiteral("/sys/class/drm"));
+    static const QRegularExpression card(QStringLiteral("^card\\d+$"));
+    QStringList devices;
+    for (const QString& name : drm.entryList({QStringLiteral("card*")}, QDir::Dirs | QDir::NoDotAndDotDot)) {
+        if (!card.match(name).hasMatch()) {
+            continue;  // connectors (card1-DP-1)
+        }
+        const QString device = drm.filePath(name + QStringLiteral("/device"));
+        QString entry = QFileInfo(device).canonicalFilePath();
+        for (const QString& id : {QStringLiteral("/vendor"), QStringLiteral("/device")}) {
+            if (auto content = readWholeFile(device + id)) {
+                entry += u' ' + QString::fromLatin1(content->trimmed());
+            }
+        }
+        devices.append(entry);
+    }
+    devices.sort();  // card numbers may change between boots; the devices themselves matter
+    for (const QString& device : devices) {
+        hash.addData(device.toUtf8());
+    }
     // Driver version text changes even when mtimes do not (e.g. kernel module upgrades).
-    if (auto nvidia = readWholeFile(QStringLiteral("/proc/driver/nvidia/version"))) {
+    if (auto nvidia = readWholeFile(root + QStringLiteral("/proc/driver/nvidia/version"))) {
         hash.addData(*nvidia);
     }
     return QString::fromLatin1(hash.result().toHex());

@@ -8,7 +8,9 @@
 #include "gfx/QualityGovernor.hpp"
 #include "gfx/Relaunch.hpp"
 
+#include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QQuickWindow>
 #include <QTemporaryDir>
 
@@ -550,6 +552,58 @@ TEST_SUITE("gfx.relaunch")
                 qunsetenv(kSet[i]);
             }
         }
+    }
+}
+
+namespace {
+
+void writeFile(const QString& path, const QByteArray& content)
+{
+    REQUIRE(QDir().mkpath(QFileInfo(path).absolutePath()));
+    QFile file(path);
+    REQUIRE(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    file.write(content);
+}
+
+}  // namespace
+
+TEST_SUITE("gfx.fingerprint")
+{
+    TEST_CASE("a Mesa update changes the fingerprint, whatever the library directory")
+    {
+        // Mesa installs its gallium drivers as libgallium-<version>.so, with no unversioned name.
+        const std::array<std::string, 3> libDirs{"/usr/lib", "/usr/lib64", "/usr/lib/x86_64-linux-gnu"};
+        for (const std::string& libDir : libDirs) {
+            CAPTURE(libDir);
+            QTemporaryDir root;
+            REQUIRE(root.isValid());
+            const QString dir = root.path() + QString::fromStdString(libDir);
+            writeFile(dir + QStringLiteral("/libgallium-26.1.0-arch1.1.so"), "gallium 26.1");
+            const QString before = graphicsStackFingerprint(root.path());
+            CHECK(graphicsStackFingerprint(root.path()) == before);
+            REQUIRE(QFile::rename(dir + QStringLiteral("/libgallium-26.1.0-arch1.1.so"),
+                                  dir + QStringLiteral("/libgallium-26.2.6-arch1.1.so")));
+            CHECK(graphicsStackFingerprint(root.path()) != before);
+        }
+    }
+
+    TEST_CASE("adding or removing a GPU changes the fingerprint")
+    {
+        QTemporaryDir root;
+        REQUIRE(root.isValid());
+        const QString drm = root.path() + QStringLiteral("/sys/class/drm");
+        writeFile(drm + QStringLiteral("/card1/device/vendor"), "0x10de\n");
+        writeFile(drm + QStringLiteral("/card1/device/device"), "0x1b81\n");
+        REQUIRE(QDir().mkpath(drm + QStringLiteral("/card1-DP-1")));
+        const QString single = graphicsStackFingerprint(root.path());
+
+        writeFile(drm + QStringLiteral("/card2/device/vendor"), "0x1002\n");
+        writeFile(drm + QStringLiteral("/card2/device/device"), "0x7480\n");
+        const QString added = graphicsStackFingerprint(root.path());
+        CHECK(added != single);
+
+        REQUIRE(QDir(drm + QStringLiteral("/card2")).removeRecursively());
+        CHECK(graphicsStackFingerprint(root.path()) == single);
     }
 }
 

@@ -45,7 +45,7 @@ If an explicitly chosen API fails, the other one is tried and the user is told (
 
 ### Probe cache
 
-Probing costs about 0.9 s on the dev machine (NVIDIA GL), so results are cached in `~/.cache/noctara/gpu-probe.json`. The cache key is a fingerprint built from the Qt version, the platform plugin, GPU-related environment variables, the Vulkan ICD files, the GL/EGL/Vulkan loader files and `/proc/driver/nvidia/version`. A driver update therefore invalidates the cache without loading any driver at startup.
+Probing costs about 0.9 s on the dev machine (NVIDIA GL), so results are cached in `~/.cache/noctara/gpu-probe.json`. The cache key is a fingerprint built from the Qt version, the platform plugin, GPU-related environment variables, the Vulkan ICD files, the GL/EGL/Vulkan loader and driver files (Mesa's versioned `libgallium-<version>.so` included, in `/usr/lib`, `/usr/lib64` and the multiarch directories), `/proc/driver/nvidia/version` and the GPUs listed under `/sys/class/drm` (PCI path, vendor and device id). A driver update or a GPU added or removed therefore invalidates the cache, and with it a cached Vulkan device index, without loading any driver at startup.
 
 ### Blocklist
 

@@ -22,8 +22,9 @@ enum class DevicePreference : std::uint8_t { Auto, Integrated, Discrete };
 [[nodiscard]] ProbeResult probeRhi(Api api, DevicePreference preference = DevicePreference::Auto);
 
 // Identifies the installed graphics stack cheaply (file stats, no driver loading) so cached probe
-// results are invalidated when drivers, Qt or relevant environment variables change.
-[[nodiscard]] QString graphicsStackFingerprint();
+// results are invalidated when drivers, Qt or relevant environment variables change. `root` prefixes every
+// file system path (tests).
+[[nodiscard]] QString graphicsStackFingerprint(const QString& root = {});
 
 // Probe results cached between launches in <cache>/gpu-probe.json.
 class ProbeCache {
