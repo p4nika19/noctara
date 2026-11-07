@@ -876,6 +876,8 @@ void AudioCache::retire(const QByteArray& name)
     if (doomed) {
         removeEntryFiles(name);
         m_memory.dropEntry(entry->id);
+        collectCovers();  // the covers it kept referenced while in use
+        Q_EMIT usageChanged();
         return;
     }
     const std::scoped_lock lock(entry->mutex);

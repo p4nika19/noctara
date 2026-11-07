@@ -734,6 +734,27 @@ TEST_SUITE("cache.audio")
         CHECK(audio.cache->usage().completeBytes == 0);
     }
 
+    TEST_CASE("an entry cleared while in use takes its covers along when its last reader closes")
+    {
+        Audio audio;
+        audio.origin.serve(QString::fromLatin1(kTrackUrl), {.body = randomBytes(5000, 51)});
+        audio.origin.serve(QStringLiteral("https://img.test/d.png"),
+                           {.body = pngCover(Qt::magenta), .type = "image/png"});
+        TrackInfo info = track(QStringLiteral("doomed-cover"));
+        info.artworkUrl = QUrl(QStringLiteral("https://img.test/d.png"));
+        AudioReaderPtr reader = audio.open(info);
+        Audio::readAll(*reader);
+        REQUIRE(test::waitUntil([&] { return !reader->info().coverHash.isEmpty(); }));
+        audio.settle();
+        audio.cache->clear();
+        CHECK(QDir(audio.layout.covers()).entryList(QDir::Files).size() == 1);  // still in use
+        reader.reset();
+        audio.settle();
+        CHECK_FALSE(QFileInfo::exists(audio.entryDir(info)));
+        CHECK(QDir(audio.layout.covers()).entryList(QDir::Files).isEmpty());
+        CHECK(audio.cache->usage().coverBytes == 0);
+    }
+
     TEST_CASE("without a disk tier entries live in RAM only and leave no files")
     {
         Audio audio;
