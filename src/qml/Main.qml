@@ -431,7 +431,9 @@ Window {
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 active: window.detail !== null
-                sourceComponent: window.detail && window.detail.kind === "playlist" ? playlistPage : userPage
+                // No page without a detail: `active` may be updated after this, and a user page made for a moment
+                // when a playlist opens would look up a user with the playlist's id.
+                sourceComponent: !window.detail ? null : window.detail.kind === "playlist" ? playlistPage : userPage
             }
             Component {
                 id: playlistPage
