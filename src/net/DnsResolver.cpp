@@ -165,7 +165,7 @@ void DnsResolver::start(const QString& rawHost, ResolveCallback callback, bool u
     }
     std::vector<IpAddress> overrides;
     for (const auto& [name, address] : m_config.overrides) {
-        if (name == host) {
+        if (normalisedHost(name) == host) {  // an override may be written "example.com."
             overrides.push_back(address);
         }
     }

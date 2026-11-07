@@ -205,6 +205,20 @@ TEST_SUITE("net.resolver")
         CHECK(system.calls == 0);
     }
 
+    TEST_CASE("a host override written with a trailing dot still matches")
+    {
+        FakeSystemResolver system;
+        DnsResolver resolver(system);
+        DnsConfig config;
+        config.overrides = {{QStringLiteral("fixed.test."), ip("192.0.2.9")}};
+        resolver.setConfig(config);
+        const auto answer = resolveNow(resolver, QStringLiteral("fixed.test"));
+        REQUIRE_MESSAGE(answer, test::describe(answer));
+        CHECK(answer->source == ResolverSource::Override);
+        CHECK(answer->addresses == std::vector{ip("192.0.2.9")});
+        CHECK(system.calls == 0);
+    }
+
     TEST_CASE("custom servers: answers, failover, TCP on truncation, family filter, single flight")
     {
         test::DnsServer server;
