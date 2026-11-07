@@ -217,6 +217,23 @@ TEST_SUITE("settings.toml")
         CHECK(QString::fromUtf8(rewritten).contains(QStringLiteral("кириллица 🎵")));
     }
 
+    TEST_CASE("unknown root keys and arrays of tables in a settings table keep their place in a rewrite")
+    {
+        const auto parsed = parse("client_id = \"misplaced\"\nfoo = 1\n"
+                                  "[[appearance.glass.layers]]\nx = 1\n[[appearance.glass.layers]]\nx = 2\n"
+                                  "[soundcloud]\nclient_id = \"abcdefghijklmnopqrstuvwxyz012345\"\n");
+        REQUIRE(parsed.syntaxOk);
+        REQUIRE_FALSE(parsed.unknownToml.empty());
+
+        const QByteArray rewritten = serializeConfig(schema(), parsed.values, parsed.unknownToml);
+        CAPTURE(rewritten.toStdString());
+        const auto reparsed =
+            parse(std::string_view(rewritten.constData(), static_cast<std::size_t>(rewritten.size())));
+        REQUIRE(reparsed.syntaxOk);
+        CHECK(reparsed.unknownToml == parsed.unknownToml);
+        CHECK(parsedValue(reparsed, keys::ClientId)->toString() == QStringLiteral("abcdefghijklmnopqrstuvwxyz012345"));
+    }
+
     TEST_CASE("a value where a settings table belongs is reported and the rewrite stays valid TOML")
     {
         for (const std::string text : {"[cache]\nimages = 512\n", "[general]\nformatting = \"24h\"\n",

@@ -294,6 +294,25 @@ QByteArray serializeConfig(const Schema& schema, const ValueMap& userValues, std
                  "but your own comments are not. Secrets (tokens, proxy passwords) are never stored here."));
     out += QStringLiteral("\nconfig_version = %1\n").arg(std::max(version, Schema::kConfigVersion));
 
+    // Unknown root-level values go before the first table header; after it they would belong to that table.
+    {
+        toml::table leaves;
+        std::vector<std::string> moved;
+        for (auto&& [key, node] : unknown) {
+            const auto* asTable = node.as_table();
+            if ((asTable == nullptr || asTable->is_inline()) && !node.is_array_of_tables()) {
+                node.visit([&](auto&& value) { leaves.insert_or_assign(key.str(), value); });
+                moved.emplace_back(key.str());
+            }
+        }
+        for (const auto& key : moved) {
+            unknown.erase(key);
+        }
+        if (!leaves.empty()) {
+            out += QStringLiteral("\n# Unrecognised keys, kept as-is:\n") + fromUtf8(formatToml(leaves)) + u'\n';
+        }
+    }
+
     for (const Section& section : schema.sections()) {
         out += QStringLiteral("\n[%1]\n").arg(latin(section.id));
         appendComment(out, QString::fromUtf8(section.label) + QStringLiteral(" - ") +
@@ -317,13 +336,14 @@ QByteArray serializeConfig(const Schema& schema, const ValueMap& userValues, std
             }
         }
 
-        // Unknown scalar keys inside a known table stay in that table.
+        // Unknown scalar keys inside a known table stay in that table. Arrays of tables stay in `unknown`: their
+        // [[headers]] are written with the full path at the end.
         if (toml::table* extra = tableAt(unknown, section.id)) {
             toml::table leaves;
             std::vector<std::string> moved;
             for (auto&& [key, node] : *extra) {
                 const auto* asTable = node.as_table();
-                if (asTable == nullptr || asTable->is_inline()) {
+                if ((asTable == nullptr || asTable->is_inline()) && !node.is_array_of_tables()) {
                     node.visit([&](auto&& value) { leaves.insert_or_assign(key.str(), value); });
                     moved.emplace_back(key.str());
                 }
