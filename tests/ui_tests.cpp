@@ -717,6 +717,31 @@ TEST_SUITE("ui.components")
         CHECK_MESSAGE(picks == cleared, "picked: ", picks.join(u',').toStdString());
     }
 
+    TEST_CASE("a toast with a long message and an action keeps its buttons inside the panel")
+    {
+        const WindowHarness harness(R"(Window {
+            width: 800; height: 300; visible: true
+            property Item toast: toast
+            Toast {
+                id: toast
+                kind: "error"
+                message: "The graphics driver stopped responding. ".repeat(5)
+                actionLabel: "Restart now"
+            }
+        })");
+        QQuickItem* toast = harness.item("toast");
+        QQuickItem* row = nullptr;
+        for (auto* child : toast->findChildren<QQuickItem*>()) {
+            if (QByteArrayView(child->metaObject()->className()) == "QQuickRow" && child->childItems().size() == 4) {
+                row = child;  // icon, message, action, dismiss
+            }
+        }
+        REQUIRE(row != nullptr);
+        QCoreApplication::processEvents();
+        CHECK(toast->width() <= 480);
+        CHECK(row->x() + row->width() <= toast->width() - 16);
+    }
+
     TEST_CASE("the navigation pill is hidden while the current page is not in the rail")
     {
         const WindowHarness harness(R"(Window {

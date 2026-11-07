@@ -10,11 +10,12 @@ GlassPanel {
     property string actionLabel
     property string actionId
     signal dismissed()
+    readonly property real maxWidth: 480 * Theme.scale
 
     level: 2
     liquid: true
     radius: Theme.radius.md
-    implicitWidth: Math.min(480 * Theme.scale, layout.implicitWidth + Theme.space.lg * 2)
+    implicitWidth: Math.min(maxWidth, layout.implicitWidth + Theme.space.lg * 2)
     implicitHeight: layout.implicitHeight + Theme.space.md * 2
     Accessible.role: Accessible.AlertMessage
     Accessible.name: message
@@ -30,13 +31,17 @@ GlassPanel {
         spacing: Theme.space.md
 
         Icon {
+            id: kindIcon
             anchors.verticalCenter: parent.verticalCenter
             name: root.kind === "error" || root.kind === "warning" ? "triangle-alert"
                 : root.kind === "success" ? "check" : "info"
             color: root.kindColor
         }
         Text {
-            width: Math.min(implicitWidth, 300 * Theme.scale)
+            // What the icon and the buttons leave of the widest panel: the message wraps instead of pushing them out.
+            width: Math.min(implicitWidth, 300 * Theme.scale,
+                            root.maxWidth - Theme.space.lg * 2 - kindIcon.width - dismiss.width - layout.spacing * 2
+                            - (root.actionLabel.length > 0 ? action.width + layout.spacing : 0))
             anchors.verticalCenter: parent.verticalCenter
             text: root.message
             wrapMode: Text.Wrap
@@ -44,6 +49,7 @@ GlassPanel {
             color: Theme.colors.textPrimary
         }
         Button {
+            id: action
             visible: root.actionLabel.length > 0
             anchors.verticalCenter: parent.verticalCenter
             small: true
@@ -54,6 +60,7 @@ GlassPanel {
             }
         }
         IconButton {
+            id: dismiss
             anchors.verticalCenter: parent.verticalCenter
             iconName: "x"
             iconSize: Theme.space.iconSizeSmall
