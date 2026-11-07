@@ -1407,6 +1407,21 @@ TEST_SUITE("media.controller")
         CHECK_FALSE(player.backend.next.has_value());
     }
 
+    TEST_CASE("seeking back before the duration is known stops at the start")
+    {
+        Player player({}, {{7, apiTrack(7)}});
+        api::Track stub;
+        stub.id = 7;
+        stub.stub = true;  // no duration until the lookup answers
+        player.controller->playTracks({stub}, 0, {});
+        QSignalSpy seeked(player.controller.get(), &PlaybackController::seeked);
+        player.controller->seekBy(-5000);
+        REQUIRE(seeked.size() == 1);
+        CHECK(seeked.first().first().toLongLong() == 0);
+        REQUIRE(test::waitUntil([&] { return !player.backend.loads.empty(); }));
+        CHECK(player.backend.startPositions[0] == 0);
+    }
+
     TEST_CASE("skipping an unplayable track keeps playback paused when it was paused")
     {
         Player player;

@@ -779,7 +779,10 @@ void PlaybackController::seek(qint64 ms)
     if (!hasTrack()) {
         return;
     }
-    ms = std::clamp<qint64>(ms, 0, m_duration > 0 ? m_duration : ms);
+    ms = std::max<qint64>(ms, 0);
+    if (m_duration > 0) {
+        ms = std::min(ms, m_duration);  // unknown until a stub is looked up
+    }
     if (m_ended) {
         m_ended = false;
         startCurrent(ms, false);
