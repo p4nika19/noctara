@@ -542,8 +542,9 @@ DohServer::DohServer(const DnsServer& table, bool ipv6)
     : m_ipv6(ipv6)
     , m_http(
           [&table](const HttpRequest& request) {
-              if (request.method != "POST" || request.target != "/dns-query" ||
-                  request.headers.at("content-type") != "application/dns-message") {
+              const auto type = request.headers.find("content-type");
+              if (request.method != "POST" || request.target != "/dns-query" || type == request.headers.end() ||
+                  type->second != "application/dns-message") {
                   return HttpReply{.status = 404, .headers = {}, .body = {}};
               }
               return HttpReply{.status = 200,

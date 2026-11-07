@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <arpa/inet.h>
+#include <array>
 #include <atomic>
 #include <map>
 #include <netinet/in.h>
@@ -445,6 +446,28 @@ TEST_SUITE("net.resolver")
         const auto fallback = resolveNow(net.resolver, QStringLiteral("api.test"));
         REQUIRE(fallback);
         CHECK(fallback->source == ResolverSource::SystemFallback);
+    }
+
+    TEST_CASE("the mock DoH server answers 404 to a POST without a content type")
+    {
+        const test::DnsServer table;
+        const test::DohServer doh(table);
+        const int fd = ::socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
+        REQUIRE(fd >= 0);
+        const auto closeFd = qScopeGuard([fd] { ::close(fd); });
+        sockaddr_in address{};
+        address.sin_family = AF_INET;
+        address.sin_port = htons(doh.port());
+        address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+        auto* raw = reinterpret_cast<sockaddr*>(&address);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        REQUIRE(::connect(fd, raw, sizeof(address)) == 0);
+        const QByteArray request = "POST /dns-query HTTP/1.1\r\nHost: x\r\nContent-Length: 0\r\n\r\n";
+        REQUIRE(::send(fd, request.constData(), static_cast<std::size_t>(request.size()), MSG_NOSIGNAL) ==
+                request.size());
+        std::array<char, 256> buffer{};
+        const ssize_t got = ::recv(fd, buffer.data(), buffer.size(), 0);
+        REQUIRE(got > 0);
+        CHECK(QByteArray(buffer.data(), got).startsWith("HTTP/1.1 404 "));
     }
 
     TEST_CASE("DoH at an IPv6 literal address answers in strict mode")
