@@ -431,7 +431,9 @@ TEST_SUITE("drm.host")
             REQUIRE(host.send(load));
             REQUIRE(test::waitUntil([&] { return stopped.size() == crash; }, 10000));
             CHECK(stopped.last().first().toBool());
-            REQUIRE(test::waitUntil([&] { return ready.size() == crash; }, 10000));  // restarted by itself
+            // The load started it (ready == crash); the restart comes by itself, before the next request.
+            REQUIRE(test::waitUntil([&] { return ready.size() == crash + 1; }, 10000));
+            CHECK(host.status() == DrmHost::Status::Ready);
         }
         REQUIRE(host.send(load));
         REQUIRE(test::waitUntil([&] { return failed.size() == 1; }, 10000));
