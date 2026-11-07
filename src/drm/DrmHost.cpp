@@ -350,6 +350,11 @@ void DrmHost::onMessage(const QJsonObject& message)
         } else {
             qCDebug(lcDrm).noquote() << "helper:" << text;
         }
+    } else if (type == u"error" && message.value(u"id").toString().isEmpty()) {
+        // Outside any track (e.g. a "configure" Chromium refused): no backend reports it. Code and detail carry
+        // no secrets.
+        qCWarning(lcDrm).noquote() << "helper error:" << message.value(u"code").toString()
+                                   << message.value(u"detail").toString();
     }
     Q_EMIT received(message);
 }

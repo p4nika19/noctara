@@ -9,6 +9,7 @@
 //   NOCTARA_MOCK_DRM_CRASH_ONCE=<file> abort on "load" unless <file> exists (it is created first)
 //   NOCTARA_MOCK_DRM_CHILD=1           start a child process in its group and log "child <pid>"
 //   NOCTARA_MOCK_DRM_DURATION_MS=<n>   length of every track (default 3000)
+//   NOCTARA_MOCK_DRM_CONFIGURE_ERROR=1 answer "configure" with an error outside a track (empty id)
 // Every message it receives is echoed back as a "log" message "got <json>"; its arguments as "args <json>".
 // A "load" whose URL contains "license-denied" fails with the "drm" error code.
 
@@ -123,6 +124,13 @@ private:
                   {QStringLiteral("widevine"), qEnvironmentVariable("NOCTARA_MOCK_DRM_WIDEVINE") != u"0"},
                   {QStringLiteral("electron"), QStringLiteral("mock")}});
         } else if (type == u"configure") {
+            if (qEnvironmentVariableIntValue("NOCTARA_MOCK_DRM_CONFIGURE_ERROR") == 1) {
+                send({{QStringLiteral("type"), QStringLiteral("error")},
+                      {QStringLiteral("id"), QString()},
+                      {QStringLiteral("code"), QStringLiteral("network")},
+                      {QStringLiteral("detail"), QStringLiteral("configure refused")}});
+                return;
+            }
             send({{QStringLiteral("type"), QStringLiteral("configured")},
                   {QStringLiteral("proxy"), message.value(u"proxy").toObject().value(u"mode").toString()},
                   {QStringLiteral("dns"), message.value(u"dns").toObject().value(u"mode").toString()}});

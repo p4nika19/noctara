@@ -18,6 +18,7 @@
 
 #include <csignal>
 #include <map>
+#include <mutex>
 
 using namespace noctara;
 using namespace noctara::drm;
@@ -107,6 +108,44 @@ struct Transcript {
     std::vector<QJsonObject> received;
     std::vector<QJsonObject> events;
     qint64 child = 0;
+};
+
+// Collects the warnings logged meanwhile (from any category), and restores the previous message handler.
+class WarningLog {
+public:
+    WarningLog() { s_previous = qInstallMessageHandler(&WarningLog::handle); }
+    ~WarningLog()
+    {
+        qInstallMessageHandler(s_previous);
+        const std::scoped_lock lock(s_mutex);
+        s_lines.clear();
+    }
+    WarningLog(const WarningLog&) = delete;
+    WarningLog& operator=(const WarningLog&) = delete;
+    WarningLog(WarningLog&&) = delete;
+    WarningLog& operator=(WarningLog&&) = delete;
+
+    [[nodiscard]] bool contains(const QString& text) const
+    {
+        const std::scoped_lock lock(s_mutex);
+        return std::ranges::any_of(s_lines, [&](const QString& line) { return line.contains(text); });
+    }
+
+private:
+    static void handle(QtMsgType type, const QMessageLogContext& context, const QString& message)
+    {
+        if (type == QtWarningMsg) {
+            const std::scoped_lock lock(s_mutex);
+            s_lines.push_back(message);
+        }
+        if (s_previous != nullptr) {
+            s_previous(type, context, message);
+        }
+    }
+
+    static inline QtMessageHandler s_previous = nullptr;
+    static inline std::mutex s_mutex;
+    static inline QStringList s_lines;
 };
 
 QJsonObject ping()
@@ -404,6 +443,20 @@ TEST_SUITE("drm.host")
         REQUIRE(host.send(ping()));
         REQUIRE(test::waitUntil([&] { return !stopped.isEmpty(); }, 10000));
         CHECK(stopped.first().first().toBool());
+    }
+
+    TEST_CASE("an error outside a track (a refused network configuration) is logged")
+    {
+        QTemporaryDir profile;
+        ScopedEnv env{{"NOCTARA_MOCK_DRM_CONFIGURE_ERROR", "1"}};
+        WarningLog warnings;
+        DrmHost host(mockOptions(profile.path()));
+        host.setNetwork(planNetwork(directConfig()));
+        QSignalSpy ready(&host, &DrmHost::ready);
+        REQUIRE(host.send(ping()));
+        REQUIRE(test::waitUntil([&] { return ready.size() == 1; }, 10000));
+        CHECK(test::waitUntil([&] { return warnings.contains(QStringLiteral("configure refused")); }, 5000));
+        CHECK(warnings.contains(QStringLiteral("network")));
     }
 
     TEST_CASE("missing helper, no Widevine, another protocol version and blocked networks fail cleanly")
