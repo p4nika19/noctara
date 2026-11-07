@@ -24,6 +24,7 @@
 #include <QImage>
 #include <QTemporaryDir>
 
+#include <limits>
 #include <sys/stat.h>
 
 using namespace noctara;
@@ -110,6 +111,19 @@ TEST_SUITE("cache.pieces")
         CHECK(map.pieceCount() == 4);
         CHECK(map.has(3));
         CHECK(map.ranges().front().first == 3 * PieceMap::kChunkSize);
+    }
+
+    TEST_CASE("an implausible content length is ignored instead of allocating pieces for it")
+    {
+        PieceMap map = PieceMap::progressive(-1);
+        map.setContentLength(100'000'000'000'000);  // ~1.5e9 pieces
+        CHECK(map.contentLength() == -1);
+        CHECK(map.pieceCount() == -1);
+        map.setContentLength(std::numeric_limits<std::int64_t>::max());
+        CHECK(map.pieceCount() == -1);
+        CHECK(PieceMap::progressive(std::numeric_limits<std::int64_t>::max()).pieceCount() == -1);
+        map.setContentLength(1000);
+        CHECK(map.pieceCount() == 1);
     }
 
     TEST_CASE("an HLS map is complete once every segment is stored, never before its playlist is known")

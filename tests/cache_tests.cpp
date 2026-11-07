@@ -382,6 +382,56 @@ TEST_SUITE("cache.audio")
         }
     }
 
+    TEST_CASE("an absurd total length from the server fails the fetch instead of allocating for it")
+    {
+        // Rewrites the length the origin reports, like a broken server or middlebox.
+        struct AbsurdLength : net::INetworkTransport {
+            explicit AbsurdLength(test::FakeOrigin& origin)
+                : inner(origin)
+            {
+            }
+            net::RequestHandle send(net::Request request, QObject* context, net::Callbacks callbacks) override
+            {
+                if (callbacks.onResponse) {
+                    callbacks.onResponse = [forward = std::move(callbacks.onResponse)](const net::Response& response) {
+                        net::Response changed = response;
+                        for (auto& [name, value] : changed.headers) {
+                            if (name == "content-range") {
+                                value = value.first(value.indexOf('/') + 1) + "100000000000000";
+                            }
+                        }
+                        forward(changed);
+                    };
+                }
+                return inner.send(std::move(request), context, std::move(callbacks));
+            }
+            test::FakeOrigin& inner;
+        };
+        Audio audio;
+        AbsurdLength transport(audio.origin);
+        audio.origin.serve(QString::fromLatin1(kTrackUrl), {.body = QByteArray(1000, 'x')});
+        AudioCache cache(transport, audio.memory, FileOps::posix());
+        cache.setLayout(audio.layout);
+        cache.setConfig(audio.config);
+        cache.loadIndex();
+        QObject context;
+        std::optional<Result<AudioReaderPtr>> out;
+        cache.open(track(QStringLiteral("absurd")), audio.urls(QString::fromLatin1(kTrackUrl)), &context,
+                   [&](Result<AudioReaderPtr> r) { out = std::move(r); });
+        REQUIRE(test::waitUntil([&] { return out.has_value(); }));
+        REQUIRE(*out);
+        AudioReader::Piece result;
+        REQUIRE(test::waitUntil(
+            [&] {
+                result = (**out)->tryRead(0);
+                return result.status != AudioReader::Status::Pending;
+            },
+            10'000));
+        CHECK(result.status == AudioReader::Status::Failed);
+        CHECK(result.error.code == ErrorCode::ParseError);
+        CHECK((**out)->pieceCount() == -1);
+    }
+
     TEST_CASE("a stream that keeps failing reports the error instead of hanging")
     {
         Audio audio;

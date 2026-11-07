@@ -29,7 +29,10 @@ public:
     [[nodiscard]] std::int64_t chunkSize() const noexcept { return m_chunkSize; }
     // Progressive: total length in bytes, -1 while unknown (the server sent no length yet).
     [[nodiscard]] std::int64_t contentLength() const noexcept { return m_contentLength; }
+    // A length needing more pieces than a map may hold (an absurd server value) is ignored: the length stays as it was.
     void setContentLength(std::int64_t length);
+    // Whether a known length (>= 0) fits in a map of this chunk size.
+    [[nodiscard]] static bool plausibleLength(std::int64_t length, std::int64_t chunkSize = kChunkSize) noexcept;
 
     // -1 while a progressive length is unknown.
     [[nodiscard]] int pieceCount() const noexcept;

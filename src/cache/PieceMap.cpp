@@ -35,13 +35,22 @@ PieceMap PieceMap::hls(int segments)
     return map;
 }
 
+bool PieceMap::plausibleLength(std::int64_t length, std::int64_t chunkSize) noexcept
+{
+    // Written so that it cannot overflow, whatever the server sent.
+    return length >= 0 && chunkSize > 0 && length / chunkSize + (length % chunkSize != 0 ? 1 : 0) <= kMaxPieces;
+}
+
 void PieceMap::setContentLength(std::int64_t length)
 {
+    if (length >= 0 && !plausibleLength(length, m_chunkSize)) {
+        return;
+    }
     m_contentLength = length;
     if (length < 0) {
         return;
     }
-    const auto count = static_cast<std::size_t>((length + m_chunkSize - 1) / m_chunkSize);
+    const auto count = static_cast<std::size_t>(length / m_chunkSize + (length % m_chunkSize != 0 ? 1 : 0));
     // Pieces beyond the real end (a stream that turned out shorter) are dropped.
     while (m_pieces.size() > count) {
         unmark(static_cast<int>(m_pieces.size()) - 1);

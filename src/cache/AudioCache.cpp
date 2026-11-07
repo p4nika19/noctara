@@ -1130,6 +1130,11 @@ void AudioCache::onProgressiveResponse(const QByteArray& name, std::uint64_t fet
         total = ok ? total : -1;
         l->fetch->skip = expectedFirst;
     }
+    if (total >= 0 && !PieceMap::plausibleLength(total)) {
+        cancelFetch(*l);
+        retryOrFail(*l, Error{ErrorCode::ParseError, "implausible content length"});
+        return;
+    }
     const QByteArray etag = response.header("etag");
     bool changed = false;
     bool sidecar = false;
