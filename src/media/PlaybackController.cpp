@@ -529,6 +529,7 @@ void PlaybackController::prepareFollowing()
     }
     const QueueItem& item = m_queue.items()[static_cast<std::size_t>(*following)];
     if (item.track.stub || item.track.stale) {
+        m_active->setNext(std::nullopt);  // whatever was prepared before no longer follows
         const std::uint64_t serial = m_trackSerial;
         const api::Id id = item.track.id;
         hydrate({id}, [this, serial, id] {

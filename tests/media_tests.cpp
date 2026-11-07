@@ -1407,6 +1407,21 @@ TEST_SUITE("media.controller")
         CHECK_FALSE(player.backend.next.has_value());
     }
 
+    TEST_CASE("a following track that is looked up first disarms the one prepared before it")
+    {
+        Player player({}, {{3, apiTrack(3)}});
+        api::Track saved = apiTrack(3);
+        saved.stale = true;
+        player.controller->playTracks({apiTrack(1), apiTrack(2), saved}, 0, {});
+        player.backend.setPosition(190'000);
+        REQUIRE(player.backend.next.has_value());
+        CHECK(player.backend.next->info.key.trackId == u"2");
+        player.controller->moveQueueItem(2, 1);  // the saved track now follows: it is looked up first
+        CHECK_FALSE(player.backend.next.has_value());
+        REQUIRE(test::waitUntil([&] { return player.backend.next.has_value(); }));
+        CHECK(player.backend.next->info.key.trackId == u"3");
+    }
+
     TEST_CASE("stream URLs are resolved through the API when the cache asks, with the track authorization")
     {
         Player player;
