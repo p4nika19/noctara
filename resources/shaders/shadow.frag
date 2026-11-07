@@ -8,7 +8,7 @@ layout(location = 0) out vec4 fragColor;
 layout(std140, binding = 0) uniform buf {
     mat4 qt_Matrix;
     float qt_Opacity;
-    vec4 color;      // straight (non-premultiplied) shadow colour
+    vec4 color;      // shadow colour, premultiplied (Qt premultiplies colour uniforms of a ShaderEffect)
     vec2 itemSize;   // size of this quad in pixels
     vec4 box;        // casting rectangle inside the quad: x, y, width, height (pixels)
     float radius;    // corner radius of the casting rectangle
@@ -30,5 +30,5 @@ void main()
     // Smooth, Gaussian-like falloff across the blur extent (tanh approximates erf).
     float s = max(softness, 0.5) * 0.5;
     float a = 0.5 - 0.5 * tanh(d / s);
-    fragColor = vec4(color.rgb * color.a, color.a) * (a * qt_Opacity);
+    fragColor = color * (a * qt_Opacity);
 }
