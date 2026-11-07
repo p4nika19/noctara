@@ -95,9 +95,9 @@ building it:
   nothing is written through symlinks, permissions are kept). The helper app (`electron/*.js`, `player.html`,
   `protocol.json`) is compiled into Noctara and written out by the installer.
 - **Where:** `<data>/drm-helper/` (`~/.local/share/noctara/drm-helper/`): `electron-<version>/` (the runtime, marked
-  complete by `.complete`) and `app-<hash>/` (the app, named by a hash of its files, so a newer Noctara with a
-  changed helper app writes a new folder without downloading the runtime again). Older folders and the downloads are
-  removed afterwards.
+  complete by `.complete`) and `app-<hash>/` (the app, named by a hash of its files and the pinned hls.js, so a newer
+  Noctara with a changed helper app writes a new folder without downloading the runtime again; a newly pinned hls.js
+  is downloaded on its own and replaces the runtime's copy). Older folders and the downloads are removed afterwards.
 - **Progress:** *Settings → Playback → Protected tracks* shows the download percentage, unpacking, or why it failed
   (it is tried again on the next protected track); a toast says when it is ready.
 

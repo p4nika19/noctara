@@ -856,6 +856,49 @@ TEST_SUITE("drm.installer")
         CHECK_FALSE(QDir(installer.root() + QStringLiteral("/downloads")).exists());
     }
 
+    TEST_CASE("a newly pinned hls.js reaches an installed player without downloading the runtime again")
+    {
+        QTemporaryDir dir;
+        test::FakeOrigin origin;
+        const QByteArray runtime = fixture("runtime.zip");
+        const QByteArray hls = "/* hls.js */";
+        const QByteArray newer = "/* hls.js, fixed */";
+        const HelperRelease release{.electron = artifactFor(QStringLiteral("runtime.zip"), runtime),
+                                    .hlsjs = artifactFor(QStringLiteral("hls.min.js"), hls)};
+        origin.serve(release.electron.url.toString(), resource(runtime));
+        origin.serve(release.hlsjs.url.toString(), resource(hls));
+        {
+            HelperInstaller installer(origin, dir.path(), release);
+            QSignalSpy finished(&installer, &HelperInstaller::finished);
+            installer.install(false);
+            REQUIRE(test::waitUntil([&] { return finished.size() == 1; }, 10000));
+            REQUIRE_MESSAGE(finished.last().first().toBool(), installer.error().describe());
+        }
+
+        HelperRelease bumped = release;
+        bumped.hlsjs = artifactFor(QStringLiteral("hls-2.min.js"), newer);
+        origin.serve(bumped.hlsjs.url.toString(), resource(newer));
+        const int before = origin.count();
+        HelperInstaller installer(origin, dir.path(), bumped);
+        CHECK_FALSE(installer.installed());
+        QSignalSpy finished(&installer, &HelperInstaller::finished);
+        installer.install(false);
+        REQUIRE(test::waitUntil([&] { return finished.size() == 1; }, 10000));
+        REQUIRE_MESSAGE(finished.last().first().toBool(), installer.error().describe());
+        const std::optional<HelperCommand> command = installer.installed();
+        REQUIRE(command.has_value());
+        REQUIRE(command->arguments.size() == 1);
+        QFile vendored(command->arguments.front() + QStringLiteral("/vendor/hls.min.js"));
+        REQUIRE(vendored.open(QIODevice::ReadOnly));
+        CHECK(vendored.readAll() == newer);
+        CHECK(origin.count() == before + 1);  // only hls.js
+        const std::vector<net::Request> requests = origin.requests();
+        CHECK(requests.back().url == bumped.hlsjs.url);
+        // The old app goes; the runtime stays.
+        const QStringList folders = QDir(installer.root()).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+        CHECK(folders.size() == 2);
+    }
+
     TEST_CASE("a download cut after its last byte is finished from its part, not resumed past its end")
     {
         QTemporaryDir dir;

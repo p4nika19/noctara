@@ -132,6 +132,9 @@ public:
         if (!QFileInfo::exists(m_runtime + QStringLiteral("/.complete"))) {
             m_pending = {release.electron, release.hlsjs};
             m_total = release.electron.size + release.hlsjs.size;
+        } else if (sha256Of(m_runtime + QStringLiteral("/hls.min.js")) != release.hlsjs.sha256) {
+            m_pending = {release.hlsjs};  // only hls.js was pinned anew: the runtime stays
+            m_total = release.hlsjs.size;
         }
         if (Result<void> made = ensureDirectory(m_downloads); !made) {
             done(made.error());
@@ -313,6 +316,17 @@ private:
                 done(marked.error());
                 return;
             }
+        } else if (sha256Of(m_runtime + QStringLiteral("/hls.min.js")) != release.hlsjs.sha256) {
+            QFile hls(m_downloads + u'/' + release.hlsjs.file);
+            if (!hls.open(QIODevice::ReadOnly)) {
+                done(Error{ErrorCode::IoError, "cannot read hls.js"});
+                return;
+            }
+            if (Result<void> replaced = writeFileAtomic(m_runtime + QStringLiteral("/hls.min.js"), hls.readAll(), 0644);
+                !replaced) {
+                done(replaced.error());
+                return;
+            }
         }
         if (Result<void> written = writeApp(); !written) {
             done(written.error());
@@ -436,7 +450,11 @@ QString HelperInstaller::runtimeDir() const
 
 QString HelperInstaller::appDir() const
 {
-    return m_root + QStringLiteral("/app-") + helperAppId();
+    // The app vendors hls.js, so a newly pinned hls.js makes a new app folder too.
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    hash.addData(helperAppId().toLatin1());
+    hash.addData(m_release.hlsjs.sha256);
+    return m_root + QStringLiteral("/app-") + QString::fromLatin1(hash.result().toHex().left(12));
 }
 
 std::optional<HelperCommand> HelperInstaller::installed() const
