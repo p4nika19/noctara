@@ -340,6 +340,9 @@ void MprisPlayerAdaptor::SetPosition(const QDBusObjectPath& trackId, qlonglong p
     if (trackId != mprisTrackPath(player.trackId()) || position < 0) {
         return;  // a stale request for a track that is no longer current
     }
+    if (player.duration() > 0 && position / kUsPerMs > player.duration()) {
+        return;  // past the end: the specification asks for no operation
+    }
     player.seek(position / kUsPerMs);
 }
 

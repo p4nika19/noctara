@@ -1529,6 +1529,24 @@ TEST_SUITE("media.mpris")
         }
     }
 
+    TEST_CASE("SetPosition seeks within the track and ignores a position past its end")
+    {
+        Player player;
+        MprisService service(*player.controller, nullptr);
+        auto* adaptor = service.findChild<MprisPlayerAdaptor*>();
+        REQUIRE(adaptor != nullptr);
+        player.controller->playTracks({apiTrack(1), apiTrack(2)}, 0, {});
+        REQUIRE(player.controller->duration() == 200'000);
+        const QDBusObjectPath current = mprisTrackPath(player.controller->trackId());
+        adaptor->SetPosition(current, 201'000'000LL);  // as the specification asks: no operation
+        CHECK(player.backend.seeks.empty());
+        CHECK(player.controller->trackId() == u"1");
+        adaptor->SetPosition(current, 200'000'000LL);  // the very end is still within the track
+        CHECK(player.backend.seeks == std::vector<std::int64_t>{200'000});
+        adaptor->SetPosition(current, 1'500'000LL);
+        CHECK(player.backend.seeks == std::vector<std::int64_t>{200'000, 1500});
+    }
+
     TEST_CASE("a cover asked for twice at once is kept once, so a later eviction never deletes its current file")
     {
         QTemporaryDir dir;
