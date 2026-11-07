@@ -83,13 +83,13 @@ TEST_SUITE("settings.schema")
     {
         const Definition& theme = *schema().find(keys::ThemeMode);
         CHECK(validate(theme, QStringLiteral("dark")).has_value());
-        CHECK(validate(theme, QStringLiteral("purple")).error().code == ErrorCode::ConfigUnknownEnumValue);
-        CHECK(validate(theme, true).error().code == ErrorCode::ConfigTypeMismatch);
+        CHECK(test::errorOf(validate(theme, QStringLiteral("purple"))) == ErrorCode::ConfigUnknownEnumValue);
+        CHECK(test::errorOf(validate(theme, true)) == ErrorCode::ConfigTypeMismatch);
 
         const Definition& zoom = *schema().find(keys::UiScale);
         CHECK(validate(zoom, QVariant::fromValue(qint64{150})).has_value());
-        CHECK(validate(zoom, QVariant::fromValue(qint64{500})).error().code == ErrorCode::ConfigOutOfRange);
-        CHECK(validate(zoom, QVariant::fromValue(150.5)).error().code == ErrorCode::ConfigTypeMismatch);
+        CHECK(test::errorOf(validate(zoom, QVariant::fromValue(qint64{500}))) == ErrorCode::ConfigOutOfRange);
+        CHECK(test::errorOf(validate(zoom, QVariant::fromValue(150.5))) == ErrorCode::ConfigTypeMismatch);
         CHECK(validate(zoom, QVariant::fromValue(150.0))->typeId() == QMetaType::LongLong);
 
         const Definition& color = *schema().find(keys::AccentColor);
@@ -148,12 +148,13 @@ TEST_SUITE("settings.store")
         REQUIRE(store.setUserValue(keys::ThemeMode, QStringLiteral("system")).has_value());
         CHECK_FALSE(store.layerValue(Layer::User, idx(keys::ThemeMode)).has_value());
 
-        CHECK(store.setUserValue(keys::ThemeMode, QStringLiteral("nope")).error().code ==
+        CHECK(test::errorOf(store.setUserValue(keys::ThemeMode, QStringLiteral("nope"))) ==
               ErrorCode::ConfigUnknownEnumValue);
-        CHECK(store.setUserValue("no.such.key", true).error().code == ErrorCode::ConfigUnknownKey);
+        CHECK(test::errorOf(store.setUserValue("no.such.key", true)) == ErrorCode::ConfigUnknownKey);
 
         store.replaceLayer(Layer::Environment, {{idx(keys::ThemeMode), QStringLiteral("light")}});
-        CHECK(store.setUserValue(keys::ThemeMode, QStringLiteral("dark")).error().code == ErrorCode::ConfigOverridden);
+        CHECK(test::errorOf(store.setUserValue(keys::ThemeMode, QStringLiteral("dark"))) ==
+              ErrorCode::ConfigOverridden);
     }
 
     TEST_CASE("reset section and all")
