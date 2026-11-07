@@ -111,19 +111,6 @@ constexpr Migration kMigrations[] = {
 };
 // clang-format on
 
-std::vector<std::string_view> splitPath(std::string_view path)
-{
-    std::vector<std::string_view> parts;
-    std::size_t start = 0;
-    while (start <= path.size()) {
-        const auto dot = path.find('.', start);
-        const auto end = dot == std::string_view::npos ? path.size() : dot;
-        parts.push_back(path.substr(start, end - start));
-        start = end + 1;
-    }
-    return parts;
-}
-
 }  // namespace
 
 std::span<const Migration> builtinMigrations() noexcept
@@ -143,6 +130,19 @@ std::int64_t migrate(toml::table& root, std::int64_t version, std::int64_t targe
         ++version;
     }
     return version;
+}
+
+std::vector<std::string_view> splitPath(std::string_view path)
+{
+    std::vector<std::string_view> parts;
+    std::size_t start = 0;
+    while (start <= path.size()) {
+        const auto dot = path.find('.', start);
+        const auto end = dot == std::string_view::npos ? path.size() : dot;
+        parts.push_back(path.substr(start, end - start));
+        start = end + 1;
+    }
+    return parts;
 }
 
 bool moveKey(toml::table& root, std::string_view from, std::string_view to)

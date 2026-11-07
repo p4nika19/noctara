@@ -1,5 +1,7 @@
 #include "settings/Schema.hpp"
 
+#include "core/Strings.hpp"
+
 #include <QLocale>
 #include <QRegularExpression>
 
@@ -19,11 +21,6 @@ namespace {
 {
     std::println(stderr, "settings schema defect: {}", message);
     std::abort();
-}
-
-QString latin(std::string_view text)
-{
-    return QString::fromLatin1(text.data(), static_cast<qsizetype>(text.size()));
 }
 
 std::string keyString(const Definition& def)

@@ -1,5 +1,6 @@
 #include "ui/KeyboardController.hpp"
 
+#include "core/Strings.hpp"
 #include "i18n/LanguageManager.hpp"
 #include "settings/Keys.hpp"
 #include "settings/Schema.hpp"
@@ -12,11 +13,6 @@
 namespace noctara::ui {
 
 namespace {
-
-QString latin(std::string_view text)
-{
-    return QString::fromLatin1(text.data(), static_cast<qsizetype>(text.size()));
-}
 
 template <class Visit> void forEachShortcut(const settings::Schema& schema, Visit visit)
 {

@@ -1,5 +1,6 @@
 #include "settings/TomlCodec.hpp"
 
+#include "core/Strings.hpp"
 #include "settings/Migrations.hpp"
 
 #include <QStringList>
@@ -16,24 +17,6 @@ constexpr std::string_view kVersionKey = "config_version";
 QString fromUtf8(std::string_view text)
 {
     return QString::fromUtf8(text.data(), static_cast<qsizetype>(text.size()));
-}
-
-QString latin(std::string_view text)
-{
-    return QString::fromLatin1(text.data(), static_cast<qsizetype>(text.size()));
-}
-
-std::vector<std::string_view> splitPath(std::string_view path)
-{
-    std::vector<std::string_view> parts;
-    std::size_t start = 0;
-    while (start <= path.size()) {
-        const auto dot = path.find('.', start);
-        const auto end = dot == std::string_view::npos ? path.size() : dot;
-        parts.push_back(path.substr(start, end - start));
-        start = end + 1;
-    }
-    return parts;
 }
 
 toml::table* tableAt(toml::table& root, std::string_view path)
@@ -170,6 +153,27 @@ QString describeConstraints(const Definition& def)
     return parts.join(u' ');
 }
 
+// Moves the scalar (and inline-table) values of `from` out of it and writes them as "key = value" lines. Tables and
+// arrays of tables stay in `from`.
+void appendUnknownLeaves(QString& out, toml::table& from)
+{
+    toml::table leaves;
+    std::vector<std::string> moved;
+    for (auto&& [key, node] : from) {
+        const auto* asTable = node.as_table();
+        if ((asTable == nullptr || asTable->is_inline()) && !node.is_array_of_tables()) {
+            node.visit([&](auto&& value) { leaves.insert_or_assign(key.str(), value); });
+            moved.emplace_back(key.str());
+        }
+    }
+    for (const auto& key : moved) {
+        from.erase(key);
+    }
+    if (!leaves.empty()) {
+        out += QStringLiteral("\n# Unrecognised keys, kept as-is:\n") + fromUtf8(formatToml(leaves)) + u'\n';
+    }
+}
+
 }  // namespace
 
 QString ConfigIssue::logText() const
@@ -295,23 +299,7 @@ QByteArray serializeConfig(const Schema& schema, const ValueMap& userValues, std
     out += QStringLiteral("\nconfig_version = %1\n").arg(std::max(version, Schema::kConfigVersion));
 
     // Unknown root-level values go before the first table header; after it they would belong to that table.
-    {
-        toml::table leaves;
-        std::vector<std::string> moved;
-        for (auto&& [key, node] : unknown) {
-            const auto* asTable = node.as_table();
-            if ((asTable == nullptr || asTable->is_inline()) && !node.is_array_of_tables()) {
-                node.visit([&](auto&& value) { leaves.insert_or_assign(key.str(), value); });
-                moved.emplace_back(key.str());
-            }
-        }
-        for (const auto& key : moved) {
-            unknown.erase(key);
-        }
-        if (!leaves.empty()) {
-            out += QStringLiteral("\n# Unrecognised keys, kept as-is:\n") + fromUtf8(formatToml(leaves)) + u'\n';
-        }
-    }
+    appendUnknownLeaves(out, unknown);
 
     for (const Section& section : schema.sections()) {
         out += QStringLiteral("\n[%1]\n").arg(latin(section.id));
@@ -339,21 +327,7 @@ QByteArray serializeConfig(const Schema& schema, const ValueMap& userValues, std
         // Unknown scalar keys inside a known table stay in that table. Arrays of tables stay in `unknown`: their
         // [[headers]] are written with the full path at the end.
         if (toml::table* extra = tableAt(unknown, section.id)) {
-            toml::table leaves;
-            std::vector<std::string> moved;
-            for (auto&& [key, node] : *extra) {
-                const auto* asTable = node.as_table();
-                if ((asTable == nullptr || asTable->is_inline()) && !node.is_array_of_tables()) {
-                    node.visit([&](auto&& value) { leaves.insert_or_assign(key.str(), value); });
-                    moved.emplace_back(key.str());
-                }
-            }
-            for (const auto& key : moved) {
-                extra->erase(key);
-            }
-            if (!leaves.empty()) {
-                out += QStringLiteral("\n# Unrecognised keys, kept as-is:\n") + fromUtf8(formatToml(leaves)) + u'\n';
-            }
+            appendUnknownLeaves(out, *extra);
         }
     }
 

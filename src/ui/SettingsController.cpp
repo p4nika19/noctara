@@ -1,6 +1,7 @@
 #include "ui/SettingsController.hpp"
 
 #include "core/Log.hpp"
+#include "core/Strings.hpp"
 #include "i18n/ErrorMessages.hpp"
 #include "i18n/LanguageManager.hpp"
 #include "settings/ConfigFile.hpp"
@@ -18,11 +19,6 @@ namespace noctara::ui {
 namespace {
 
 using settings::Category;
-
-QString latin(std::string_view text)
-{
-    return QString::fromLatin1(text.data(), static_cast<qsizetype>(text.size()));
-}
 
 const char* categoryIcon(Category category)
 {

@@ -1,15 +1,12 @@
 #include "settings/Overrides.hpp"
 
+#include "core/Strings.hpp"
+
 #include <algorithm>
 
 namespace noctara::settings {
 
 namespace {
-
-QString latin(std::string_view text)
-{
-    return QString::fromLatin1(text.data(), static_cast<qsizetype>(text.size()));
-}
 
 void assign(OverrideSet& set, std::size_t index, QVariant value)
 {

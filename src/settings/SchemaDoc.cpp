@@ -1,17 +1,13 @@
 #include "settings/SchemaDoc.hpp"
 
 #include "core/Log.hpp"
+#include "core/Strings.hpp"
 
 #include <QStringList>
 
 namespace noctara::settings {
 
 namespace {
-
-QString latin(std::string_view text)
-{
-    return QString::fromLatin1(text.data(), static_cast<qsizetype>(text.size()));
-}
 
 QString escapeCell(QString text)
 {

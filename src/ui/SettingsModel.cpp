@@ -1,5 +1,6 @@
 #include "ui/SettingsModel.hpp"
 
+#include "core/Strings.hpp"
 #include "settings/Schema.hpp"
 #include "settings/SettingsStore.hpp"
 
@@ -10,11 +11,6 @@ namespace noctara::ui {
 namespace {
 
 using settings::Definition;
-
-QString latin(std::string_view text)
-{
-    return QString::fromLatin1(text.data(), static_cast<qsizetype>(text.size()));
-}
 
 QString translated(const char* source)
 {
