@@ -1063,6 +1063,19 @@ TEST_SUITE("cache.audio")
             CHECK(request.background);
             CHECK(request.url.toString().contains(QStringLiteral("p1")));
         }
+
+        // The queue moves on: only p2 is upcoming now. p1's reader is dropped, only p2 is fetched.
+        audio.origin.reset();
+        std::vector<PrefetchItem> next;
+        next.push_back({track(QStringLiteral("p2")), audio.urls(QStringLiteral("https://cdn.test/p2.mp3"))});
+        prefetcher.setQueue(next, 1, -1);
+        REQUIRE(test::waitUntil([&] { return audio.cache->usage().completeEntries == 2; }));
+        CHECK(prefetcher.active() == 1);
+        CHECK(audio.origin.count() > 0);
+        for (const net::Request& request : audio.origin.requests()) {
+            CHECK(request.background);
+            CHECK(request.url.toString().contains(QStringLiteral("p2")));
+        }
         prefetcher.cancel();
         CHECK(prefetcher.active() == 0);
     }
