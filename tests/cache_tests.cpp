@@ -257,6 +257,8 @@ TEST_SUITE("cache.audio")
         CHECK(again->contentLength() == content.size());
         CHECK(Audio::readAll(*again) == content);
         Result<QByteArray> middle = again->readBytes(100'000, 1000, {}, 1s);
+        REQUIRE_MESSAGE(middle, test::describe(middle));
+        CHECK(*middle == content.sliced(100'000, 1000));
         audio.settle();
         CHECK(audio.origin.count() == 0);
         CHECK(audio.urlCalls == 1);  // only the first session needed a URL
