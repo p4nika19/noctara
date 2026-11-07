@@ -563,6 +563,26 @@ TEST_SUITE("ui.components")
         CHECK(menu->property("y").toReal() >= 0);
     }
 
+    TEST_CASE("Up in a context menu with nothing highlighted highlights the last entry")
+    {
+        const WindowHarness harness(R"(Window {
+            width: 400; height: 400; visible: true
+            property QtObject menu: menu
+            ContextMenu { id: menu }
+        })");
+        QObject* menu = harness.object("menu");
+        QVariantList actions;
+        for (int i = 0; i < 3; ++i) {
+            actions.append(QVariantMap{{QStringLiteral("text"), QStringLiteral("Action %1").arg(i)}});
+        }
+        QVariant item = QVariant::fromValue<QObject*>(harness.window->contentItem());
+        REQUIRE(QMetaObject::invokeMethod(menu, "show", Q_ARG(QVariant, QVariant(actions)), Q_ARG(QVariant, item),
+                                          Q_ARG(QVariant, QVariant(QPointF(10, 10)))));
+        REQUIRE(menu->property("highlighted").toInt() == -1);
+        REQUIRE(QMetaObject::invokeMethod(menu, "step", Q_ARG(QVariant, QVariant(-1))));
+        CHECK(menu->property("highlighted").toInt() == 2);
+    }
+
     TEST_CASE("the full player's flying cover is decoded once, not on every animation frame")
     {
         std::atomic<int> requests = 0;

@@ -25,7 +25,8 @@ T.Popup {
         list.forceActiveFocus()
     }
     function step(direction) {
-        let next = highlighted
+        // With nothing highlighted, Down starts at the first entry and Up at the last.
+        let next = highlighted >= 0 ? highlighted : (direction > 0 ? -1 : 0)
         for (let i = 0; i < actions.length; ++i) {
             next = (next + direction + actions.length) % actions.length
             const action = actions[next]
