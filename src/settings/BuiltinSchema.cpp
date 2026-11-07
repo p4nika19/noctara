@@ -1,5 +1,6 @@
 // The application's settings schema: the single source of truth for the settings UI, config file,
 // CLI/env overrides and docs/configuration.md. Adding a setting = adding one entry here.
+#include "core/Log.hpp"
 #include "core/NetAddress.hpp"
 #include "settings/Keys.hpp"
 #include "settings/Schema.hpp"
@@ -134,7 +135,7 @@ Result<void> validateDohUrl(const QVariant& value)
     const QUrl url(text, QUrl::StrictMode);
     const bool schemeOk = url.scheme() == u"https" || url.scheme() == u"http";
     if (!url.isValid() || !schemeOk || url.host().isEmpty() || !url.userInfo().isEmpty()) {
-        return invalid(text, "an https:// URL");
+        return invalid(log::redactUrlCredentials(text), "an https:// URL");  // the detail reaches the log
     }
     return {};
 }

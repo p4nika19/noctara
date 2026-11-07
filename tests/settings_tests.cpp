@@ -97,6 +97,15 @@ TEST_SUITE("settings.schema")
         CHECK_FALSE(validate(color, QStringLiteral("red")).has_value());
     }
 
+    TEST_CASE("a rejected DoH URL does not carry its credentials into the error")
+    {
+        const auto rejected = validate(*schema().find(keys::DohUrl), QStringLiteral("https://u:pw@x.example/q"));
+        REQUIRE_FALSE(rejected.has_value());
+        const std::string text = test::describe(rejected);
+        CHECK(text.find("pw") == std::string::npos);
+        CHECK(text.find("x.example/q") != std::string::npos);
+    }
+
     TEST_CASE("textual values from env/CLI")
     {
         const Definition& adaptive = *schema().find(keys::AccentAdaptive);
