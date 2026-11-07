@@ -75,6 +75,7 @@ void DnsResolver::rebuild()
 {
     const DnsConfig& config = m_config;
     ++m_generation;
+    ++m_configGeneration;
     m_cache.clear();
     m_cache.setLimits({config.minTtl, config.maxTtl, config.negativeTtl});
     m_upstream.reset();
@@ -257,7 +258,7 @@ void DnsResolver::withUpstream(const std::function<void(Result<std::shared_ptr<I
         return;
     }
     ++m_stats.systemLookups;
-    const std::uint64_t generation = m_generation;
+    const std::uint64_t generation = m_configGeneration;
     m_system.lookup(m_config.doh.url.host(), [self = QPointer(this), generation, next](auto addresses) {
         if (self == nullptr) {
             return;
@@ -266,7 +267,7 @@ void DnsResolver::withUpstream(const std::function<void(Result<std::shared_ptr<I
             next(fail(ErrorCode::DohUnreachable, "DoH server name: " + addresses.error().describe()));
             return;
         }
-        if (generation == self->m_generation && !self->m_upstream) {
+        if (generation == self->m_configGeneration && !self->m_upstream) {
             self->m_upstream = makeUpstream<DohUpstream>(self->m_config.doh.url, *addresses, self->m_dohSender);
         }
         next(self->m_upstream ? Result<std::shared_ptr<IDnsUpstream>>(self->m_upstream)
@@ -291,59 +292,62 @@ void DnsResolver::lookupUpstream(const QString& host, const std::shared_ptr<IDns
     }
     gathered->remaining = static_cast<int>(types.size());
     const std::uint64_t generation = m_generation;
+    const std::uint64_t configGeneration = m_configGeneration;
     const QByteArray name = host.toLatin1();
     for (const dns::RecordType type : types) {
-        upstream->query(name, type, [self = QPointer(this), gathered, host, source, generation, lookup](auto answer) {
-            gathered->answers.push_back(std::move(answer));
-            if (--gathered->remaining > 0 || self == nullptr || !self->isCurrent(host, lookup)) {
-                return;
-            }
-            std::vector<IpAddress> addresses;
-            std::uint32_t ttl = UINT32_MAX;
-            std::optional<std::uint32_t> negativeTtl;
-            const Error* firstError = nullptr;
-            QString server;
-            for (const auto& result : gathered->answers) {
-                if (!result) {
-                    firstError = firstError != nullptr ? firstError : &result.error();
-                    continue;
+        upstream->query(
+            name, type,
+            [self = QPointer(this), gathered, host, source, generation, configGeneration, lookup](auto answer) {
+                gathered->answers.push_back(std::move(answer));
+                if (--gathered->remaining > 0 || self == nullptr || !self->isCurrent(host, lookup)) {
+                    return;
                 }
-                server = result->server;
-                for (const dns::AddressRecord& record : result->response.addresses) {
-                    addresses.push_back(record.address);
-                    ttl = std::min(ttl, record.ttl);
+                std::vector<IpAddress> addresses;
+                std::uint32_t ttl = UINT32_MAX;
+                std::optional<std::uint32_t> negativeTtl;
+                const Error* firstError = nullptr;
+                QString server;
+                for (const auto& result : gathered->answers) {
+                    if (!result) {
+                        firstError = firstError != nullptr ? firstError : &result.error();
+                        continue;
+                    }
+                    server = result->server;
+                    for (const dns::AddressRecord& record : result->response.addresses) {
+                        addresses.push_back(record.address);
+                        ttl = std::min(ttl, record.ttl);
+                    }
+                    if (result->response.negativeTtl) {
+                        negativeTtl = std::min(negativeTtl.value_or(UINT32_MAX), *result->response.negativeTtl);
+                    }
                 }
-                if (result->response.negativeTtl) {
-                    negativeTtl = std::min(negativeTtl.value_or(UINT32_MAX), *result->response.negativeTtl);
+                const bool cacheable = generation == self->m_generation;
+                const auto now = DnsCache::Clock::now();
+                if (!addresses.empty()) {
+                    if (cacheable) {
+                        self->m_cache.storeAddresses(host, addresses, std::chrono::seconds(ttl), now);
+                    }
+                    self->complete(host, lookup, Resolution{self->ordered(std::move(addresses)), source, server, {}});
+                    return;
                 }
-            }
-            const bool cacheable = generation == self->m_generation;
-            const auto now = DnsCache::Clock::now();
-            if (!addresses.empty()) {
-                if (cacheable) {
-                    self->m_cache.storeAddresses(host, addresses, std::chrono::seconds(ttl), now);
+                if (firstError == nullptr) {
+                    // Every server answered authoritatively: the name has no addresses. Never a reason to fall back.
+                    if (cacheable) {
+                        self->m_cache.storeMissing(
+                            host, negativeTtl.transform([](std::uint32_t s) { return std::chrono::seconds(s); }), now);
+                    }
+                    self->complete(host, lookup, fail(ErrorCode::DnsResolutionFailed, "no such host"));
+                    return;
                 }
-                self->complete(host, lookup, Resolution{self->ordered(std::move(addresses)), source, server, {}});
-                return;
-            }
-            if (firstError == nullptr) {
-                // Every server answered authoritatively: the name has no addresses. Never a reason to fall back.
-                if (cacheable) {
-                    self->m_cache.storeMissing(
-                        host, negativeTtl.transform([](std::uint32_t s) { return std::chrono::seconds(s); }), now);
+                if (self->m_config.fallbackToSystem && configGeneration == self->m_configGeneration) {
+                    ++self->m_stats.fallbacks;
+                    qCInfo(lcNet).noquote()
+                        << "DNS falls back to the system resolver:" << QString::fromStdString(firstError->describe());
+                    self->lookupSystem(host, ResolverSource::SystemFallback, lookup);
+                    return;
                 }
-                self->complete(host, lookup, fail(ErrorCode::DnsResolutionFailed, "no such host"));
-                return;
-            }
-            if (self->m_config.fallbackToSystem && generation == self->m_generation) {
-                ++self->m_stats.fallbacks;
-                qCInfo(lcNet).noquote() << "DNS falls back to the system resolver:"
-                                        << QString::fromStdString(firstError->describe());
-                self->lookupSystem(host, ResolverSource::SystemFallback, lookup);
-                return;
-            }
-            self->complete(host, lookup, std::unexpected(*firstError));
-        });
+                self->complete(host, lookup, std::unexpected(*firstError));
+            });
     }
 }
 

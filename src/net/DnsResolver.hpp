@@ -73,7 +73,8 @@ private:
     QHash<QString, Pending> m_pending;
     std::shared_ptr<IDnsUpstream> m_upstream;  // for custom servers / DoH; rebuilt on config changes
     std::vector<IpAddress> m_dohAddresses;     // resolved DoH host when no bootstrap addresses are given
-    std::uint64_t m_generation = 0;            // answers from before a config change are not cached
+    std::uint64_t m_generation = 0;            // answers from before a config change or flush are not cached
+    std::uint64_t m_configGeneration = 0;      // bumped by config changes only, not by a flush
     std::uint64_t m_lastLookup = 0;
     ResolverStats m_stats;
 };

@@ -332,6 +332,45 @@ TEST_SUITE("net.resolver")
         CHECK(system.calls == 2);
     }
 
+    TEST_CASE("flushing the DNS cache during a lookup keeps the fallback and the DoH server")
+    {
+        // Custom servers that never answer, fallback allowed: the flush arrives while the query waits.
+        const SilentUdpServer silent;
+        FakeSystemResolver system;
+        system.table[QStringLiteral("api.test")] = std::vector{ip("192.0.2.1")};
+        DnsResolver resolver(system);
+        resolver.setConfig(customServers({silent.port()}, true));
+        std::optional<Result<Resolution>> fallback;
+        resolver.resolve(QStringLiteral("api.test"), [&](Result<Resolution> result) { fallback = std::move(result); });
+        REQUIRE(test::waitUntil([&] { return silent.received(); }));
+        resolver.flush();
+        REQUIRE(test::waitUntil([&] { return fallback.has_value(); }, 10000));
+        REQUIRE_MESSAGE(*fallback, test::describe(*fallback));
+        CHECK((*fallback)->source == ResolverSource::SystemFallback);
+
+        // DoH by name without bootstrap addresses: the flush arrives while the server's name is looked up.
+        test::DnsServer table;
+        table.add(QStringLiteral("doh.test"), QStringLiteral("192.0.2.44"));
+        const test::DohServer doh(table);
+        Network net;
+        net.system.table[QStringLiteral("localhost")] = std::vector{ip("127.0.0.1")};
+        DnsConfig config;
+        config.mode = DnsMode::Doh;
+        config.doh.url = QUrl(QStringLiteral("http://localhost:%1/dns-query").arg(doh.port()));
+        config.doh.allowInsecure = true;
+        config.fallbackToSystem = true;
+        net.resolver.setConfig(config);
+        std::optional<Result<Resolution>> viaDoh;
+        net.resolver.resolve(QStringLiteral("doh.test"),
+                             [&](Result<Resolution> result) { viaDoh = std::move(result); });
+        net.resolver.flush();
+        REQUIRE(test::waitUntil([&] { return viaDoh.has_value(); }, 10000));
+        REQUIRE_MESSAGE(*viaDoh, test::describe(*viaDoh));
+        CHECK((*viaDoh)->source == ResolverSource::Doh);
+        CHECK((*viaDoh)->addresses == std::vector{ip("192.0.2.44")});
+        CHECK(net.system.hosts == QStringList{QStringLiteral("localhost")});
+    }
+
     TEST_CASE("DoH: answers over HTTP POST, insecure URLs refused, strict mode leaks nothing")
     {
         test::DnsServer table;
