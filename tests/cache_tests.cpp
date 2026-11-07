@@ -1299,4 +1299,31 @@ TEST_SUITE("cache.service")
         CHECK(QDir(root + QStringLiteral("/audio")).entryList(QDir::Dirs | QDir::NoDotAndDotDot) ==
               QStringList{QStringLiteral("covers")});
     }
+
+    TEST_CASE("clear on exit also removes an entry whose cover is still downloading at shutdown")
+    {
+        QTemporaryDir dir;
+        test::FakeOrigin origin;
+        origin.serve(QStringLiteral("https://img.test/slow.png"), {.body = pngCover(Qt::cyan), .type = "image/png"});
+        origin.setHold(true);  // the cover request never finishes before the service goes
+        settings::SettingsStore store(settings::Schema::builtin());
+        REQUIRE(store.setUserValue(settings::keys::ClearCacheOnExit, true));
+        const QString root = dir.filePath(QStringLiteral("cache"));
+        {
+            CacheService service(store, origin, root);
+            TrackInfo info = track(QStringLiteral("slow-cover"));
+            info.artworkUrl = QUrl(QStringLiteral("https://img.test/slow.png"));
+            QObject context;
+            std::optional<Result<AudioReaderPtr>> reader;
+            service.audio().open(
+                info, [](bool, UrlCallback done) { done(QUrl(QString::fromLatin1(kTrackUrl))); }, &context,
+                [&](Result<AudioReaderPtr> r) { reader = std::move(r); });
+            REQUIRE(test::waitUntil([&] { return reader.has_value(); }));
+            REQUIRE(*reader);
+            REQUIRE(test::waitUntil([&] { return origin.count() >= 1; }));
+            reader.reset();  // closed, but the entry stays in use until its cover fetch ends
+        }
+        CHECK(QDir(root + QStringLiteral("/audio")).entryList(QDir::Dirs | QDir::NoDotAndDotDot) ==
+              QStringList{QStringLiteral("covers")});
+    }
 }

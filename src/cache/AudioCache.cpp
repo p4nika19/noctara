@@ -427,8 +427,11 @@ AudioCache::AudioCache(net::INetworkTransport& transport, MemoryTier& memory, Fi
 AudioCache::~AudioCache()
 {
     m_mailbox->close();
-    for (const auto& live : std::as_const(m_live)) {
-        cancelFetch(*live);
+    for (auto it = m_live.cbegin(); it != m_live.cend(); ++it) {
+        cancelFetch(**it);
+        if ((*it)->doomed) {
+            removeEntryFiles(it.key());  // cleared while in use: it never gets to retire now
+        }
     }
     flush();
 }
