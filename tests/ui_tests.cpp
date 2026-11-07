@@ -630,6 +630,27 @@ TEST_SUITE("ui.components")
         CHECK_MESSAGE(requests - before <= 1, "cover requests during the flight: ", requests - before);
     }
 
+    TEST_CASE("the full player's flying cover starts on the bar's cover when the player sits below a title bar")
+    {
+        const WindowHarness harness(R"(Window {
+            width: 1000; height: 800; visible: true
+            property Item player: player
+            FullPlayer {
+                id: player
+                anchors.fill: parent
+                anchors.topMargin: 48  // the custom title bar
+                sourceRect: Qt.rect(20, 720, 64, 64)  // window coordinates
+            }
+        })");
+        QQuickItem* player = harness.item("player");
+        auto* flyer = player->findChild<QQuickItem*>(QStringLiteral("flyingCover"));
+        REQUIRE(flyer != nullptr);
+        REQUIRE(player->property("shown").toReal() == 0.0);
+        const QPointF start = flyer->mapToScene(QPointF(0, 0));
+        CHECK(start.x() == doctest::Approx(20));
+        CHECK(start.y() == doctest::Approx(720));
+    }
+
     TEST_CASE("the navigation pill is hidden while the current page is not in the rail")
     {
         const WindowHarness harness(R"(Window {

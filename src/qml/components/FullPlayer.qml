@@ -322,13 +322,19 @@ FocusScope {
     // provider for a new decode each time and show the skeleton for the whole flight.
     CoverArt {
         id: flyer
+        objectName: "flyingCover"
         // Re-evaluated whenever anything that moves the slot changes (mapToItem alone does not track that).
         readonly property point slot: {
             void (artSlot.width + main.x + main.y + main.height + stage.x + stage.y + stage.width + stage.height)
             return artSlot.mapToItem(root, 0, 0)
         }
-        x: root.sourceRect.x + (slot.x - root.sourceRect.x) * root.shown
-        y: root.sourceRect.y + (slot.y - root.sourceRect.y) * root.shown
+        // sourceRect in this item's coordinates: the player sits below the custom title bar, if there is one.
+        readonly property point start: {
+            void (root.x + root.y)
+            return root.mapFromItem(null, root.sourceRect.x, root.sourceRect.y)
+        }
+        x: start.x + (slot.x - start.x) * root.shown
+        y: start.y + (slot.y - start.y) * root.shown
         width: artSlot.width
         height: width
         transformOrigin: Item.TopLeft
