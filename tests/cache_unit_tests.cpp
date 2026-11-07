@@ -18,6 +18,7 @@
 #include "core/Paths.hpp"
 
 #include <QBuffer>
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QImage>
@@ -585,6 +586,22 @@ TEST_SUITE("cache.disklru")
         REQUIRE(lru.put("cccccccccccccccc", "c"));
         DiskLru again(dir.path(), 10'000, full);  // no index written: rebuilt by scanning
         CHECK(again.get("cccccccccccccccc"));
+    }
+
+    TEST_CASE("a rebuild deletes temp files left over from interrupted writes")
+    {
+        QTemporaryDir dir;
+        REQUIRE(QDir(dir.path()).mkpath(QStringLiteral("aa")));
+        const QString temp = dir.path() + QStringLiteral("/aa/.aaaaaaaaaaaaaaaa.123abc.tmp");
+        {
+            QFile file(temp);
+            REQUIRE(file.open(QIODevice::WriteOnly));
+            file.write(QByteArray(100, 'a'));
+        }
+        DiskLru lru(dir.path(), 1 << 20, FileOps::posix());  // no index: rebuilt by scanning
+        lru.load();
+        CHECK_FALSE(QFileInfo::exists(temp));
+        CHECK(lru.bytes() == 0);
     }
 
     TEST_CASE("blobs stored after the last index flush are found and evicted after an unclean exit")

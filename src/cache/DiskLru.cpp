@@ -83,7 +83,8 @@ void DiskLru::rebuild()
 {
     // Access times the index still knows are kept; files it does not list are dated by their modification time.
     const LruLedger known = std::exchange(m_ledger, LruLedger{});
-    QDirIterator it(m_directory, QDir::Files, QDirIterator::Subdirectories);
+    // Hidden too: writeFileAtomic names its temp files ".<name>.<hex>.tmp".
+    QDirIterator it(m_directory, QDir::Files | QDir::Hidden, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         const QFileInfo info = it.nextFileInfo();
         const QByteArray name = info.fileName().toLatin1();
