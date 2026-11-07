@@ -397,6 +397,15 @@ TEST_SUITE("net.policy")
 
 TEST_SUITE("net.config")
 {
+    TEST_CASE("a host override written with a trailing dot is stored without it")
+    {
+        settings::SettingsStore store(settings::Schema::builtin());
+        REQUIRE(store.setUserValue(settings::keys::HostOverrides, QStringList{QStringLiteral("Api.Test.=192.0.2.7")}));
+        const NetworkConfig config = configFromSettings(store);
+        REQUIRE(config.dns.overrides.size() == 1);
+        CHECK(config.dns.overrides[0].first == QStringLiteral("api.test"));  // also what the DRM helper maps
+    }
+
     TEST_CASE("settings snapshot: presets, custom entries and derived values")
     {
         settings::SettingsStore store(settings::Schema::builtin());

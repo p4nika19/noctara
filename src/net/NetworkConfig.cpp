@@ -105,7 +105,11 @@ DnsConfig dnsFromSettings(const settings::SettingsStore& store)
     for (const QString& item : store.listValue(keys::HostOverrides)) {
         const qsizetype eq = item.indexOf(u'=');
         if (auto address = IpAddress::parse(QStringView(item).sliced(eq + 1)); eq > 0 && address) {
-            dns.overrides.emplace_back(item.first(eq).trimmed().toLower(), *address);
+            QString host = item.first(eq).trimmed().toLower();
+            if (host.endsWith(u'.')) {
+                host.chop(1);  // "example.com." is the same name; lookups and the DRM helper use the short form
+            }
+            dns.overrides.emplace_back(std::move(host), *address);
         }
     }
     dns.minTtl = std::chrono::seconds(store.intValue(keys::DnsMinTtl));
