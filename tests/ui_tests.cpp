@@ -20,6 +20,7 @@
 
 #include <QAbstractItemModelTester>
 #include <QColor>
+#include <QDateTime>
 #include <QJSEngine>
 #include <QQmlComponent>
 #include <QQmlContext>
@@ -851,19 +852,23 @@ public:
     std::vector<QUrl> urls;
 };
 
+void registerDetailTypes()
+{
+    static const bool registered = [] {
+        qmlRegisterUncreatableType<models::UserDetail>("Noctara", 1, 0, "UserDetail", QStringLiteral("test"));
+        qmlRegisterUncreatableType<models::CollectionModel>("Noctara", 1, 0, "CollectionModel", QStringLiteral("test"));
+        return true;
+    }();
+    (void)registered;
+}
+
 }  // namespace
 
 TEST_SUITE("ui.pages")
 {
     TEST_CASE("a user page reused for another user loads that user's playlists on the Playlists tab")
     {
-        static const bool registered = [] {
-            qmlRegisterUncreatableType<models::UserDetail>("Noctara", 1, 0, "UserDetail", QStringLiteral("test"));
-            qmlRegisterUncreatableType<models::CollectionModel>("Noctara", 1, 0, "CollectionModel",
-                                                                QStringLiteral("test"));
-            return true;
-        }();
-        (void)registered;
+        registerDetailTypes();
         RecordingClient client;
         models::UserDetail first(client, 1, 20);
         models::UserDetail second(client, 2, 20);
@@ -893,6 +898,41 @@ TEST_SUITE("ui.pages")
         REQUIRE(harness.item("page") == page);
         CHECK(page->property("tab").toString() == QStringLiteral("playlists"));
         CHECK(test::waitUntil([&] { return client.asked(QStringLiteral("/users/2/playlists")); }, 1000));
+    }
+
+    TEST_CASE("the home page's date and greeting are current again when the page is shown")
+    {
+        registerDetailTypes();
+        RecordingClient client;
+        models::CollectionModel history(client);
+        models::CollectionModel feed(client);
+        models::CollectionModel charts(client);
+        for (models::CollectionModel* model : {&history, &feed, &charts}) {
+            QQmlEngine::setObjectOwnership(model, QQmlEngine::CppOwnership);
+        }
+        stub::singleton("Catalog", [&](QJSEngine* js) {
+            QJSValue catalog = js->evaluate(QStringLiteral("({ensure: name => {}})"));
+            catalog.setProperty(QStringLiteral("history"), js->newQObject(&history));
+            catalog.setProperty(QStringLiteral("feed"), js->newQObject(&feed));
+            catalog.setProperty(QStringLiteral("charts"), js->newQObject(&charts));
+            return catalog;
+        });
+        stub::singleton("Account", QStringLiteral("({signedIn: false})"));
+        stub::singleton("Language", QStringLiteral("({localeName: 'en_US'})"));
+        const WindowHarness harness(R"(import "../pages"
+        Window {
+            width: 800; height: 600; visible: true
+            property Item page: page
+            HomePage { id: page; anchors.fill: parent }
+        })");
+        QQuickItem* page = harness.item("page");
+        REQUIRE(page != nullptr);
+        // Pages stay alive while hidden: coming back hours or days later must not show the old date and greeting.
+        QTest::qWait(50);
+        const QDateTime before = QDateTime::currentDateTime();
+        page->setVisible(false);
+        page->setVisible(true);
+        CHECK(page->property("now").toDateTime() >= before);
     }
 }
 

@@ -13,7 +13,16 @@ Flickable {
     boundsBehavior: Flickable.StopAtBounds
     ScrollBar.vertical: ScrollBar {}
 
-    readonly property date now: new Date()
+    // The page stays alive once visited: the date and greeting follow the clock while shown and catch up when the
+    // page comes back.
+    property date now: new Date()
+    onVisibleChanged: if (visible) now = new Date()
+    Timer {
+        interval: 60000
+        repeat: true
+        running: root.visible
+        onTriggered: root.now = new Date()
+    }
 
     function load() {
         if (Account.signedIn) {
