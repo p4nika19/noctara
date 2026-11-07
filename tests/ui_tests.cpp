@@ -583,6 +583,32 @@ TEST_SUITE("ui.components")
         CHECK(menu->property("highlighted").toInt() == 2);
     }
 
+    TEST_CASE("a context menu is as wide as its own entries, not as the widest earlier menu")
+    {
+        const WindowHarness harness(R"(Window {
+            width: 800; height: 400; visible: true
+            property QtObject menu: menu
+            ContextMenu { id: menu }
+        })");
+        QObject* menu = harness.object("menu");
+        QVariant item = QVariant::fromValue<QObject*>(harness.window->contentItem());
+        const auto show = [&](const QString& text) {
+            const QVariantList actions{QVariantMap{{QStringLiteral("text"), text}}};
+            REQUIRE(QMetaObject::invokeMethod(menu, "show", Q_ARG(QVariant, QVariant(actions)), Q_ARG(QVariant, item),
+                                              Q_ARG(QVariant, QVariant(QPointF(10, 10)))));
+            QCoreApplication::processEvents();
+        };
+        show(QStringLiteral("Play"));
+        const qreal narrow = menu->property("implicitWidth").toReal();
+        CHECK(narrow == 220);
+        QMetaObject::invokeMethod(menu, "close");
+        show(QStringLiteral("A rather long menu entry that needs much more room than the others"));
+        REQUIRE(menu->property("implicitWidth").toReal() > narrow);
+        QMetaObject::invokeMethod(menu, "close");
+        show(QStringLiteral("Play"));
+        CHECK(menu->property("implicitWidth").toReal() == narrow);
+    }
+
     TEST_CASE("the full player's flying cover is decoded once, not on every animation frame")
     {
         std::atomic<int> requests = 0;

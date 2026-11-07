@@ -13,6 +13,7 @@ T.Popup {
 
     // `item` and `point` (in the item's coordinates) place the menu at the pointer.
     function show(newActions, item, point) {
+        list.widest = 0  // the new entries measure themselves as they are created
         actions = newActions.filter(a => a !== null && a !== undefined)
         highlighted = -1
         list.forceLayout()  // the Column sizes itself on the next frame: clamp with this menu's height, not the last one's
