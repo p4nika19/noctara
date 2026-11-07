@@ -46,7 +46,8 @@ public:
 class TcpServer {
 public:
     using Handler = std::function<void(int fd)>;
-    // Listens on 127.0.0.1, or on ::1 when `ipv6` is set.
+    // Listens on 127.0.0.1, or on ::1 when `ipv6` is set. When `port` cannot be bound, port() is 0 and nothing
+    // is accepted.
     explicit TcpServer(Handler handler, std::uint16_t port = 0, bool ipv6 = false);
     ~TcpServer();
     TcpServer(const TcpServer&) = delete;
@@ -135,6 +136,7 @@ public:
     // Answers TCP queries with an id that does not match the query's.
     void setWrongTcpId(bool wrong) { m_wrongTcpId = wrong; }
     [[nodiscard]] std::uint16_t port() const noexcept { return m_port; }
+    [[nodiscard]] std::uint16_t tcpPort() const noexcept { return m_tcp->port(); }
     [[nodiscard]] int udpQueries() const noexcept { return m_udpQueries.load(); }
     [[nodiscard]] int tcpQueries() const noexcept { return m_tcpQueries.load(); }
 

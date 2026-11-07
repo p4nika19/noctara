@@ -269,6 +269,17 @@ TEST_SUITE("net.resolver")
         CHECK(system.calls == 0);
     }
 
+    TEST_CASE("the mock TCP listener reports a port it could not bind, and DNS serves UDP and TCP on one port")
+    {
+        const test::TcpServer taken([](int) {});
+        REQUIRE(taken.port() != 0);
+        const test::TcpServer clash([](int) {}, taken.port());
+        CHECK(clash.port() == 0);
+
+        const test::DnsServer server;
+        CHECK(server.tcpPort() == server.port());
+    }
+
     TEST_CASE("a TCP answer whose id does not match the query moves on to the next server")
     {
         test::DnsServer wrong;

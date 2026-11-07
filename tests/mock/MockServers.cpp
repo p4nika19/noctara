@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <array>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <netinet/in.h>
 #include <openssl/err.h>
@@ -197,21 +198,28 @@ TcpServer::TcpServer(Handler handler, std::uint16_t port, bool ipv6)
         address.sin6_family = AF_INET6;
         address.sin6_port = htons(port);
         address.sin6_addr = in6addr_loopback;
-        ::bind(m_listen, reinterpret_cast<sockaddr*>(&address), sizeof(address));
-        ::listen(m_listen, 64);
-        socklen_t length = sizeof(address);
-        ::getsockname(m_listen, reinterpret_cast<sockaddr*>(&address), &length);
-        m_port = ntohs(address.sin6_port);
+        if (::bind(m_listen, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == 0 &&
+            ::listen(m_listen, 64) == 0) {
+            socklen_t length = sizeof(address);
+            ::getsockname(m_listen, reinterpret_cast<sockaddr*>(&address), &length);
+            m_port = ntohs(address.sin6_port);
+        }
     } else {
         sockaddr_in address{};
         address.sin_family = AF_INET;
         address.sin_port = htons(port);
         address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-        ::bind(m_listen, reinterpret_cast<sockaddr*>(&address), sizeof(address));
-        ::listen(m_listen, 64);
-        socklen_t length = sizeof(address);
-        ::getsockname(m_listen, reinterpret_cast<sockaddr*>(&address), &length);
-        m_port = ntohs(address.sin_port);
+        if (::bind(m_listen, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == 0 &&
+            ::listen(m_listen, 64) == 0) {
+            socklen_t length = sizeof(address);
+            ::getsockname(m_listen, reinterpret_cast<sockaddr*>(&address), &length);
+            m_port = ntohs(address.sin_port);
+        }
+    }
+    if (m_port == 0) {
+        // Not listening: without this, listen() would have bound some other port, or poll() would spin.
+        ::close(m_listen);
+        m_listen = -1;
     }
     m_wake = ::eventfd(0, EFD_CLOEXEC);
     m_acceptor = std::jthread([this](const std::stop_token& stop) {
@@ -383,14 +391,47 @@ void HttpServer::serve(Stream& stream)
 
 DnsServer::DnsServer()
 {
-    m_udp = ::socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0);
-    sockaddr_in address{};
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    ::bind(m_udp, reinterpret_cast<sockaddr*>(&address), sizeof(address));
-    socklen_t length = sizeof(address);
-    ::getsockname(m_udp, reinterpret_cast<sockaddr*>(&address), &length);
-    m_port = ntohs(address.sin_port);
+    const TcpServer::Handler tcp = [this](int fd) {
+        std::array<char, 2> prefix{};
+        while (readExact(fd, prefix.data(), 2)) {
+            const auto size = static_cast<std::size_t>((static_cast<std::uint8_t>(prefix[0]) << 8U) |
+                                                       static_cast<std::uint8_t>(prefix[1]));
+            QByteArray query(static_cast<qsizetype>(size), '\0');
+            if (!readExact(fd, query.data(), size)) {
+                return;
+            }
+            ++m_tcpQueries;
+            QByteArray reply = answer(query, false);
+            if (m_wrongTcpId && reply.size() >= 2) {
+                reply[1] = static_cast<char>(static_cast<std::uint8_t>(reply[1]) + 1U);
+            }
+            QByteArray framed;
+            put16(framed, static_cast<std::uint16_t>(reply.size()));
+            FdStream(fd).write(framed + reply);
+        }
+    };
+    // UDP and TCP ports are allocated separately: the TCP side of a fresh UDP port may already be in use.
+    for (int attempt = 0; m_tcp == nullptr; ++attempt) {
+        m_udp = ::socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0);
+        sockaddr_in address{};
+        address.sin_family = AF_INET;
+        address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+        ::bind(m_udp, reinterpret_cast<sockaddr*>(&address), sizeof(address));
+        socklen_t length = sizeof(address);
+        ::getsockname(m_udp, reinterpret_cast<sockaddr*>(&address), &length);
+        m_port = ntohs(address.sin_port);
+        auto server = std::make_unique<TcpServer>(tcp, m_port);
+        if (m_port != 0 && server->port() == m_port) {
+            m_tcp = std::move(server);
+        } else {
+            server.reset();
+            ::close(m_udp);
+            if (attempt == 100) {
+                std::fputs("DnsServer: no port free for both UDP and TCP\n", stderr);
+                std::abort();
+            }
+        }
+    }
     m_wake = ::eventfd(0, EFD_CLOEXEC);
     m_udpThread = std::jthread([this] {
         std::array<pollfd, 2> fds{pollfd{m_udp, POLLIN, 0}, pollfd{m_wake, POLLIN, 0}};
@@ -409,27 +450,6 @@ DnsServer::DnsServer()
                      reinterpret_cast<sockaddr*>(&peer), peerLength);
         }
     });
-    m_tcp = std::make_unique<TcpServer>(
-        [this](int fd) {
-            std::array<char, 2> prefix{};
-            while (readExact(fd, prefix.data(), 2)) {
-                const auto size = static_cast<std::size_t>((static_cast<std::uint8_t>(prefix[0]) << 8U) |
-                                                           static_cast<std::uint8_t>(prefix[1]));
-                QByteArray query(static_cast<qsizetype>(size), '\0');
-                if (!readExact(fd, query.data(), size)) {
-                    return;
-                }
-                ++m_tcpQueries;
-                QByteArray reply = answer(query, false);
-                if (m_wrongTcpId && reply.size() >= 2) {
-                    reply[1] = static_cast<char>(static_cast<std::uint8_t>(reply[1]) + 1U);
-                }
-                QByteArray framed;
-                put16(framed, static_cast<std::uint16_t>(reply.size()));
-                FdStream(fd).write(framed + reply);
-            }
-        },
-        m_port);
 }
 
 DnsServer::~DnsServer()
