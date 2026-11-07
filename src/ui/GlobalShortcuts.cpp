@@ -124,6 +124,9 @@ void GlobalShortcuts::onBound(uint response, const QVariantMap& /*results*/)
                                              SLOT(onBound(uint, QVariantMap)));
     m_pending.clear();
     qCInfo(lcUi) << "global shortcuts:" << (response == 0 ? "bound" : "not bound") << m_actions.size() << "actions";
+    if (m_enabled && m_session.isEmpty()) {
+        setEnabled(true, m_actions);  // turned off and on again while this bind was pending: open a new session
+    }
 }
 
 void GlobalShortcuts::onActivated(const QDBusObjectPath& session, const QString& id, qulonglong /*timestamp*/,
