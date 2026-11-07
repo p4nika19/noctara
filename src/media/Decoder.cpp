@@ -101,6 +101,13 @@ struct Decoder::Impl {
         return *got == 0 ? AVERROR_EOF : static_cast<int>(*got);
     }
 
+    // FFmpeg never opens a URL: a demuxer that would fetch nested resources (DASH, concat, ...) is refused.
+    static int refuseOpen(AVFormatContext* /*context*/, AVIOContext** /*pb*/, const char* /*url*/, int /*flags*/,
+                          AVDictionary** /*options*/)
+    {
+        return AVERROR(EPERM);
+    }
+
     static std::int64_t seek(void* opaque, std::int64_t offset, int whence)
     {
         auto* self = static_cast<Impl*>(opaque);
@@ -195,6 +202,7 @@ Result<std::unique_ptr<Decoder>> Decoder::open(StreamSource& source, AudioFormat
         return fail(ErrorCode::DecodeFailed, "out of memory");
     }
     format->pb = io;
+    format->io_open = &Impl::refuseOpen;
     format->flags =
         static_cast<int>(static_cast<unsigned>(format->flags) | static_cast<unsigned>(AVFMT_FLAG_CUSTOM_IO));
     // Keep the first audio quick: audio needs only a few packets to be understood.

@@ -5,6 +5,7 @@
 #include "api/ApiClient.hpp"
 #include "api/Streams.hpp"
 #include "mock/FakeOrigin.hpp"
+#include "mock/MockServers.hpp"
 
 #include "cache/AudioCache.hpp"
 #include "cache/CacheLayout.hpp"
@@ -797,6 +798,38 @@ TEST_SUITE("media.decoder")
         const auto reader = cache.open(
             trackInfo(QStringLiteral("junk"), cache::StreamProtocol::Progressive, QStringLiteral("audio/mpeg")), url);
         const Decoded decoded = decodeAll(reader);
+        REQUIRE(decoded.error.has_value());
+        CHECK(decoded.error->code == ErrorCode::DecodeFailed);
+    }
+
+    TEST_CASE("a manifest stored as the stream never makes FFmpeg open the URLs it lists")
+    {
+        const QByteArray sine = fixture(QStringLiteral("sine.mp3"));
+        test::HttpServer server([&](const test::HttpRequest&) {
+            return test::HttpReply{.headers = {{"Content-Type", "audio/mpeg"}}, .body = sine};
+        });
+        const QByteArray media = QByteArray("http://127.0.0.1:") + QByteArray::number(server.port()) + "/sine.mp3";
+        const QByteArray manifest =
+            R"(<?xml version="1.0" encoding="utf-8"?>
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" profiles="urn:mpeg:dash:profile:isoff-on-demand:2011" type="static" mediaPresentationDuration="PT2S" minBufferTime="PT1S">
+ <Period>
+  <AdaptationSet mimeType="audio/mpeg" contentType="audio">
+   <Representation id="a" bandwidth="128000" codecs="mp3">
+    <BaseURL>)" +
+            media + R"(</BaseURL>
+   </Representation>
+  </AdaptationSet>
+ </Period>
+</MPD>
+)";
+        Cache cache;
+        const QString url = QStringLiteral("https://cdn.test/manifest.mp3");
+        cache.origin.serve(url, {.body = manifest});
+        const auto reader = cache.open(
+            trackInfo(QStringLiteral("manifest"), cache::StreamProtocol::Progressive, QStringLiteral("audio/mpeg")),
+            url);
+        const Decoded decoded = decodeAll(reader);
+        CHECK(server.requests().empty());
         REQUIRE(decoded.error.has_value());
         CHECK(decoded.error->code == ErrorCode::DecodeFailed);
     }
