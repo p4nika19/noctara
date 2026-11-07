@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          pacman -Syu --noconfirm --needed git clang lld mold xmake unzip \
+          pacman -Syu --noconfirm --needed git clang lld mold xmake pkgconf unzip \
             qt6-base qt6-declarative qt6-svg qt6-shadertools qt6-tools qt6-translations \
             qt6-multimedia tomlplusplus vulkan-headers vulkan-icd-loader mesa xorg-server-xvfb fontconfig noto-fonts \
             curl libarchive libproxy libsecret openssl sqlite simdjson taglib xxhash ffmpeg
@@ -43,7 +43,7 @@ jobs:
     container: archlinux:latest
     steps:
       - run: |
-          pacman -Syu --noconfirm --needed git clang mold xmake \
+          pacman -Syu --noconfirm --needed git clang mold xmake pkgconf \
             qt6-base qt6-declarative qt6-svg qt6-shadertools qt6-tools qt6-multimedia tomlplusplus vulkan-headers \
             curl libarchive libproxy libsecret openssl sqlite simdjson taglib xxhash ffmpeg
       - uses: actions/checkout@v4
