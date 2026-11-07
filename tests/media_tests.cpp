@@ -1495,6 +1495,40 @@ TEST_SUITE("media.mpris")
         CHECK(mprisTrackPath(QStringLiteral("a-b.c")).path() == u"/org/noctara/track/ta_b_c");
     }
 
+    TEST_CASE("every Player property that changes with the track is sent when the track changes")
+    {
+        Player player;
+        MprisService service(*player.controller, nullptr);
+        auto* adaptor = service.findChild<MprisPlayerAdaptor*>();
+        REQUIRE(adaptor != nullptr);
+        const auto snapshot = [&] {
+            QVariantMap values;
+            const QMetaObject* meta = adaptor->metaObject();
+            for (int i = meta->propertyOffset(); i < meta->propertyCount(); ++i) {
+                values.insert(QString::fromLatin1(meta->property(i).name()), meta->property(i).read(adaptor));
+            }
+            return values;
+        };
+        const QVariantMap before = snapshot();
+        player.controller->playTracks({apiTrack(1), apiTrack(2)}, 0, {});
+        REQUIRE(player.controller->hasTrack());
+        const QVariantMap after = snapshot();
+        const QVariantMap sent = service.trackProperties();
+        // PlaybackStatus goes out with the state change; Position never emits a change.
+        for (const QString& name : after.keys()) {
+            if (name == u"PlaybackStatus" || name == u"Position" || after.value(name) == before.value(name)) {
+                continue;
+            }
+            CAPTURE(name);
+            CHECK(sent.contains(name));
+        }
+        for (const QString& name : {QStringLiteral("CanPlay"), QStringLiteral("CanPause"), QStringLiteral("CanSeek")}) {
+            CAPTURE(name);
+            CHECK(sent.value(name) == QVariant(true));
+            CHECK(after.value(name) == QVariant(true));
+        }
+    }
+
     TEST_CASE("a cover asked for twice at once is kept once, so a later eviction never deletes its current file")
     {
         QTemporaryDir dir;

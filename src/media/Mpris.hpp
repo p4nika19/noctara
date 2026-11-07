@@ -44,6 +44,8 @@ public:
     [[nodiscard]] PlaybackController& player() noexcept { return m_player; }
     [[nodiscard]] QVariantMap metadata() const;
     [[nodiscard]] QString playbackStatus() const;
+    // The Player properties that change with the track, as sent in PropertiesChanged when it changes.
+    [[nodiscard]] QVariantMap trackProperties() const;
 
 Q_SIGNALS:
     // A client asked to bring the window to the front.

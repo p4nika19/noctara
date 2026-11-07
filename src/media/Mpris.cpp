@@ -138,10 +138,18 @@ void MprisService::trackChanged()
             }
         });
     }
-    propertiesChanged(kPlayerInterface, {{QStringLiteral("Metadata"), metadata()},
-                                         {QStringLiteral("CanGoNext"), m_player.canGoNext()},
-                                         {QStringLiteral("CanGoPrevious"), m_player.canGoPrevious()},
-                                         {QStringLiteral("CanPlay"), m_player.hasTrack()}});
+    propertiesChanged(kPlayerInterface, trackProperties());
+}
+
+QVariantMap MprisService::trackProperties() const
+{
+    // CanPause and CanSeek follow CanPlay: clients caching them must hear about every change.
+    return {{QStringLiteral("Metadata"), metadata()},
+            {QStringLiteral("CanGoNext"), m_player.canGoNext()},
+            {QStringLiteral("CanGoPrevious"), m_player.canGoPrevious()},
+            {QStringLiteral("CanPlay"), m_player.hasTrack()},
+            {QStringLiteral("CanPause"), m_player.hasTrack()},
+            {QStringLiteral("CanSeek"), m_player.hasTrack()}};
 }
 
 QVariantMap MprisService::metadata() const
