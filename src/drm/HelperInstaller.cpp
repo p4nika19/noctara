@@ -205,7 +205,11 @@ private:
             }
         };
         callbacks.onData = [this](const QByteArray& chunk) {
+            if (m_writeFailed) {
+                return;  // already on its way when a write failed: it would land after a gap
+            }
             if (m_file->write(chunk) != chunk.size()) {
+                (void)m_file->resize(m_offset);  // drop a partly written chunk: the part stays a prefix
                 m_request.cancel();
                 m_writeFailed = true;
                 return;
