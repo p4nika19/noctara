@@ -128,7 +128,12 @@ Result<void> writeViaTemp(const QString& path, QByteArrayView data, mode_t mode,
         cleanup();
         return fail(errorCodeFromErrno(err), errnoDetail("fsync", tempPath, err));
     }
-    fd.reset();
+    // Network and FUSE filesystems may report deferred write-back errors only here; not retried on EINTR.
+    if (::close(fd.release()) != 0) {
+        const int err = errno;
+        cleanup();
+        return fail(errorCodeFromErrno(err), errnoDetail("close", tempPath, err));
+    }
 
     if (publish == Publish::Replace) {
         if (::rename(nativeTemp.constData(), nativeTarget.constData()) != 0) {
