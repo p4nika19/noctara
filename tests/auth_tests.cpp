@@ -8,6 +8,7 @@
 #include "api/Session.hpp"
 #include "api/Snapshot.hpp"
 #include "mock/FakeApi.hpp"
+#include "mock/MockServers.hpp"
 
 #include "auth/SecretStore.hpp"
 #include "i18n/LanguageManager.hpp"
@@ -657,5 +658,35 @@ TEST_SUITE("ui.network-credentials")
         h.releaseOldCredentials();
         CHECK(h.controller.proxyUsername() == u"old");
         CHECK(test::waitUntil([&] { return h.network.config().proxy.manual.username == u"old"; }, 2000));
+    }
+
+    TEST_CASE("recent requests and the copied report show the resolver, address, size and attempt")
+    {
+        test::HttpServer origin([](const test::HttpRequest&) {
+            return test::HttpReply{.status = 200, .headers = {}, .body = "twelve bytes"};
+        });
+        NetworkHarness h;
+        REQUIRE(h.noProxy);
+        h.releaseOldCredentials();
+        QObject context;
+        bool finished = false;
+        net::Request request;
+        // "%2F" in the path: a chained arg() would replace the "%2" with the next argument.
+        request.url = QUrl(QStringLiteral("http://127.0.0.1:%1/a%2Fb").arg(origin.port()), QUrl::StrictMode);
+        h.network.transport().send(request, &context,
+                                   {.onResponse = {}, .onData = {}, .onFinished = [&](auto) { finished = true; }});
+        REQUIRE(test::waitUntil([&] { return finished && !h.controller.recentRequests().isEmpty(); }, 10000));
+
+        const QVariantMap entry = h.controller.recentRequests().constFirst().toMap();
+        CHECK(entry.value(QStringLiteral("dns")).toString() == ui::NetworkController::tr("IP address, no lookup"));
+        CHECK(entry.value(QStringLiteral("address")).toString() == u"127.0.0.1");
+        CHECK(entry.value(QStringLiteral("bytes")).toLongLong() == 12);
+        CHECK(entry.value(QStringLiteral("attempt")).toInt() == 1);
+        CHECK_FALSE(entry.value(QStringLiteral("internal")).toBool());
+
+        const QString report = h.controller.report();
+        INFO(report.toStdString());
+        CHECK(report.contains(QStringLiteral("/a%2Fb → 200")));
+        CHECK(report.contains(QStringLiteral("[dns literal, 127.0.0.1, 12 B]")));
     }
 }

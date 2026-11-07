@@ -2,6 +2,7 @@
 
 #include "auth/SecretStore.hpp"
 #include "core/Log.hpp"
+#include "core/NetAddress.hpp"
 #include "core/Strings.hpp"
 #include "i18n/ErrorMessages.hpp"
 #include "i18n/LanguageManager.hpp"
@@ -17,12 +18,36 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLocale>
+#include <QUrl>
 
 namespace noctara::ui {
 
 namespace {
 
 namespace keys = settings::keys;
+
+// Which resolver answered for the request's host. A host name that was never looked up locally went to a proxy
+// that resolves names itself.
+bool lookedUpByProxy(const net::RequestRecord& record)
+{
+    return record.dnsSource == net::ResolverSource::Literal && !IpAddress::parse(QUrl(record.url).host());
+}
+
+QString dnsSourceText(const net::RequestRecord& record)
+{
+    switch (record.dnsSource) {
+    case net::ResolverSource::Literal:
+        return lookedUpByProxy(record) ? NetworkController::tr("resolved by the proxy")
+                                       : NetworkController::tr("IP address, no lookup");
+    case net::ResolverSource::Override: return NetworkController::tr("host override");
+    case net::ResolverSource::Cache: return NetworkController::tr("DNS cache");
+    case net::ResolverSource::System: return NetworkController::tr("system resolver");
+    case net::ResolverSource::SystemFallback: return NetworkController::tr("system resolver (fallback)");
+    case net::ResolverSource::Servers: return NetworkController::tr("DNS servers");
+    case net::ResolverSource::Doh: return NetworkController::tr("DNS over HTTPS");
+    }
+    return {};
+}
 
 QString milliseconds(double value)
 {
@@ -383,6 +408,12 @@ QVariantList NetworkController::recentRequests() const
                           : QStringLiteral("%1 %2").arg(record.status).arg(QString::fromLatin1(record.httpVersion))},
             {QStringLiteral("latency"), milliseconds(record.timings.totalMs)},
             {QStringLiteral("via"), record.route == u"direct" ? tr("direct") : record.route},
+            {QStringLiteral("dns"), dnsSourceText(record)},
+            {QStringLiteral("address"), record.remoteAddress},
+            {QStringLiteral("bytes"), QVariant::fromValue(qint64{record.bytes})},
+            {QStringLiteral("attempt"), record.attempt},
+            {QStringLiteral("internal"), record.internal},
+            {QStringLiteral("detail"), log::redactUrlCredentials(record.errorDetail)},
         });
     }
     return list;
@@ -423,14 +454,34 @@ QString NetworkController::report() const
     lines << QString() << tr("Recent requests:");
     for (const net::RequestRecord& record : m_service.recentRequests()) {
         const QString outcome = record.error ? latin(errorCodeName(*record.error)) : QString::number(record.status);
-        lines << QStringLiteral("  %1 %2 %3 → %4 %5 %6 ms (dns %7, connect %8, tls %9) %10")
-                     .arg(record.finishedAt.toString(QStringLiteral("HH:mm:ss")), QString::fromLatin1(record.method),
-                          record.url, outcome, QString::fromLatin1(record.httpVersion))
-                     .arg(record.timings.totalMs, 0, 'f', 0)
-                     .arg(record.timings.dnsMs, 0, 'f', 0)
-                     .arg(record.timings.connectMs, 0, 'f', 0)
-                     .arg(record.timings.tlsMs, 0, 'f', 0)
-                     .arg(record.route);
+        const auto ms = [](double value) {
+            return QString::number(value, 'f', 0);
+        };
+        // One arg() call: the URL may contain "%2F" and the like, which a chained arg() would replace again.
+        QString line =
+            QStringLiteral("  %1 %2 %3 → %4 %5 %6 ms (dns %7, connect %8, tls %9) %10")
+                .arg(record.finishedAt.toString(QStringLiteral("HH:mm:ss")), QString::fromLatin1(record.method),
+                     record.url, outcome, QString::fromLatin1(record.httpVersion), ms(record.timings.totalMs),
+                     ms(record.timings.dnsMs), ms(record.timings.connectMs), ms(record.timings.tlsMs), record.route);
+        QStringList extras{QStringLiteral("dns ") + (lookedUpByProxy(record)
+                                                         ? QStringLiteral("proxy")
+                                                         : QString::fromLatin1(resolverSourceName(record.dnsSource)))};
+        if (!record.remoteAddress.isEmpty()) {
+            extras << record.remoteAddress;
+        }
+        if (record.bytes > 0) {
+            extras << QStringLiteral("%1 B").arg(record.bytes);
+        }
+        if (record.attempt > 1) {
+            extras << QStringLiteral("attempt %1").arg(record.attempt);
+        }
+        if (record.internal) {
+            extras << QStringLiteral("internal DoH query");
+        }
+        lines << line + QStringLiteral(" [") + extras.join(QStringLiteral(", ")) + u']';
+        if (!record.errorDetail.isEmpty()) {
+            lines << QStringLiteral("    ") + log::redactUrlCredentials(record.errorDetail);
+        }
     }
     return lines.join(u'\n');
 }

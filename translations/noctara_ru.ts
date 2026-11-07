@@ -1734,6 +1734,23 @@
         <extracomment>%1 = status or error, %2 = duration, %3 = &quot;direct&quot; or the proxy</extracomment>
         <translation>%1 · %2 · %3</translation>
     </message>
+    <message>
+        <location line="+10"/>
+        <source>DNS: %1</source>
+        <extracomment>Which resolver answered for the request&apos;s host, e.g. &quot;DNS: system resolver&quot;</extracomment>
+        <translation>DNS: %1</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>attempt %1</source>
+        <extracomment>%1 = number of the attempt (retries count from 2)</extracomment>
+        <translation>попытка %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>DNS-over-HTTPS lookup</source>
+        <translation>запрос DNS-over-HTTPS</translation>
+    </message>
 </context>
 <context>
     <name>NetworkHeader</name>
@@ -2318,6 +2335,11 @@
         <location filename="../src/app/main.cpp" line="+204"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation>Установленная libcurl собрана без поддержки HTTP/3.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>The installed libcurl was built without support for HTTPS proxies.</source>
+        <translation>Установленная libcurl собрана без поддержки HTTPS-прокси.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -5041,12 +5063,12 @@
         <translation>Вставьте OAuth-токен SoundCloud, чтобы войти.</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+52"/>
         <source>Noctara SoundCloud session</source>
         <translation>Сессия SoundCloud в Noctara</translation>
     </message>
     <message>
-        <location line="-133"/>
+        <location line="-128"/>
         <source>Could not inspect the installed browser profiles.</source>
         <translation>Не удалось просмотреть установленные профили браузеров.</translation>
     </message>
@@ -5104,7 +5126,7 @@
         <translation>Это не похоже на OAuth-токен. Скопируйте только значение oauth_token, без пробелов.</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+55"/>
         <source>Signed in, but no persistent secret store is available, so you will need to sign in again after Noctara quits.</source>
         <translation>Вход выполнен, но постоянное хранилище секретов недоступно, поэтому после выхода из Noctara потребуется войти снова.</translation>
     </message>
@@ -5243,7 +5265,7 @@
 <context>
     <name>noctara::ui::NetworkController</name>
     <message>
-        <location filename="../src/ui/NetworkController.cpp" line="+30"/>
+        <location filename="../src/ui/NetworkController.cpp" line="+55"/>
         <source>%1 ms</source>
         <extracomment>Duration in milliseconds, e.g. &quot;42 ms&quot;</extracomment>
         <translation>%1 мс</translation>
@@ -5375,7 +5397,8 @@
         <translation>IP-адрес</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-309"/>
+        <location line="+310"/>
         <source>host override</source>
         <translation>свой адрес хоста</translation>
     </message>
@@ -5385,17 +5408,44 @@
         <translation>кэш</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-309"/>
+        <location line="+310"/>
         <source>system resolver</source>
         <translation>системный DNS</translation>
     </message>
     <message>
+        <location line="-314"/>
+        <source>resolved by the proxy</source>
+        <translation>разрешил прокси</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <source>IP address, no lookup</source>
+        <translation>IP-адрес, без запроса DNS</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>DNS cache</source>
+        <translation>кэш DNS</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <location line="+310"/>
         <source>system resolver (fallback)</source>
         <translation>системный DNS (резервный)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-309"/>
+        <source>DNS servers</source>
+        <translation>DNS-серверы</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>DNS over HTTPS</source>
+        <translation>DNS over HTTPS</translation>
+    </message>
+    <message>
+        <location line="+312"/>
         <source>DNS over HTTPS (%1)</source>
         <extracomment>%1 = DoH server host name</extracomment>
         <translation>DNS over HTTPS (%1)</translation>
@@ -5407,7 +5457,7 @@
         <translation>Доступен (HTTP %1, %2)</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+47"/>
         <source>Noctara network report (%1, %2)</source>
         <extracomment>Title of the copied network report; %1 = app version, %2 = date and time</extracomment>
         <translation>Сетевой отчёт Noctara (%1, %2)</translation>
@@ -5485,7 +5535,7 @@
         <translation>Последние запросы:</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+37"/>
         <source>Network report copied. Passwords and tokens are not included.</source>
         <translation>Сетевой отчёт скопирован. Пароли и токены в него не входят.</translation>
     </message>
@@ -5558,7 +5608,7 @@
         <translation>Темы «%1» нет в папке тем; используется встроенное оформление.</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+21"/>
         <source>That file is not a valid theme (TOML syntax error).</source>
         <translation>Этот файл — не корректная тема (синтаксическая ошибка TOML).</translation>
     </message>

@@ -1725,6 +1725,23 @@
         <extracomment>%1 = status or error, %2 = duration, %3 = &quot;direct&quot; or the proxy</extracomment>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location line="+10"/>
+        <source>DNS: %1</source>
+        <extracomment>Which resolver answered for the request&apos;s host, e.g. &quot;DNS: system resolver&quot;</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>attempt %1</source>
+        <extracomment>%1 = number of the attempt (retries count from 2)</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>DNS-over-HTTPS lookup</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NetworkHeader</name>
@@ -2306,6 +2323,11 @@
     <message>
         <location filename="../src/app/main.cpp" line="+204"/>
         <source>The installed libcurl was built without HTTP/3.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>The installed libcurl was built without support for HTTPS proxies.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5028,12 +5050,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+52"/>
         <source>Noctara SoundCloud session</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-133"/>
+        <location line="-128"/>
         <source>Could not inspect the installed browser profiles.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5091,7 +5113,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+55"/>
         <source>Signed in, but no persistent secret store is available, so you will need to sign in again after Noctara quits.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5230,7 +5252,7 @@
 <context>
     <name>noctara::ui::NetworkController</name>
     <message>
-        <location filename="../src/ui/NetworkController.cpp" line="+30"/>
+        <location filename="../src/ui/NetworkController.cpp" line="+55"/>
         <source>%1 ms</source>
         <extracomment>Duration in milliseconds, e.g. &quot;42 ms&quot;</extracomment>
         <translation type="unfinished"></translation>
@@ -5362,7 +5384,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-309"/>
+        <location line="+310"/>
         <source>host override</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5372,17 +5395,44 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-309"/>
+        <location line="+310"/>
         <source>system resolver</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="-314"/>
+        <source>resolved by the proxy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <source>IP address, no lookup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>DNS cache</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <location line="+310"/>
         <source>system resolver (fallback)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-309"/>
+        <source>DNS servers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>DNS over HTTPS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+312"/>
         <source>DNS over HTTPS (%1)</source>
         <extracomment>%1 = DoH server host name</extracomment>
         <translation type="unfinished"></translation>
@@ -5394,7 +5444,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+47"/>
         <source>Noctara network report (%1, %2)</source>
         <extracomment>Title of the copied network report; %1 = app version, %2 = date and time</extracomment>
         <translation type="unfinished"></translation>
@@ -5472,7 +5522,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+37"/>
         <source>Network report copied. Passwords and tokens are not included.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5545,7 +5595,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+21"/>
         <source>That file is not a valid theme (TOML syntax error).</source>
         <translation type="unfinished"></translation>
     </message>
