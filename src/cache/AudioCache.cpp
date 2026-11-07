@@ -190,7 +190,8 @@ TrackInfo AudioReader::info() const
 
 StreamProtocol AudioReader::protocol() const
 {
-    return info().protocol;
+    const std::scoped_lock lock(m_entry->mutex);
+    return m_entry->info.protocol;
 }
 
 std::int64_t AudioReader::contentLength() const
@@ -297,9 +298,10 @@ AudioReader::Piece AudioReader::tryRead(int piece)
     std::uint64_t sum = 0;
     bool present = false;
     QString dir;
-    const bool hls = info().protocol == StreamProtocol::Hls;
+    bool hls = false;
     {
         const std::scoped_lock lock(m_entry->mutex);
+        hls = m_entry->info.protocol == StreamProtocol::Hls;
         if (m_generation->reset) {
             return {Status::Failed, {}, Error{ErrorCode::ContentChanged, "the source changed"}};
         }

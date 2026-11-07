@@ -1,6 +1,7 @@
 #include "cache/LruLedger.hpp"
 
 #include <algorithm>
+#include <tuple>
 
 namespace noctara::cache {
 
@@ -65,22 +66,34 @@ const LruLedger::Item* LruLedger::find(const QByteArray& name) const
 
 std::vector<QByteArray> LruLedger::victims(std::int64_t bytesToFree, const QByteArray& keep) const
 {
-    std::vector<std::pair<std::int64_t, QByteArray>> candidates;
+    struct Candidate {
+        std::int64_t lastAccess;
+        QByteArray name;
+        std::int64_t bytes;
+    };
+    std::vector<Candidate> candidates;
     candidates.reserve(static_cast<std::size_t>(m_items.size()));
     for (auto it = m_items.cbegin(); it != m_items.cend(); ++it) {
         if (it->pins == 0 && it.key() != keep) {
-            candidates.emplace_back(it->lastAccess, it.key());
+            candidates.push_back({it->lastAccess, it.key(), it->bytes});
         }
     }
-    std::ranges::sort(candidates);  // oldest first; ties broken by name for determinism
+    // Oldest first; ties broken by name for determinism. A heap pops only the victims actually taken instead of
+    // sorting every entry of a full tier (names are unique, so the order is total and matches a full sort).
+    const auto later = [](const Candidate& a, const Candidate& b) {
+        return std::tie(a.lastAccess, a.name) > std::tie(b.lastAccess, b.name);
+    };
+    std::ranges::make_heap(candidates, later);
     std::vector<QByteArray> chosen;
     std::int64_t freed = 0;
-    for (const auto& [lastAccess, name] : candidates) {
+    while (!candidates.empty()) {
         if (bytesToFree >= 0 && freed >= bytesToFree) {
             break;
         }
-        freed += m_items.value(name).bytes;
-        chosen.push_back(name);
+        std::ranges::pop_heap(candidates, later);
+        freed += candidates.back().bytes;
+        chosen.push_back(std::move(candidates.back().name));
+        candidates.pop_back();
     }
     return chosen;
 }

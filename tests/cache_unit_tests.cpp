@@ -178,6 +178,22 @@ TEST_SUITE("cache.lru")
         ledger.remove("cc");
         CHECK(ledger.totalBytes() == 350);
     }
+
+    TEST_CASE("victims with equal access times come out in name order; a negative amount takes every one")
+    {
+        LruLedger ledger;
+        ledger.upsert("delta", 40, 7);
+        ledger.upsert("alpha", 10, 7);
+        ledger.upsert("charlie", 30, 3);
+        ledger.upsert("bravo", 20, 7);
+        ledger.upsert("echo", 50, 9);
+        CHECK(ledger.victims(-1) == std::vector<QByteArray>{"charlie", "alpha", "bravo", "delta", "echo"});
+        CHECK(ledger.victims(-1, "bravo") == std::vector<QByteArray>{"charlie", "alpha", "delta", "echo"});
+        CHECK(ledger.victims(40) == std::vector<QByteArray>{"charlie", "alpha"});
+        CHECK(ledger.victims(41) == std::vector<QByteArray>{"charlie", "alpha", "bravo"});
+        CHECK(ledger.victims(0).empty());
+        CHECK(ledger.victims(1000) == std::vector<QByteArray>{"charlie", "alpha", "bravo", "delta", "echo"});
+    }
 }
 
 TEST_SUITE("cache.memory")
