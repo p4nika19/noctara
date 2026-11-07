@@ -1,6 +1,7 @@
 // The SoundCloud API layer: JSON parsing into domain structs, endpoints, client_id discovery, the client's
 // deduplication, coalescing, rate-limit pause and 401 handling (against tests/mock/FakeApi.hpp), stream
 // selection, and the collection model's pagination and hydration.
+#include "ModelTester.hpp"
 #include "TestUtil.hpp"
 #include "api/ApiClient.hpp"
 #include "api/ApiService.hpp"
@@ -18,7 +19,6 @@
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
 
-#include <QAbstractItemModelTester>
 #include <QElapsedTimer>
 #include <QFile>
 #include <QJsonArray>
@@ -673,7 +673,7 @@ TEST_SUITE("models.collection")
             return FakeApi::reply(503, "{}");
         });
         models::CollectionModel model(h.client);
-        QAbstractItemModelTester tester(&model, QAbstractItemModelTester::FailureReportingMode::Warning);
+        test::ModelTester tester(&model);
         model.setSource(
             [](int limit) { return endpoints::search(QStringLiteral("x"), endpoints::SearchKind::Tracks, limit); }, 20);
         CHECK(model.loading());
@@ -711,7 +711,7 @@ TEST_SUITE("models.collection")
             entries.push_back({.item = track, .at = {}, .repostedBy = {}});
         }
         models::CollectionModel model(h.client);
-        QAbstractItemModelTester tester(&model, QAbstractItemModelTester::FailureReportingMode::Warning);
+        test::ModelTester tester(&model);
         model.setEntries(std::move(entries));
         CHECK(model.data(model.index(1), models::CollectionModel::PendingRole).toBool());
         (void)model.data(model.index(1), models::CollectionModel::TitleRole);  // a view asks for both stubs
@@ -731,7 +731,7 @@ TEST_SUITE("models.collection")
             return FakeApi::reply(200, empty ? page({}) : page({trackJson(1), trackJson(2)}));
         });
         models::CollectionModel model(h.client);
-        QAbstractItemModelTester tester(&model, QAbstractItemModelTester::FailureReportingMode::Warning);
+        test::ModelTester tester(&model);
         model.setSource(
             [](int limit) { return endpoints::search(QStringLiteral("x"), endpoints::SearchKind::Tracks, limit); }, 20);
         REQUIRE(test::waitUntil([&] { return !model.loading() && model.count() == 2; }));
@@ -1014,7 +1014,7 @@ TEST_SUITE("models.sync")
         };
         {
             models::CollectionModel model(h.client);
-            QAbstractItemModelTester tester(&model);
+            test::ModelTester tester(&model);
             model.setSyncedSource(likes, &store, QStringLiteral("likes"));
             REQUIRE(test::waitUntil([&] { return model.complete(); }));
             CHECK(idsOf(model) == std::vector<Id>{1, 2, 3, 4, 5});
@@ -1027,7 +1027,7 @@ TEST_SUITE("models.sync")
         // On SoundCloud meanwhile: track 6 liked, track 4 unliked.
         *pages = {{6, 1, 2}, {3}, {5}};
         models::CollectionModel model(h.client);
-        QAbstractItemModelTester tester(&model);
+        test::ModelTester tester(&model);
         h.transport.reset();
         // The first change is the snapshot, shown before any request has been answered.
         std::optional<std::vector<Id>> firstShown;
@@ -1060,7 +1060,7 @@ TEST_SUITE("models.sync")
     {
         Harness h;
         models::CollectionModel model(h.client);
-        QAbstractItemModelTester tester(&model);
+        test::ModelTester tester(&model);
         const auto entries = [](std::initializer_list<Id> ids, Id stubId = 0) {
             std::vector<Entry> out;
             for (const Id id : ids) {
