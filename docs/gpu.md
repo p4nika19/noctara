@@ -79,7 +79,7 @@ Safe Mode means software rendering, Solid glass and no shader features. It start
 
 `gfx::QualityGovernor` is pure and unit-tested. Once per second of rendering, `FrameMonitor` reports the GPU time per frame (QRhi timestamps enabled through `QQuickGraphicsConfiguration`; the window is shown only after that) and the frame intervals. With *Effects quality* = Auto:
 
-- GPU timestamps are not available everywhere: OpenGL ES through EGL (Wayland on NVIDIA, for example) reports none. The governor then judges the frame intervals, and the Performance page shows "Not reported yet" for the GPU time.
+- GPU timestamps are not available everywhere: OpenGL ES through EGL (Wayland on NVIDIA, for example) reports none. The governor then judges the frame intervals, and the Performance page shows "Not reported yet" for the GPU time. Intervals longer than 2.25 frame budgets (and 33 ms) count as pauses between low-rate redraws, such as the 12 Hz backdrop drift, not as slow frames.
 - **Down:** two consecutive overloaded windows (GPU p90 > 85% of the frame budget, or without timestamps a frame-interval p90 > 1.5 budgets) step down one tier: High → Medium (capture 1/3) → Low (1/4, one level fewer) → Dual Kawase (style cap) → Solid.
 - **Up:** five consecutive healthy windows (GPU < 45% of the budget) after a cooldown of 20 s step up one tier. A step down within 30 s of a step up doubles the cooldown (up to 10 min).
 - Idle windows (fewer than 30 frames) are not judged, so a static scene never moves the governor.

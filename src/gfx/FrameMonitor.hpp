@@ -76,5 +76,8 @@ private:
 
 // 90th percentile of the samples (by partial sort); 0 for an empty input.
 [[nodiscard]] double percentile90(std::vector<double> samples);
+// 90th percentile of the intervals between presented frames, for a frame budget of `budgetMs`. Pauses longer
+// than a couple of missed frames (low-rate redraws of an otherwise idle scene) are left out.
+[[nodiscard]] double frameIntervalP90(std::vector<double> intervalsMs, double budgetMs);
 
 }  // namespace noctara::gfx

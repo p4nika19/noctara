@@ -17,6 +17,8 @@ namespace {
 constexpr auto kWindow = std::chrono::seconds(1);
 // Longer gaps mean the scene was idle in between, not that a frame was slow.
 constexpr double kMaxIntervalMs = 100.0;
+// Frame intervals longer than this many frame budgets are pauses between low-rate redraws, not slow frames.
+constexpr double kGapBudgets = 2.25;
 // Wake up this much before the paced deadline: the following VSync wait absorbs the difference.
 constexpr auto kPacingSlack = std::chrono::microseconds(1500);
 // A frame this far behind the pacing grid follows an idle scene: the grid restarts from it.
@@ -32,6 +34,17 @@ double percentile90(std::vector<double> samples)
     const auto index = static_cast<std::ptrdiff_t>((samples.size() - 1) * 9 / 10);
     std::ranges::nth_element(samples, samples.begin() + index);
     return samples[static_cast<std::size_t>(index)];
+}
+
+double frameIntervalP90(std::vector<double> intervalsMs, double budgetMs)
+{
+    // A missed frame or two in a continuous animation is a slow frame; a longer gap is a deliberate low-rate
+    // redraw (the backdrop drift's 12 Hz timer) after the animation stopped. Intervals within the governor's
+    // minimum judged rate always count, so continuous rendering at, say, 36 fps on a 144 Hz display never
+    // looks healthy.
+    const double gap = std::max(kGapBudgets * budgetMs, 1000.0 / GovernorConfig{}.minFrames);
+    std::erase_if(intervalsMs, [gap](double interval) { return interval > gap; });
+    return percentile90(std::move(intervalsMs));
 }
 
 std::optional<FramePacer::Clock::time_point> FramePacer::wakeUp(Clock::time_point presented, int capFps)
@@ -148,7 +161,7 @@ void FrameMonitor::summarise()
     if (!gpu.empty()) {
         stats.gpuP90Ms = percentile90(std::move(gpu));
     }
-    stats.intervalP90Ms = percentile90(std::move(intervals));
+    stats.intervalP90Ms = frameIntervalP90(std::move(intervals), stats.budgetMs);
     Q_EMIT measured(stats, elapsed > 0.0 ? frames / elapsed : 0.0);
 
     if (frames == 0) {

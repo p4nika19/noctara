@@ -388,6 +388,38 @@ TEST_SUITE("gfx.governor")
         CHECK(governor.feed(stats, 2) == Tier::Medium);
     }
 
+    TEST_CASE("deliberate low-rate redraws between animation frames are not slow frames")
+    {
+        // 0.6 s of a 60 Hz animation, then the backdrop drift's 12 Hz redraws (Backdrop.qml) in the same window.
+        const double budget = 1000.0 / 60.0;
+        std::vector<double> intervals(36, budget);
+        intervals.insert(intervals.end(), {42.0, 83.0, 83.0, 83.0, 83.0, 83.0, 83.0, 83.0, 83.0, 83.0});
+        FrameWindowStats stats;
+        stats.frames = 47;
+        stats.budgetMs = budget;
+        stats.intervalP90Ms = frameIntervalP90(intervals, budget);
+        CHECK(stats.intervalP90Ms == doctest::Approx(budget));
+        QualityGovernor governor;
+        CHECK_FALSE(governor.feed(stats, 1).has_value());
+        CHECK_FALSE(governor.feed(stats, 2).has_value());
+        CHECK(governor.tier() == Tier::High);
+
+        // Missed frames in a continuous animation still count, at 60 Hz and at 144 Hz (36 fps).
+        std::vector<double> dropped(30, budget);
+        dropped.insert(dropped.end(), 10, 2.0 * budget);
+        CHECK(frameIntervalP90(dropped, budget) == doctest::Approx(2.0 * budget));
+        const double fast = 1000.0 / 144.0;
+        CHECK(frameIntervalP90(std::vector<double>(36, 4.0 * fast), fast) == doctest::Approx(4.0 * fast));
+        // With a 30 fps cap one missed frame counts, the drift's 83 ms redraws do not.
+        const double capped = 1000.0 / 30.0;
+        std::vector<double> cappedDrift(30, capped);
+        cappedDrift.insert(cappedDrift.end(), 5, 83.3);
+        CHECK(frameIntervalP90(cappedDrift, capped) == doctest::Approx(capped));
+        std::vector<double> cappedDropped(30, capped);
+        cappedDropped.insert(cappedDropped.end(), 5, 2.0 * capped);
+        CHECK(frameIntervalP90(cappedDropped, capped) == doctest::Approx(2.0 * capped));
+    }
+
     TEST_CASE("percentile90 of frame samples")
     {
         CHECK(percentile90({}) == 0.0);
