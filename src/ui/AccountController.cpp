@@ -206,6 +206,9 @@ void AccountController::verifyCandidate(const QByteArray& token)
                                   return;
                               }
                               setState(m_beforeVerify);  // an expired session stays visibly expired
+                              if (m_state == SignedIn && m_userId == 0) {
+                                  checkSession();  // resume the saved session's check that this one cancelled
+                              }
                               const ErrorCode code = result.error().code;
                               Q_EMIT notice(QStringLiteral("error"),
                                             code == ErrorCode::Unauthorized || code == ErrorCode::Forbidden

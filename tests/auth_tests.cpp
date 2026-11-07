@@ -18,6 +18,7 @@
 #include <QSignalSpy>
 #include <QTemporaryDir>
 
+#include <atomic>
 #include <optional>
 #include <thread>
 
@@ -314,6 +315,45 @@ TEST_SUITE("ui.account")
         CHECK(h.session.token() == QByteArray("good-token"));
         CHECK(h.stored() == QByteArray("good-token"));
         CHECK(rejected.isEmpty());  // a wrong candidate says nothing about the working session
+    }
+
+    TEST_CASE("a refused candidate resumes the unconfirmed saved session's background check")
+    {
+        Harness h("good-token");
+        h.preStore(QByteArray("good-token"));
+        std::atomic<bool> online = false;
+        h.transport.setHandler([&](const net::Request& request) -> Result<net::Response> {
+            const QByteArray auth = FakeApi::header(request, QByteArrayLiteral("authorization"));
+            if (auth != "OAuth good-token") {
+                return FakeApi::reply(401, R"({"error":"401 - Unauthorized"})", jsonHeaders());
+            }
+            if (!online) {
+                return fail(ErrorCode::ConnectionFailed, "offline");
+            }
+            return FakeApi::reply(200, meJson(), jsonHeaders());
+        });
+        const auto savedChecks = [&] {
+            int count = 0;
+            for (const net::Request& request : h.transport.requests()) {
+                count += FakeApi::header(request, QByteArrayLiteral("authorization")) == "OAuth good-token" ? 1 : 0;
+            }
+            return count;
+        };
+        AccountController account(h.client, h.session, h.secrets);
+        QSignalSpy notice(&account, &AccountController::notice);
+        // The saved session is used at once; its /me fails offline and is retried much later.
+        REQUIRE(test::waitUntil([&] { return account.signedIn() && savedChecks() == 1; }, 3000));
+        test::waitUntil([] { return false; }, 100);
+        CHECK(account.userId() == 0);
+
+        account.signInWithToken(QStringLiteral("wrong-token"));
+        REQUIRE(notice.wait(3000));
+        CHECK(account.state() == AccountController::SignedIn);
+
+        online = true;
+        CHECK(test::waitUntil([&] { return savedChecks() >= 2; }, 3000));
+        CHECK(test::waitUntil([&] { return account.userId() == 42; }, 3000));
+        CHECK(h.session.token() == QByteArray("good-token"));
     }
 
     TEST_CASE("a queued rejection of the previous token leaves a newly installed token alone")
