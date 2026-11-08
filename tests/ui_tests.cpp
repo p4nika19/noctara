@@ -118,6 +118,29 @@ TEST_SUITE("ui.settings")
         }
     }
 
+    TEST_CASE("an address pasted with stray whitespace or invisible characters is accepted")
+    {
+        QTemporaryDir dir;
+        settings::SettingsStore store(settings::Schema::builtin());
+        settings::ConfigFile config(store, dir.filePath(QStringLiteral("config.toml")), {});
+        i18n::LanguageManager languages(store);
+        ui::SettingsController controller(store, config, languages);
+        const QString key = QStringLiteral("network.dns.doh_url");
+        const QString address = QStringLiteral("https://abc123.cloudflare-gateway.com/dns-query");
+
+        CHECK(controller.setValue(key, address).isEmpty());
+        CHECK(store.stringValue(settings::keys::DohUrl) == address);
+        const QStringList variants{address + u' ',          u' ' + address,          address + u'\t',
+                                   address + QChar(0x200B), QChar(0xFEFF) + address, address + QChar(0x00A0)};
+        for (const QString& pasted : variants) {
+            REQUIRE(controller.setValue(key, QStringLiteral("https://other.example/dns-query")).isEmpty());
+            CHECK(controller.setValue(key, pasted).isEmpty());
+            CHECK(store.stringValue(settings::keys::DohUrl) == address);
+        }
+        CHECK_FALSE(controller.setValue(key, QStringLiteral("not an address")).isEmpty());
+        CHECK(store.stringValue(settings::keys::DohUrl) == address);
+    }
+
     TEST_CASE("the sidebar lists only categories with a row to show")
     {
         QTemporaryDir dir;

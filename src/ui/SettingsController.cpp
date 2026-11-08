@@ -50,6 +50,20 @@ std::optional<Category> categoryFromId(const QString& id)
     return std::nullopt;
 }
 
+// Text copied from a web page often brings a trailing space or an invisible character along; neither can be part
+// of an address, and the user cannot see why it was refused. The command line trims its values the same way.
+QString withoutPastedJunk(const QString& text)
+{
+    QString clean;
+    clean.reserve(text.size());
+    for (const QChar c : text) {
+        if (c.category() != QChar::Other_Format) {
+            clean.append(c);
+        }
+    }
+    return clean.trimmed();
+}
+
 }  // namespace
 
 SettingsController::SettingsController(settings::SettingsStore& store, settings::ConfigFile& config,
@@ -280,6 +294,8 @@ QString SettingsController::setValue(const QString& key, const QVariant& value)
         candidate = QVariant::fromValue(candidate.toDouble());
     } else if (def->type == settings::Type::StringList) {
         candidate = QVariant::fromValue(candidate.toStringList());
+    } else if (def->type == settings::Type::Url && candidate.typeId() == QMetaType::QString) {
+        candidate = withoutPastedJunk(candidate.toString());
     }
     if (auto result = m_store.setUserValue(def->key, candidate); !result) {
         return i18n::errorMessage(result.error().code);
