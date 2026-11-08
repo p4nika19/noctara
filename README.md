@@ -4,6 +4,31 @@ Noctara is a native SoundCloud desktop client written in C++23 and Qt 6 Quick. I
 
 > Status: slices (a)–(i) of the plan are done (foundations, glass pipeline, network stack, caches, SoundCloud api-v2 models, authentication, native playback, pages and customization, and protected playback through a castlabs Electron helper). See [docs/plan.md](docs/plan.md).
 
+## Install
+
+Paste this into a terminal:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/p4nika19/noctara/main/get.sh | bash
+```
+
+It fetches the sources into `~/.cache/noctara-source`, offers to install the build dependencies with your package
+manager (pacman, dnf, zypper, apt, xbps, apk; Gentoo gets the `emerge` line to run), builds Noctara for your CPU and
+installs it for your user into `~/.local` (app menu entry included). Nothing runs as root except the package
+installation (and copying the files for `--system`). Building takes a few minutes.
+
+- **Update:** run the same line again. When Noctara is installed, the installer asks whether to update it, remove it
+  or leave.
+- **Uninstall:** `~/.local/lib/noctara/uninstall.sh` (it asks whether to keep your settings, cache and sign-in;
+  `--purge` deletes them, `--keep` keeps them).
+- **Options** go after `bash -s --`: `--system` (into `/usr/local` for every user), `--prefix DIR`, `--update`,
+  `--uninstall [--purge]`, `--yes` (no questions), `--no-deps`. From a checkout, `./install.sh --help` and
+  `./uninstall.sh --help` list the same.
+- **Needs** a current toolchain: Qt 6.8 or newer, clang 19 or newer with GCC 14's C++ library, xmake 3, and the
+  libraries below. Rolling and recent distributions have them (Arch and its derivatives, openSUSE Tumbleweed, recent
+  Fedora, Void); older stable releases do not, and the installer says what is missing. Protected (Go+) tracks need
+  x86_64 and glibc.
+
 ## Dependencies
 
 | Dependency | Tested version | Source |

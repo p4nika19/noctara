@@ -4,6 +4,12 @@ option("werror")
     set_description("Treat warnings as errors (always on in release mode and CI)")
 option_end()
 
+option("release_werror")
+    set_default(true)
+    set_showmenu(true)
+    set_description("Treat warnings as errors in release mode (off for builds on users' machines: the installer)")
+option_end()
+
 option("march")
     set_default("x86-64-v3")
     set_showmenu(true)

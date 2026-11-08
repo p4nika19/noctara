@@ -24,9 +24,12 @@ xmake docs-config [--check]                     # regenerate/verify docs/configu
 xmake f -m tsan && xmake build noctara-tests && xmake test-tsan
 xmake pgo                                       # instrumented release build → --pgo-scenario run → llvm-profdata merge → optimised rebuild
 xmake package                                   # release tarball with desktop file and icons in build/dist (release config first)
+./install.sh [--prefix DIR|--system] [--no-deps]   # user install from this tree; get.sh is the curl | bash entry point, uninstall.sh removes
 ```
 
-Modes: `debug` runs ASan+UBSan, `release` uses -O3, ThinLTO, hardening and -Werror, and `tsan` is separate. The release check before a commit is `xmake f -m release && xmake build -a`. Every build copies the binary to `build/noctara`. Config options (`xmake/options.lua`): `--werror`, `--march`, `--lto`, `--sanitizers`, `--pgo=generate|use`, `--trace`.
+Modes: `debug` runs ASan+UBSan, `release` uses -O3, ThinLTO, hardening and -Werror, and `tsan` is separate. The release check before a commit is `xmake f -m release && xmake build -a`. Every build copies the binary to `build/noctara`. Config options (`xmake/options.lua`): `--werror`, `--release_werror` (release forces `-Werror` unless this is `n`; the installer turns it off because users' compilers warn differently), `--march`, `--lto`, `--sanitizers`, `--pgo=generate|use`, `--trace`.
+
+The installer scripts (`get.sh`, `install.sh`, `uninstall.sh`) build release with `--march=native --release_werror=n` and record what they copied in `<prefix>/lib/noctara/manifest`; uninstall removes only those files. Package names per package manager live in `install.sh`'s `packages()`. Test them with `NOCTARA_REPO_URL=<local path> NOCTARA_REF=<branch> NOCTARA_SOURCE_DIR=<tmp>`, isolated XDG directories and a scratch `--prefix`; questions read `/dev/tty`, so drive them through `script -qec`. Stub `secret-tool`, `pgrep` and `pkill` on `PATH` in purge tests: `--purge` clears the real keyring entries and closes a running Noctara.
 
 A fresh machine needs every package of the README's Arch line (CI installs the same list): without `qt6-tools` (lrelease, lupdate) or `qt6-shadertools` (qsb) configuring stops with "… not found in the Qt installation", and the error names the package.
 

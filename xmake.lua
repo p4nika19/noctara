@@ -95,7 +95,7 @@ STRICT_WARNINGS = {
     "-Wunused", "-Wmisleading-indentation", "-Wdeprecated", "-Wextra-semi",
     "-Wzero-as-null-pointer-constant", "-Wthread-safety",
 }
-if has_config("werror") or is_mode("release") then
+if has_config("werror") or (is_mode("release") and has_config("release_werror")) then
     table.insert(STRICT_WARNINGS, "-Werror")
 end
 
