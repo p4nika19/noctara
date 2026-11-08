@@ -110,4 +110,6 @@ Settings are layered with this precedence: defaults < `/etc/xdg/noctara/config.t
 
 ## Licenses
 
+Noctara is distributed under the [Mozilla Public License 2.0](LICENSE).
+
 The bundled fonts (Manrope, Inter, JetBrains Mono) are under the SIL Open Font License 1.1, and the icons (Lucide) under the ISC License. The license texts are in `resources/` and in the app's About page. The protected-playback helper is castlabs Electron (MIT, with Chromium's licenses in its zip) and hls.js (Apache-2.0), downloaded by `xmake drm-helper`, not part of this repository.
