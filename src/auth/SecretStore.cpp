@@ -237,7 +237,8 @@ void SecretServiceStore::read(const QString& key, QObject* context, ReadCallback
                     return;
                 }
                 if (!result) {
-                    qCWarning(lcAuth).noquote()
+                    // No keyring on this system is an expected state, and the UI says so.
+                    qCInfo(lcAuth).noquote()
                         << QString::fromStdString(result.error().describe()) << "- using the local secret fallback";
                     m_available = false;
                 }

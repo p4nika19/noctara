@@ -45,9 +45,12 @@ jobs:
   tsan:
     runs-on: ubuntu-latest
     container: archlinux:latest
+    env:
+      # tools/tsan.supp matches Qt's and GLib's internal function names, which only their debug symbols provide.
+      DEBUGINFOD_URLS: https://debuginfod.archlinux.org
     steps:
       - run: |
-          pacman -Syu --noconfirm --needed git clang mold xmake pkgconf \
+          pacman -Syu --noconfirm --needed git clang llvm mold xmake pkgconf \
             qt6-base qt6-declarative qt6-svg qt6-shadertools qt6-tools qt6-multimedia tomlplusplus vulkan-headers \
             curl libarchive libproxy libsecret openssl sqlite simdjson taglib xxhash ffmpeg
       - uses: actions/checkout@v4
