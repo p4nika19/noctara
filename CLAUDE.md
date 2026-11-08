@@ -33,7 +33,7 @@ The installer scripts (`get.sh`, `install.sh`, `uninstall.sh`) build release wit
 
 A fresh machine needs every package of the README's Arch line (CI installs the same list): without `qt6-tools` (lrelease, lupdate) or `qt6-shadertools` (qsb) configuring stops with "… not found in the Qt installation", and the error names the package.
 
-CI (`.github/workflows/ci.yml`) runs on Arch as root, hence `--root` on every xmake call (tasks that run nested xmake add it themselves when `os.isroot()`). The matrix is debug and release: build, tests, smoke, format/i18n/docs, lint. A separate job runs TSan. A new pkg-config dependency must also go into its `pacman` lines (`pkgconf` itself is needed too).
+CI (`.github/workflows/ci.yml`) runs on Arch as root, hence `XMAKE_ROOT=y` for the whole workflow: custom tasks without options (`smoke`, `lint`, `test-tsan`, `i18n-check`) reject a `--root` flag. Tests that rely on file permissions skip themselves as root, and a killed orphan can stay a zombie there because PID 1 does not reap it. The matrix is debug and release: build, tests, smoke, format/i18n/docs, lint. A separate job runs TSan. A new pkg-config dependency must also go into its `pacman` lines (`pkgconf` itself is needed too).
 
 Before committing, run all of these: `xmake format` then `--check`, a `--werror=y` build, the unit tests, `xmake smoke`, `xmake i18n-check`, `xmake docs-config --check` and `xmake lint` (0 findings). Commits are made per slice; review fixes go in separate commits.
 

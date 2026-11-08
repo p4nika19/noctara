@@ -26,6 +26,7 @@
 
 #include <limits>
 #include <sys/stat.h>
+#include <unistd.h>
 
 using namespace noctara;
 using namespace noctara::cache;
@@ -623,6 +624,10 @@ TEST_SUITE("cache.layout")
 
     TEST_CASE("unwritable locations are refused")
     {
+        if (::geteuid() == 0) {
+            MESSAGE("permissions do not apply to root; skipped");
+            return;
+        }
         QTemporaryDir dir;
         const QString root = dir.filePath(QStringLiteral("ro"));
         REQUIRE(ensureDirectory(root));

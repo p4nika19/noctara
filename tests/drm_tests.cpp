@@ -158,9 +158,21 @@ QJsonObject ping()
     return QJsonObject{{QStringLiteral("type"), QStringLiteral("ping")}, {QStringLiteral("seq"), 1}};
 }
 
+// A killed orphan stays a zombie where PID 1 does not reap (a CI container), and kill(pid, 0) still finds it.
+bool isZombie(qint64 pid)
+{
+    QFile stat(QStringLiteral("/proc/%1/stat").arg(pid));
+    if (!stat.open(QIODevice::ReadOnly)) {
+        return false;
+    }
+    const QByteArray text = stat.readAll();
+    const qsizetype nameEnd = text.lastIndexOf(')');
+    return nameEnd >= 0 && text.mid(nameEnd + 2, 1) == "Z";
+}
+
 bool processGone(qint64 pid)
 {
-    return test::waitUntil([pid] { return ::kill(static_cast<pid_t>(pid), 0) != 0; }, 5000);
+    return test::waitUntil([pid] { return ::kill(static_cast<pid_t>(pid), 0) != 0 || isZombie(pid); }, 5000);
 }
 
 net::NetworkConfig directConfig()
