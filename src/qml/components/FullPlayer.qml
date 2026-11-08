@@ -319,6 +319,7 @@ FocusScope {
 
     GlassPanel {
         id: queuePanel
+        objectName: "fullPlayerQueue"
         visible: root.showQueue
         anchors.right: parent.right
         anchors.top: topBar.bottom
@@ -328,6 +329,11 @@ FocusScope {
         level: 1
         radius: Theme.radius.lg
         opacity: root.shown
+        MouseArea {  // a list at its end leaves the wheel unhandled: it must not reach the volume control behind
+            anchors.fill: parent
+            acceptedButtons: Qt.NoButton
+            onWheel: wheel => wheel.accepted = true
+        }
         Text {
             id: queueTitle
             x: Math.max(Theme.space.lg, queuePanel.cornerInset)

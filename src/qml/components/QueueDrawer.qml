@@ -29,6 +29,12 @@ FocusScope {
         Accessible.role: Accessible.Dialog
         Accessible.name: qsTr("Queue")
 
+        MouseArea {  // a list at its end leaves the wheel unhandled: it must not reach the volume control behind
+            anchors.fill: parent
+            acceptedButtons: Qt.NoButton
+            onWheel: wheel => wheel.accepted = true
+        }
+
         Item {
             id: head
             anchors.left: parent.left

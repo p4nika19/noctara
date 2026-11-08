@@ -932,6 +932,32 @@ TEST_SUITE("ui.components")
         CHECK_MESSAGE(requests - before <= 1, "cover requests during the flight: ", requests - before);
     }
 
+    TEST_CASE("the wheel changes the full player's volume, except over the queue")
+    {
+        const WindowHarness harness(R"(Window {
+            width: 1000; height: 800; visible: true
+            property Item player: player
+            function currentVolume() { return Player.volume }
+            FullPlayer { id: player; anchors.fill: parent; sourceRect: Qt.rect(20, 720, 64, 64) }
+        })");
+        QQuickItem* player = harness.item("player");
+        player->setProperty("open", true);
+        REQUIRE(test::waitUntil([&] { return player->property("shown").toReal() == 1.0; }));
+        auto* queue = player->findChild<QQuickItem*>(QStringLiteral("fullPlayerQueue"));
+        REQUIRE(queue != nullptr);
+        queue->setVisible(true);  // the stub's layout hides it; the empty list scrolls nowhere, like a list at its end
+        const auto scrollAt = [&](QPointF point) {
+            QWheelEvent wheel(point, harness.window->mapToGlobal(point), QPoint(), QPoint(0, -120), Qt::NoButton,
+                              Qt::NoModifier, Qt::NoScrollPhase, false);
+            QCoreApplication::sendEvent(harness.window.get(), &wheel);
+            QVariant volume;
+            REQUIRE(QMetaObject::invokeMethod(harness.window.get(), "currentVolume", Q_RETURN_ARG(QVariant, volume)));
+            return volume.toDouble();
+        };
+        CHECK(scrollAt(queue->mapToScene(QPointF(queue->width() / 2, queue->height() / 2))) == doctest::Approx(1.0));
+        CHECK(scrollAt(QPointF(100, 100)) == doctest::Approx(0.9));
+    }
+
     TEST_CASE("the full player's volume slider and scrubber are centred on the play button")
     {
         const WindowHarness harness(R"(Window {
