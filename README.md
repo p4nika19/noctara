@@ -24,10 +24,11 @@ installation (and copying the files for `--system`). Building takes a few minute
 - **Options** go after `bash -s --`: `--system` (into `/usr/local` for every user), `--prefix DIR`, `--update`,
   `--uninstall [--purge]`, `--yes` (no questions), `--no-deps`. From a checkout, `./install.sh --help` and
   `./uninstall.sh --help` list the same.
-- **Needs** a current toolchain: Qt 6.8 or newer, clang 19 or newer with GCC 14's C++ library, xmake 3, and the
-  libraries below. Rolling and recent distributions have them (Arch and its derivatives, openSUSE Tumbleweed, recent
-  Fedora, Void); older stable releases do not, and the installer says what is missing. Protected (Go+) tracks need
-  x86_64 and glibc.
+- **Needs** x86_64 and a current toolchain: Qt 6.12 or newer, clang 19 or newer with GCC 14's C++ library, xmake 3
+  (installed into `~/.local/bin` with your consent when the repositories lack it) and the libraries below. Today
+  that is Arch and its derivatives (EndeavourOS, CachyOS), openSUSE Tumbleweed, Fedora rawhide and Gentoo; Fedora 44,
+  Debian sid, Manjaro stable, Alpine edge and Void ship Qt 6.11 and older releases older still. The installer checks
+  everything first and says what is missing. Protected (Go+) tracks also need glibc.
 
 ## Dependencies
 
