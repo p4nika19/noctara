@@ -1548,33 +1548,33 @@
     <message>
         <location line="+11"/>
         <location line="+12"/>
-        <location line="+18"/>
-        <location line="+16"/>
+        <location line="+19"/>
+        <location line="+22"/>
         <source>Play</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-52"/>
         <location line="+12"/>
-        <location line="+18"/>
+        <location line="+19"/>
         <source>Play next</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-29"/>
+        <location line="-30"/>
         <location line="+12"/>
         <source>Add to queue</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="-8"/>
-        <location line="+29"/>
-        <location line="+29"/>
+        <location line="+33"/>
+        <location line="+32"/>
         <source>Go to artist</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-53"/>
+        <location line="-60"/>
         <source>Open</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1589,17 +1589,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Remove from queue</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+10"/>
         <source>Clear upcoming tracks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+9"/>
         <source>Pause</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2058,7 +2058,7 @@
     </message>
     <message>
         <location line="+2"/>
-        <source>Energy saving is active: the backdrop is still, blur is limited to Dual Kawase at medium quality and animations run at up to 30 fps.</source>
+        <source>Energy saving is active: the backdrop is still, blur is limited to Dual Kawase at medium quality and animations that play by themselves run at up to 30 fps.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2267,7 +2267,7 @@
 <context>
     <name>QueueList</name>
     <message>
-        <location filename="../src/qml/components/QueueList.qml" line="+56"/>
+        <location filename="../src/qml/components/QueueList.qml" line="+57"/>
         <source>Loading</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2277,7 +2277,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+46"/>
         <source>Loading…</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2545,12 +2545,12 @@
     <message>
         <location line="+6"/>
         <location line="+603"/>
-        <location line="+344"/>
+        <location line="+345"/>
         <source>System</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-946"/>
+        <location line="-947"/>
         <source>Midnight (dark)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2917,14 +2917,14 @@
         <location line="+354"/>
         <location line="+13"/>
         <location line="+12"/>
-        <location line="+57"/>
+        <location line="+58"/>
         <location line="+111"/>
         <location line="+125"/>
         <source>Auto</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-853"/>
+        <location line="-854"/>
         <source>Low</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3100,13 +3100,13 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+579"/>
+        <location line="+580"/>
         <location line="+23"/>
         <source>Custom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-600"/>
+        <location line="-601"/>
         <source>Corner radius</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3894,22 +3894,17 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+24"/>
+        <location line="+25"/>
         <source>Always</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-21"/>
+        <location line="-22"/>
         <source>Energy saving</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead of Liquid Glass or Gaussian, and limits animations to 30 frames per second. Automatic turns it on only while the computer runs on battery.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+11"/>
+        <location line="+13"/>
         <source>Offline mode</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4094,8 +4089,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-556"/>
-        <location line="+557"/>
+        <location line="-557"/>
+        <location line="+558"/>
         <location line="+11"/>
         <location line="+12"/>
         <location line="+94"/>
@@ -4104,7 +4099,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1152"/>
+        <location line="-1153"/>
         <source>Navigation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4260,7 +4255,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+487"/>
+        <location line="+319"/>
+        <source>While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead of Liquid Glass or Gaussian, and limits animations that play by themselves to 30 frames per second; scrolling and clicks stay at full speed. Automatic turns it on only while the computer runs on battery.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+169"/>
         <source>Maximum lifetime</source>
         <translation type="unfinished"></translation>
     </message>

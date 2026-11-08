@@ -70,7 +70,7 @@ Column {
         text: !Graphics.hardware
               ? qsTr("Hardware acceleration is off, so glass is drawn as solid surfaces and the backdrop does not move.")
               : Performance.energySaving
-                ? qsTr("Energy saving is active: the backdrop is still, blur is limited to Dual Kawase at medium quality and animations run at up to 30 fps.")
+                ? qsTr("Energy saving is active: the backdrop is still, blur is limited to Dual Kawase at medium quality and animations that play by themselves run at up to 30 fps.")
                 : Performance.governed
                   ? qsTr("Effects were lowered automatically because frames took too long. Quality is raised again step by step when there is headroom.")
                   : ""

@@ -1,6 +1,7 @@
 #include "gfx/FrameMonitor.hpp"
 
 #include <QCoreApplication>
+#include <QEvent>
 #include <QQuickGraphicsConfiguration>
 #include <QScreen>
 #include <QThread>
@@ -8,7 +9,6 @@
 
 #include <algorithm>
 #include <rhi/qrhi.h>
-#include <thread>
 
 namespace noctara::gfx {
 
@@ -23,6 +23,25 @@ constexpr double kGapBudgets = 2.25;
 constexpr auto kPacingSlack = std::chrono::microseconds(1500);
 // A frame this far behind the pacing grid follows an idle scene: the grid restarts from it.
 constexpr auto kIdleGap = std::chrono::milliseconds(100);
+// How long the interactive cap lasts after an input: long enough for the transition or scroll it started.
+constexpr auto kInteractionHold = std::chrono::seconds(1);
+
+bool isUserInput(QEvent::Type type) noexcept
+{
+    switch (type) {
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+    case QEvent::MouseButtonDblClick:
+    case QEvent::MouseMove:
+    case QEvent::Wheel:
+    case QEvent::KeyPress:
+    case QEvent::KeyRelease:
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd: return true;
+    default: return false;
+    }
+}
 
 }  // namespace
 
@@ -64,6 +83,11 @@ std::optional<FramePacer::Clock::time_point> FramePacer::wakeUp(Clock::time_poin
     return *m_slot - kPacingSlack;
 }
 
+int FramePacer::capFor(int idleFps, int interactiveFps, Clock::duration sinceInput) noexcept
+{
+    return sinceInput < kInteractionHold ? interactiveFps : idleFps;
+}
+
 FrameMonitor::FrameMonitor(QObject* parent)
     : QObject(parent)
 {
@@ -75,13 +99,27 @@ void FrameMonitor::attach(QQuickWindow* window)
     QQuickGraphicsConfiguration config = window->graphicsConfiguration();
     config.setTimestamps(true);
     window->setGraphicsConfiguration(config);
+    window->installEventFilter(this);
     connect(window, &QQuickWindow::afterRendering, this, &FrameMonitor::onRendered, Qt::DirectConnection);
     connect(window, &QQuickWindow::frameSwapped, this, &FrameMonitor::onSwapped, Qt::DirectConnection);
 }
 
-void FrameMonitor::setFrameCap(int fps) noexcept
+void FrameMonitor::setFrameCap(int fps, int interactiveFps) noexcept
 {
     m_frameCapFps.store(std::max(0, fps), std::memory_order_relaxed);
+    m_interactiveCapFps.store(std::max(0, interactiveFps), std::memory_order_relaxed);
+}
+
+bool FrameMonitor::eventFilter(QObject* watched, QEvent* event)
+{
+    if (isUserInput(event->type())) {
+        {
+            const std::scoped_lock lock(m_inputMutex);
+            m_lastInput = Clock::now();
+        }
+        m_inputArrived.notify_all();
+    }
+    return QObject::eventFilter(watched, event);
 }
 
 void FrameMonitor::onRendered()
@@ -121,15 +159,25 @@ void FrameMonitor::onSwapped()
             this, [this] { QTimer::singleShot(kWindow, this, &FrameMonitor::summarise); }, Qt::QueuedConnection);
     }
 
-    // Sleep until shortly before the next allowed frame, then let the VSync wait absorb the rest.
     if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
-        if (const auto deadline = m_pacer.wakeUp(now, m_frameCapFps.load(std::memory_order_relaxed));
-            deadline && *deadline > now) {
-            std::this_thread::sleep_until(*deadline);
-        }
+        pace(now);
     }
     m_lastSwap = now;
     m_hasLastSwap = true;
+}
+
+// Sleeps until shortly before the next allowed frame, then lets the VSync wait absorb the rest. While it sleeps the
+// GUI thread cannot sync its next frame, so an input that lifts the cap ends the sleep at once.
+void FrameMonitor::pace(Clock::time_point presented)
+{
+    const int idleFps = m_frameCapFps.load(std::memory_order_relaxed);
+    const int interactiveFps = m_interactiveCapFps.load(std::memory_order_relaxed);
+    std::unique_lock lock(m_inputMutex);
+    const Clock::time_point seen = m_lastInput;
+    const auto deadline = m_pacer.wakeUp(presented, FramePacer::capFor(idleFps, interactiveFps, presented - seen));
+    if (deadline && *deadline > presented) {
+        m_inputArrived.wait_until(lock, *deadline, [&] { return idleFps != interactiveFps && m_lastInput != seen; });
+    }
 }
 
 void FrameMonitor::summarise()

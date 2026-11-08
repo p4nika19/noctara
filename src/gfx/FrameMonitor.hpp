@@ -8,6 +8,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <mutex>
 #include <optional>
 #include <vector>
@@ -25,6 +26,9 @@ public:
 
     // When to start the next frame after one was presented at `presented`; nothing for no cap (0).
     [[nodiscard]] std::optional<Clock::time_point> wakeUp(Clock::time_point presented, int capFps);
+    // The cap for the next frame: `interactiveFps` for a moment after the last input, so that energy saving slows
+    // only what plays by itself, never scrolling, hover feedback or a page switch.
+    [[nodiscard]] static int capFor(int idleFps, int interactiveFps, Clock::duration sinceInput) noexcept;
 
 private:
     std::optional<Clock::time_point> m_slot;  // when the next frame may be presented
@@ -46,26 +50,36 @@ public:
     void attach(QQuickWindow* window);
     // 0 = no cap beyond VSync. Applied by sleeping on the render thread after a frame is presented; never on
     // the GUI thread (the software renderer draws there), where it would delay input handling.
-    void setFrameCap(int fps) noexcept;
+    // `interactiveFps` replaces it for a moment after each user input.
+    void setFrameCap(int fps, int interactiveFps) noexcept;
 
 Q_SIGNALS:
     void measured(const noctara::gfx::FrameWindowStats& stats, double fps);
 
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
 private:
     using Clock = std::chrono::steady_clock;
 
-    void onRendered();  // render thread
-    void onSwapped();   // render thread
-    void summarise();   // GUI thread
+    void onRendered();                       // render thread
+    void onSwapped();                        // render thread
+    void pace(Clock::time_point presented);  // render thread
+    void summarise();                        // GUI thread
 
     QPointer<QQuickWindow> m_window;
     std::atomic<int> m_frameCapFps{0};
+    std::atomic<int> m_interactiveCapFps{0};
     std::atomic<bool> m_windowOpen{false};
 
     // Render thread only.
     FramePacer m_pacer;
     Clock::time_point m_lastSwap;
     bool m_hasLastSwap = false;
+
+    std::mutex m_inputMutex;
+    std::condition_variable m_inputArrived;  // ends the render thread's sleep when the cap no longer applies
+    Clock::time_point m_lastInput;           // guarded by m_inputMutex
 
     std::mutex m_mutex;
     std::vector<double> m_gpuMs;        // guarded by m_mutex

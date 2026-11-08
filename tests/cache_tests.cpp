@@ -1317,9 +1317,9 @@ TEST_SUITE("cache.service")
         settings::SettingsStore store(settings::Schema::builtin());
         CacheService service(store, origin, dir.filePath(QStringLiteral("cache")));
         CHECK(service.diskAvailable());
-        CHECK(service.memory().stats().budget == 128LL << 20);
-        REQUIRE(store.setUserValue(settings::keys::AudioRamMb, 32));
-        REQUIRE(test::waitUntil([&] { return service.memory().stats().budget == 32LL << 20; }));
+        CHECK(service.memory().stats().budget == 32LL << 20);
+        REQUIRE(store.setUserValue(settings::keys::AudioRamMb, 64));
+        REQUIRE(test::waitUntil([&] { return service.memory().stats().budget == 64LL << 20; }));
         CHECK(service.prefetchCount(false) == 2);
         CHECK(service.prefetchCount(true) == 0);
         REQUIRE(store.setUserValue(settings::keys::AudioCacheEnabled, false));

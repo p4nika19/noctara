@@ -1079,8 +1079,9 @@ std::vector<Definition> builtinDefinitions()
                     .description = QT_TRANSLATE_NOOP(
                         "Settings",
                         "While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead "
-                        "of Liquid Glass or Gaussian, and limits animations to 30 frames per second. Automatic turns "
-                        "it on only while the computer runs on battery.")});
+                        "of Liquid Glass or Gaussian, and limits animations that play by themselves to 30 frames per "
+                        "second; scrolling and clicks stay at full speed. Automatic turns it on only while the "
+                        "computer runs on battery.")});
 
     // --- Network: data usage -----------------------------------------------------------------------
     defs.push_back({.key = keys::OfflineMode,
@@ -1452,7 +1453,7 @@ std::vector<Definition> builtinDefinitions()
                     .visibleWhen = Condition{keys::AudioCacheEnabled, {"true"}}});
     defs.push_back({.key = keys::AudioRamMb,
                     .type = Type::Int,
-                    .defaultValue = integer(128),
+                    .defaultValue = integer(32),
                     .min = 16,
                     .max = 2048,
                     .step = 16,
@@ -1514,7 +1515,7 @@ std::vector<Definition> builtinDefinitions()
                     .flags = flag::Advanced});
     defs.push_back({.key = keys::ImageRamMb,
                     .type = Type::Int,
-                    .defaultValue = integer(64),
+                    .defaultValue = integer(32),
                     .min = 16,
                     .max = 1024,
                     .step = 16,

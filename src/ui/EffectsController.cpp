@@ -118,7 +118,7 @@ void EffectsController::update()
     const gfx::EffectsState state = gfx::resolveEffects(inputs);
 
     m_theme.setGlassLimits(state.quality, state.styleCap, state.backdropAnimation);
-    m_frames.setFrameCap(state.frameCapFps);
+    m_frames.setFrameCap(state.frameCapFps, state.interactiveCapFps);
     if (!(state == m_state)) {
         m_state = state;
         Q_EMIT stateChanged();

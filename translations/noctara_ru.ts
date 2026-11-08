@@ -1557,33 +1557,33 @@
     <message>
         <location line="+11"/>
         <location line="+12"/>
-        <location line="+18"/>
-        <location line="+16"/>
+        <location line="+19"/>
+        <location line="+22"/>
         <source>Play</source>
         <translation>Воспроизвести</translation>
     </message>
     <message>
-        <location line="-45"/>
+        <location line="-52"/>
         <location line="+12"/>
-        <location line="+18"/>
+        <location line="+19"/>
         <source>Play next</source>
         <translation>Играть следующим</translation>
     </message>
     <message>
-        <location line="-29"/>
+        <location line="-30"/>
         <location line="+12"/>
         <source>Add to queue</source>
         <translation>Добавить в очередь</translation>
     </message>
     <message>
         <location line="-8"/>
-        <location line="+29"/>
-        <location line="+29"/>
+        <location line="+33"/>
+        <location line="+32"/>
         <source>Go to artist</source>
         <translation>Перейти к исполнителю</translation>
     </message>
     <message>
-        <location line="-53"/>
+        <location line="-60"/>
         <source>Open</source>
         <translation>Открыть</translation>
     </message>
@@ -1598,17 +1598,17 @@
         <translation>Открыть профиль</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Remove from queue</source>
         <translation>Убрать из очереди</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+10"/>
         <source>Clear upcoming tracks</source>
         <translation>Очистить следующие треки</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+9"/>
         <source>Pause</source>
         <translation>Пауза</translation>
     </message>
@@ -2067,8 +2067,8 @@
     </message>
     <message>
         <location line="+2"/>
-        <source>Energy saving is active: the backdrop is still, blur is limited to Dual Kawase at medium quality and animations run at up to 30 fps.</source>
-        <translation>Включено энергосбережение: фон неподвижен, размытие ограничено Dual Kawase в среднем качестве, анимация — не более 30 кадров/с.</translation>
+        <source>Energy saving is active: the backdrop is still, blur is limited to Dual Kawase at medium quality and animations that play by themselves run at up to 30 fps.</source>
+        <translation>Включено энергосбережение: фон неподвижен, размытие ограничено Dual Kawase в среднем качестве, фоновая анимация — не более 30 кадров/с.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2278,7 +2278,7 @@
 <context>
     <name>QueueList</name>
     <message>
-        <location filename="../src/qml/components/QueueList.qml" line="+56"/>
+        <location filename="../src/qml/components/QueueList.qml" line="+57"/>
         <source>Loading</source>
         <translation>Загрузка</translation>
     </message>
@@ -2288,7 +2288,7 @@
         <translation>%1, %2</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+46"/>
         <source>Loading…</source>
         <translation>Загрузка…</translation>
     </message>
@@ -2556,12 +2556,12 @@
     <message>
         <location line="+6"/>
         <location line="+603"/>
-        <location line="+344"/>
+        <location line="+345"/>
         <source>System</source>
         <translation>Как в системе</translation>
     </message>
     <message>
-        <location line="-946"/>
+        <location line="-947"/>
         <source>Midnight (dark)</source>
         <translation>Midnight (тёмная)</translation>
     </message>
@@ -2928,14 +2928,14 @@
         <location line="+354"/>
         <location line="+13"/>
         <location line="+12"/>
-        <location line="+57"/>
+        <location line="+58"/>
         <location line="+111"/>
         <location line="+125"/>
         <source>Auto</source>
         <translation>Авто</translation>
     </message>
     <message>
-        <location line="-853"/>
+        <location line="-854"/>
         <source>Low</source>
         <translation>Низкое</translation>
     </message>
@@ -3111,13 +3111,13 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+579"/>
+        <location line="+580"/>
         <location line="+23"/>
         <source>Custom</source>
         <translation>Свои</translation>
     </message>
     <message>
-        <location line="-600"/>
+        <location line="-601"/>
         <source>Corner radius</source>
         <translation>Скругление углов</translation>
     </message>
@@ -3905,22 +3905,22 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+24"/>
+        <location line="+25"/>
         <source>Always</source>
         <translation>Всегда</translation>
     </message>
     <message>
-        <location line="-21"/>
+        <location line="-22"/>
         <source>Energy saving</source>
         <translation>Энергосбережение</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead of Liquid Glass or Gaussian, and limits animations to 30 frames per second. Automatic turns it on only while the computer runs on battery.</source>
-        <translation>Пока режим включён, Noctara останавливает анимацию фона, использует более лёгкое размытие Dual Kawase вместо «Жидкого стекла» или размытия по Гауссу и ограничивает анимации 30 кадрами в секунду. В режиме «Авто» он включается, только когда компьютер работает от батареи.</translation>
+        <source>While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead of Liquid Glass or Gaussian, and limits animations that play by themselves to 30 frames per second; scrolling and clicks stay at full speed. Automatic turns it on only while the computer runs on battery.</source>
+        <translation>Пока режим включён, Noctara останавливает анимацию фона, использует более лёгкое размытие Dual Kawase вместо «Жидкого стекла» или размытия по Гауссу и ограничивает фоновые анимации 30 кадрами в секунду; прокрутка и нажатия остаются на полной скорости. В режиме «Авто» он включается, только когда компьютер работает от батареи.</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+12"/>
         <source>Offline mode</source>
         <translation>Автономный режим</translation>
     </message>
@@ -4105,8 +4105,8 @@
         <translation>Ответы хранятся не меньше этого времени.</translation>
     </message>
     <message>
-        <location line="-556"/>
-        <location line="+557"/>
+        <location line="-557"/>
+        <location line="+558"/>
         <location line="+11"/>
         <location line="+12"/>
         <location line="+94"/>
@@ -4115,7 +4115,7 @@
         <translation>с</translation>
     </message>
     <message>
-        <location line="-1152"/>
+        <location line="-1153"/>
         <source>Navigation</source>
         <translation>Навигация</translation>
     </message>
@@ -4271,7 +4271,7 @@
         <translation>Папка с вашим собственным защищённым плеером (как создаёт `xmake drm-helper`). Если пусто, используется плеер рядом с Noctara, в её каталоге установки или установленный самой Noctara.</translation>
     </message>
     <message>
-        <location line="+487"/>
+        <location line="+488"/>
         <source>Maximum lifetime</source>
         <translation>Максимальное время жизни</translation>
     </message>

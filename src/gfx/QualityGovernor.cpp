@@ -143,6 +143,7 @@ EffectsState resolveEffects(const EffectsInputs& inputs)
     bool ok = false;
     const int cap = inputs.frameRateCap.toInt(&ok);
     state.frameCapFps = ok && cap > 0 ? cap : 0;
+    state.interactiveCapFps = state.frameCapFps;
 
     if (inputs.energySaving) {
         state.energySaving = true;

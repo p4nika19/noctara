@@ -9,10 +9,15 @@
 #include "gfx/Relaunch.hpp"
 
 #include <QDir>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
+#include <QMouseEvent>
+#include <QQmlApplicationEngine>
 #include <QQuickWindow>
 #include <QTemporaryDir>
+#include <QTest>
+#include <QThread>
 
 #include <algorithm>
 #include <array>
@@ -456,6 +461,68 @@ TEST_SUITE("gfx.governor")
         // No cap: every refresh.
         CHECK(pacedIntervalMs(0, 60.0, 1.0) == doctest::Approx(1000.0 / 60).epsilon(0.01));
     }
+
+    TEST_CASE("the interactive cap replaces the idle one for a moment after an input")
+    {
+        using std::chrono::milliseconds;
+        CHECK(FramePacer::capFor(30, 0, milliseconds(0)) == 0);
+        CHECK(FramePacer::capFor(30, 0, milliseconds(999)) == 0);
+        CHECK(FramePacer::capFor(30, 0, milliseconds(1000)) == 30);
+        CHECK(FramePacer::capFor(30, 60, milliseconds(10)) == 60);
+    }
+}
+
+// Needs a threaded GPU window: QT_QPA_PLATFORM=wayland QT_QUICK_BACKEND=rhi noctara-tests --no-skip -tc="energy
+// saving*"
+TEST_CASE("energy saving input response benchmark" * doctest::skip())
+{
+    QQmlApplicationEngine engine;
+    engine.loadData(R"(import QtQuick
+        Window { width: 400; height: 300; visible: true
+            Rectangle { width: 100; height: 100; color: "teal"; RotationAnimation on rotation { from: 0; to: 360; duration: 1000; loops: Animation.Infinite } }
+        })");
+    REQUIRE_FALSE(engine.rootObjects().isEmpty());
+    auto* window = qobject_cast<QQuickWindow*>(engine.rootObjects().constFirst());
+    REQUIRE(window != nullptr);
+    FrameMonitor monitor;
+    monitor.attach(window);
+    int frames = 0;
+    QObject::connect(window, &QQuickWindow::frameSwapped, window, [&frames] { ++frames; }, Qt::QueuedConnection);
+    QTest::qWait(1500);
+
+    const auto measure = [&](int capFps, int interactiveFps, bool input) {
+        monitor.setFrameCap(capFps, interactiveFps);
+        QTest::qWait(1200);  // the previous phase's input has worn off
+        frames = 0;
+        QElapsedTimer clock;
+        clock.start();
+        double worstGapMs = 0;
+        double total = 0;
+        int samples = 0;
+        qint64 last = clock.nsecsElapsed();
+        while (clock.elapsed() < 2000) {
+            if (input) {
+                QMouseEvent move(QEvent::MouseMove, QPointF(50, 50), QPointF(50, 50), Qt::NoButton, Qt::NoButton,
+                                 Qt::NoModifier);
+                QCoreApplication::sendEvent(window, &move);
+            }
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
+            QThread::msleep(4);  // a 250 Hz mouse
+            const qint64 now = clock.nsecsElapsed();
+            const double gapMs = static_cast<double>(now - last) / 1e6;
+            worstGapMs = std::max(worstGapMs, gapMs);
+            total += gapMs;
+            ++samples;
+            last = now;
+        }
+        MESSAGE("cap " << capFps << " interactive " << interactiveFps << (input ? " with input" : " no input") << ": "
+                       << frames / 2.0 << " fps, exposed " << window->isExposed() << ", GUI loop avg "
+                       << total / samples << " ms, worst " << worstGapMs << " ms");
+    };
+    measure(0, 0, false);
+    measure(30, 30, true);  // what energy saving did before
+    measure(30, 0, true);   // input lifts the cap
+    measure(30, 0, false);  // nothing to do: the cap holds
 }
 
 TEST_SUITE("gfx.effects")
@@ -495,6 +562,7 @@ TEST_SUITE("gfx.effects")
         CHECK(state.styleCap == QStringLiteral("kawase"));
         CHECK(state.quality == 1);
         CHECK(state.frameCapFps == 30);
+        CHECK(state.interactiveCapFps == 0);  // energy saving never slows the user down
 
         inputs.frameRateCap = QStringLiteral("60");
         CHECK(resolveEffects(inputs).frameCapFps == 30);
@@ -503,6 +571,7 @@ TEST_SUITE("gfx.effects")
         inputs.energySaving = false;
         inputs.governorTier = Tier::High;
         CHECK(resolveEffects(inputs).frameCapFps == 60);
+        CHECK(resolveEffects(inputs).interactiveCapFps == 60);
         inputs.frameRateCap = QStringLiteral("unlimited");
         CHECK(resolveEffects(inputs).frameCapFps == 0);
     }

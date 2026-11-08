@@ -34,7 +34,7 @@ All directories are created with mode 0700 and files with 0600. The lock is take
 | | Tier 1: RAM (`MemoryTier`) | Tier 2: disk (`AudioCache`) |
 |---|---|---|
 | Unit | encoded pieces: 64 KiB chunks of a progressive stream, or whole HLS segments | the same pieces in the entry directory |
-| Budget | `cache.ram_mb` (128 MB); pieces of the current and prefetched tracks are evicted last | `cache.disk_mb` (2 GB), 0 = off; free-space floor `cache.min_free_mb` (1 GB) |
+| Budget | `cache.ram_mb` (32 MB: a piece that left it is read back from disk in about 10 µs); pieces of the current and prefetched tracks are evicted last | `cache.disk_mb` (2 GB), 0 = off; free-space floor `cache.min_free_mb` (1 GB) |
 | Eviction | LRU, inactive entries first; trimmed to a quarter on kernel memory pressure (PSI trigger, event-driven) | LRU by last access; open entries are never evicted |
 | Sharing | pieces are implicitly shared `QByteArray`s, so a hit hands out the buffer without copying | `pread` per piece, verified against its checksum, then promoted to RAM |
 
@@ -74,7 +74,7 @@ They are never cached, in any tier. `AudioCache::open` refuses `TrackInfo::drm` 
 
 ## Images
 
-`ImageCache` keeps decoded `QImage`s in a RAM LRU (`cache.images.ram_mb`, 64 MB) keyed by URL and decode size, so a thumbnail and the full-screen cover are separate entries. The encoded bytes go into a disk LRU (`cache.images.disk_mb`, 512 MB) once they decode, so a block page is never kept as a cover; a stored blob that no longer decodes is dropped and downloaded again. Concurrent requests for one URL share one download, and decoding runs on the thread pool: the image is scaled to fit the requested box, never enlarged. QML uses `image://cover/<percent-encoded URL>` (an async image provider).
+`ImageCache` keeps decoded `QImage`s in a RAM LRU (`cache.images.ram_mb`, 32 MB) keyed by URL and decode size, so a thumbnail and the full-screen cover are separate entries. The encoded bytes go into a disk LRU (`cache.images.disk_mb`, 512 MB) once they decode, so a block page is never kept as a cover; a stored blob that no longer decodes is dropped and downloaded again. Concurrent requests for one URL share one download, and decoding runs on the thread pool: the image is scaled to fit the requested box, never enlarged. QML uses `image://cover/<percent-encoded URL>` (an async image provider).
 
 ## API responses (HTTP cache)
 

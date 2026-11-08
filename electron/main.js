@@ -40,6 +40,7 @@ if (userData) {
 // Audio only: no GPU unless Noctara asks for it, no disk cache, no throttling of the hidden page.
 if (!process.argv.includes('--noctara-gpu')) {
   app.disableHardwareAcceleration();
+  app.commandLine.appendSwitch('in-process-gpu');
 }
 // 0 would mean "the default size" to Chromium: 1 byte leaves the default session's disk cache unusable (the
 // player's session is in memory anyway).
@@ -48,8 +49,12 @@ app.commandLine.appendSwitch('media-cache-size', '1');
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
+// Memory: the network and audio services have no sandbox of their own here, so a separate process buys nothing. The
+// renderer and the Widevine CDM stay in their own sandboxed processes.
+app.commandLine.appendSwitch('enable-features', 'NetworkServiceInProcess');
 app.commandLine.appendSwitch('disable-features',
-  'MediaSessionService,HardwareMediaKeyHandling,Translate,AutofillServerCommunication,SpareRendererForSitePerProcess');
+  'MediaSessionService,HardwareMediaKeyHandling,Translate,AutofillServerCommunication,SpareRendererForSitePerProcess,'
+  + 'AudioServiceOutOfProcess');
 
 let player = null;     // the hidden BrowserWindow
 let pageReady = false;

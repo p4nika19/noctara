@@ -84,6 +84,7 @@ struct EffectsState {
     QString styleCap;  // most expensive glass style allowed: "" (any), "kawase" or "solid"
     bool backdropAnimation = true;
     int frameCapFps = 0;        // 0 = no cap beyond VSync
+    int interactiveCapFps = 0;  // the cap while the user is working in the window: energy saving does not apply
     bool governed = false;      // the governor currently lowers the effects (Auto quality)
     bool energySaving = false;  // energy saving currently lowers the effects
 

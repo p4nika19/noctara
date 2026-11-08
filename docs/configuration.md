@@ -333,7 +333,7 @@ How Noctara reduces its own energy use. Your system power profile is not changed
 
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
-| `energy_saving` | enum | `"auto"` | `auto`, `always`, `off` | **Energy saving.** While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead of Liquid Glass or Gaussian, and limits animations to 30 frames per second. Automatic turns it on only while the computer runs on battery. (env `NOCTARA_PERFORMANCE_POWER_ENERGY_SAVING`) |
+| `energy_saving` | enum | `"auto"` | `auto`, `always`, `off` | **Energy saving.** While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead of Liquid Glass or Gaussian, and limits animations that play by themselves to 30 frames per second; scrolling and clicks stay at full speed. Automatic turns it on only while the computer runs on battery. (env `NOCTARA_PERFORMANCE_POWER_ENERGY_SAVING`) |
 
 ## Network
 
@@ -420,7 +420,7 @@ Tracks you play are kept on this computer, so replays, seeking and the next trac
 |---|---|---|---|---|
 | `audio_enabled` | bool | `true` | — | **Keep played tracks.** Off keeps only the current track in memory; nothing is written to disk. (env `NOCTARA_CACHE_AUDIO_ENABLED`, CLI `--audio-cache=`) |
 | `disk_mb` | integer | `2048` | 0 … 102400 | **Disk space for tracks.** The tracks played longest ago make room for new ones. 0 turns the disk cache off. (env `NOCTARA_CACHE_DISK_MB`) |
-| `ram_mb` | integer | `128` | 16 … 2048 | **Memory for tracks.** For the current and upcoming tracks, so seeking is instant. Released early when the system runs low on memory. (env `NOCTARA_CACHE_RAM_MB`) |
+| `ram_mb` | integer | `32` | 16 … 2048 | **Memory for tracks.** For the current and upcoming tracks, so seeking is instant. Released early when the system runs low on memory. (env `NOCTARA_CACHE_RAM_MB`) |
 | `prefetch` | integer | `2` | 0 … 5 | **Prepare upcoming tracks.** How many tracks of the queue are downloaded in advance. None on a metered connection; at most one while the disk cache is off. (env `NOCTARA_CACHE_PREFETCH`) |
 | `embed_tags` | bool | `true` | — | **Embed tags in cached audio.** Completed tracks get title, artist and cover inside the file. The audio itself is never altered. (*advanced*, env `NOCTARA_CACHE_EMBED_TAGS`) |
 | `dir` | path | `""` | — | **Cache location.** A folder for all caches; Noctara creates a “noctara” folder inside it. Empty uses the standard cache folder of your system. (*advanced*, env `NOCTARA_CACHE_DIR`) |
@@ -433,7 +433,7 @@ Cover art and profile pictures.
 
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
-| `ram_mb` | integer | `64` | 16 … 1024 | **Memory for images.** Decoded images ready to be shown. (*advanced*, env `NOCTARA_CACHE_IMAGES_RAM_MB`) |
+| `ram_mb` | integer | `32` | 16 … 1024 | **Memory for images.** Decoded images ready to be shown. (*advanced*, env `NOCTARA_CACHE_IMAGES_RAM_MB`) |
 | `disk_mb` | integer | `512` | 0 … 10240 | **Disk space for images.** 0 keeps images in memory only. (env `NOCTARA_CACHE_IMAGES_DISK_MB`) |
 
 ### `[cache.metadata]` Metadata
