@@ -293,6 +293,7 @@ TEST_SUITE("drm.network")
         config.proxy.mode = net::ProxyMode::Manual;
         config.proxy.manual = *net::ProxyServer::fromUrl(u"socks5://proxy.example:1080");
         config.proxy.bypass = {QStringLiteral("example.com")};
+        config.proxy.bypassLocal = false;
         CHECK_FALSE(needsSocksRelay(config));  // no credentials: Chromium connects by itself
 
         config.proxy.manual.username = QStringLiteral("real-user");
