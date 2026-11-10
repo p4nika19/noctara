@@ -148,7 +148,7 @@ noctara_module("media", {qt = {"QtCore", "QtGui", "QtMultimedia", "QtDBus"},
     deps = {"noctara_core", "noctara_settings", "noctara_cache", "noctara_api", "noctara_models"},
     packages = {"avformat", "avcodec", "avutil", "swresample"}})
 -- Protected playback: the castlabs Electron helper's host process, IPC and playback backend.
-noctara_module("drm", {qt = {"QtCore"}, deps = {"noctara_core", "noctara_settings", "noctara_i18n", "noctara_net",
+noctara_module("drm", {qt = {"QtCore", "QtNetwork"}, deps = {"noctara_core", "noctara_settings", "noctara_i18n", "noctara_net",
     "noctara_cache", "noctara_api", "noctara_media"}, packages = {"libarchive"}})
 noctara_module("auth", {qt = {"QtCore", "QtConcurrent", "QtDBus"}, deps = {"noctara_core"},
     packages = {"libsecret", "openssl", "sqlite3"}})
@@ -159,7 +159,7 @@ noctara_module("ui", {qt = {"QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtD
 target("noctara")
     set_kind("binary")
     add_rules("qt.quickapp", "noctara.qtfix", "noctara.qsb", "noctara.lrelease", "noctara.qrcgen")
-    add_frameworks("QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus", "QtMultimedia", "QtWidgets")
+    add_frameworks("QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus", "QtMultimedia", "QtWidgets", "QtNetwork")
     add_deps("noctara_ui")
     add_files("src/app/*.cpp", {cxxflags = STRICT_WARNINGS})
     add_files("resources/shaders/*.vert", "resources/shaders/*.frag")
@@ -190,7 +190,7 @@ target("noctara-bench")
     set_kind("binary")
     set_default(false)
     add_rules("qt.quickapp", "noctara.qtfix")
-    add_frameworks("QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus", "QtMultimedia", "QtWidgets")
+    add_frameworks("QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus", "QtMultimedia", "QtWidgets", "QtNetwork")
     add_deps("noctara_ui")
     add_files("bench/*.cpp", {cxxflags = STRICT_WARNINGS})
 target_end()
@@ -208,7 +208,7 @@ target("noctara-tests")
     set_kind("binary")
     set_default(false)
     add_rules("qt.quickapp", "noctara.qtfix", "noctara.lrelease")
-    add_frameworks("QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus", "QtMultimedia", "QtWidgets", "QtTest")
+    add_frameworks("QtCore", "QtGui", "QtQml", "QtQuick", "QtSvg", "QtDBus", "QtMultimedia", "QtWidgets", "QtNetwork", "QtTest")
     add_deps("noctara_ui", "noctara-mock-drm-helper")
     add_packages("doctest", "openssl")
     add_files("tests/**.cpp|mock-drm-helper/*.cpp", {cxxflags = STRICT_WARNINGS})

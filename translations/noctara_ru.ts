@@ -495,7 +495,7 @@
         <translation>только IPv4 или только IPv6</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+38"/>
         <source>The protected player is set up: protected tracks play now.</source>
         <translation>Защищённый плеер установлен: защищённые треки теперь воспроизводятся.</translation>
     </message>
@@ -506,7 +506,7 @@
         <translation>Защищённые треки не учитывают: %1.</translation>
     </message>
     <message>
-        <location line="+51"/>
+        <location line="+62"/>
         <source>Setting up the protected player: downloading, %1 % of %2 MB…</source>
         <extracomment>%1 = percent done, %2 = total size in MB</extracomment>
         <translation>Установка защищённого плеера: загрузка, %1 % из %2 МБ…</translation>
@@ -620,12 +620,12 @@
     <name>Errors</name>
     <message>
         <location filename="../src/i18n/ErrorMessages.cpp" line="+11"/>
-        <location line="+112"/>
+        <location line="+116"/>
         <source>Something went wrong.</source>
         <translation>Что-то пошло не так.</translation>
     </message>
     <message>
-        <location line="-111"/>
+        <location line="-115"/>
         <source>The operation was cancelled.</source>
         <translation>Операция отменена.</translation>
     </message>
@@ -771,6 +771,11 @@
     </message>
     <message>
         <location line="+2"/>
+        <source>The proxy server did not accept an encrypted connection. If its provider lists it as HTTP(S), choose HTTP as the proxy type: HTTPS sites stay encrypted.</source>
+        <translation>Прокси-сервер не принял зашифрованное соединение. Если провайдер указывает его как HTTP(S), выберите тип прокси HTTP: сайты по HTTPS останутся зашифрованными.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>A secure connection could not be established.</source>
         <translation>Не удалось установить защищённое соединение.</translation>
     </message>
@@ -1112,7 +1117,7 @@
         <translation>Громкость</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+28"/>
         <source>Up next</source>
         <translation>Далее</translation>
     </message>
@@ -2246,7 +2251,7 @@
     <name>QueueDrawer</name>
     <message>
         <location filename="../src/qml/components/QueueDrawer.qml" line="+30"/>
-        <location line="+18"/>
+        <location line="+24"/>
         <source>Queue</source>
         <translation>Очередь</translation>
     </message>
@@ -2930,12 +2935,12 @@
         <location line="+12"/>
         <location line="+58"/>
         <location line="+111"/>
-        <location line="+125"/>
+        <location line="+127"/>
         <source>Auto</source>
         <translation>Авто</translation>
     </message>
     <message>
-        <location line="-854"/>
+        <location line="-856"/>
         <source>Low</source>
         <translation>Низкое</translation>
     </message>
@@ -4105,17 +4110,22 @@
         <translation>Ответы хранятся не меньше этого времени.</translation>
     </message>
     <message>
-        <location line="-557"/>
+        <location line="+50"/>
+        <source>HTTP also carries HTTPS sites, and suits most proxies, including those listed as HTTP(S). HTTPS encrypts the connection to the proxy itself and works only if the proxy supports it. With SOCKS4 and SOCKS5 Noctara looks up server names itself; the others let the proxy do it.</source>
+        <translation>HTTP подходит и для сайтов по HTTPS и работает с большинством прокси, в том числе с указанными как HTTP(S). HTTPS шифрует соединение с самим прокси и работает, только если прокси это поддерживает. С SOCKS4 и SOCKS5 Noctara сама определяет адреса серверов, остальные типы поручают это прокси.</translation>
+    </message>
+    <message>
+        <location line="-607"/>
         <location line="+558"/>
         <location line="+11"/>
         <location line="+12"/>
-        <location line="+94"/>
+        <location line="+96"/>
         <location line="+11"/>
         <source>s</source>
         <translation>с</translation>
     </message>
     <message>
-        <location line="-1153"/>
+        <location line="-1155"/>
         <source>Navigation</source>
         <translation>Навигация</translation>
     </message>
@@ -4321,12 +4331,7 @@
         <translation>Тип прокси</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>HTTPS encrypts the connection to the proxy itself. With SOCKS4 and SOCKS5 Noctara looks up server names itself; the others let the proxy do it.</source>
-        <translation>HTTPS шифрует соединение с самим прокси. С SOCKS4 и SOCKS5 Noctara сама определяет адреса серверов, остальные типы поручают это прокси.</translation>
-    </message>
-    <message>
-        <location line="+8"/>
+        <location line="+11"/>
         <source>Proxy host</source>
         <translation>Адрес прокси</translation>
     </message>

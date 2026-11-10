@@ -786,6 +786,10 @@ void CurlTransport::onTransferDone(Transfer& transfer, int rawCode)
         .tlsMs = millis(easy, CURLINFO_APPCONNECT_TIME_T) > 0 ? dns + millis(easy, CURLINFO_APPCONNECT_TIME_T) : 0,
         .firstByteMs = dns + millis(easy, CURLINFO_STARTTRANSFER_TIME_T),
         .totalMs = static_cast<double>(transfer.clock.nsecsElapsed()) / 1e6};
+    // CONNECT never answered, no TLS finished, yet the proxy took the TCP connection: its TLS is what failed.
+    const bool proxyTlsPending = transfer.route.proxy && transfer.route.proxy->type == ProxyType::Https &&
+                                 connectStatus == 0 && millis(easy, CURLINFO_CONNECT_TIME_T) > 0 &&
+                                 millis(easy, CURLINFO_APPCONNECT_TIME_T) == 0;
     const QString curlDetail = QString::fromLatin1(transfer.errorBuffer.data());
     detach(transfer);
     const std::uint64_t id = transfer.id;
@@ -795,7 +799,8 @@ void CurlTransport::onTransferDone(Transfer& transfer, int rawCode)
                                                                        .osErrno = osErrno,
                                                                        .connectStatus = connectStatus,
                                                                        .proxyError = proxyError,
-                                                                       .viaProxy = transfer.route.proxy.has_value()}));
+                                                                       .viaProxy = transfer.route.proxy.has_value(),
+                                                                       .proxyTlsPending = proxyTlsPending}));
         if (transfer.cancelled() && !transfer.abortReason) {
             error = ErrorCode::Cancelled;
         }

@@ -47,6 +47,7 @@ enum class ErrorCode : std::uint16_t {
     ProxyNotConfigured,
     ProxyConnectFailed,
     ProxyAuthRequired,
+    ProxyTlsFailed,
     TlsHandshakeFailed,
     TlsCertificateInvalid,
     ConnectionFailed,

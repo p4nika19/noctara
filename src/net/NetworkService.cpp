@@ -207,6 +207,18 @@ void NetworkService::route(const QUrl& url, QObject* context, std::function<void
     });
 }
 
+void NetworkService::resolve(const QString& host, QObject* context, ResolveCallback callback)
+{
+    auto* channel = new CallbackChannel(context);  // NOLINT(cppcoreguidelines-owning-memory): deleted when done
+    channel->moveToThread(&m_thread);
+    handoff::post(m_core, [core = m_core, host, channel, callback = std::move(callback)] {
+        core->resolver.resolve(host, [channel, callback](Result<Resolution> result) {
+            channel->post([callback, result] { callback(result); });
+            channel->deleteLater();
+        });
+    });
+}
+
 void NetworkService::flushDnsCache()
 {
     handoff::post(m_core, [core = m_core] { core->resolver.flush(); });

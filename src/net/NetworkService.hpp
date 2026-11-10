@@ -79,6 +79,8 @@ public:
     void testConnection(QObject* context, const std::function<void(std::vector<ConnectionTestResult>)>& callback);
     // How a URL would be routed right now (direct or which proxy), e.g. to show what System mode found.
     void route(const QUrl& url, QObject* context, std::function<void(Result<ProxyRoute>)> callback);
+    // Looks up a name with the current DNS settings. Callable from any thread; `callback` runs on `context`'s.
+    void resolve(const QString& host, QObject* context, ResolveCallback callback);
     void flushDnsCache();
     void snapshot(QObject* context, std::function<void(ResolverSnapshot)> callback);
 

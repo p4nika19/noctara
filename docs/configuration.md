@@ -381,7 +381,7 @@ Route Noctara's traffic through a proxy server.
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
 | `mode` | enum | `"system"` | `none`, `system`, `manual` | **Proxy mode.** System uses the proxy variables of the environment (http_proxy, no_proxy …) or, if none are set, your desktop's proxy settings. (env `NOCTARA_NETWORK_PROXY_MODE`, CLI `--proxy-mode=`) |
-| `type` | enum | `"http"` | `http`, `https`, `socks4`, `socks5`, `socks5h` | **Proxy type.** HTTPS encrypts the connection to the proxy itself. With SOCKS4 and SOCKS5 Noctara looks up server names itself; the others let the proxy do it. (env `NOCTARA_NETWORK_PROXY_TYPE`) |
+| `type` | enum | `"http"` | `http`, `https`, `socks4`, `socks5`, `socks5h` | **Proxy type.** HTTP also carries HTTPS sites, and suits most proxies, including those listed as HTTP(S). HTTPS encrypts the connection to the proxy itself and works only if the proxy supports it. With SOCKS4 and SOCKS5 Noctara looks up server names itself; the others let the proxy do it. (env `NOCTARA_NETWORK_PROXY_TYPE`) |
 | `host` | string | `""` | — | **Proxy host.** Host name or IP address of the proxy server. (env `NOCTARA_NETWORK_PROXY_HOST`) |
 | `port` | integer | `8080` | 1 … 65535 | **Proxy port.** Username and password, if the proxy needs them, are kept in the system keyring, never in the configuration file. (env `NOCTARA_NETWORK_PROXY_PORT`) |
 | `bypass` | string list | `[]` | — | **Connect directly to.** Hosts that bypass the proxy: example.com (with its subdomains), *.example.com, IP addresses or ranges such as 10.0.0.0/8. (env `NOCTARA_NETWORK_PROXY_BYPASS`) |

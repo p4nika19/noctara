@@ -820,6 +820,15 @@ TEST_SUITE("net.transport")
         CHECK(clock.elapsed() >= 900);  // 25 kB burst, then 100 kB/s
     }
 
+    TEST_CASE("an HTTPS proxy type on a proxy without TLS is reported as such")
+    {
+        test::HttpProxy plain;
+        Network net;
+        net.useProxy(ProxyType::Https, plain.port());
+        const auto result = net.get(QStringLiteral("https://app.test/"));
+        CHECK_MESSAGE(test::errorOf(result) == ErrorCode::ProxyTlsFailed, test::describe(result));
+    }
+
     TEST_CASE("connection failures are typed")
     {
         Network net;

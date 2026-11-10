@@ -94,7 +94,7 @@ Common to all modes:
 |---|---|
 | No proxy | Direct connections. |
 | System (default) | Proxy environment variables if any is set: `https_proxy`/`HTTPS_PROXY` for https, `http_proxy` for http (upper-case `HTTP_PROXY` is ignored, as in curl, because of httpoxy), then `all_proxy`/`ALL_PROXY`; `no_proxy` is honoured. Otherwise the desktop's settings through libproxy (GNOME, KDE, PAC/WPAD), cached per scheme and host for a minute. The settings page shows which source is used and what it resolved to. |
-| Manual | HTTP, HTTPS, SOCKS4, SOCKS5, or SOCKS5 with remote DNS (socks5h). The bypass list takes host names (with subdomains), `*.domain`, `.domain`, IP addresses, CIDR ranges, `<local>` and `*`. "Bypass for local addresses" (default on) adds localhost, private and link-local ranges and dot-less names. |
+| Manual | HTTP, HTTPS, SOCKS4, SOCKS5, or SOCKS5 with remote DNS (socks5h). *HTTPS* means TLS to the proxy itself; a proxy sold as "HTTP(S)" normally takes plain CONNECT, so it is the *HTTP* type (HTTPS sites stay encrypted end to end). Noctara never falls back from TLS to plain by itself, because the proxy password would then travel unencrypted; it reports `ProxyTlsFailed` instead. The bypass list takes host names (with subdomains), `*.domain`, `.domain`, IP addresses, CIDR ranges, `<local>` and `*`. "Bypass for local addresses" (default on) adds localhost, private and link-local ranges and dot-less names. |
 
 Proxy credentials are kept only in the secret store (see [auth.md](auth.md#where-the-token-lives)): the system
 keyring (Secret Service via libsecret, under the key `network.proxy.credentials`), else Noctara's encrypted local
@@ -204,7 +204,8 @@ restarts the helper (a protected track resumes where it was); other changes appl
 | Proxy: manual HTTP/HTTPS | `--proxy-server`, `--proxy-bypass-list` (`<local>` for *Bypass local*); credentials answer Chromium's proxy authentication only |
 | Proxy: SOCKS5 / SOCKS5h | `socks5://` — Chromium always resolves names on the proxy, like SOCKS5h |
 | Proxy: SOCKS4 / SOCKS4a | `socks4://`; for SOCKS4a names are resolved locally (warned) |
-| SOCKS credentials | not supported by Chromium (warned; the connection fails if the proxy insists) |
+| SOCKS5 credentials | Chromium cannot sign in to SOCKS proxies, so `drm::SocksRelay` stands in: a CONNECT-only HTTP proxy on 127.0.0.1 with random per-run credentials (sent to the helper in `configure`, never on the command line) that opens each tunnel through the real proxy with RFC 1929 sign-in; destination names go to the proxy, the proxy's own name is looked up with Noctara's resolver |
+| SOCKS4 credentials | not supported by Chromium (warned; the connection fails if the proxy insists) |
 | DNS: system | Chromium's resolver |
 | DNS over HTTPS | `app.configureHostResolver` (`secure` when strict, `automatic` with fallback), at start and live; the DoH host maps to its bootstrap address (`--host-resolver-rules`) so its name is never looked up |
 | DNS: custom servers | Chromium cannot use them: the system resolver answers (warned); **strict** custom DNS blocks protected playback (`ProtectedNetworkUnsupported`) unless a manual proxy given by address resolves all names |

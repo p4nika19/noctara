@@ -41,9 +41,17 @@ void addLimit(HelperNetwork& plan, NetworkLimit limit)
 
 }  // namespace
 
-HelperNetwork planNetwork(const net::NetworkConfig& config)
+bool needsSocksRelay(const net::NetworkConfig& config)
+{
+    const net::ProxyServer& manual = config.proxy.manual;
+    return config.proxy.mode == net::ProxyMode::Manual && manual.valid() && manual.hasCredentials() &&
+           (manual.type == ProxyType::Socks5 || manual.type == ProxyType::Socks5h);
+}
+
+HelperNetwork planNetwork(const net::NetworkConfig& config, const LocalProxy* relay)
 {
     HelperNetwork plan;
+    const bool relayed = relay != nullptr && needsSocksRelay(config);
     if (config.transport.offline) {
         plan.blocked = Error{ErrorCode::Offline, "offline mode"};
     }
@@ -68,9 +76,11 @@ HelperNetwork planNetwork(const net::NetworkConfig& config)
             break;
         }
         const auto literal = IpAddress::parse(manual.host);  // IPv6 needs brackets
-        const QString rules = QStringLiteral("%1://%2:%3")
-                                  .arg(chromiumScheme(manual.type), literal ? literal->toUrlHost() : manual.host)
-                                  .arg(manual.port);
+        const QString rules = relayed
+                                  ? QStringLiteral("http://127.0.0.1:%1").arg(relay->port)
+                                  : QStringLiteral("%1://%2:%3")
+                                        .arg(chromiumScheme(manual.type), literal ? literal->toUrlHost() : manual.host)
+                                        .arg(manual.port);
         QStringList bypass = config.proxy.bypass;
         if (config.proxy.bypassLocal) {
             bypass << QStringLiteral("<local>");
@@ -79,7 +89,10 @@ HelperNetwork planNetwork(const net::NetworkConfig& config)
         proxy.insert(u"rules", rules);
         proxy.insert(u"bypass", bypass.join(u';'));
         proxy.insert(u"display", manual.displayUrl());
-        if (manual.hasCredentials()) {
+        if (relayed) {
+            proxy.insert(u"username", relay->username);
+            proxy.insert(u"password", relay->password);
+        } else if (manual.hasCredentials()) {
             if (isSocks(manual.type)) {
                 addLimit(plan, NetworkLimit::SocksCredentials);
             } else {
@@ -130,8 +143,9 @@ HelperNetwork planNetwork(const net::NetworkConfig& config)
             addLimit(plan, NetworkLimit::CustomDns);
         }
         // Strict: the system resolver must never see a name. Through a name-resolving proxy only the proxy's
-        // own host name would need one, and only when it is not an address.
-        if (dns.strict() && (!namesResolvedByProxy || !IpAddress::parse(manual.host))) {
+        // own host name would need one, and only when it is not an address (the relay looks it up with Noctara's
+        // own resolver).
+        if (dns.strict() && !relayed && (!namesResolvedByProxy || !IpAddress::parse(manual.host))) {
             plan.blocked = Error{ErrorCode::ProtectedNetworkUnsupported, "strict custom DNS"};
         }
         break;

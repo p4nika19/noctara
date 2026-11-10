@@ -3,6 +3,7 @@
 #include "drm/DrmBackend.hpp"
 #include "drm/DrmHost.hpp"
 #include "drm/HelperInstaller.hpp"
+#include "drm/SocksRelay.hpp"
 
 #include <QObject>
 
@@ -54,6 +55,7 @@ Q_SIGNALS:
 private:
     void applySettings(const QString& key);
     void applyNetwork();
+    [[nodiscard]] HelperNetwork networkPlan();
     void removeProfile();
     [[nodiscard]] std::optional<HelperCommand> command() const;
     void installIfMissing(bool background);
@@ -63,6 +65,7 @@ private:
     QString m_profileDir;
     QString m_applicationDir;
     HelperInstaller m_installer;
+    SocksRelay m_relay;  // outlives the host: the helper's connections go through it
     DrmHost m_host;
     DrmBackend m_backend;
 };

@@ -33,7 +33,19 @@ struct HelperNetwork {
     std::optional<Error> blocked;
 };
 
-// Pure: `config` as NetworkService has it (manual proxy credentials filled in).
-[[nodiscard]] HelperNetwork planNetwork(const net::NetworkConfig& config);
+// The local stand-in for a proxy Chromium cannot sign in to (see SocksRelay).
+struct LocalProxy {
+    std::uint16_t port = 0;
+    QString username;  // secret: random per run, travels only in "configure"
+    QString password;  // secret
+};
+
+// True when the configured proxy is one the helper can only reach through a SocksRelay.
+[[nodiscard]] bool needsSocksRelay(const net::NetworkConfig& config);
+
+// Pure: `config` as NetworkService has it (manual proxy credentials filled in). `relay` is where the helper connects
+// instead when needsSocksRelay(config); without one, such a proxy is used directly and the sign-in is listed as a
+// limit.
+[[nodiscard]] HelperNetwork planNetwork(const net::NetworkConfig& config, const LocalProxy* relay = nullptr);
 
 }  // namespace noctara::drm

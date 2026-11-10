@@ -44,6 +44,9 @@ DrmService::DrmService(settings::SettingsStore& settings, net::NetworkService& n
     , m_profileDir(std::move(profileDir))
     , m_applicationDir(std::move(applicationDir))
     , m_installer(network.transport(), std::move(dataDir), std::nullopt)
+    , m_relay([&network](const QString& host, QObject* context, net::ResolveCallback done) {
+        network.resolve(host, context, std::move(done));
+    })
     , m_host(DrmHost::Options{
           .command = command(),
           .profileDir = m_profileDir,
@@ -52,7 +55,7 @@ DrmService::DrmService(settings::SettingsStore& settings, net::NetworkService& n
       })
     , m_backend(m_host)
 {
-    m_host.setNetwork(planNetwork(m_network.config()));
+    m_host.setNetwork(networkPlan());
     connect(&m_network, &net::NetworkService::configChanged, this, &DrmService::applyNetwork);
     connect(&m_settings, &settings::SettingsStore::valueChanged, this, &DrmService::applySettings);
     connect(&m_host, &DrmHost::statusChanged, this, &DrmService::statusChanged);
@@ -158,9 +161,20 @@ void DrmService::removeProfile()
     }
 }
 
+HelperNetwork DrmService::networkPlan()
+{
+    const net::NetworkConfig& config = m_network.config();
+    if (!needsSocksRelay(config)) {
+        m_relay.stop();
+        return planNetwork(config);
+    }
+    const std::optional<LocalProxy> relay = m_relay.start(config.proxy.manual);
+    return planNetwork(config, relay ? &*relay : nullptr);
+}
+
 void DrmService::applyNetwork()
 {
-    m_host.setNetwork(planNetwork(m_network.config()));
+    m_host.setNetwork(networkPlan());
     Q_EMIT statusChanged();
 }
 

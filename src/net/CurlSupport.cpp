@@ -39,12 +39,13 @@ ErrorCode errorFromCurl(const CurlFailure& failure) noexcept
     case CURLE_WRITE_ERROR: return ErrorCode::Cancelled;
     case CURLE_COULDNT_RESOLVE_HOST: return ErrorCode::DnsResolutionFailed;
     case CURLE_COULDNT_RESOLVE_PROXY: return ErrorCode::ProxyConnectFailed;
-    case CURLE_OPERATION_TIMEDOUT: return ErrorCode::Timeout;
+    case CURLE_OPERATION_TIMEDOUT: return failure.proxyTlsPending ? ErrorCode::ProxyTlsFailed : ErrorCode::Timeout;
     case CURLE_PEER_FAILED_VERIFICATION:
     case CURLE_SSL_CACERT_BADFILE:
     case CURLE_SSL_ISSUER_ERROR:
     case CURLE_SSL_PINNEDPUBKEYNOTMATCH: return ErrorCode::TlsCertificateInvalid;
     case CURLE_SSL_CONNECT_ERROR:
+        return failure.proxyTlsPending ? ErrorCode::ProxyTlsFailed : ErrorCode::TlsHandshakeFailed;
     case CURLE_SSL_CERTPROBLEM:
     case CURLE_SSL_CIPHER:
     case CURLE_USE_SSL_FAILED: return ErrorCode::TlsHandshakeFailed;

@@ -59,6 +59,10 @@ QString errorMessage(ErrorCode code)
         return QCoreApplication::translate("Errors", "Could not connect to the proxy server.");
     case ErrorCode::ProxyAuthRequired:
         return QCoreApplication::translate("Errors", "The proxy server requires a valid username and password.");
+    case ErrorCode::ProxyTlsFailed:
+        return QCoreApplication::translate("Errors", "The proxy server did not accept an encrypted connection. If its "
+                                                     "provider lists it as HTTP(S), choose HTTP as the proxy type: "
+                                                     "HTTPS sites stay encrypted.");
     case ErrorCode::TlsHandshakeFailed:
         return QCoreApplication::translate("Errors", "A secure connection could not be established.");
     case ErrorCode::TlsCertificateInvalid:

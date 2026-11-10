@@ -33,6 +33,7 @@ struct CurlFailure {
     long connectStatus = 0;  // CURLINFO_HTTP_CONNECTCODE: the proxy's answer to CONNECT
     long proxyError = 0;     // CURLINFO_PROXY_ERROR (CURLproxycode)
     bool viaProxy = false;
+    bool proxyTlsPending = false;  // an HTTPS proxy accepted the connection, but its TLS handshake never finished
 };
 
 // Maps a failed transfer to a typed error. Proxy problems are reported as such, not as server problems.

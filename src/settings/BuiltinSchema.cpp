@@ -1286,8 +1286,10 @@ std::vector<Definition> builtinDefinitions()
                     .category = Network,
                     .label = QT_TRANSLATE_NOOP("Settings", "Proxy type"),
                     .description = QT_TRANSLATE_NOOP(
-                        "Settings", "HTTPS encrypts the connection to the proxy itself. With SOCKS4 and SOCKS5 "
-                                    "Noctara looks up server names itself; the others let the proxy do it."),
+                        "Settings", "HTTP also carries HTTPS sites, and suits most proxies, including those listed "
+                                    "as HTTP(S). HTTPS encrypts the connection to the proxy itself and works only if "
+                                    "the proxy supports it. With SOCKS4 and SOCKS5 Noctara looks up server names "
+                                    "itself; the others let the proxy do it."),
                     .visibleWhen = Condition{keys::ProxyMode, {"manual"}}});
     defs.push_back({.key = keys::ProxyHost,
                     .type = Type::String,

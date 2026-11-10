@@ -1,6 +1,7 @@
 #include "Doctest.hpp"
 #include "TestUtil.hpp"
 #include "mock/FakeOrigin.hpp"
+#include "mock/MockServers.hpp"
 
 #include "drm/DrmBackend.hpp"
 #include "drm/DrmHost.hpp"
@@ -8,6 +9,7 @@
 #include "drm/HelperInstaller.hpp"
 #include "drm/HelperNetwork.hpp"
 #include "drm/Protocol.hpp"
+#include "drm/SocksRelay.hpp"
 #include "net/NetworkService.hpp"
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
@@ -16,11 +18,14 @@
 #include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
+#include <QHostAddress>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QSignalSpy>
+#include <QTcpSocket>
 #include <QTemporaryDir>
 
+#include <atomic>
 #include <csignal>
 #include <map>
 #include <mutex>
@@ -282,6 +287,42 @@ TEST_SUITE("drm.network")
         CHECK(planNetwork(config).blocked->code == ErrorCode::ProxyNotConfigured);
     }
 
+    TEST_CASE("a SOCKS5 proxy with a sign-in goes through the local relay, and only the relay's credentials reach it")
+    {
+        net::NetworkConfig config = directConfig();
+        config.proxy.mode = net::ProxyMode::Manual;
+        config.proxy.manual = *net::ProxyServer::fromUrl(u"socks5://proxy.example:1080");
+        config.proxy.bypass = {QStringLiteral("example.com")};
+        CHECK_FALSE(needsSocksRelay(config));  // no credentials: Chromium connects by itself
+
+        config.proxy.manual.username = QStringLiteral("real-user");
+        config.proxy.manual.password = QStringLiteral("real-password");
+        REQUIRE(needsSocksRelay(config));
+        const LocalProxy relay{.port = 4242, .username = QStringLiteral("r-user"), .password = QStringLiteral("r-pw")};
+        const HelperNetwork plan = planNetwork(config, &relay);
+        const QJsonObject proxy = plan.configure.value(u"proxy").toObject();
+        CHECK(plan.switches.contains(u"--proxy-server=http://127.0.0.1:4242"));
+        CHECK(plan.switches.contains(u"--proxy-bypass-list=example.com"));
+        CHECK(proxy.value(u"rules").toString() == u"http://127.0.0.1:4242");
+        CHECK(proxy.value(u"username").toString() == u"r-user");
+        CHECK(proxy.value(u"password").toString() == u"r-pw");
+        CHECK(plan.limits.empty());
+        const QByteArray message = QJsonDocument(plan.configure).toJson();
+        CHECK_FALSE(message.contains("real-user"));
+        CHECK_FALSE(message.contains("real-password"));
+
+        // Strict custom DNS holds: the relay looks the proxy's name up with Noctara's own resolver.
+        config.dns.mode = net::DnsMode::Custom;
+        config.dns.servers = {*Endpoint::parse(u"192.0.2.53", 53)};
+        config.dns.fallbackToSystem = false;
+        REQUIRE(config.dns.strict());
+        CHECK_FALSE(planNetwork(config, &relay).blocked);
+        CHECK(planNetwork(config).blocked);  // without a relay it would still need the system resolver
+
+        config.proxy.manual.type = net::ProxyType::Socks4;
+        CHECK_FALSE(needsSocksRelay(config));  // not relayed: warned as a limit
+    }
+
     TEST_CASE("DNS over HTTPS applies live with its bootstrap mapped; strict custom DNS blocks protected playback")
     {
         net::NetworkConfig config = directConfig();
@@ -334,6 +375,179 @@ TEST_SUITE("drm.network")
         CHECK(plan.limits.size() == 3);
         config.transport.offline = true;
         CHECK(planNetwork(config).blocked->code == ErrorCode::Offline);
+    }
+}
+
+TEST_SUITE("drm.relay")
+{
+    // The helper's side of the relay, driven the way Chromium drives it.
+    struct RelayClient {
+        QTcpSocket socket;
+
+        explicit RelayClient(std::uint16_t port)
+        {
+            socket.connectToHost(QHostAddress::LocalHost, port);
+            REQUIRE(socket.waitForConnected(5000));
+        }
+
+        // Writes `request` and returns everything up to the end of the response head.
+        QByteArray exchange(const QByteArray& request)
+        {
+            socket.write(request);
+            QByteArray head;
+            while (!head.contains("\r\n\r\n") && socket.waitForReadyRead(10000)) {
+                head += socket.readAll();
+            }
+            return head;
+        }
+    };
+
+    QByteArray connectRequest(const QByteArray& target, const LocalProxy& relay)
+    {
+        const QByteArray secret = (relay.username + u':' + relay.password).toLatin1().toBase64();
+        return "CONNECT " + target + " HTTP/1.1\r\nHost: " + target + "\r\nProxy-Authorization: Basic " + secret +
+               "\r\n\r\n";
+    }
+
+    net::ProxyServer socksServer(std::uint16_t port, const char* username, const char* password)
+    {
+        return {net::ProxyType::Socks5h, QStringLiteral("127.0.0.1"), port, QString::fromLatin1(username),
+                QString::fromLatin1(password)};
+    }
+
+    SocksRelay::Resolve noResolver()
+    {
+        return [](const QString&, QObject*, const net::ResolveCallback&) {
+            FAIL("the proxy is given by address");
+        };
+    }
+
+    TEST_CASE("signs in to the SOCKS5 proxy and tunnels to the destination by name")
+    {
+        test::HttpServer origin([](const test::HttpRequest&) {
+            test::HttpReply reply;
+            reply.body = "through the relay";
+            return reply;
+        });
+        test::SocksProxy socks("bob:pw");
+        SocksRelay relay(noResolver());
+        const auto endpoint = relay.start(socksServer(socks.port(), "bob", "pw"));
+        REQUIRE(endpoint);
+        CHECK_FALSE(endpoint->username.isEmpty());
+        CHECK_FALSE(endpoint->password.isEmpty());
+
+        RelayClient client(endpoint->port);
+        const QByteArray opened =
+            client.exchange(connectRequest("app.test:" + QByteArray::number(origin.port()), *endpoint));
+        REQUIRE_MESSAGE(opened.startsWith("HTTP/1.1 200"), opened.constData());
+        QByteArray answer = client.exchange("GET / HTTP/1.1\r\nHost: app.test\r\nConnection: close\r\n\r\n");
+        while (!answer.contains("through the relay") && client.socket.waitForReadyRead(10000)) {
+            answer += client.socket.readAll();
+        }
+        CHECK(answer.contains("through the relay"));
+        REQUIRE(socks.connects().size() == 1);
+        CHECK(socks.connects().front().addressType == 3);
+        CHECK(socks.connects().front().host == "app.test");
+    }
+
+    TEST_CASE("asks for its credentials and refuses anything but an authenticated CONNECT")
+    {
+        test::SocksProxy socks("bob:pw");
+        SocksRelay relay(noResolver());
+        const auto endpoint = relay.start(socksServer(socks.port(), "bob", "pw"));
+        REQUIRE(endpoint);
+
+        RelayClient anonymous(endpoint->port);
+        const QByteArray challenge = anonymous.exchange("CONNECT app.test:443 HTTP/1.1\r\nHost: app.test:443\r\n\r\n");
+        CHECK(challenge.startsWith("HTTP/1.1 407"));
+        CHECK(challenge.contains("Proxy-Authenticate: Basic"));
+
+        LocalProxy wrong = *endpoint;
+        wrong.password += u'x';
+        RelayClient impostor(endpoint->port);
+        CHECK(impostor.exchange(connectRequest("app.test:443", wrong)).startsWith("HTTP/1.1 407"));
+
+        RelayClient plainRequest(endpoint->port);
+        CHECK(plainRequest.exchange("GET http://app.test/ HTTP/1.1\r\nHost: app.test\r\n\r\n")
+                  .startsWith("HTTP/1.1 405"));
+        CHECK(socks.connects().empty());
+    }
+
+    TEST_CASE("reports a refused sign-in and an unreachable proxy")
+    {
+        test::SocksProxy socks("bob:pw");
+        SocksRelay relay(noResolver());
+        auto endpoint = relay.start(socksServer(socks.port(), "bob", "wrong"));
+        REQUIRE(endpoint);
+        RelayClient refused(endpoint->port);
+        CHECK(refused.exchange(connectRequest("app.test:443", *endpoint)).startsWith("HTTP/1.1 403"));
+
+        const std::uint16_t port = endpoint->port;
+        endpoint = relay.start(socksServer(1, "bob", "pw"));  // same relay, nothing listens there
+        REQUIRE(endpoint);
+        CHECK(endpoint->port == port);
+        RelayClient unreachable(endpoint->port);
+        CHECK(unreachable.exchange(connectRequest("app.test:443", *endpoint)).startsWith("HTTP/1.1 502"));
+    }
+
+    TEST_CASE("looks a named proxy up with the given resolver, trying each address")
+    {
+        test::SocksProxy socks("bob:pw");
+        std::atomic<int> lookups = 0;
+        SocksRelay relay([&](const QString& host, QObject* context, net::ResolveCallback done) {
+            CHECK(host == u"proxy.test");
+            ++lookups;
+            QMetaObject::invokeMethod(
+                context,
+                [done = std::move(done)] {
+                    // Nothing listens on the first one: the proxy is only reached if the second is tried.
+                    net::Resolution resolution;
+                    resolution.addresses = {*IpAddress::parse(u"::1"), *IpAddress::parse(u"127.0.0.1")};
+                    done(resolution);
+                },
+                Qt::QueuedConnection);
+        });
+        net::ProxyServer named = socksServer(socks.port(), "bob", "pw");
+        named.host = QStringLiteral("proxy.test");
+        const auto endpoint = relay.start(named);
+        REQUIRE(endpoint);
+        RelayClient client(endpoint->port);
+        (void)client.exchange(connectRequest("app.test:443", *endpoint));
+        CHECK(lookups.load() == 1);
+        CHECK(socks.connects().size() == 1);
+    }
+
+    // Against a real proxy: NOCTARA_TEST_PROXY=socks5h://user:password@host:port, with `xmake drm-helper` done.
+    TEST_CASE("real proxy: the helper gets Widevine through the relay" * doctest::skip())
+    {
+        const auto upstream = net::ProxyServer::fromUrl(QString::fromLocal8Bit(qgetenv("NOCTARA_TEST_PROXY")));
+        REQUIRE_MESSAGE(upstream, "set NOCTARA_TEST_PROXY");
+        SocksRelay relay([](const QString&, QObject*, const net::ResolveCallback&) { FAIL("use an address"); });
+        const auto endpoint = relay.start(*upstream);
+        REQUIRE(endpoint);
+        RelayClient client(endpoint->port);
+        const QByteArray opened =
+            client.exchange(connectRequest("license.media-streaming.soundcloud.cloud:443", *endpoint));
+        REQUIRE_MESSAGE(opened.startsWith("HTTP/1.1 200"), opened.constData());
+
+        const auto command = helperIn(QStringLiteral(NOCTARA_SOURCE_DIR "/build/drm-helper"));
+        REQUIRE_MESSAGE(command, "run `xmake drm-helper` first");
+        QTemporaryDir profile;  // empty: the CDM has to come through the proxy
+        DrmHost::Options options = mockOptions(profile.path());
+        options.command = command;
+        options.heartbeat = 5s;
+        options.heartbeatTimeout = 60s;
+        DrmHost host(options);
+        net::NetworkConfig config;
+        config.proxy.mode = net::ProxyMode::Manual;
+        config.proxy.manual = *upstream;
+        host.setNetwork(planNetwork(config, &*endpoint));
+        QSignalSpy ready(&host, &DrmHost::ready);
+        QSignalSpy failed(&host, &DrmHost::failed);
+        REQUIRE(host.send(ping()));
+        REQUIRE(test::waitUntil([&] { return !ready.isEmpty() || !failed.isEmpty(); }, 240000));
+        CHECK(failed.isEmpty());
+        CHECK(host.status() == DrmHost::Status::Ready);
     }
 }
 

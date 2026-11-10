@@ -37,6 +37,7 @@ std::string_view errorCodeName(ErrorCode code) noexcept
     case ErrorCode::ProxyNotConfigured: return "ProxyNotConfigured";
     case ErrorCode::ProxyConnectFailed: return "ProxyConnectFailed";
     case ErrorCode::ProxyAuthRequired: return "ProxyAuthRequired";
+    case ErrorCode::ProxyTlsFailed: return "ProxyTlsFailed";
     case ErrorCode::TlsHandshakeFailed: return "TlsHandshakeFailed";
     case ErrorCode::TlsCertificateInvalid: return "TlsCertificateInvalid";
     case ErrorCode::ConnectionFailed: return "ConnectionFailed";

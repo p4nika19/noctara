@@ -494,7 +494,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+38"/>
         <source>The protected player is set up: protected tracks play now.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -505,7 +505,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+51"/>
+        <location line="+62"/>
         <source>Setting up the protected player: downloading, %1 % of %2 MB…</source>
         <extracomment>%1 = percent done, %2 = total size in MB</extracomment>
         <translation type="unfinished"></translation>
@@ -619,12 +619,12 @@
     <name>Errors</name>
     <message>
         <location filename="../src/i18n/ErrorMessages.cpp" line="+11"/>
-        <location line="+112"/>
+        <location line="+116"/>
         <source>Something went wrong.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-111"/>
+        <location line="-115"/>
         <source>The operation was cancelled.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -770,6 +770,11 @@
     </message>
     <message>
         <location line="+2"/>
+        <source>The proxy server did not accept an encrypted connection. If its provider lists it as HTTP(S), choose HTTP as the proxy type: HTTPS sites stay encrypted.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>A secure connection could not be established.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1105,7 +1110,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+28"/>
         <source>Up next</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2236,7 +2241,7 @@
     <name>QueueDrawer</name>
     <message>
         <location filename="../src/qml/components/QueueDrawer.qml" line="+30"/>
-        <location line="+18"/>
+        <location line="+24"/>
         <source>Queue</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2919,12 +2924,12 @@
         <location line="+12"/>
         <location line="+58"/>
         <location line="+111"/>
-        <location line="+125"/>
+        <location line="+127"/>
         <source>Auto</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-854"/>
+        <location line="-856"/>
         <source>Low</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4089,17 +4094,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-557"/>
+        <location line="+50"/>
+        <source>HTTP also carries HTTPS sites, and suits most proxies, including those listed as HTTP(S). HTTPS encrypts the connection to the proxy itself and works only if the proxy supports it. With SOCKS4 and SOCKS5 Noctara looks up server names itself; the others let the proxy do it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-607"/>
         <location line="+558"/>
         <location line="+11"/>
         <location line="+12"/>
-        <location line="+94"/>
+        <location line="+96"/>
         <location line="+11"/>
         <source>s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1153"/>
+        <location line="-1155"/>
         <source>Navigation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4310,12 +4320,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>HTTPS encrypts the connection to the proxy itself. With SOCKS4 and SOCKS5 Noctara looks up server names itself; the others let the proxy do it.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+8"/>
+        <location line="+11"/>
         <source>Proxy host</source>
         <translation type="unfinished"></translation>
     </message>

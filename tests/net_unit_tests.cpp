@@ -414,6 +414,10 @@ TEST_SUITE("net.policy")
         CHECK(errorFromCurl({.code = CURLE_PEER_FAILED_VERIFICATION}) == ErrorCode::TlsCertificateInvalid);
         CHECK(errorFromCurl({.code = CURLE_SSL_CONNECT_ERROR}) == ErrorCode::TlsHandshakeFailed);
         CHECK(errorFromCurl({.code = CURLE_OPERATION_TIMEDOUT}) == ErrorCode::Timeout);
+        CHECK(errorFromCurl({.code = CURLE_OPERATION_TIMEDOUT, .viaProxy = true, .proxyTlsPending = true}) ==
+              ErrorCode::ProxyTlsFailed);
+        CHECK(errorFromCurl({.code = CURLE_SSL_CONNECT_ERROR, .viaProxy = true, .proxyTlsPending = true}) ==
+              ErrorCode::ProxyTlsFailed);
         CHECK(errorFromCurl({.code = CURLE_COULDNT_RESOLVE_HOST}) == ErrorCode::DnsResolutionFailed);
         CHECK(errorFromCurl({.code = CURLE_ABORTED_BY_CALLBACK}) == ErrorCode::Cancelled);
     }
