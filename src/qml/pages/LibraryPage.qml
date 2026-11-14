@@ -30,11 +30,12 @@ Item {
         width: parent.width
         title: qsTr("Library")
         viewPage: "library"
-        FilterField {
-            anchors.verticalCenter: parent.verticalCenter
+        search: FilterField {
+            anchors.centerIn: parent
+            width: Math.min(implicitWidth, parent.width)
             visible: Account.signedIn && ((listFilter.source ? listFilter.source.count : 0) > 0 || listFilter.active)
             filter: listFilter
-            placeholderText: root.tab === "following" ? qsTr("Search people") : qsTr("Search playlists and albums")
+            prompt: root.tab === "following" ? qsTr("Search people") : qsTr("Search playlists and albums")
         }
         SegmentedControl {
             anchors.verticalCenter: parent.verticalCenter

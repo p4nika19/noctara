@@ -33,19 +33,27 @@ T.TextField {
         visible: control.length === 0 && !control.preeditText
     }
 
-    background: Rectangle {
-        radius: Math.min(Theme.radius.button, height / 2)
-        color: control.hovered || control.activeFocus ? Theme.colors.surfaceRaised : Theme.colors.surfaceBase
-        border.width: Theme.space.hairline
-        border.color: control.activeFocus ? Theme.colors.focusRing : Theme.colors.edge
+    // The field's surface (fill, edge, sheen); 0 leaves only the icon and the placeholder (a collapsed FilterField).
+    property real chrome: 1
+
+    background: Item {
         Rectangle {
             anchors.fill: parent
-            anchors.margins: Theme.space.hairline
-            radius: Math.max(0, parent.radius - Theme.space.hairline)
-            visible: Theme.glass.translucent
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: Theme.colors.sheen }
-                GradientStop { position: 0.45; color: "transparent" }
+            opacity: control.chrome
+            visible: opacity > 0
+            radius: Math.min(Theme.radius.button, height / 2)
+            color: control.hovered || control.activeFocus ? Theme.colors.surfaceRaised : Theme.colors.surfaceBase
+            border.width: Theme.space.hairline
+            border.color: control.activeFocus ? Theme.colors.focusRing : Theme.colors.edge
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: Theme.space.hairline
+                radius: Math.max(0, parent.radius - Theme.space.hairline)
+                visible: Theme.glass.translucent
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: Theme.colors.sheen }
+                    GradientStop { position: 0.45; color: "transparent" }
+                }
             }
         }
         Icon {

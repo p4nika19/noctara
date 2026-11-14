@@ -465,14 +465,14 @@
     <name>DownloadsPage</name>
     <message>
         <location filename="../src/qml/pages/DownloadsPage.qml" line="+22"/>
-        <location line="+17"/>
+        <location line="+18"/>
         <location line="+7"/>
         <location line="+10"/>
         <source>Downloaded</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-33"/>
+        <location line="-34"/>
         <source>Played tracks stored for listening offline</source>
         <translation type="unfinished"></translation>
     </message>
@@ -494,7 +494,7 @@
         </translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Search in downloads</source>
         <translation type="unfinished"></translation>
     </message>
@@ -978,7 +978,12 @@
 <context>
     <name>FilterField</name>
     <message>
-        <location filename="../src/qml/components/FilterField.qml" line="+39"/>
+        <location filename="../src/qml/components/FilterField.qml" line="+47"/>
+        <source>Click to search</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+66"/>
         <source>Clear the search</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1442,7 +1447,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Search people</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1491,14 +1496,14 @@
     <name>LikesPage</name>
     <message>
         <location filename="../src/qml/pages/LikesPage.qml" line="+24"/>
-        <location line="+19"/>
+        <location line="+20"/>
         <location line="+7"/>
         <location line="+12"/>
         <source>Likes</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="-34"/>
+        <location line="-35"/>
         <source>%n track(s) · updating…</source>
         <translation>
             <numerusform>%n track · updating…</numerusform>
@@ -1523,7 +1528,7 @@
         </translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
         <source>Search in likes</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2060,7 +2065,7 @@
 <context>
     <name>PageHeader</name>
     <message>
-        <location filename="../src/qml/components/PageHeader.qml" line="+50"/>
+        <location filename="../src/qml/components/PageHeader.qml" line="+72"/>
         <source>List</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2220,7 +2225,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
         <source>No tracks in this playlist match “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2674,8 +2679,8 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+612"/>
-        <location line="+346"/>
+        <location line="+611"/>
+        <location line="+347"/>
         <source>System</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2766,12 +2771,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+624"/>
+        <location line="+623"/>
         <source>Volume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-623"/>
+        <location line="-622"/>
         <source>Volume when Noctara starts.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3060,13 +3065,13 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+407"/>
+        <location line="+406"/>
         <location line="+25"/>
         <source>Medium</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-431"/>
+        <location line="-430"/>
         <source>High</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3359,12 +3364,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+199"/>
+        <location line="+198"/>
         <source>Regular</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-198"/>
+        <location line="-197"/>
         <source>Bold</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3380,12 +3385,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+188"/>
+        <location line="+187"/>
         <source>Compact</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-187"/>
+        <location line="-186"/>
         <source>Comfortable</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3566,18 +3571,18 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+28"/>
+        <location line="+27"/>
         <source>Bottom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-26"/>
-        <location line="+29"/>
+        <location line="-25"/>
+        <location line="+28"/>
         <source>Position</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-27"/>
         <source>Which edge of the window the navigation sits on.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3602,7 +3607,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+9"/>
         <source>Pages in the navigation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3908,6 +3913,11 @@
     </message>
     <message>
         <location line="+4"/>
+        <source>Search in the list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Back</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4280,12 +4290,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+773"/>
+        <location line="+772"/>
         <source>Full-screen player</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-772"/>
+        <location line="-771"/>
         <source>The large player with the cover art.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4395,7 +4405,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+207"/>
+        <location line="+206"/>
         <source>Hide to the tray when closed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4405,7 +4415,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+113"/>
+        <location line="+114"/>
         <source>While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead of Liquid Glass or Gaussian, and limits animations that play by themselves to 30 frames per second; scrolling and clicks stay at full speed. Automatic turns it on only while the computer runs on battery.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6016,7 +6026,7 @@
 <context>
     <name>noctara::ui::TrayIcon</name>
     <message>
-        <location filename="../src/ui/TrayIcon.cpp" line="+121"/>
+        <location filename="../src/ui/TrayIcon.cpp" line="+120"/>
         <source>Previous</source>
         <translation type="unfinished"></translation>
     </message>

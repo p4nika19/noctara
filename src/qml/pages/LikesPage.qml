@@ -28,11 +28,12 @@ Item {
                   : Catalog.likes.loading ? qsTr("%n track(s) · updating…", "", Catalog.likes.count)
                   : qsTr("%n track(s)", "", Catalog.likes.count)
         viewPage: "likes"
-        FilterField {
-            anchors.verticalCenter: parent.verticalCenter
+        search: FilterField {
+            anchors.centerIn: parent
+            width: Math.min(implicitWidth, parent.width)
             visible: Account.signedIn && (Catalog.likes.count > 0 || listFilter.active)
             filter: listFilter
-            placeholderText: qsTr("Search in likes")
+            prompt: qsTr("Search in likes")
         }
         Button {
             anchors.verticalCenter: parent.verticalCenter

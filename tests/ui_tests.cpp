@@ -1174,39 +1174,66 @@ TEST_SUITE("ui.components")
         }));
     }
 
-    TEST_CASE("the list search field drives its filter; Escape and the clear button empty it")
+    TEST_CASE("the list search field opens on its key, drives its filter, and Escape empties then closes it")
     {
         static const bool registered = [] {
             qmlRegisterType<models::CollectionFilter>("Noctara", 1, 0, "CollectionFilter");
             return true;
         }();
         (void)registered;
+        stub::singleton("Shortcuts", QStringLiteral("({sequences: {find_in_list: '/'}, display: text => text, "
+                                                    "fromKeyEvent: (key, mods) => ''})"));
         const WindowHarness harness(R"(Window {
             width: 400; height: 100; visible: true
             property Item field: field
             property QtObject filter: listFilter
+            property int summons: 0
             CollectionFilter { id: listFilter }
-            FilterField { id: field; x: 10; y: 10; width: 300; filter: listFilter; focus: true }
+            FilterField { id: field; x: 10; y: 10; filter: listFilter; prompt: "Search"; onSummoned: summons++ }
         })");
+        QQuickWindow* window = harness.window.get();
+        window->requestActivate();
+        REQUIRE(test::waitUntil([&] { return QGuiApplication::focusWindow() == window; }));
         QQuickItem* field = harness.item("field");
         QObject* filter = harness.object("filter");
-        field->forceActiveFocus();
         const auto type = [&](const char* text) {
             for (const char* c = text; *c != '\0'; ++c) {  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-                QTest::keyClick(harness.window.get(), *c);
+                QTest::keyClick(window, *c);
             }
         };
+
+        // Closed: only the hint, much narrower than the open field.
+        CHECK_FALSE(field->property("open").toBool());
+        CHECK(field->property("placeholderText").toString() != u"Search");
+        CHECK(field->property("collapsedWidth").toReal() < field->property("openWidth").toReal());
+
+        // Its key opens it (and is not typed into it).
+        QTest::keyClick(window, Qt::Key_Slash);
+        REQUIRE(field->hasActiveFocus());
+        CHECK(field->property("open").toBool());
+        CHECK(window->property("summons").toInt() == 1);
+        CHECK(field->property("placeholderText").toString() == u"Search");
+        CHECK(test::waitUntil([&] { return field->width() == field->property("openWidth").toReal(); }));
         type("neon");
         CHECK(filter->property("text").toString() == u"neon");
-        QTest::keyClick(harness.window.get(), Qt::Key_Escape);
+
+        // Escape empties it, a second Escape closes it.
+        QTest::keyClick(window, Qt::Key_Escape);
         CHECK(filter->property("text").toString().isEmpty());
         CHECK(field->property("text").toString().isEmpty());
+        CHECK(field->hasActiveFocus());
+        QTest::keyClick(window, Qt::Key_Escape);
+        CHECK_FALSE(field->hasActiveFocus());
+        CHECK_FALSE(field->property("open").toBool());
 
-        // Emptied from outside (another playlist opened in the same page): the field follows.
-        type("drive");
-        REQUIRE(filter->property("text").toString() == u"drive");
+        // A search set while it is closed keeps it open; emptied from outside (another playlist opened in the same
+        // page), it follows and closes again.
+        filter->setProperty("text", QStringLiteral("drive"));
+        CHECK(field->property("text").toString() == u"drive");
+        CHECK(field->property("open").toBool());
         filter->setProperty("text", QString());
         CHECK(field->property("text").toString().isEmpty());
+        CHECK_FALSE(field->property("open").toBool());
     }
 
     TEST_CASE("dragging a queue row moves it once, where it is dropped; a click still plays")

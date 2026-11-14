@@ -466,14 +466,14 @@
     <name>DownloadsPage</name>
     <message>
         <location filename="../src/qml/pages/DownloadsPage.qml" line="+22"/>
-        <location line="+17"/>
+        <location line="+18"/>
         <location line="+7"/>
         <location line="+10"/>
         <source>Downloaded</source>
         <translation>Скачанное</translation>
     </message>
     <message>
-        <location line="-33"/>
+        <location line="-34"/>
         <source>Played tracks stored for listening offline</source>
         <translation>Прослушанные треки, сохранённые для офлайна</translation>
     </message>
@@ -497,7 +497,7 @@
         </translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Search in downloads</source>
         <translation>Поиск в скачанном</translation>
     </message>
@@ -981,7 +981,12 @@
 <context>
     <name>FilterField</name>
     <message>
-        <location filename="../src/qml/components/FilterField.qml" line="+39"/>
+        <location filename="../src/qml/components/FilterField.qml" line="+47"/>
+        <source>Click to search</source>
+        <translation>Нажмите, чтобы искать</translation>
+    </message>
+    <message>
+        <location line="+66"/>
         <source>Clear the search</source>
         <translation>Очистить поиск</translation>
     </message>
@@ -1451,7 +1456,7 @@
         <translation>Медиатека</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Search people</source>
         <translation>Поиск по людям</translation>
     </message>
@@ -1500,14 +1505,14 @@
     <name>LikesPage</name>
     <message>
         <location filename="../src/qml/pages/LikesPage.qml" line="+24"/>
-        <location line="+19"/>
+        <location line="+20"/>
         <location line="+7"/>
         <location line="+12"/>
         <source>Likes</source>
         <translation>Лайки</translation>
     </message>
     <message numerus="yes">
-        <location line="-34"/>
+        <location line="-35"/>
         <source>%n track(s) · updating…</source>
         <translation>
             <numerusform>%n трек · обновляется…</numerusform>
@@ -1535,7 +1540,7 @@
         </translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
         <source>Search in likes</source>
         <translation>Поиск в лайках</translation>
     </message>
@@ -2072,7 +2077,7 @@
 <context>
     <name>PageHeader</name>
     <message>
-        <location filename="../src/qml/components/PageHeader.qml" line="+50"/>
+        <location filename="../src/qml/components/PageHeader.qml" line="+72"/>
         <source>List</source>
         <translation>Список</translation>
     </message>
@@ -2232,7 +2237,7 @@
         <translation>Плейлист</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
         <source>No tracks in this playlist match “%1”.</source>
         <translation>В этом плейлисте нет совпадений с «%1».</translation>
     </message>
@@ -2688,8 +2693,8 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+612"/>
-        <location line="+346"/>
+        <location line="+611"/>
+        <location line="+347"/>
         <source>System</source>
         <translation>Как в системе</translation>
     </message>
@@ -2780,12 +2785,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+624"/>
+        <location line="+623"/>
         <source>Volume</source>
         <translation>Громкость</translation>
     </message>
     <message>
-        <location line="-623"/>
+        <location line="-622"/>
         <source>Volume when Noctara starts.</source>
         <translation>Громкость при запуске Noctara.</translation>
     </message>
@@ -3074,13 +3079,13 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+407"/>
+        <location line="+406"/>
         <location line="+25"/>
         <source>Medium</source>
         <translation>Среднее</translation>
     </message>
     <message>
-        <location line="-431"/>
+        <location line="-430"/>
         <source>High</source>
         <translation>Высокое</translation>
     </message>
@@ -3373,12 +3378,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+199"/>
+        <location line="+198"/>
         <source>Regular</source>
         <translation>Обычные</translation>
     </message>
     <message>
-        <location line="-198"/>
+        <location line="-197"/>
         <source>Bold</source>
         <translation>Жирные</translation>
     </message>
@@ -3394,12 +3399,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+188"/>
+        <location line="+187"/>
         <source>Compact</source>
         <translation>Плотно</translation>
     </message>
     <message>
-        <location line="-187"/>
+        <location line="-186"/>
         <source>Comfortable</source>
         <translation>Обычно</translation>
     </message>
@@ -3580,18 +3585,18 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+28"/>
+        <location line="+27"/>
         <source>Bottom</source>
         <translation>Снизу</translation>
     </message>
     <message>
-        <location line="-26"/>
-        <location line="+29"/>
+        <location line="-25"/>
+        <location line="+28"/>
         <source>Position</source>
         <translation>Положение</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-27"/>
         <source>Which edge of the window the navigation sits on.</source>
         <translation>У какого края окна находится навигация.</translation>
     </message>
@@ -3616,7 +3621,7 @@
         <translation>При автоскрытии навигация появляется, когда указатель доходит до её края.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+9"/>
         <source>Pages in the navigation</source>
         <translation>Страницы в навигации</translation>
     </message>
@@ -3922,6 +3927,11 @@
     </message>
     <message>
         <location line="+4"/>
+        <source>Search in the list</source>
+        <translation>Поиск в списке</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Back</source>
         <translation>Назад</translation>
     </message>
@@ -4299,12 +4309,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+773"/>
+        <location line="+772"/>
         <source>Full-screen player</source>
         <translation>Полноэкранный плеер</translation>
     </message>
     <message>
-        <location line="-772"/>
+        <location line="-771"/>
         <source>The large player with the cover art.</source>
         <translation>Большой плеер с обложкой.</translation>
     </message>
@@ -4414,7 +4424,7 @@
         <translation>Папка с вашим собственным защищённым плеером (как создаёт `xmake drm-helper`). Если пусто, используется плеер рядом с Noctara, в её каталоге установки или установленный самой Noctara.</translation>
     </message>
     <message>
-        <location line="+207"/>
+        <location line="+206"/>
         <source>Hide to the tray when closed</source>
         <translation>Сворачивать в трей при закрытии</translation>
     </message>
@@ -4424,7 +4434,7 @@
         <translation>Закрытие окна убирает его в трей, а воспроизведение продолжается; «Выход» в меню трея завершает Noctara. Если выключено, закрытие окна завершает программу. Нужен значок в трее.</translation>
     </message>
     <message>
-        <location line="+282"/>
+        <location line="+283"/>
         <source>Maximum lifetime</source>
         <translation>Максимальное время жизни</translation>
     </message>
@@ -6036,7 +6046,7 @@
 <context>
     <name>noctara::ui::TrayIcon</name>
     <message>
-        <location filename="../src/ui/TrayIcon.cpp" line="+121"/>
+        <location filename="../src/ui/TrayIcon.cpp" line="+120"/>
         <source>Previous</source>
         <translation>Предыдущий</translation>
     </message>

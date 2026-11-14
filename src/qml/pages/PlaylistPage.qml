@@ -21,6 +21,7 @@ Item {
     onDetailChanged: listFilter.text = ""
 
     CollectionView {
+        id: tracksView
         anchors.fill: parent
         model: listFilter.model
         context: root.detail.title
@@ -138,7 +139,8 @@ Item {
                             width: Math.min(implicitWidth, parent.width)
                             visible: root.detail.tracks.count > 1 || listFilter.active
                             filter: listFilter
-                            placeholderText: qsTr("Search in this playlist")
+                            prompt: qsTr("Search in this playlist")
+                            onSummoned: tracksView.view.positionViewAtBeginning()
                         }
                     }
                 }

@@ -1,27 +1,101 @@
 import QtQuick
+import QtQuick.Window
 import Noctara
 
-// A search within one list (likes, the library, a playlist), driving a CollectionFilter: typing narrows the list,
-// the clear button or Escape brings everything back. Escape only goes back a page once the field is empty.
+// A search within one list (likes, the library, a playlist), driving a CollectionFilter. Until it is used it is only
+// a faint "Click to search" with the key that opens it (Settings → Keyboard, "/" by default); a click or that key
+// opens the full field. Typing narrows the list. Escape empties the field, a second Escape closes it, and Escape goes
+// back a page only while it is closed. A field that keeps a search stays open.
 TextField {
     id: control
 
     property CollectionFilter filter
+    property string prompt  // the placeholder of the open field
+    property real openWidth: 240 * Theme.scale
+    readonly property bool open: activeFocus || length > 0
+    readonly property string keys: Shortcuts.sequences.find_in_list || ""
 
-    implicitWidth: 240 * Theme.scale
+    // Opened by its key (the page may want to bring it into view).
+    signal summoned()
+
+    function close() {
+        focus = false
+    }
+
+    implicitWidth: open ? openWidth : collapsedWidth
+    Behavior on implicitWidth {
+        NumberAnimation { duration: Theme.motion.normal; easing.type: Theme.motion.easingStandard }
+    }
+    readonly property real collapsedWidth: Math.ceil(leftPadding + hintMetrics.advanceWidth
+                                                     + (keycap.visible ? keycap.width + Theme.space.sm * 2
+                                                                       : Theme.space.md))
+    chrome: open ? 1 : 0
+    Behavior on chrome { NumberAnimation { duration: Theme.motion.fast } }
+    opacity: open ? 1 : hovered ? 0.85 : 0.6
+    Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+
     iconName: "search"
-    rightPadding: clear.visible ? clear.width + Theme.space.xs * 2 : Theme.space.md
+    placeholderText: open ? prompt : hintMetrics.text
+    rightPadding: open ? (clear.visible ? clear.width + Theme.space.xs * 2 : Theme.space.md)
+                       : (keycap.visible ? keycap.width + Theme.space.sm * 2 : Theme.space.md)
     text: filter ? filter.text : ""
     onTextEdited: if (filter) filter.text = text
 
-    Keys.onShortcutOverride: event => event.accepted = event.key === Qt.Key_Escape && text.length > 0
+    TextMetrics {
+        id: hintMetrics
+        font: control.font
+        text: qsTr("Click to search")
+    }
+
+    HoverHandler {
+        enabled: !control.open
+        cursorShape: Qt.PointingHandCursor
+    }
+
+    Shortcut {
+        sequence: control.keys
+        enabled: control.keys.length > 0 && control.visible && control.enabled && !control.activeFocus
+                 && !(control.Window.window && control.Window.window.fullPlayer === true)
+        onActivated: {
+            control.forceActiveFocus(Qt.ShortcutFocusReason)
+            control.summoned()
+        }
+    }
+
+    Keys.onShortcutOverride: event => event.accepted = event.key === Qt.Key_Escape
     Keys.onEscapePressed: event => {
         if (text.length > 0) {
             if (filter)
                 filter.text = ""
-            event.accepted = true
+            else
+                text = ""
         } else {
-            event.accepted = false
+            close()
+        }
+        event.accepted = true
+    }
+
+    // The key that opens the field, while it is closed.
+    Rectangle {
+        id: keycap
+        anchors.right: parent.right
+        anchors.rightMargin: Theme.space.sm
+        anchors.verticalCenter: parent.verticalCenter
+        visible: !control.open && control.keys.length > 0
+        width: Math.max(height, keyText.implicitWidth + Theme.space.sm)
+        height: keyText.implicitHeight + Theme.space.xxs * 2
+        // Concentric with the field's (hidden) shape.
+        radius: Math.min(height / 2, Math.max(0, Math.min(Theme.radius.button, control.height / 2)
+                                                 - (control.height - height) / 2))
+        color: "transparent"
+        border.width: Theme.space.hairline
+        border.color: Theme.colors.edge
+        Text {
+            id: keyText
+            anchors.centerIn: parent
+            text: control.keys.length > 0 ? Shortcuts.display(control.keys) : ""
+            font: Theme.font.monoSmall
+            color: Theme.colors.textTertiary
         }
     }
 

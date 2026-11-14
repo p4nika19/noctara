@@ -24,11 +24,12 @@ Item {
                   : listFilter.active ? qsTr("%1 · %n match(es)", "", (listFilter.model ? listFilter.model.count : 0))
                                             .arg(qsTr("%n track(s)", "", Downloads.tracks.count))
                   : qsTr("%n track(s)", "", Downloads.tracks.count)
-        FilterField {
-            anchors.verticalCenter: parent.verticalCenter
+        search: FilterField {
+            anchors.centerIn: parent
+            width: Math.min(implicitWidth, parent.width)
             visible: Downloads.tracks.count > 0 || listFilter.active
             filter: listFilter
-            placeholderText: qsTr("Search in downloads")
+            prompt: qsTr("Search in downloads")
         }
         Button {
             anchors.verticalCenter: parent.verticalCenter

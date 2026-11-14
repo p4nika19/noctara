@@ -294,6 +294,7 @@ Click a shortcut and press the new keys. Backspace removes it, Escape cancels. M
 | `queue` | shortcut | `"Ctrl+Shift+Q"` | — | **Show the queue.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_QUEUE`) |
 | `full_player` | shortcut | `"Ctrl+Shift+F"` | — | **Full-screen player.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_FULL_PLAYER`) |
 | `search` | shortcut | `"Ctrl+K"` | — | **Search.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_SEARCH`) |
+| `find_in_list` | shortcut | `"/"` | — | **Search in the list.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_FIND_IN_LIST`) |
 | `back` | shortcut | `"Alt+Left"` | — | **Back.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_BACK`) |
 | `settings` | shortcut | `"Ctrl+,"` | — | **Settings.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_SETTINGS`) |
 | `appearance` | shortcut | `"Ctrl+Shift+A"` | — | **Appearance panel.**  (env `NOCTARA_KEYBOARD_SHORTCUTS_APPEARANCE`) |

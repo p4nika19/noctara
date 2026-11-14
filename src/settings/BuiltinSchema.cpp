@@ -995,6 +995,7 @@ std::vector<Definition> builtinDefinitions()
           std::tuple{"keyboard.shortcuts.full_player", QT_TRANSLATE_NOOP("Settings", "Full-screen player"),
                      "Ctrl+Shift+F"},
           std::tuple{"keyboard.shortcuts.search", QT_TRANSLATE_NOOP("Settings", "Search"), "Ctrl+K"},
+          std::tuple{"keyboard.shortcuts.find_in_list", QT_TRANSLATE_NOOP("Settings", "Search in the list"), "/"},
           std::tuple{"keyboard.shortcuts.back", QT_TRANSLATE_NOOP("Settings", "Back"), "Alt+Left"},
           std::tuple{"keyboard.shortcuts.settings", QT_TRANSLATE_NOOP("Settings", "Settings"), "Ctrl+,"},
           std::tuple{"keyboard.shortcuts.appearance", QT_TRANSLATE_NOOP("Settings", "Appearance panel"),
