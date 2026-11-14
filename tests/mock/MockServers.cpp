@@ -267,16 +267,20 @@ TcpServer::~TcpServer()
 
 TestCertificate::TestCertificate()
 {
-    EVP_PKEY* key = EVP_EC_gen("P-256");
+    // Not EVP_EC_gen: since OpenSSL 4 the macro tests the curve string as a bool (-Wstring-conversion).
+    EVP_PKEY* key = EVP_PKEY_Q_keygen(nullptr, nullptr, "EC", "P-256");
     X509* cert = X509_new();
     X509_set_version(cert, 2);
     ASN1_INTEGER_set(X509_get_serialNumber(cert), 1);
     X509_gmtime_adj(X509_getm_notBefore(cert), -3600);
     X509_gmtime_adj(X509_getm_notAfter(cert), 86400);
     X509_set_pubkey(cert, key);
-    X509_NAME* name = X509_get_subject_name(cert);
+    // A name of its own: OpenSSL 4 hands out the certificate's subject only as const.
+    X509_NAME* name = X509_NAME_new();
     X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, reinterpret_cast<const unsigned char*>("app.test"), -1, -1, 0);
+    X509_set_subject_name(cert, name);
     X509_set_issuer_name(cert, name);
+    X509_NAME_free(name);
     X509V3_CTX v3{};
     X509V3_set_ctx_nodb(&v3);
     X509V3_set_ctx(&v3, cert, cert, nullptr, nullptr, 0);
