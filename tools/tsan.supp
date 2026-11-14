@@ -34,3 +34,10 @@ mutex:libQt6DBus.so.6
 # The raster paint engine splits large fills across Qt's own thread pool (qdrawhelper.cpp); the runnable's hand-off
 # happens inside uninstrumented Qt, so its delete on the pool thread is reported against its new on the GUI thread.
 race:qdrawhelper.cpp
+# OpenSSL's libcrypto (uninstrumented; Qt hashes through it) publishes its method store with its own atomics since
+# OpenSSL 4, so a lookup on one thread (strcmp over a name another thread allocated inside libcrypto) is reported.
+called_from_lib:libcrypto.so
+race:ossl_method_store_*
+# glibc's tzset() guards its time-zone state with glibc's internal lock, which TSan cannot see: the zone name one
+# thread allocated is freed by the next thread that reads the local time (QDateTime, the QML engine's Date).
+race:tzset_internal

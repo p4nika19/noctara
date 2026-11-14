@@ -2,12 +2,52 @@
 
 #include <QThread>
 
+#ifdef NOCTARA_TSAN
+#include <QSet>
+
+#include <mutex>
+#endif
+
 namespace noctara::net {
+
+namespace {
+
+#ifdef NOCTARA_TSAN
+// A closure still queued when its context is destroyed never runs: ~QObject drops the posted event, and with it
+// the copy of the closure the posting thread made, so the receiving side's barrier is never taken. ~QObject emits
+// destroyed() before it removes posted events, so taking the barrier there makes that drop visible too. One
+// connection per context, however many requests it makes.
+void watchContext(QObject* context)
+{
+    static std::mutex mutex;
+    static QSet<QObject*> watched;
+    {
+        const std::scoped_lock lock(mutex);
+        if (watched.contains(context)) {
+            return;
+        }
+        watched.insert(context);
+    }
+    QObject::connect(
+        context, &QObject::destroyed, context,
+        [context] {
+            handoff::barrier();
+            const std::scoped_lock lock(mutex);
+            watched.remove(context);
+        },
+        Qt::DirectConnection);
+}
+#else
+void watchContext(QObject* /*context*/) {}
+#endif
+
+}  // namespace
 
 CallbackChannel::CallbackChannel(QObject* context)
 {
     static const int registered = qRegisterMetaType<std::function<void()>>();
     (void)registered;
+    watchContext(context);
     connect(
         this, &CallbackChannel::posted, context,
         [](const std::function<void()>& closure) {
