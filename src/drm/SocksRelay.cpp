@@ -22,9 +22,9 @@ namespace {
 
 using namespace std::chrono_literals;
 
-constexpr qsizetype kMaxRequestHead = 16 * 1024;
-constexpr qint64 kChunk = 64 * 1024;
-constexpr qint64 kWriteHighWater = 256 * 1024;  // past this, the sending side waits for the slower peer
+constexpr qsizetype kMaxRequestHead = qsizetype{16} * 1024;
+constexpr qint64 kChunk = qint64{64} * 1024;
+constexpr qint64 kWriteHighWater = qint64{256} * 1024;  // past this, the sending side waits for the slower peer
 constexpr auto kHandshakeTimeout = 30s;
 constexpr int kMaxSocksField = 255;  // RFC 1929 username and password, SOCKS5 domain name
 
@@ -53,7 +53,7 @@ QString randomToken()
 {
     std::array<std::uint32_t, 4> words{};
     QRandomGenerator::system()->fillRange(words.data(), words.size());
-    QByteArray bytes(
+    const QByteArray bytes(
         reinterpret_cast<const char*>(words.data()),  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
         static_cast<qsizetype>(sizeof(words)));
     return QString::fromLatin1(bytes.toHex());
@@ -66,7 +66,8 @@ bool sameSecret(QByteArrayView a, QByteArrayView b) noexcept
     }
     unsigned difference = 0;
     for (qsizetype i = 0; i < a.size(); ++i) {
-        difference |= static_cast<unsigned char>(a[i]) ^ static_cast<unsigned char>(b[i]);
+        difference |= static_cast<unsigned>(static_cast<unsigned char>(a[i])) ^
+                      static_cast<unsigned>(static_cast<unsigned char>(b[i]));
     }
     return difference == 0;
 }
@@ -501,6 +502,9 @@ std::optional<LocalProxy> SocksRelay::start(const net::ProxyServer& upstream)
             return std::nullopt;
         }
         m_endpoint = LocalProxy{.port = port, .username = randomToken(), .password = randomToken()};
+    }
+    if (!m_endpoint) {
+        return std::nullopt;  // set together with the worker
     }
     auto config = std::make_shared<Config>();
     config->upstream = upstream;
