@@ -45,12 +45,13 @@ Result<void> invalid(const QString& item, const char* expected)
 // Navigation pages: known ids, each at most once.
 Result<void> validateNavItems(const QVariant& value)
 {
-    static const QStringList known{QStringLiteral("home"),  QStringLiteral("search"),  QStringLiteral("library"),
-                                   QStringLiteral("likes"), QStringLiteral("history"), QStringLiteral("charts")};
+    static const QStringList known{QStringLiteral("home"),     QStringLiteral("search"),  QStringLiteral("library"),
+                                   QStringLiteral("likes"),    QStringLiteral("history"), QStringLiteral("charts"),
+                                   QStringLiteral("downloads")};
     QStringList seen;
     for (const QString& item : value.toStringList()) {
         if (!known.contains(item)) {
-            return invalid(item, "home, search, library, likes, history or charts");
+            return invalid(item, "home, search, library, likes, history, charts or downloads");
         }
         if (seen.contains(item)) {
             return invalid(item, "listed once");
@@ -719,6 +720,14 @@ std::vector<Definition> builtinDefinitions()
                     .description = QT_TRANSLATE_NOOP(
                         "Settings", "Lets media keys, the desktop's media controls and other apps control playback "
                                     "and show the current track (MPRIS).")});
+    defs.push_back({.key = keys::PauseForOthers,
+                    .type = Type::Bool,
+                    .defaultValue = false,
+                    .category = Playback,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Pause when another player starts"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Pauses Noctara when another app starts playing and tells the desktop about it "
+                                    "(MPRIS), such as a video in the browser.")});
     defs.push_back({.key = keys::TrayIcon,
                     .type = Type::Bool,
                     .defaultValue = true,
@@ -809,9 +818,9 @@ std::vector<Definition> builtinDefinitions()
     defs.push_back(
         {.key = keys::NavItems,
          .type = Type::StringList,
-         .defaultValue = QVariant::fromValue(QStringList{QStringLiteral("home"), QStringLiteral("search"),
-                                                         QStringLiteral("library"), QStringLiteral("likes"),
-                                                         QStringLiteral("history"), QStringLiteral("charts")}),
+         .defaultValue = QVariant::fromValue(QStringList{
+             QStringLiteral("home"), QStringLiteral("search"), QStringLiteral("library"), QStringLiteral("likes"),
+             QStringLiteral("history"), QStringLiteral("charts"), QStringLiteral("downloads")}),
          .category = Layout,
          .label = QT_TRANSLATE_NOOP("Settings", "Pages in the navigation"),
          .description = QT_TRANSLATE_NOOP("Settings", "Their order and which are shown. Settings is always there."),
@@ -947,6 +956,7 @@ std::vector<Definition> builtinDefinitions()
                                 {"likes", QT_TRANSLATE_NOOP("Settings", "Likes")},
                                 {"history", QT_TRANSLATE_NOOP("Settings", "History")},
                                 {"charts", QT_TRANSLATE_NOOP("Settings", "Charts")},
+                                {"downloads", QT_TRANSLATE_NOOP("Settings", "Downloaded")},
                                 {"last", QT_TRANSLATE_NOOP("Settings", "Where I left off")}},
                     .category = Layout,
                     .label = QT_TRANSLATE_NOOP("Settings", "Start page"),
@@ -960,12 +970,12 @@ std::vector<Definition> builtinDefinitions()
          .description = QT_TRANSLATE_NOOP("Settings", "Start in the tray when there is one, otherwise minimized.")});
     defs.push_back({.key = keys::CloseToTray,
                     .type = Type::Bool,
-                    .defaultValue = false,
+                    .defaultValue = true,
                     .category = Layout,
-                    .label = QT_TRANSLATE_NOOP("Settings", "Keep playing when closed"),
+                    .label = QT_TRANSLATE_NOOP("Settings", "Hide to the tray when closed"),
                     .description = QT_TRANSLATE_NOOP(
-                        "Settings", "Closing the window hides it in the tray; Quit in the tray menu ends Noctara. "
-                                    "Needs the tray icon.")});
+                        "Settings", "Closing the window hides it in the tray and playback goes on; Quit in the tray "
+                                    "menu ends Noctara. Off: closing the window quits. Needs the tray icon.")});
 
     // --- Keyboard --------------------------------------------------------------------------------
     // The action is the last part of the key (see ui::KeyboardController).

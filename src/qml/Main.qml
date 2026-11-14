@@ -29,7 +29,8 @@ Window {
         library: { id: "library", icon: "library", label: qsTr("Library") },
         likes: { id: "likes", icon: "heart", label: qsTr("Likes") },
         history: { id: "history", icon: "clock", label: qsTr("History") },
-        charts: { id: "charts", icon: "trending-up", label: qsTr("Charts") }
+        charts: { id: "charts", icon: "trending-up", label: qsTr("Charts") },
+        downloads: { id: "downloads", icon: "download", label: qsTr("Downloaded") }
     })
     readonly property var destinations: Layout.navItems.map(id => pageInfo[id]).filter(p => p !== undefined)
     readonly property var footer: [{ id: "settings", icon: "settings", label: qsTr("Settings") }]
@@ -45,6 +46,10 @@ Window {
     readonly property real rightInset: railSide === "right" && !railAutoHide ? rail.width + gap * 2 : gap
     readonly property real bottomInset: railSide === "bottom" && !railAutoHide ? rail.height + gap * 2 : gap
     readonly property real topInset: (titleBar.visible ? titleBar.height : 0) + gap
+    // How far page lists run on below the pages, under the floating player bar at the bottom: down to the window's
+    // edge (or the navigation there), so rows scroll away behind the bar's own shape rather than being cut off
+    // above it. The bar is opaque glass and drawn above them.
+    readonly property real contentOverhang: playerShown && !playerOnTop ? player.height + gap * 2 : 0
 
     width: 1280
     height: 820
@@ -81,6 +86,14 @@ Window {
         else if (details.length > 0)
             details = details.slice(0, -1)
     }
+    // The queue drawer; the full player shows its own queue when it is wide enough, and the drawer stays shut then.
+    function toggleQueue() {
+        if (fullPlayer && fullPlayerView.showQueue)
+            queuePanel = false
+        else
+            queuePanel = !queuePanel
+    }
+    onFullPlayerChanged: if (fullPlayer && fullPlayerView.showQueue) queuePanel = false
     function toggleFullScreen() {
         window.visibility = window.visibility === Window.FullScreen ? Window.Windowed : Window.FullScreen
     }
@@ -158,6 +171,10 @@ Window {
                 { text: qsTr("Go to artist"), icon: "user", enabled: ownerId > 0, run: () => openUser(ownerId) },
                 separator
             ]).concat(linkActions(permalink))
+            // The Downloaded page (or a search in it) lists stored copies, which can go.
+            if (page === "downloads" && detail === null)
+                actions = actions.concat([separator, { text: qsTr("Remove the download"), icon: "x", danger: true,
+                                                       run: () => Downloads.remove(itemId) }])
         } else if (item.kind === "playlist") {
             actions = [
                 { text: qsTr("Open"), icon: "list-music", run: () => openPlaylist(itemId) },
@@ -216,7 +233,7 @@ Window {
             fullPlayer ? { text: qsTr("Close the full-screen player"), icon: "minimize-2", run: () => closeFullPlayer() }
                        : { text: qsTr("Full-screen player"), icon: "maximize-2", enabled: has, run: () => openFullPlayer() },
             { text: queuePanel ? qsTr("Hide the queue") : qsTr("Show the queue"), icon: "list-music",
-              run: () => queuePanel = !queuePanel },
+              enabled: !(fullPlayer && fullPlayerView.showQueue), run: () => toggleQueue() },
             { separator: true }
         ].concat(trackActions(has ? Number(Player.trackId) : 0)).concat([
             { separator: true },
@@ -256,7 +273,7 @@ Window {
     ActionShortcut { action: "mute"; onActivated: Player.toggleMute() }
     ActionShortcut { action: "shuffle"; onActivated: Player.toggleShuffle() }
     ActionShortcut { action: "repeat"; onActivated: Player.cycleRepeat() }
-    ActionShortcut { action: "queue"; onActivated: window.queuePanel = !window.queuePanel }
+    ActionShortcut { action: "queue"; onActivated: window.toggleQueue() }
     ActionShortcut {
         action: "full_player"
         onActivated: window.fullPlayer ? window.closeFullPlayer() : window.openFullPlayer()
@@ -410,8 +427,9 @@ Window {
         y: window.playerShown ? restY : hiddenY
         height: implicitHeight
         visible: window.playerShown || (y > -height && y < parent.height)
+        z: 1  // over the page lists that run on beneath it
         queueOpen: window.queuePanel
-        onQueueRequested: window.queuePanel = !window.queuePanel
+        onQueueRequested: window.toggleQueue()
         onFullPlayerRequested: window.openFullPlayer()
         Behavior on y { NumberAnimation { duration: Theme.motion.slow; easing.type: Theme.motion.easingEmphasized } }
     }
@@ -427,7 +445,10 @@ Window {
         // Pages are created on first visit and kept alive afterwards.
         component Page: Loader {
             required property string pageId
+            // The page runs on under the player bar by itself (a Flickable as the page's root).
+            property bool overhang: false
             anchors.fill: parent
+            anchors.bottomMargin: overhang ? -window.contentOverhang : 0
             active: false
             visible: window.page === pageId && window.detail === null
             opacity: visible ? 1 : 0
@@ -436,12 +457,13 @@ Window {
             Component.onCompleted: active = visible
         }
 
-        Page { pageId: "home"; sourceComponent: HomePage {} }
+        Page { pageId: "home"; overhang: true; sourceComponent: HomePage {} }
         Page { id: searchPage; pageId: "search"; sourceComponent: SearchPage {} }
         Page { pageId: "library"; sourceComponent: LibraryPage {} }
         Page { pageId: "likes"; sourceComponent: LikesPage {} }
         Page { pageId: "history"; sourceComponent: HistoryPage {} }
         Page { pageId: "charts"; sourceComponent: ChartsPage {} }
+        Page { pageId: "downloads"; sourceComponent: DownloadsPage {} }
         Page {
             pageId: "settings"
             sourceComponent: SettingsView {
@@ -523,6 +545,8 @@ Window {
         z: 3
         open: window.fullPlayer
         onCloseRequested: window.closeFullPlayer()
+        // Widened while open: its own queue appears, the drawer goes.
+        onShowQueueChanged: if (window.fullPlayer && showQueue) window.queuePanel = false
     }
 
     CheatSheet {

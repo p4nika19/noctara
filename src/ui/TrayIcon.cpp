@@ -6,11 +6,28 @@
 #include "settings/SettingsStore.hpp"
 
 #include <QApplication>
+#include <QDBusConnection>
+#include <QDBusConnectionInterface>
+#include <QDBusServiceWatcher>
 #include <QIcon>
 #include <QMenu>
 #include <QSystemTrayIcon>
 
 namespace noctara::ui {
+
+namespace {
+
+// Where StatusNotifierItem tray icons register (KDE, waybar, noctalia and most Wayland bars).
+constexpr QLatin1StringView kTrayHost("org.kde.StatusNotifierWatcher");
+
+bool trayPossible()
+{
+    // The offscreen platform (tests, screenshots) has no tray; neither has a plain QGuiApplication.
+    return qobject_cast<QApplication*>(QCoreApplication::instance()) != nullptr &&
+           QGuiApplication::platformName() != u"offscreen";
+}
+
+}  // namespace
 
 TrayIcon::TrayIcon(media::PlaybackController& player, settings::SettingsStore& settings,
                    i18n::LanguageManager& languages, QObject* parent)
@@ -20,23 +37,41 @@ TrayIcon::TrayIcon(media::PlaybackController& player, settings::SettingsStore& s
 {
     connect(&m_settings, &settings::SettingsStore::valueChanged, this, [this](const QString& key) {
         if (key == QLatin1StringView(settings::keys::TrayIcon)) {
-            apply();
+            apply(true);
         }
     });
+    if (trayPossible() && QDBusConnection::sessionBus().isConnected()) {
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): owned by this QObject
+        m_host = new QDBusServiceWatcher(
+            kTrayHost, QDBusConnection::sessionBus(),
+            QDBusServiceWatcher::WatchForRegistration | QDBusServiceWatcher::WatchForUnregistration, this);
+        connect(m_host, &QDBusServiceWatcher::serviceRegistered, this, [this] { apply(true); });
+        connect(m_host, &QDBusServiceWatcher::serviceUnregistered, this, [this] {
+            const bool had = m_icon != nullptr;
+            apply(false);
+            if (had) {
+                Q_EMIT lost();
+            }
+        });
+    }
     connect(&languages, &i18n::LanguageManager::languageChanged, this, &TrayIcon::retranslate);
     connect(&m_player, &media::PlaybackController::trackChanged, this, &TrayIcon::refresh);
     connect(&m_player, &media::PlaybackController::stateChanged, this, &TrayIcon::refresh);
     connect(&m_player, &media::PlaybackController::queueChanged, this, &TrayIcon::refresh);
-    apply();
+    apply(true);
 }
 
 TrayIcon::~TrayIcon() = default;
 
-void TrayIcon::apply()
+void TrayIcon::apply(bool hostPresent)
 {
-    // The offscreen platform (tests, screenshots) has no tray; neither has a plain QGuiApplication.
-    const bool possible = qobject_cast<QApplication*>(QCoreApplication::instance()) != nullptr &&
-                          QGuiApplication::platformName() != u"offscreen" && QSystemTrayIcon::isSystemTrayAvailable();
+    // Qt remembers the first answer of isSystemTrayAvailable() for good: asked before the tray host is up, the
+    // icon would never appear. On Wayland the host is the only tray there is, so it is checked first; X11 also
+    // has the legacy system tray, which Qt finds by itself.
+    const auto* bus = QDBusConnection::sessionBus().interface();
+    const bool hostUp = QGuiApplication::platformName() != u"wayland" ||
+                        (bus != nullptr && bus->isServiceRegistered(kTrayHost).value());
+    const bool possible = hostPresent && hostUp && trayPossible() && QSystemTrayIcon::isSystemTrayAvailable();
     const bool wanted = possible && m_settings.boolValue(settings::keys::TrayIcon);
     if (wanted && !m_icon) {
         create();

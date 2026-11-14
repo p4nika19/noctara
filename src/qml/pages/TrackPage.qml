@@ -305,7 +305,12 @@ Item {
 
     ListView {
         id: comments
+        // Runs on under the player bar, like the CollectionView beside it.
+        readonly property real overhang: Window.window && Window.window.contentOverhang !== undefined
+                                         ? Window.window.contentOverhang : 0
         anchors.fill: parent
+        anchors.bottomMargin: -overhang
+        bottomMargin: overhang
         visible: root.tab === "comments"
         clip: true
         boundsBehavior: Flickable.StopAtBounds
@@ -317,7 +322,7 @@ Item {
         readonly property real headerExtent: headerItem ? headerItem.height : 0
         onContentYChanged: atStart = atYBeginning
         onHeaderExtentChanged: if (atStart) positionViewAtBeginning()
-        ScrollBar.vertical: ScrollBar {}
+        ScrollBar.vertical: ScrollBar { endInset: comments.overhang }
         delegate: Item {
             id: comment
             required property string body

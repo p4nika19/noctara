@@ -315,6 +315,22 @@ TEST_SUITE("settings.toml")
         CHECK_FALSE(parsedValue(gaussian, keys::GlassSurface).has_value());  // default (frosted)
     }
 
+    TEST_CASE("v7 navigation lists gain the Downloaded page after Charts")
+    {
+        const auto chosen = parse("config_version = 7\n[layout.navigation]\nitems = [\"likes\", \"charts\", "
+                                  "\"home\"]\n");
+        REQUIRE(chosen.syntaxOk);
+        CHECK(chosen.issues.empty());
+        CHECK(parsedValue(chosen, keys::NavItems)->toStringList() ==
+              QStringList{QStringLiteral("likes"), QStringLiteral("charts"), QStringLiteral("downloads"),
+                          QStringLiteral("home")});
+        const auto noCharts = parse("config_version = 7\n[layout.navigation]\nitems = [\"home\"]\n");
+        CHECK(parsedValue(noCharts, keys::NavItems)->toStringList() ==
+              QStringList{QStringLiteral("home"), QStringLiteral("downloads")});
+        const auto current = parse("config_version = 8\n[layout.navigation]\nitems = [\"home\"]\n");
+        CHECK(parsedValue(current, keys::NavItems)->toStringList() == QStringList{QStringLiteral("home")});
+    }
+
     TEST_CASE("glass tint and grain: v4 relative values become absolute again, v3 values pass unchanged")
     {
         const auto v4 = parse("config_version = 4\n[appearance.glass]\nopacity = 0.3\ngrain = -0.35\n");

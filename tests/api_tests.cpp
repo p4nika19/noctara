@@ -13,6 +13,7 @@
 #include "api/Streams.hpp"
 #include "mock/FakeApi.hpp"
 
+#include "models/CollectionFilter.hpp"
 #include "models/CollectionModel.hpp"
 #include "models/Details.hpp"
 #include "net/NetworkService.hpp"
@@ -685,6 +686,29 @@ TEST_SUITE("api.streams")
         CHECK(info.artworkThumbUrl.path().endsWith(u"-t67x67.jpg"));
         CHECK(info.sourceUpdatedAt == u"2023-01-02T03:04:05Z");
     }
+
+    TEST_CASE("a stored track comes back from its cache record and plays the stored transcoding")
+    {
+        const Result<Track> track = parse::track(trackJson(77));
+        REQUIRE(track);
+        cache::TrackInfo info = toTrackInfo(*track, track->transcodings[1], QStringLiteral("My mix"));
+        info.cachedAt = QDateTime::currentDateTimeUtc();
+        const Track stored = trackFromCache(info);
+        CHECK(stored.id == 77);
+        CHECK(stored.stale);  // looked up again before it plays, when there is a connection
+        CHECK_FALSE(stored.stub);
+        CHECK(stored.title == track->title);
+        CHECK(stored.artist() == u"The Artist");
+        CHECK(stored.user.username == u"uploader");
+        CHECK(stored.publisherAlbum == u"Neon");
+        CHECK(sizedArtwork(stored.artwork(), 67) == info.artworkThumbUrl.toString());  // the stored thumbnail
+        // Offline it plays as it is: the one transcoding is the stored one, so the cache entry is the same.
+        const auto picked = pickTranscoding(stored, StreamPreference::Best);
+        REQUIRE(picked);
+        CHECK(toTrackInfo(stored, *picked).key == info.key);
+        // Its URL is never sent anywhere.
+        CHECK(endpoints::streamUrl(*picked, QStringLiteral("auth")).request.url.isEmpty());
+    }
 }
 
 TEST_SUITE("models.collection")
@@ -1141,6 +1165,97 @@ TEST_SUITE("models.sync")
         CHECK(h.transport.count() == 1);
         (void)model.data(model.index(0), models::CollectionModel::ThumbnailRole);
         CHECK(h.transport.count() == 1);  // asked once
+    }
+}
+
+TEST_SUITE("models.filter")
+{
+    static Entry trackEntry(Id id, const char* title, const char* artist, bool stub = false)
+    {
+        Track track;
+        track.id = id;
+        track.stub = stub;
+        track.title = QString::fromUtf8(title);
+        track.user.username = QString::fromUtf8(artist);
+        return {.item = track, .at = {}, .repostedBy = std::nullopt};
+    }
+
+    TEST_CASE("search words match title, artist or owner, ignoring case and accents")
+    {
+        CHECK(models::CollectionFilter::fold(QStringLiteral("Beyoncé ÉTÉ")) == u"beyonce ete");
+        CHECK(models::CollectionFilter::fold(QStringLiteral("Ёлка")) == u"елка");
+        const QStringList words = models::CollectionFilter::words(QStringLiteral("  night   DRIVE "));
+        CHECK(words == QStringList{QStringLiteral("night"), QStringLiteral("drive")});
+        const Entry entry = trackEntry(1, "Night Drive", "Café Neon");
+        CHECK(models::CollectionFilter::matches(entry, words));
+        CHECK(models::CollectionFilter::matches(entry, models::CollectionFilter::words(QStringLiteral("cafe drive"))));
+        CHECK_FALSE(models::CollectionFilter::matches(entry, models::CollectionFilter::words(QStringLiteral("day"))));
+        // A word never spans two fields.
+        CHECK_FALSE(
+            models::CollectionFilter::matches(entry, models::CollectionFilter::words(QStringLiteral("drivecafe"))));
+        CHECK_FALSE(models::CollectionFilter::matches(trackEntry(2, "", "", true), words));
+        Playlist playlist;
+        playlist.title = QStringLiteral("Summer mix");
+        playlist.user.username = QStringLiteral("DJ Ötzi");
+        const Entry listed{.item = playlist, .at = {}, .repostedBy = std::nullopt};
+        CHECK(
+            models::CollectionFilter::matches(listed, models::CollectionFilter::words(QStringLiteral("otzi summer"))));
+    }
+
+    TEST_CASE("the matches follow the source row by row; a new search lets a following queue go")
+    {
+        Harness h;
+        models::CollectionModel source(h.client);
+        source.setEntries({trackEntry(1, "Night Drive", "Neon"), trackEntry(2, "Morning", "Sun"),
+                           trackEntry(3, "Drive Home", "Neon")});
+        models::CollectionFilter filter;
+        QSignalSpy modelChanged(&filter, &models::CollectionFilter::modelChanged);
+        filter.setSource(&source);
+        CHECK(filter.model() == &source);  // nothing typed: the list itself
+        CHECK_FALSE(filter.active());
+
+        filter.setText(QStringLiteral("drive"));
+        REQUIRE(filter.active());
+        models::CollectionModel* matches = filter.model();
+        REQUIRE(matches != &source);
+        test::ModelTester tester(matches);
+        CHECK(idsOf(*matches) == std::vector<Id>{1, 3});
+
+        // The source changes (a new like, one gone): the matches follow without a reset.
+        QSignalSpy resets(matches, &QAbstractItemModel::modelReset);
+        QSignalSpy sourceResets(matches, &models::CollectionModel::sourceReset);
+        source.applyEntries({trackEntry(4, "Drive Slow", "Kanye"), trackEntry(1, "Night Drive", "Neon"),
+                             trackEntry(2, "Morning", "Sun")});
+        REQUIRE(test::waitUntil([&] { return idsOf(*matches) == std::vector<Id>{4, 1}; }));
+        CHECK(resets.isEmpty());
+        CHECK(sourceResets.isEmpty());  // the same search: a queue started from it keeps following
+
+        // Another search: a queue started from the old matches stops following them.
+        filter.setText(QStringLiteral("drive neon"));
+        CHECK(sourceResets.size() == 1);
+        CHECK(idsOf(*matches) == std::vector<Id>{1});
+        filter.setText(QStringLiteral("drive  neon "));  // only spacing: nothing changes
+        CHECK(sourceResets.size() == 1);
+
+        filter.setText({});
+        CHECK(filter.model() == &source);
+        CHECK(modelChanged.size() >= 2);
+    }
+
+    TEST_CASE("a search in a playlist fetches its tracks known only by id")
+    {
+        Harness h;
+        h.transport.setHandler([](const net::Request&) -> Result<net::Response> {
+            return FakeApi::reply(200, "[" + trackJson(2, QStringLiteral("Hidden Drive")) + "]");
+        });
+        models::CollectionModel source(h.client);
+        source.setEntries({trackEntry(1, "Night Drive", "Neon"), trackEntry(2, "", "", true)});
+        models::CollectionFilter filter;
+        filter.setSource(&source);
+        filter.setText(QStringLiteral("drive"));
+        REQUIRE(filter.active());
+        CHECK(idsOf(*filter.model()) == std::vector<Id>{1});
+        REQUIRE(test::waitUntil([&] { return idsOf(*filter.model()) == std::vector<Id>{1, 2}; }));
     }
 }
 

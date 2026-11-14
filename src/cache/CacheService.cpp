@@ -271,4 +271,25 @@ void CacheService::clear(Part part, QObject* context, std::function<void()> done
     });
 }
 
+void CacheService::completeTracks(QObject* context, std::function<void(std::vector<TrackInfo>)> done)
+{
+    const auto channel = std::make_shared<net::ChannelPtr>(
+        net::makeChannel(context, std::make_shared<std::atomic<bool>>(false), &m_thread));
+    handoff::post(m_anchor, [core = m_core, channel, done = std::move(done)] {
+        (*channel)->post([done, tracks = core->audio.completeTracks()] { done(tracks); });
+        channel->reset();
+    });
+}
+
+void CacheService::removeTrack(const QString& trackId, QObject* context, std::function<void()> done)
+{
+    const auto channel = std::make_shared<net::ChannelPtr>(
+        net::makeChannel(context, std::make_shared<std::atomic<bool>>(false), &m_thread));
+    handoff::post(m_anchor, [core = m_core, trackId, channel, done = std::move(done)] {
+        core->audio.removeTrack(trackId);
+        (*channel)->post([done] { done(); });
+        channel->reset();
+    });
+}
+
 }  // namespace noctara::cache

@@ -18,6 +18,7 @@
 #include "media/Mixer.hpp"
 #include "media/Mpris.hpp"
 #include "media/NativeBackend.hpp"
+#include "media/OtherPlayers.hpp"
 #include "media/PcmRing.hpp"
 #include "media/PlaybackController.hpp"
 #include "media/PlaybackQueue.hpp"
@@ -1748,6 +1749,49 @@ TEST_SUITE("media.mpris")
         const QString again = fetch('a');
         REQUIRE_FALSE(again.isEmpty());
         CHECK(QFileInfo::exists(again));
+    }
+}
+
+TEST_SUITE("media.others")
+{
+    TEST_CASE("another player starting counts once; Noctara's own status and proxies never do")
+    {
+        OtherPlayers others(QDBusConnection(QStringLiteral("noctara-test-no-bus")));  // not connected
+        QSignalSpy started(&others, &OtherPlayers::startedPlaying);
+        const auto announce = [&] {
+            others.noteOwner(QStringLiteral("org.mpris.MediaPlayer2.firefox.instance_1"), QStringLiteral(":1.40"));
+            others.noteOwner(QStringLiteral("org.mpris.MediaPlayer2.playerctld"), QStringLiteral(":1.41"));
+        };
+        announce();
+        others.reportStatus(QStringLiteral(":1.40"), QStringLiteral("Playing"));
+        CHECK(started.isEmpty());  // the setting is off
+
+        others.setEnabled(true);
+        announce();
+        others.reportStatus(QStringLiteral(":1.40"), QStringLiteral("Playing"));
+        REQUIRE(started.size() == 1);
+        CHECK(started.at(0).at(0).toString() == u"org.mpris.MediaPlayer2.firefox.instance_1");
+        // Still playing (a new video, metadata sent again): not a new start.
+        others.reportStatus(QStringLiteral(":1.40"), QStringLiteral("Playing"));
+        CHECK(started.size() == 1);
+        others.reportStatus(QStringLiteral(":1.40"), QStringLiteral("Paused"));
+        others.reportStatus(QStringLiteral(":1.40"), QStringLiteral("Playing"));
+        CHECK(started.size() == 2);
+
+        // playerctld mirrors whichever player is active, Noctara included.
+        others.reportStatus(QStringLiteral(":1.41"), QStringLiteral("Playing"));
+        // A connection without an MPRIS name is no player; once it announces one, it counts.
+        others.reportStatus(QStringLiteral(":1.50"), QStringLiteral("Playing"));
+        CHECK(started.size() == 2);
+        others.noteOwner(QStringLiteral("org.mpris.MediaPlayer2.mpv"), QStringLiteral(":1.50"));
+        others.reportStatus(QStringLiteral(":1.50"), QStringLiteral("Playing"));
+        CHECK(started.size() == 3);
+        CHECK(OtherPlayers::isProxy(QStringLiteral("org.mpris.MediaPlayer2.playerctld")));
+
+        others.setEnabled(false);
+        others.reportStatus(QStringLiteral(":1.40"), QStringLiteral("Paused"));
+        others.reportStatus(QStringLiteral(":1.40"), QStringLiteral("Playing"));
+        CHECK(started.size() == 3);
     }
 }
 

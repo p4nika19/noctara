@@ -31,4 +31,10 @@ enum class StreamPreference : std::uint8_t {
 [[nodiscard]] cache::TrackInfo toTrackInfo(const Track& track, const Transcoding& transcoding,
                                            const QString& context = {});
 
+// A track stored in the audio cache, as a list shows and the player plays it (the Downloaded page). It is `stale`:
+// online the player looks it up again first (fresh authorization and transcodings); offline it plays as it is,
+// from the stored transcoding, which the cache serves without asking for a URL. That transcoding's URL is a
+// placeholder the API client never sends anywhere (transcodingUrl() accepts only API hosts).
+[[nodiscard]] Track trackFromCache(const cache::TrackInfo& info);
+
 }  // namespace noctara::api

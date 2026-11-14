@@ -13,12 +13,20 @@ Item {
                                                 : detail.setType === "compilation" ? qsTr("Compilation") : qsTr("Album"))
         : qsTr("Playlist")
 
+    // The search within the playlist's tracks; another playlist in the same page starts without one.
+    CollectionFilter {
+        id: listFilter
+        source: root.detail.tracks
+    }
+    onDetailChanged: listFilter.text = ""
+
     CollectionView {
         anchors.fill: parent
-        model: root.detail.tracks
+        model: listFilter.model
         context: root.detail.title
-        emptyText: root.detail.errorCode >= 0 ? Format.error(root.detail.errorCode)
-                                              : (root.detail.loading ? "" : qsTr("This playlist has no tracks."))
+        emptyText: listFilter.active ? qsTr("No tracks in this playlist match “%1”.").arg(listFilter.text.trim())
+                   : root.detail.errorCode >= 0 ? Format.error(root.detail.errorCode)
+                   : (root.detail.loading ? "" : qsTr("This playlist has no tracks."))
         header: Item {
             width: ListView.view ? ListView.view.width : 0
             height: headerRow.height + Theme.space.xl
@@ -94,21 +102,22 @@ Item {
                         color: Theme.colors.textTertiary
                         elide: Text.ElideRight
                     }
-                    Row {
+                    Flow {
+                        width: parent.width
                         spacing: Theme.space.sm
                         topPadding: Theme.space.sm
                         Button {
                             variant: "primary"
                             iconName: "play"
                             text: qsTr("Play")
-                            enabled: root.detail.tracks.count > 0
-                            onClicked: Player.playCollection(root.detail.tracks, 0, root.detail.title)
+                            enabled: (listFilter.model ? listFilter.model.count : 0) > 0
+                            onClicked: Player.playCollection(listFilter.model, 0, root.detail.title)
                         }
                         IconButton {
                             iconName: "shuffle"
                             text: qsTr("Shuffle")
-                            enabled: root.detail.tracks.count > 0
-                            onClicked: Player.shufflePlay(root.detail.tracks, root.detail.title)
+                            enabled: (listFilter.model ? listFilter.model.count : 0) > 0
+                            onClicked: Player.shufflePlay(listFilter.model, root.detail.title)
                         }
                         IconButton {
                             iconName: "external-link"
@@ -124,6 +133,12 @@ Item {
                                 App.copyText(root.detail.permalink)
                                 App.showToast("info", qsTr("Link copied."), "", "")
                             }
+                        }
+                        FilterField {
+                            width: Math.min(implicitWidth, parent.width)
+                            visible: root.detail.tracks.count > 1 || listFilter.active
+                            filter: listFilter
+                            placeholderText: qsTr("Search in this playlist")
                         }
                     }
                 }

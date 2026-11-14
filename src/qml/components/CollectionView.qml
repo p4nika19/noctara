@@ -14,6 +14,12 @@ Item {
     property string context       // what the tracks play from (queue, MPRIS)
     property string emptyText
     property Component header: null
+    // The list runs on under the floating player bar down to the window's edge, so rows scroll away behind the bar's
+    // own rounded shape instead of being cut off above it; the last rows can still scroll clear of it. Off for a list
+    // inside a panel (search results).
+    property bool underPlayer: true
+    readonly property real overhang: underPlayer && Window.window && Window.window.contentOverhang !== undefined
+                                     ? Window.window.contentOverhang : 0
     readonly property bool firstLoad: model !== null && model.loading && model.count === 0
     readonly property bool failed: model !== null && !model.loading && model.count === 0 && model.errorCode >= 0
     readonly property Item view: mode === "grid" ? grid : list
@@ -37,6 +43,8 @@ Item {
     ListView {
         id: list
         anchors.fill: parent
+        anchors.bottomMargin: -root.overhang
+        bottomMargin: root.overhang
         visible: root.mode === "list"
         clip: true
         reuseItems: true
@@ -50,7 +58,7 @@ Item {
         readonly property real headerExtent: headerItem ? headerItem.height : 0
         onContentYChanged: atStart = atYBeginning
         onHeaderExtentChanged: if (atStart) positionViewAtBeginning()
-        ScrollBar.vertical: ScrollBar {}
+        ScrollBar.vertical: ScrollBar { endInset: root.overhang }
         delegate: CatalogRow {
             width: ListView.view.width
             onActivated: root.activate(index, kind, itemId)
@@ -71,6 +79,8 @@ Item {
     GridView {
         id: grid
         anchors.fill: parent
+        anchors.bottomMargin: -root.overhang
+        bottomMargin: root.overhang
         visible: root.mode === "grid"
         clip: true
         reuseItems: true
@@ -85,7 +95,7 @@ Item {
         cellHeight: cellWidth - Theme.space.lg + Theme.font.bodyStrong.pixelSize * 1.4
                     + Theme.font.caption.pixelSize * 1.4 + Theme.space.xl
         cacheBuffer: cellHeight * 2
-        ScrollBar.vertical: ScrollBar {}
+        ScrollBar.vertical: ScrollBar { endInset: root.overhang }
         delegate: Item {
             id: cell
             required property int index

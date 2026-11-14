@@ -14,6 +14,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <vector>
 
 class QTemporaryDir;
 
@@ -79,6 +80,10 @@ public:
 
     void usage(QObject* context, std::function<void(CacheUsage)> done);
     void clear(Part part, QObject* context, std::function<void()> done);
+    // The tracks stored in full (AudioCache::completeTracks()), delivered on `context`'s thread.
+    void completeTracks(QObject* context, std::function<void(std::vector<TrackInfo>)> done);
+    // Removes every stored transcoding of a track (an entry in use goes when it is closed).
+    void removeTrack(const QString& trackId, QObject* context, std::function<void()> done);
     // Runs `function` on the cache thread and waits for it (tests, shutdown).
     void runOnCacheThread(const std::function<void()>& function);
 

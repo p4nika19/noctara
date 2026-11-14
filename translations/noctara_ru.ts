@@ -400,7 +400,7 @@
 <context>
     <name>CollectionView</name>
     <message>
-        <location filename="../src/qml/components/CollectionView.qml" line="+175"/>
+        <location filename="../src/qml/components/CollectionView.qml" line="+185"/>
         <source>Try again</source>
         <translation>Повторить</translation>
     </message>
@@ -460,6 +460,66 @@
         <location line="+7"/>
         <source>Flush DNS cache</source>
         <translation>Очистить кэш DNS</translation>
+    </message>
+</context>
+<context>
+    <name>DownloadsPage</name>
+    <message>
+        <location filename="../src/qml/pages/DownloadsPage.qml" line="+22"/>
+        <location line="+17"/>
+        <location line="+7"/>
+        <location line="+10"/>
+        <source>Downloaded</source>
+        <translation>Скачанное</translation>
+    </message>
+    <message>
+        <location line="-33"/>
+        <source>Played tracks stored for listening offline</source>
+        <translation>Прослушанные треки, сохранённые для офлайна</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%1 · %n match(es)</source>
+        <translation>
+            <numerusform>%1 · %n совпадение</numerusform>
+            <numerusform>%1 · %n совпадения</numerusform>
+            <numerusform>%1 · %n совпадений</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>%n track(s)</source>
+        <translation>
+            <numerusform>%n трек</numerusform>
+            <numerusform>%n трека</numerusform>
+            <numerusform>%n треков</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Search in downloads</source>
+        <translation>Поиск в скачанном</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Play</source>
+        <translation>Воспроизвести</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Shuffle</source>
+        <translation>Перемешать</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>No downloaded tracks match “%1”.</source>
+        <translation>Среди скачанных треков нет совпадений с «%1».</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing downloaded yet. Tracks you play are stored in full and show up here, ready to play offline.</source>
+        <translation>Пока ничего не скачано. Прослушанные треки сохраняются целиком и появляются здесь — их можно слушать без сети.</translation>
     </message>
 </context>
 <context>
@@ -919,6 +979,14 @@
     </message>
 </context>
 <context>
+    <name>FilterField</name>
+    <message>
+        <location filename="../src/qml/components/FilterField.qml" line="+39"/>
+        <source>Clear the search</source>
+        <translation>Очистить поиск</translation>
+    </message>
+</context>
+<context>
     <name>Format</name>
     <message>
         <location filename="../src/i18n/Formatter.cpp" line="+91"/>
@@ -1290,7 +1358,7 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="../src/qml/pages/HomePage.qml" line="+55"/>
+        <location filename="../src/qml/pages/HomePage.qml" line="+60"/>
         <source>Good night</source>
         <translation>Доброй ночи</translation>
     </message>
@@ -1378,9 +1446,19 @@
 <context>
     <name>LibraryPage</name>
     <message>
-        <location filename="../src/qml/pages/LibraryPage.qml" line="+25"/>
+        <location filename="../src/qml/pages/LibraryPage.qml" line="+31"/>
         <source>Library</source>
         <translation>Медиатека</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Search people</source>
+        <translation>Поиск по людям</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Search playlists and albums</source>
+        <translation>Поиск по плейлистам и альбомам</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -1394,6 +1472,11 @@
     </message>
     <message>
         <location line="+13"/>
+        <source>Nothing here matches “%1”.</source>
+        <translation>Здесь нет совпадений с «%1».</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>You do not follow anyone yet.</source>
         <translation>Вы пока ни на кого не подписаны.</translation>
     </message>
@@ -1416,15 +1499,15 @@
 <context>
     <name>LikesPage</name>
     <message>
-        <location filename="../src/qml/pages/LikesPage.qml" line="+18"/>
-        <location line="+11"/>
+        <location filename="../src/qml/pages/LikesPage.qml" line="+24"/>
+        <location line="+19"/>
         <location line="+7"/>
         <location line="+12"/>
         <source>Likes</source>
         <translation>Лайки</translation>
     </message>
     <message numerus="yes">
-        <location line="-28"/>
+        <location line="-34"/>
         <source>%n track(s) · updating…</source>
         <translation>
             <numerusform>%n трек · обновляется…</numerusform>
@@ -1433,13 +1516,28 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+1"/>
+        <location line="-1"/>
+        <location line="+2"/>
         <source>%n track(s)</source>
         <translation>
             <numerusform>%n трек</numerusform>
             <numerusform>%n трека</numerusform>
             <numerusform>%n треков</numerusform>
         </translation>
+    </message>
+    <message numerus="yes">
+        <location line="-3"/>
+        <source>%1 · %n match(es)</source>
+        <translation>
+            <numerusform>%1 · %n совпадение</numerusform>
+            <numerusform>%1 · %n совпадения</numerusform>
+            <numerusform>%1 · %n совпадений</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Search in likes</source>
+        <translation>Поиск в лайках</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1453,6 +1551,11 @@
     </message>
     <message>
         <location line="+14"/>
+        <source>No liked tracks match “%1”.</source>
+        <translation>Среди лайков нет совпадений с «%1».</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>No liked tracks yet. Like tracks on SoundCloud and they appear here.</source>
         <translation>Лайкнутых треков пока нет. Отмечайте треки в SoundCloud — они появятся здесь.</translation>
     </message>
@@ -1470,12 +1573,12 @@
 <context>
     <name>Main</name>
     <message>
-        <location filename="../src/qml/Main.qml" line="+55"/>
+        <location filename="../src/qml/Main.qml" line="+60"/>
         <source>Noctara</source>
         <translation>Noctara</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-33"/>
         <source>Home</source>
         <translation>Главная</translation>
     </message>
@@ -1505,12 +1608,17 @@
         <translation>Чарты</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Downloaded</source>
+        <translation>Скачанное</translation>
+    </message>
+    <message>
         <location line="+3"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+83"/>
         <source>Link copied.</source>
         <translation>Ссылка скопирована.</translation>
     </message>
@@ -1561,34 +1669,39 @@
     </message>
     <message>
         <location line="+11"/>
-        <location line="+12"/>
+        <location line="+16"/>
         <location line="+19"/>
         <location line="+22"/>
         <source>Play</source>
         <translation>Воспроизвести</translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+12"/>
+        <location line="-56"/>
+        <location line="+16"/>
         <location line="+19"/>
         <source>Play next</source>
         <translation>Играть следующим</translation>
     </message>
     <message>
-        <location line="-30"/>
-        <location line="+12"/>
+        <location line="-34"/>
+        <location line="+16"/>
         <source>Add to queue</source>
         <translation>Добавить в очередь</translation>
     </message>
     <message>
-        <location line="-8"/>
-        <location line="+33"/>
+        <location line="-12"/>
+        <location line="+37"/>
         <location line="+32"/>
         <source>Go to artist</source>
         <translation>Перейти к исполнителю</translation>
     </message>
     <message>
-        <location line="-60"/>
+        <location line="-64"/>
+        <source>Remove the download</source>
+        <translation>Удалить из скачанного</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Open</source>
         <translation>Открыть</translation>
     </message>
@@ -1688,12 +1801,12 @@
         <translation>Понятно</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+67"/>
         <source>Back</source>
         <translation>Назад</translation>
     </message>
     <message>
-        <location line="+98"/>
+        <location line="+100"/>
         <source>New playlist</source>
         <translation>Новый плейлист</translation>
     </message>
@@ -1744,6 +1857,11 @@
         <location line="+1"/>
         <source>Charts</source>
         <translation>Чарты</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Downloaded</source>
+        <translation>Скачанное</translation>
     </message>
     <message>
         <location line="+64"/>
@@ -2114,7 +2232,12 @@
         <translation>Плейлист</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+13"/>
+        <source>No tracks in this playlist match “%1”.</source>
+        <translation>В этом плейлисте нет совпадений с «%1».</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>This playlist has no tracks.</source>
         <translation>В этом плейлисте нет треков.</translation>
     </message>
@@ -2133,7 +2256,7 @@
         <translation>%1 лайков</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
         <source>Play</source>
         <translation>Воспроизвести</translation>
     </message>
@@ -2156,6 +2279,11 @@
         <location line="+4"/>
         <source>Link copied.</source>
         <translation>Ссылка скопирована.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Search in this playlist</source>
+        <translation>Поиск в плейлисте</translation>
     </message>
 </context>
 <context>
@@ -2283,7 +2411,7 @@
 <context>
     <name>QueueList</name>
     <message>
-        <location filename="../src/qml/components/QueueList.qml" line="+57"/>
+        <location filename="../src/qml/components/QueueList.qml" line="+117"/>
         <source>Loading</source>
         <translation>Загрузка</translation>
     </message>
@@ -2293,7 +2421,7 @@
         <translation>%1, %2</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+116"/>
         <source>Loading…</source>
         <translation>Загрузка…</translation>
     </message>
@@ -2303,7 +2431,7 @@
         <translation>%1 · защищён</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+43"/>
         <source>Remove from queue</source>
         <translation>Убрать из очереди</translation>
     </message>
@@ -2312,12 +2440,12 @@
     <name>SearchPage</name>
     <message>
         <location filename="../src/qml/pages/SearchPage.qml" line="+25"/>
-        <location line="+45"/>
+        <location line="+46"/>
         <source>Search</source>
         <translation>Поиск</translation>
     </message>
     <message>
-        <location line="-35"/>
+        <location line="-36"/>
         <source>Tracks, playlists, albums and people</source>
         <translation>Треки, плейлисты, альбомы и люди</translation>
     </message>
@@ -2347,7 +2475,7 @@
         <translation>Люди</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+22"/>
         <source>Nothing found for “%1”.</source>
         <translation>По запросу «%1» ничего не найдено.</translation>
     </message>
@@ -2365,7 +2493,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+204"/>
+        <location filename="../src/app/main.cpp" line="+208"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation>Установленная libcurl собрана без поддержки HTTP/3.</translation>
     </message>
@@ -2385,7 +2513,7 @@
         <translation>Недоступно на этом графическом устройстве.</translation>
     </message>
     <message>
-        <location filename="../src/settings/BuiltinSchema.cpp" line="+188"/>
+        <location filename="../src/settings/BuiltinSchema.cpp" line="+189"/>
         <location line="+111"/>
         <source>Language</source>
         <translation>Язык</translation>
@@ -2474,12 +2602,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+593"/>
+        <location line="+601"/>
         <source>Icons</source>
         <translation>Значки</translation>
     </message>
     <message>
-        <location line="-592"/>
+        <location line="-600"/>
         <source>Icon appearance.</source>
         <translation>Внешний вид значков.</translation>
     </message>
@@ -2560,13 +2688,13 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+603"/>
-        <location line="+345"/>
+        <location line="+612"/>
+        <location line="+346"/>
         <source>System</source>
         <translation>Как в системе</translation>
     </message>
     <message>
-        <location line="-947"/>
+        <location line="-957"/>
         <source>Midnight (dark)</source>
         <translation>Midnight (тёмная)</translation>
     </message>
@@ -2652,12 +2780,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+615"/>
+        <location line="+624"/>
         <source>Volume</source>
         <translation>Громкость</translation>
     </message>
     <message>
-        <location line="-614"/>
+        <location line="-623"/>
         <source>Volume when Noctara starts.</source>
         <translation>Громкость при запуске Noctara.</translation>
     </message>
@@ -2930,7 +3058,7 @@
     <message>
         <location line="+4"/>
         <location line="+182"/>
-        <location line="+354"/>
+        <location line="+364"/>
         <location line="+13"/>
         <location line="+12"/>
         <location line="+58"/>
@@ -2940,19 +3068,19 @@
         <translation>Авто</translation>
     </message>
     <message>
-        <location line="-856"/>
+        <location line="-866"/>
         <source>Low</source>
         <translation>Низкое</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+398"/>
+        <location line="+407"/>
         <location line="+25"/>
         <source>Medium</source>
         <translation>Среднее</translation>
     </message>
     <message>
-        <location line="-422"/>
+        <location line="-431"/>
         <source>High</source>
         <translation>Высокое</translation>
     </message>
@@ -3116,13 +3244,13 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+580"/>
+        <location line="+590"/>
         <location line="+23"/>
         <source>Custom</source>
         <translation>Свои</translation>
     </message>
     <message>
-        <location line="-601"/>
+        <location line="-611"/>
         <source>Corner radius</source>
         <translation>Скругление углов</translation>
     </message>
@@ -3245,12 +3373,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+190"/>
+        <location line="+199"/>
         <source>Regular</source>
         <translation>Обычные</translation>
     </message>
     <message>
-        <location line="-189"/>
+        <location line="-198"/>
         <source>Bold</source>
         <translation>Жирные</translation>
     </message>
@@ -3266,12 +3394,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+179"/>
+        <location line="+188"/>
         <source>Compact</source>
         <translation>Плотно</translation>
     </message>
     <message>
-        <location line="-178"/>
+        <location line="-187"/>
         <source>Comfortable</source>
         <translation>Обычно</translation>
     </message>
@@ -3372,6 +3500,16 @@
     </message>
     <message>
         <location line="+7"/>
+        <source>Pause when another player starts</source>
+        <translation>Пауза, когда играет другой плеер</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pauses Noctara when another app starts playing and tells the desktop about it (MPRIS), such as a video in the browser.</source>
+        <translation>Ставит Noctara на паузу, когда другое приложение начинает воспроизведение и сообщает об этом системе (MPRIS), например видео в браузере.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Tray icon</source>
         <translation>Значок в трее</translation>
     </message>
@@ -3442,18 +3580,18 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+27"/>
+        <location line="+28"/>
         <source>Bottom</source>
         <translation>Снизу</translation>
     </message>
     <message>
-        <location line="-25"/>
-        <location line="+28"/>
+        <location line="-26"/>
+        <location line="+29"/>
         <source>Position</source>
         <translation>Положение</translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-28"/>
         <source>Which edge of the window the navigation sits on.</source>
         <translation>У какого края окна находится навигация.</translation>
     </message>
@@ -3478,7 +3616,7 @@
         <translation>При автоскрытии навигация появляется, когда указатель доходит до её края.</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
         <source>Pages in the navigation</source>
         <translation>Страницы в навигации</translation>
     </message>
@@ -3693,12 +3831,17 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+42"/>
+        <location line="+43"/>
         <source>Search</source>
         <translation>Поиск</translation>
     </message>
     <message>
-        <location line="-37"/>
+        <location line="-38"/>
+        <source>Downloaded</source>
+        <translation>Скачанное</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Where I left off</source>
         <translation>Там, где я остановился</translation>
     </message>
@@ -3723,17 +3866,7 @@
         <translation>Запускаться в трее, если он есть, иначе свёрнутым.</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>Keep playing when closed</source>
-        <translation>Продолжать играть после закрытия</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Closing the window hides it in the tray; Quit in the tray menu ends Noctara. Needs the tray icon.</source>
-        <translation>Закрытие окна прячет его в трей; «Выйти» в меню трея завершает Noctara. Нужен значок в трее.</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+13"/>
         <source>Play or pause</source>
         <translation>Воспроизведение или пауза</translation>
     </message>
@@ -4115,8 +4248,8 @@
         <translation>HTTP подходит и для сайтов по HTTPS и работает с большинством прокси, в том числе с указанными как HTTP(S). HTTPS шифрует соединение с самим прокси и работает, только если прокси это поддерживает. С SOCKS4 и SOCKS5 Noctara сама определяет адреса серверов, остальные типы поручают это прокси.</translation>
     </message>
     <message>
-        <location line="-607"/>
-        <location line="+558"/>
+        <location line="-617"/>
+        <location line="+568"/>
         <location line="+11"/>
         <location line="+12"/>
         <location line="+96"/>
@@ -4125,7 +4258,7 @@
         <translation>с</translation>
     </message>
     <message>
-        <location line="-1155"/>
+        <location line="-1165"/>
         <source>Navigation</source>
         <translation>Навигация</translation>
     </message>
@@ -4166,12 +4299,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+763"/>
+        <location line="+773"/>
         <source>Full-screen player</source>
         <translation>Полноэкранный плеер</translation>
     </message>
     <message>
-        <location line="-762"/>
+        <location line="-772"/>
         <source>The large player with the cover art.</source>
         <translation>Большой плеер с обложкой.</translation>
     </message>
@@ -4266,7 +4399,7 @@
         <translation>Матовое: молочное размытое стекло. Жидкое: глянцевое стекло с яркой кромкой. Тонированное: стекло цвета акцента. Простой: плоская полупрозрачная заливка. Прозрачное: только контур. Сплошное: непрозрачное.</translation>
     </message>
     <message>
-        <location line="+249"/>
+        <location line="+257"/>
         <source>Set up the protected player automatically</source>
         <translation>Устанавливать защищённый плеер автоматически</translation>
     </message>
@@ -4281,7 +4414,17 @@
         <translation>Папка с вашим собственным защищённым плеером (как создаёт `xmake drm-helper`). Если пусто, используется плеер рядом с Noctara, в её каталоге установки или установленный самой Noctara.</translation>
     </message>
     <message>
-        <location line="+488"/>
+        <location line="+207"/>
+        <source>Hide to the tray when closed</source>
+        <translation>Сворачивать в трей при закрытии</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Closing the window hides it in the tray and playback goes on; Quit in the tray menu ends Noctara. Off: closing the window quits. Needs the tray icon.</source>
+        <translation>Закрытие окна убирает его в трей, а воспроизведение продолжается; «Выход» в меню трея завершает Noctara. Если выключено, закрытие окна завершает программу. Нужен значок в трее.</translation>
+    </message>
+    <message>
+        <location line="+282"/>
         <source>Maximum lifetime</source>
         <translation>Максимальное время жизни</translation>
     </message>
@@ -5197,7 +5340,7 @@
         <translation>Похожих треков нет.</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+67"/>
         <source>at %1</source>
         <translation>на %1</translation>
     </message>
@@ -5893,7 +6036,7 @@
 <context>
     <name>noctara::ui::TrayIcon</name>
     <message>
-        <location filename="../src/ui/TrayIcon.cpp" line="+85"/>
+        <location filename="../src/ui/TrayIcon.cpp" line="+121"/>
         <source>Previous</source>
         <translation>Предыдущий</translation>
     </message>

@@ -148,6 +148,9 @@ public:
     // Cache thread.
     [[nodiscard]] AudioUsage usage() const;
     [[nodiscard]] std::vector<TrackInfo> cachedTracks() const;
+    // The entries stored in full (playable offline), one per track (the newest of its transcodings), most recently
+    // cached first.
+    [[nodiscard]] std::vector<TrackInfo> completeTracks() const;
     // Removes every entry not in use; entries in use go when their last reader closes.
     void clear();
     void removeTrack(const QString& trackId);

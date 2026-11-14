@@ -88,4 +88,37 @@ cache::TrackInfo toTrackInfo(const Track& track, const Transcoding& transcoding,
     return info;
 }
 
+Track trackFromCache(const cache::TrackInfo& info)
+{
+    Track track;
+    track.id = info.key.trackId.toLongLong();
+    track.stale = true;
+    track.title = info.title;
+    track.user.username = info.uploader.isEmpty() ? info.artist : info.uploader;
+    if (info.artist != track.user.username) {
+        track.publisherArtist = info.artist;
+    }
+    track.publisherAlbum = info.album;
+    track.genre = info.genre;
+    track.durationMs = info.durationMs;
+    track.fullDurationMs = info.durationMs;
+    track.createdAt = info.created;
+    track.releasedAt = info.released;
+    track.lastModified = info.sourceUpdatedAt;
+    track.permalinkUrl = info.permalink.toString();
+    track.artworkUrl = info.artworkUrl.toString();
+    track.waveformUrl = info.waveformUrl.toString();
+    // The cache name is "<protocol>/<preset>/<quality>" (Transcoding::cacheName()).
+    Transcoding stored;
+    stored.url = QStringLiteral("noctara-cache:stored");
+    stored.protocolName = info.key.preset.section(u'/', 0, 0);
+    stored.protocol = info.protocol;
+    stored.preset = info.key.preset.section(u'/', 1, 1);
+    stored.quality = info.key.preset.section(u'/', 2);
+    stored.mimeType = info.mimeType;
+    stored.durationMs = info.durationMs;
+    track.transcodings.push_back(std::move(stored));
+    return track;
+}
+
 }  // namespace noctara::api

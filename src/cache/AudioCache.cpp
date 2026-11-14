@@ -17,6 +17,7 @@
 #include <QSet>
 #include <QtConcurrentRun>
 
+#include <algorithm>
 #include <cerrno>
 #include <fcntl.h>
 #include <format>
@@ -2018,6 +2019,35 @@ std::vector<TrackInfo> AudioCache::cachedTracks() const
             }
         }
     }
+    return tracks;
+}
+
+std::vector<TrackInfo> AudioCache::completeTracks() const
+{
+    std::vector<TrackInfo> tracks;
+    if (!m_layout) {
+        return tracks;
+    }
+    for (auto it = m_ledger.items().cbegin(); it != m_ledger.items().cend(); ++it) {
+        if (!m_entryComplete.value(it.key())) {
+            continue;
+        }
+        const Result<QByteArray> json = readWholeFile(path(entryDir(it.key()), "meta.json"));
+        if (json) {
+            if (Result<TrackInfo> info = TrackInfo::fromJson(*json); info && !info->drm) {
+                tracks.push_back(std::move(*info));
+            }
+        }
+    }
+    std::ranges::stable_sort(tracks, [](const TrackInfo& a, const TrackInfo& b) { return a.cachedAt > b.cachedAt; });
+    QSet<QString> seen;
+    std::erase_if(tracks, [&seen](const TrackInfo& info) {
+        if (seen.contains(info.key.trackId)) {
+            return true;
+        }
+        seen.insert(info.key.trackId);
+        return false;
+    });
     return tracks;
 }
 

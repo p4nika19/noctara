@@ -399,7 +399,7 @@
 <context>
     <name>CollectionView</name>
     <message>
-        <location filename="../src/qml/components/CollectionView.qml" line="+175"/>
+        <location filename="../src/qml/components/CollectionView.qml" line="+185"/>
         <source>Try again</source>
         <translation type="unfinished"></translation>
     </message>
@@ -458,6 +458,64 @@
     <message>
         <location line="+7"/>
         <source>Flush DNS cache</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>DownloadsPage</name>
+    <message>
+        <location filename="../src/qml/pages/DownloadsPage.qml" line="+22"/>
+        <location line="+17"/>
+        <location line="+7"/>
+        <location line="+10"/>
+        <source>Downloaded</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-33"/>
+        <source>Played tracks stored for listening offline</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%1 · %n match(es)</source>
+        <translation>
+            <numerusform>%1 · %n match</numerusform>
+            <numerusform>%1 · %n matches</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>%n track(s)</source>
+        <translation>
+            <numerusform>%n track</numerusform>
+            <numerusform>%n tracks</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Search in downloads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Play</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Shuffle</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>No downloaded tracks match “%1”.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing downloaded yet. Tracks you play are stored in full and show up here, ready to play offline.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -918,6 +976,14 @@
     </message>
 </context>
 <context>
+    <name>FilterField</name>
+    <message>
+        <location filename="../src/qml/components/FilterField.qml" line="+39"/>
+        <source>Clear the search</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Format</name>
     <message>
         <location filename="../src/i18n/Formatter.cpp" line="+91"/>
@@ -1283,7 +1349,7 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="../src/qml/pages/HomePage.qml" line="+55"/>
+        <location filename="../src/qml/pages/HomePage.qml" line="+60"/>
         <source>Good night</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1371,8 +1437,18 @@
 <context>
     <name>LibraryPage</name>
     <message>
-        <location filename="../src/qml/pages/LibraryPage.qml" line="+25"/>
+        <location filename="../src/qml/pages/LibraryPage.qml" line="+31"/>
         <source>Library</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Search people</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Search playlists and albums</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1387,6 +1463,11 @@
     </message>
     <message>
         <location line="+13"/>
+        <source>Nothing here matches “%1”.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>You do not follow anyone yet.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1409,28 +1490,42 @@
 <context>
     <name>LikesPage</name>
     <message>
-        <location filename="../src/qml/pages/LikesPage.qml" line="+18"/>
-        <location line="+11"/>
+        <location filename="../src/qml/pages/LikesPage.qml" line="+24"/>
+        <location line="+19"/>
         <location line="+7"/>
         <location line="+12"/>
         <source>Likes</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="-28"/>
+        <location line="-34"/>
         <source>%n track(s) · updating…</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n track · updating…</numerusform>
             <numerusform>%n tracks · updating…</numerusform>
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+1"/>
+        <location line="-1"/>
+        <location line="+2"/>
         <source>%n track(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n track</numerusform>
             <numerusform>%n tracks</numerusform>
         </translation>
+    </message>
+    <message numerus="yes">
+        <location line="-3"/>
+        <source>%1 · %n match(es)</source>
+        <translation>
+            <numerusform>%1 · %n match</numerusform>
+            <numerusform>%1 · %n matches</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Search in likes</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1444,6 +1539,11 @@
     </message>
     <message>
         <location line="+14"/>
+        <source>No liked tracks match “%1”.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>No liked tracks yet. Like tracks on SoundCloud and they appear here.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1461,12 +1561,12 @@
 <context>
     <name>Main</name>
     <message>
-        <location filename="../src/qml/Main.qml" line="+55"/>
+        <location filename="../src/qml/Main.qml" line="+60"/>
         <source>Noctara</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-33"/>
         <source>Home</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1496,12 +1596,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Downloaded</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+3"/>
         <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+83"/>
         <source>Link copied.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1552,34 +1657,39 @@
     </message>
     <message>
         <location line="+11"/>
-        <location line="+12"/>
+        <location line="+16"/>
         <location line="+19"/>
         <location line="+22"/>
         <source>Play</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+12"/>
+        <location line="-56"/>
+        <location line="+16"/>
         <location line="+19"/>
         <source>Play next</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-30"/>
-        <location line="+12"/>
+        <location line="-34"/>
+        <location line="+16"/>
         <source>Add to queue</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-8"/>
-        <location line="+33"/>
+        <location line="-12"/>
+        <location line="+37"/>
         <location line="+32"/>
         <source>Go to artist</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-60"/>
+        <location line="-64"/>
+        <source>Remove the download</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Open</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1679,12 +1789,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+67"/>
         <source>Back</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+98"/>
+        <location line="+100"/>
         <source>New playlist</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1734,6 +1844,11 @@
     <message>
         <location line="+1"/>
         <source>Charts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Downloaded</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2105,14 +2220,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+13"/>
+        <source>No tracks in this playlist match “%1”.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>This playlist has no tracks.</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
         <location line="+67"/>
         <source>%n track(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n track</numerusform>
             <numerusform>%n tracks</numerusform>
         </translation>
@@ -2123,7 +2243,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
         <source>Play</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2145,6 +2265,11 @@
     <message>
         <location line="+4"/>
         <source>Link copied.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Search in this playlist</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2248,7 +2373,7 @@
     <message numerus="yes">
         <location line="+7"/>
         <source>%n track(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n track</numerusform>
             <numerusform>%n tracks</numerusform>
         </translation>
@@ -2272,7 +2397,7 @@
 <context>
     <name>QueueList</name>
     <message>
-        <location filename="../src/qml/components/QueueList.qml" line="+57"/>
+        <location filename="../src/qml/components/QueueList.qml" line="+117"/>
         <source>Loading</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2282,7 +2407,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+116"/>
         <source>Loading…</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2292,7 +2417,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+43"/>
         <source>Remove from queue</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2301,12 +2426,12 @@
     <name>SearchPage</name>
     <message>
         <location filename="../src/qml/pages/SearchPage.qml" line="+25"/>
-        <location line="+45"/>
+        <location line="+46"/>
         <source>Search</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-35"/>
+        <location line="-36"/>
         <source>Tracks, playlists, albums and people</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2336,7 +2461,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+22"/>
         <source>Nothing found for “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2354,7 +2479,7 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+204"/>
+        <location filename="../src/app/main.cpp" line="+208"/>
         <source>The installed libcurl was built without HTTP/3.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2374,7 +2499,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings/BuiltinSchema.cpp" line="+188"/>
+        <location filename="../src/settings/BuiltinSchema.cpp" line="+189"/>
         <location line="+111"/>
         <source>Language</source>
         <translation type="unfinished"></translation>
@@ -2463,12 +2588,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+593"/>
+        <location line="+601"/>
         <source>Icons</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-592"/>
+        <location line="-600"/>
         <source>Icon appearance.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2549,13 +2674,13 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+603"/>
-        <location line="+345"/>
+        <location line="+612"/>
+        <location line="+346"/>
         <source>System</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-947"/>
+        <location line="-957"/>
         <source>Midnight (dark)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2641,12 +2766,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+615"/>
+        <location line="+624"/>
         <source>Volume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-614"/>
+        <location line="-623"/>
         <source>Volume when Noctara starts.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2919,7 +3044,7 @@
     <message>
         <location line="+4"/>
         <location line="+182"/>
-        <location line="+354"/>
+        <location line="+364"/>
         <location line="+13"/>
         <location line="+12"/>
         <location line="+58"/>
@@ -2929,19 +3054,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-856"/>
+        <location line="-866"/>
         <source>Low</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+398"/>
+        <location line="+407"/>
         <location line="+25"/>
         <source>Medium</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-422"/>
+        <location line="-431"/>
         <source>High</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3105,13 +3230,13 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+580"/>
+        <location line="+590"/>
         <location line="+23"/>
         <source>Custom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-601"/>
+        <location line="-611"/>
         <source>Corner radius</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3234,12 +3359,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+190"/>
+        <location line="+199"/>
         <source>Regular</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-189"/>
+        <location line="-198"/>
         <source>Bold</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3255,12 +3380,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+179"/>
+        <location line="+188"/>
         <source>Compact</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-178"/>
+        <location line="-187"/>
         <source>Comfortable</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3361,6 +3486,16 @@
     </message>
     <message>
         <location line="+7"/>
+        <source>Pause when another player starts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pauses Noctara when another app starts playing and tells the desktop about it (MPRIS), such as a video in the browser.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Tray icon</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3431,18 +3566,18 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+27"/>
+        <location line="+28"/>
         <source>Bottom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-25"/>
-        <location line="+28"/>
+        <location line="-26"/>
+        <location line="+29"/>
         <source>Position</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-28"/>
         <source>Which edge of the window the navigation sits on.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3467,7 +3602,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
         <source>Pages in the navigation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3682,12 +3817,17 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+42"/>
+        <location line="+43"/>
         <source>Search</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-37"/>
+        <location line="-38"/>
+        <source>Downloaded</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Where I left off</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3712,17 +3852,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>Keep playing when closed</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Closing the window hides it in the tray; Quit in the tray menu ends Noctara. Needs the tray icon.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+13"/>
         <source>Play or pause</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4099,8 +4229,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-607"/>
-        <location line="+558"/>
+        <location line="-617"/>
+        <location line="+568"/>
         <location line="+11"/>
         <location line="+12"/>
         <location line="+96"/>
@@ -4109,7 +4239,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1155"/>
+        <location line="-1165"/>
         <source>Navigation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4150,12 +4280,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+763"/>
+        <location line="+773"/>
         <source>Full-screen player</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-762"/>
+        <location line="-772"/>
         <source>The large player with the cover art.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4250,7 +4380,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+249"/>
+        <location line="+257"/>
         <source>Set up the protected player automatically</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4265,7 +4395,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+319"/>
+        <location line="+207"/>
+        <source>Hide to the tray when closed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Closing the window hides it in the tray and playback goes on; Quit in the tray menu ends Noctara. Off: closing the window quits. Needs the tray icon.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+113"/>
         <source>While active, Noctara pauses the animated backdrop, uses the lighter Dual Kawase blur instead of Liquid Glass or Gaussian, and limits animations that play by themselves to 30 frames per second; scrolling and clicks stay at full speed. Automatic turns it on only while the computer runs on battery.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5181,7 +5321,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+67"/>
         <source>at %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5216,7 +5356,7 @@
     <message numerus="yes">
         <location line="+1"/>
         <source>%n track(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n track</numerusform>
             <numerusform>%n tracks</numerusform>
         </translation>
@@ -5876,7 +6016,7 @@
 <context>
     <name>noctara::ui::TrayIcon</name>
     <message>
-        <location filename="../src/ui/TrayIcon.cpp" line="+85"/>
+        <location filename="../src/ui/TrayIcon.cpp" line="+121"/>
         <source>Previous</source>
         <translation type="unfinished"></translation>
     </message>

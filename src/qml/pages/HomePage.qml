@@ -8,10 +8,15 @@ import "../components"
 Flickable {
     id: root
 
+    // Main.qml lets this page run on under the floating player bar; the last row can still scroll clear of it.
+    readonly property real overhang: Window.window && Window.window.contentOverhang !== undefined
+                                     ? Window.window.contentOverhang : 0
+
     contentHeight: column.implicitHeight + Theme.space.xxl
+    bottomMargin: overhang
     clip: true
     boundsBehavior: Flickable.StopAtBounds
-    ScrollBar.vertical: ScrollBar {}
+    ScrollBar.vertical: ScrollBar { endInset: root.overhang }
 
     // The page stays alive once visited: the date and greeting follow the clock while shown and catch up when the
     // page comes back.

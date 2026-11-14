@@ -64,6 +64,7 @@ Item {
         visible: root.hasQuery
 
         CollectionView {
+            underPlayer: false
             anchors.fill: parent
             anchors.margins: Math.max(Theme.space.sm, panel.cornerInset)
             model: root.results

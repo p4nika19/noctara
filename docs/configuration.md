@@ -144,7 +144,7 @@ Where the navigation sits and what it shows.
 |---|---|---|---|---|
 | `position` | enum | `"left"` | `left`, `right`, `bottom` | **Position.** Which edge of the window the navigation sits on. (env `NOCTARA_LAYOUT_NAVIGATION_POSITION`) |
 | `mode` | enum | `"compact"` | `compact`, `expanded`, `auto_hide` | **Style.** Auto-hide shows the navigation when the pointer reaches its edge. (env `NOCTARA_LAYOUT_NAVIGATION_MODE`) |
-| `items` | string list | `["home", "search", "library", "likes", "history", "charts"]` | — | **Pages in the navigation.** Their order and which are shown. Settings is always there. (env `NOCTARA_LAYOUT_NAVIGATION_ITEMS`) |
+| `items` | string list | `["home", "search", "library", "likes", "history", "charts", "downloads"]` | — | **Pages in the navigation.** Their order and which are shown. Settings is always there. (env `NOCTARA_LAYOUT_NAVIGATION_ITEMS`) |
 
 ### `[layout.player]` Player bar
 
@@ -200,9 +200,9 @@ The window frame, size and what happens at start and close.
 |---|---|---|---|---|
 | `decorations` | enum | `"native"` | `native`, `custom` | **Window frame.** Noctara draws its own title bar and buttons in the glass style. Window managers without decorations keep showing none. (*restart*, env `NOCTARA_LAYOUT_WINDOW_DECORATIONS`) |
 | `remember_geometry` | bool | `true` | — | **Remember window size.** Open with the size (and, where the system allows, the position) of last time. (env `NOCTARA_LAYOUT_WINDOW_REMEMBER_GEOMETRY`) |
-| `start_page` | enum | `"home"` | `home`, `search`, `library`, `likes`, `history`, `charts`, `last` | **Start page.** The page shown when Noctara opens. (env `NOCTARA_LAYOUT_WINDOW_START_PAGE`) |
+| `start_page` | enum | `"home"` | `home`, `search`, `library`, `likes`, `history`, `charts`, `downloads`, `last` | **Start page.** The page shown when Noctara opens. (env `NOCTARA_LAYOUT_WINDOW_START_PAGE`) |
 | `start_minimized` | bool | `false` | — | **Start minimized.** Start in the tray when there is one, otherwise minimized. (env `NOCTARA_LAYOUT_WINDOW_START_MINIMIZED`) |
-| `close_to_tray` | bool | `false` | — | **Keep playing when closed.** Closing the window hides it in the tray; Quit in the tray menu ends Noctara. Needs the tray icon. (env `NOCTARA_LAYOUT_WINDOW_CLOSE_TO_TRAY`) |
+| `close_to_tray` | bool | `true` | — | **Hide to the tray when closed.** Closing the window hides it in the tray and playback goes on; Quit in the tray menu ends Noctara. Off: closing the window quits. Needs the tray icon. (env `NOCTARA_LAYOUT_WINDOW_CLOSE_TO_TRAY`) |
 
 ## Playback
 
@@ -247,6 +247,7 @@ Controlling playback from outside the window.
 | Key | Type | Default | Allowed | Description |
 |---|---|---|---|---|
 | `media_controls` | bool | `true` | — | **Media keys and system controls.** Lets media keys, the desktop's media controls and other apps control playback and show the current track (MPRIS). (env `NOCTARA_PLAYBACK_DESKTOP_MEDIA_CONTROLS`) |
+| `pause_for_others` | bool | `false` | — | **Pause when another player starts.** Pauses Noctara when another app starts playing and tells the desktop about it (MPRIS), such as a video in the browser. (env `NOCTARA_PLAYBACK_DESKTOP_PAUSE_FOR_OTHERS`) |
 | `tray` | bool | `true` | — | **Tray icon.** Playback controls in the system tray, where the desktop provides one. (env `NOCTARA_PLAYBACK_DESKTOP_TRAY`) |
 | `notifications` | bool | `false` | — | **Notify on track change.** Shows a desktop notification with the next track while Noctara's window is not in front. (env `NOCTARA_PLAYBACK_DESKTOP_NOTIFICATIONS`) |
 

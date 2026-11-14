@@ -395,6 +395,65 @@ TEST_SUITE("theme.accent")
         }
     }
 
+    TEST_CASE("dark and black-and-white artwork gets no invented colour")
+    {
+        // Near-black with compression-like chroma noise: no hue to speak of.
+        QImage noisy(64, 64, QImage::Format_RGB32);
+        for (int y = 0; y < 64; ++y) {
+            for (int x = 0; x < 64; ++x) {
+                const int n = (x * 7 + y * 13) % 9;
+                noisy.setPixel(x, y, qRgb(14 + n, 10 + (n % 4), 12 + ((n * 3) % 7)));
+            }
+        }
+        const auto dark = analyseArtwork(noisy, Extraction::Vivid);
+        CHECK_FALSE(dark.seed.has_value());
+        CHECK(dark.achromatic);
+
+        // A sepia-toned black-and-white photo: a faint warm tint over every grey.
+        QImage sepia(64, 64, QImage::Format_RGB32);
+        for (int y = 0; y < 64; ++y) {
+            for (int x = 0; x < 64; ++x) {
+                const int v = 20 + (x * 3);
+                sepia.setPixel(x, y, qRgb(std::min(255, v + 6), std::min(255, v + 3), v));
+            }
+        }
+        CHECK(analyseArtwork(sepia, Extraction::Vivid).achromatic);
+        CHECK_FALSE(analyseArtwork(sepia, Extraction::Vivid).seed.has_value());
+
+        // Black with a few red specks: too little of the artwork to stand for it.
+        QImage specks = filled(Qt::black, 100);
+        {
+            QPainter painter(&specks);
+            painter.fillRect(QRect(10, 10, 5, 5), QColor(230, 20, 30));
+        }
+        CHECK(analyseArtwork(specks, Extraction::Vivid).achromatic);
+
+        // A black cover with a clear red title keeps its red.
+        QImage title = filled(Qt::black, 100);
+        {
+            QPainter painter(&title);
+            painter.fillRect(QRect(10, 40, 80, 8), QColor(230, 20, 30));
+        }
+        const auto titled = analyseArtwork(title, Extraction::Vivid);
+        REQUIRE(titled.seed.has_value());
+        CHECK(hueDistance(titled.seed->h, color::toOkLch(color::Srgb{230 / 255.0, 20 / 255.0, 30 / 255.0}).h) < 10.0);
+
+        // White and black artwork keep their swatches, even without a seed.
+        CHECK_FALSE(analyseArtwork(filled(Qt::white), Extraction::Vivid).swatches.empty());
+    }
+
+    TEST_CASE("a muted cover gives a muted accent, not a boosted one")
+    {
+        const QColor dusty(140, 100, 70);
+        const double source = color::toOkLch(color::Srgb{140 / 255.0, 100 / 255.0, 70 / 255.0}).C;
+        const auto analysis = analyseArtwork(filled(dusty), Extraction::Vivid);
+        REQUIRE(analysis.seed.has_value());
+        CHECK(analysis.seed->C <= (source * 1.6) + 1e-3);
+        CHECK(analysis.seed->C < 0.13);  // the old fixed floor of the vivid mode
+        // A colourful cover is still lifted to a vivid accent.
+        CHECK(analyseArtwork(filled(QColor(30, 90, 200)), Extraction::Vivid).seed->C >= 0.13);
+    }
+
     TEST_CASE("extraction modes order the chroma; results are deterministic")
     {
         const QImage art = dullWithAccent(QColor(40, 30, 60), QColor(255, 90, 20), 0.5);
@@ -450,8 +509,15 @@ TEST_SUITE("theme.accent")
         REQUIRE(store.setUserValue(keys::AccentExtraction, QStringLiteral("soft")).has_value());
         REQUIRE(test::waitUntil([&] { return seeds.count() == 4; }));
 
+        // Black and white artwork: a neutral accent instead of the previous track's.
+        engine.setArtwork(QStringLiteral("grey"), filled(QColor(90, 90, 90)));
+        REQUIRE(test::waitUntil([&] { return seeds.count() == 5; }));
+        const auto neutral = seeds.last().first().value<std::optional<color::OkLch>>();
+        REQUIRE(neutral.has_value());
+        CHECK(neutral->C == 0.0);
+
         engine.clearArtwork();
-        CHECK(seeds.count() == 5);
+        CHECK(seeds.count() == 6);
         CHECK_FALSE(seeds.last().first().value<std::optional<color::OkLch>>().has_value());
         CHECK_FALSE(engine.hasArtwork());
     }

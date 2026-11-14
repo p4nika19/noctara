@@ -83,6 +83,17 @@ therefore covers every like, even before all of them have loaded. Starting anoth
 items stops following, and so does the list being repointed to other contents (`CollectionModel::sourceReset`: a
 new search, another chart genre, a paged list refreshed from page one, another account). Tracks from a saved snapshot are looked up again right before they play.
 
+A search within Likes, the library or a playlist (`models::CollectionFilter`, the field in the page header) shows a
+list of the matches (every word in the title, artist, uploader, album or genre, ignoring case and accents). *Play*,
+*Shuffle* and a click there queue the matches, and the queue follows *them*: a new like that matches joins it. A
+different search (or clearing it) announces `sourceReset`, so the queue stops following. A playlist's tracks known
+only by id are fetched (`hydrateAll`) as soon as a search starts, so they can be found too.
+
+In the queue drawer and the full-screen player's queue, a row is moved by dragging it (a grip shows on hover). While
+it is dragged only the view changes: the other rows make room, and the list scrolls when the row is held near an
+edge. The queue itself changes once, on drop (`moveQueueItem`), because every queue edit saves the session and may
+re-prepare the next track. A click without moving still plays the row.
+
 With *Restore the queue* (on by default) the queue (up to 500 track ids around the current one), the current item,
 its position and the context are saved too: on track changes, queue edits, pause and quit. At the next start the
 tracks are looked up again by id and the queue comes back paused at that position; nothing is fetched or played
@@ -98,8 +109,18 @@ slider maps to gain with a cubic curve, like the system's own slider.
   GNOME, KDE and most other desktops. Covers are handed over as local files written from the image cache, so the
   desktop never fetches artwork itself (that would bypass Noctara's DNS and proxy settings). Setting *Media keys and
   system controls*, live.
+- **Pause for other players** (*Pause when another player starts*, off by default; `media::OtherPlayers`): Noctara
+  watches the session bus for other MPRIS players (`PropertiesChanged` on `/org/mpris/MediaPlayer2`, and names that
+  appear already playing) and pauses when one turns to `Playing`. Only connections owning an
+  `org.mpris.MediaPlayer2.*` name count; Noctara's own connection and proxies that mirror the active player
+  (`playerctld`, which would mirror Noctara itself) are ignored. The protected-playback helper registers no MPRIS
+  player (Chromium's media session is turned off there).
 - **Tray icon** (StatusNotifierItem through Qt, only where the desktop has a tray): play/pause, previous, next, show,
-  quit; middle click toggles playback. Setting *Tray icon*, live.
+  quit; middle click toggles playback. Setting *Tray icon*, live. *Hide to the tray when closed* (on by default)
+  makes closing the window hide it there while playback goes on; off, closing quits. Qt remembers the first answer
+  to "is there a tray" for good, so on Wayland Noctara asks only once the tray host (`org.kde.StatusNotifierWatcher`)
+  is on the bus, and follows it appearing later (a bar started after Noctara) or restarting. A tray that goes away
+  while the window is hidden in it brings the window back.
 - **Notifications** (`org.freedesktop.Notifications`), off by default: one per new track while the window is not in
   front, replacing the previous one.
 - In-window keys: Space (play/pause), Ctrl+←/→ (previous/next), Shift+←/→ (seek 5 s), Ctrl+↑/↓ (volume), Ctrl+M
@@ -110,8 +131,9 @@ slider maps to gain with a cubic curve, like the system's own slider.
 Clicking the bar's cover (or the *Full-screen player* shortcut) opens the current track large: the cover flies from
 the bar into place (a shared-element transition driven by one progress value), over the track's own pre-blurred
 artwork; title, artist (a link to their page), the waveform or a plain progress line, transport, volume, and the
-queue beside it when the window is wide enough (*Layout → Full-screen player*). F11 or the corner button also puts
-the window into full screen; Escape leaves both.
+queue beside it when the window is wide enough (*Layout → Full-screen player*). While the full-screen player shows
+its own queue, the queue drawer closes (and the queue shortcut leaves it closed), so the queue is never shown twice.
+F11 or the corner button also puts the window into full screen; Escape leaves both.
 
 Right-click (or the menu key) opens one shared glass menu with what fits the element: tracks (play, play next, add
 to queue, go to artist, open on SoundCloud, copy link), playlists (open, play, queue, go to owner, links), people

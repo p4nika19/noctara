@@ -22,8 +22,10 @@
 #include "media/CoverFiles.hpp"
 #include "media/Mpris.hpp"
 #include "media/NativeBackend.hpp"
+#include "media/OtherPlayers.hpp"
 #include "media/PlaybackController.hpp"
 #include "media/QueueModel.hpp"
+#include "models/CollectionFilter.hpp"
 #include "net/CurlSupport.hpp"
 #include "net/NetworkMonitor.hpp"
 #include "net/NetworkService.hpp"
@@ -42,6 +44,7 @@
 #include "ui/ArtworkProvider.hpp"
 #include "ui/CatalogController.hpp"
 #include "ui/CoverImageProvider.hpp"
+#include "ui/DownloadsController.hpp"
 #include "ui/EffectsController.hpp"
 #include "ui/IconProvider.hpp"
 #include "ui/KeyboardController.hpp"
@@ -59,6 +62,7 @@
 
 #include <QApplication>
 #include <QCommandLineParser>
+#include <QDBusConnection>
 #include <QElapsedTimer>
 #include <QHash>
 #include <QIcon>
@@ -232,8 +236,9 @@ void runSmokeTest(const QQmlApplicationEngine& engine, const ui::SettingsControl
 {
     QObject* root = engine.rootObjects().constFirst();
     auto* window = qobject_cast<QQuickWindow*>(root);
-    QStringList steps{QStringLiteral("home"),  QStringLiteral("search"),  QStringLiteral("library"),
-                      QStringLiteral("likes"), QStringLiteral("history"), QStringLiteral("charts")};
+    QStringList steps{QStringLiteral("home"),     QStringLiteral("search"),  QStringLiteral("library"),
+                      QStringLiteral("likes"),    QStringLiteral("history"), QStringLiteral("charts"),
+                      QStringLiteral("downloads")};
     for (const QVariant& category : settingsUi.categories()) {
         steps.append(QStringLiteral("settings/") + category.toMap().value(QStringLiteral("id")).toString());
     }
@@ -422,6 +427,7 @@ int main(int argc, char** argv)
     api::SnapshotStore snapshots(besideCaches(QStringLiteral("library")));
     QObject::connect(&storageUi, &ui::StorageController::clearingAll, &storageUi, [&snapshots] { snapshots.clear(); });
     ui::CatalogController catalog(soundcloud, account, snapshots);
+    ui::DownloadsController downloads(cache, soundcloud.client());
     QObject::connect(&account, &ui::AccountController::notice, &appController, &ui::AppController::showToast);
     QObject::connect(
         &catalog, &ui::CatalogController::notice, &appController,
@@ -488,6 +494,20 @@ int main(int argc, char** argv)
             mpris.setEnabled(store.boolValue(settings::keys::MediaControls));
         }
     });
+    // Another app (a video in the browser) started playing: pause, when that is wanted.
+    media::OtherPlayers otherPlayers(QDBusConnection::sessionBus());
+    otherPlayers.setEnabled(store.boolValue(settings::keys::PauseForOthers));
+    QObject::connect(&store, &settings::SettingsStore::valueChanged, &otherPlayers,
+                     [&otherPlayers, &store](const QString& key) {
+                         if (key == QLatin1StringView(settings::keys::PauseForOthers)) {
+                             otherPlayers.setEnabled(store.boolValue(settings::keys::PauseForOthers));
+                         }
+                     });
+    QObject::connect(&otherPlayers, &media::OtherPlayers::startedPlaying, &player, [&player] {
+        if (player.playing()) {
+            player.pause();
+        }
+    });
     QPointer<QQuickWindow> mainWindow;
     const auto showWindow = [&mainWindow] {
         if (mainWindow) {
@@ -499,6 +519,12 @@ int main(int argc, char** argv)
     QObject::connect(&mpris, &media::MprisService::raiseRequested, &mpris, showWindow);
     ui::TrayIcon tray(player, store, languages);
     QObject::connect(&tray, &ui::TrayIcon::showRequested, &tray, showWindow);
+    // Hidden in a tray that went away: there would be no way back to the window.
+    QObject::connect(&tray, &ui::TrayIcon::lost, &tray, [&mainWindow, showWindow] {
+        if (mainWindow && !mainWindow->isVisible()) {
+            showWindow();
+        }
+    });
     QObject::connect(&keyboard, &ui::KeyboardController::globalActivated, &player,
                      [&player, showWindow](const QString& action) {
                          if (action == u"play_pause") {
@@ -541,6 +567,7 @@ int main(int argc, char** argv)
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Network", &networkUi);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Storage", &storageUi);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Catalog", &catalog);
+    qmlRegisterSingletonInstance("Noctara", 1, 0, "Downloads", &downloads);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Account", &account);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Player", &player);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Themes", &themesUi);
@@ -557,6 +584,7 @@ int main(int argc, char** argv)
                                                      QStringLiteral("Provided by Catalog"));
     qmlRegisterUncreatableType<media::QueueModel>("Noctara", 1, 0, "QueueModel", QStringLiteral("Provided by Player"));
     qmlRegisterType<ui::WaveformItem>("Noctara", 1, 0, "WaveformItem");
+    qmlRegisterType<models::CollectionFilter>("Noctara", 1, 0, "CollectionFilter");
     qmlRegisterUncreatableType<models::CollectionModel>("Noctara", 1, 0, "CollectionModel",
                                                         QStringLiteral("Provided by Catalog"));
     qmlRegisterUncreatableType<ui::SettingsModel>("Noctara", 1, 0, "SettingsModel",

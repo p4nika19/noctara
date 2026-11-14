@@ -26,7 +26,20 @@ constexpr int kBackdropSize = 256;  // blurredBackdrop's default size
 constexpr int kSourceSize = 128;
 constexpr int kClusters = 6;
 constexpr int kIterations = 10;
-constexpr double kMinSeedChroma = 0.035;
+constexpr double kMinSeedChroma = 0.045;
+// A pixel counts as coloured from this chroma on; darker pixels need more (the chroma of near-black pixels is
+// mostly compression noise and their hue is unstable).
+constexpr double kPixelChroma = 0.04;
+constexpr double kDarkPixelChroma = 0.075;  // at kDarkPixelL and below, rising linearly from kPixelL
+constexpr double kPixelL = 0.4;
+constexpr double kDarkPixelL = 0.15;
+constexpr double kMaxPixelL = 0.97;  // lighter pixels are paper white, whatever their tint
+// Artwork with fewer coloured pixels than this is black and white (or nearly) and gets a neutral accent.
+constexpr double kMinColouredShare = 0.02;
+// A colour has to cover this much of the artwork to become the accent: a tiny logo or a speck of noise must not.
+constexpr double kMinClusterShare = 0.012;
+// Lightness of the neutral accent of colourless artwork.
+constexpr double kNeutralL = 0.72;
 
 std::size_t pixelIndex(int x, int y, int width) noexcept
 {
@@ -159,11 +172,23 @@ double dullnessPenalty(double chroma) noexcept
     return chroma < 0.06 ? 0.4 : 1.0;
 }
 
+// Whether a pixel shows a colour rather than black, white or grey.
+bool coloured(const color::OkLch& pixel) noexcept
+{
+    if (pixel.L > kMaxPixelL) {
+        return false;
+    }
+    const double darkness = std::clamp((kPixelL - pixel.L) / (kPixelL - kDarkPixelL), 0.0, 1.0);
+    return pixel.C >= kPixelChroma + (darkness * (kDarkPixelChroma - kPixelChroma));
+}
+
+// The seed's chroma for the extraction mode. A muted colour is lifted at most by a bounded factor, never up to a
+// fixed floor: a dusty brown cover must not turn into a bright orange accent.
 double seedChroma(double chroma, Extraction mode) noexcept
 {
     switch (mode) {
-    case Extraction::Vivid: return std::clamp(chroma * 1.3, 0.13, 0.26);
-    case Extraction::Balanced: return std::clamp(chroma, 0.07, 0.15);
+    case Extraction::Vivid: return std::clamp(chroma * 1.3, std::min(0.13, chroma * 1.6), 0.26);
+    case Extraction::Balanced: return std::clamp(chroma, std::min(0.07, chroma * 1.3), 0.15);
     case Extraction::Soft: return std::clamp(chroma * 0.55, 0.04, 0.085);
     }
     return chroma;
@@ -223,37 +248,60 @@ ArtworkAnalysis analyseArtwork(const QImage& image, Extraction mode)
     if (pixels.empty()) {
         return analysis;
     }
-    std::vector<Cluster> clusters = cluster(pixels);
-    std::ranges::stable_sort(clusters, [](const Cluster& a, const Cluster& b) { return a.count > b.count; });
+    // The swatches show the artwork as it is: black, white and grey areas included.
+    std::vector<Cluster> all = cluster(pixels);
+    std::ranges::stable_sort(all, [](const Cluster& a, const Cluster& b) { return a.count > b.count; });
+    for (const Cluster& c : all) {
+        if (c.count > 0 && analysis.swatches.size() < 4) {
+            analysis.swatches.push_back(color::toOkLch(c.centre));
+        }
+    }
 
+    // The seed comes from the coloured pixels only. Clustering every pixel averaged near-black and grey pixels into
+    // the colours (and noise into the greys), so a dark or black-and-white cover produced a tinted mean that was
+    // then boosted into an accent the artwork does not have.
+    std::vector<color::OkLab> colours;
+    colours.reserve(pixels.size());
+    for (const color::OkLab& pixel : pixels) {
+        if (coloured(color::toOkLch(pixel))) {
+            colours.push_back(pixel);
+        }
+    }
     const auto total = static_cast<double>(pixels.size());
+    analysis.achromatic = static_cast<double>(colours.size()) < total * kMinColouredShare;
+    if (analysis.achromatic) {
+        return analysis;
+    }
+    std::vector<Cluster> clusters = cluster(colours);
+    std::ranges::stable_sort(clusters, [](const Cluster& a, const Cluster& b) { return a.count > b.count; });
     const Cluster* best = nullptr;
     double bestScore = -1.0;
     for (const Cluster& c : clusters) {
-        if (c.count == 0) {
+        const double share = static_cast<double>(c.count) / total;
+        const color::OkLch lch = color::toOkLch(c.centre);
+        if (share < kMinClusterShare || lch.C < kMinSeedChroma) {
             continue;
         }
-        const color::OkLch lch = color::toOkLch(c.centre);
         // A sub-linear population term lets a vivid minority colour beat a large dull area.
-        const double score = std::pow(static_cast<double>(c.count) / total, 0.75) * (lch.C + 0.01) *
-                             lightnessPenalty(lch.L) * dullnessPenalty(lch.C);
+        const double score = std::pow(share, 0.75) * (lch.C + 0.01) * lightnessPenalty(lch.L) * dullnessPenalty(lch.C);
         if (score > bestScore) {
             bestScore = score;
             best = &c;
         }
-        if (analysis.swatches.size() < 4) {
-            analysis.swatches.push_back(lch);
-        }
     }
     if (best == nullptr) {
+        // Specks of colour, none of them large or clear enough to stand for the artwork.
+        analysis.achromatic = true;
         return analysis;
     }
     const color::OkLch chosen = color::toOkLch(best->centre);
-    if (chosen.C < kMinSeedChroma) {
-        return analysis;  // grayscale or nearly so: no meaningful hue
-    }
     analysis.seed = color::OkLch{std::clamp(chosen.L, 0.5, 0.78), seedChroma(chosen.C, mode), chosen.h};
     return analysis;
+}
+
+color::OkLch neutralSeed() noexcept
+{
+    return {.L = kNeutralL, .C = 0.0, .h = 0.0};
 }
 
 namespace {
@@ -445,6 +493,8 @@ void AccentEngine::apply(const Result& result)
     Q_EMIT artworkChanged();
     if (result.analysis.seed) {
         Q_EMIT seedChanged(result.analysis.seed);
+    } else if (result.analysis.achromatic) {
+        Q_EMIT seedChanged(neutralSeed());  // black and white art: a neutral accent rather than the last track's
     }
 }
 

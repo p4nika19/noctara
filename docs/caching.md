@@ -68,6 +68,17 @@ This is an integrity and metadata feature of an internal cache. The layout stays
 
 `Prefetcher::setQueue` warms the next queue items as background requests (skipped on metered connections) and drops the previous prefetch when the queue changes. The count is `cache.prefetch` (2): none on a metered connection, at most one while the disk cache is off (then only the first 1 MiB, in RAM). The player feeds it the queue items after the current one; the item that follows is in addition opened and decoded ahead by the backend in the last 30 s of the current track (see [playback.md](playback.md)).
 
+### The Downloaded page
+
+The *Downloaded* page (navigation, below Charts) lists the entries stored in full (`AudioCache::completeTracks()`:
+complete entries only, one per track, the newest transcoding, most recently cached first), read from their
+sidecars on the cache thread by `ui::DownloadsController` (QML `Downloads`). Each becomes a track through
+`api::trackFromCache`: shown from the sidecar, marked `stale` so it is looked up again before it plays when there is
+a connection, and otherwise played as it is from its one stored transcoding, whose key matches the entry, so the
+cache serves it without asking for a URL (the transcoding's URL is a placeholder that `transcodingUrl()` never
+sends, since it is not an API host). The list follows the cache while the page is on screen (at most every 1.5 s),
+and *Remove the download* in the row menu deletes every stored transcoding of the track.
+
 ## DRM-protected tracks
 
 They are never cached, in any tier. `AudioCache::open` refuses `TrackInfo::drm` with `ErrorCode::NotCacheable` before anything is created: no directory, no sidecar, no URL request, no tags. An HLS playlist with `EXT-X-KEY` other than `NONE` is treated the same way, even when the track was not flagged; the entry made for it is deleted. The prefetcher skips such tracks. The protected-playback helper uses no persistent media or HTTP cache (an in-memory session with the HTTP cache off, `--disk-cache-size=1`, `--media-cache-size=1`, since Chromium reads 0 as "default size"); its profile under `electron/` holds Chromium's non-media profile files and the Widevine CDM component, and *Clear all* empties it except the CDM (see [drm-helper.md](drm-helper.md)). Protected tracks are never prefetched; the controller only warms the helper up. Tests cover all of this, including at the integration level over the real network stack.

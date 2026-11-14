@@ -15,7 +15,8 @@ Column {
         { id: "library", icon: "library", label: qsTr("Library") },
         { id: "likes", icon: "heart", label: qsTr("Likes") },
         { id: "history", icon: "clock", label: qsTr("History") },
-        { id: "charts", icon: "trending-up", label: qsTr("Charts") }
+        { id: "charts", icon: "trending-up", label: qsTr("Charts") },
+        { id: "downloads", icon: "download", label: qsTr("Downloaded") }
     ]
     // Shown pages in their order, then the hidden ones.
     readonly property var ordered: value.map(id => all.find(p => p.id === id)).filter(p => p !== undefined)

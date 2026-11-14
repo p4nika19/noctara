@@ -19,11 +19,23 @@ Item {
         function onChanged() { root.load() }
     }
 
+    // The search within the tab shown.
+    CollectionFilter {
+        id: listFilter
+        source: root.tab === "following" ? Catalog.following : Catalog.library
+    }
+
     PageHeader {
         id: header
         width: parent.width
         title: qsTr("Library")
         viewPage: "library"
+        FilterField {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: Account.signedIn && ((listFilter.source ? listFilter.source.count : 0) > 0 || listFilter.active)
+            filter: listFilter
+            placeholderText: root.tab === "following" ? qsTr("Search people") : qsTr("Search playlists and albums")
+        }
         SegmentedControl {
             anchors.verticalCenter: parent.verticalCenter
             visible: Account.signedIn
@@ -39,10 +51,11 @@ Item {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         visible: Account.signedIn
-        model: root.tab === "following" ? Catalog.following : Catalog.library
+        model: listFilter.model
         mode: Layout.views.library
-        emptyText: root.tab === "following" ? qsTr("You do not follow anyone yet.")
-                                            : qsTr("No playlists or albums yet. Create or like some on SoundCloud.")
+        emptyText: listFilter.active ? qsTr("Nothing here matches “%1”.").arg(listFilter.text.trim())
+                   : root.tab === "following" ? qsTr("You do not follow anyone yet.")
+                   : qsTr("No playlists or albums yet. Create or like some on SoundCloud.")
     }
     EmptyPage {
         anchors.fill: parent

@@ -98,6 +98,27 @@ void splitGlassStyle(toml::table& root)
     }
 }
 
+// v7 -> v8: the Downloaded page joined the navigation. A list of pages someone chose gets it too, right after
+// Charts (or at the end without Charts); a file without a list gets the new default anyway.
+void downloadsPage(toml::table& root)
+{
+    toml::array* items = root.at_path("layout.navigation.items").as_array();
+    if (items == nullptr) {
+        return;
+    }
+    std::size_t at = items->size();
+    for (std::size_t i = 0; i < items->size(); ++i) {
+        const std::optional<std::string_view> id = (*items)[i].value<std::string_view>();
+        if (id == "downloads") {
+            return;
+        }
+        if (id == "charts") {
+            at = i + 1;
+        }
+    }
+    items->insert(items->cbegin() + static_cast<std::ptrdiff_t>(at), "downloads");
+}
+
 // Files without `config_version` are v0 (same format as v1). Append future migrations here.
 // clang-format off
 constexpr Migration kMigrations[] = {
@@ -108,6 +129,7 @@ constexpr Migration kMigrations[] = {
     {4, absoluteGlassValues},
     {5, shiftedGlassTint},
     {6, splitGlassStyle},
+    {7, downloadsPage},
 };
 // clang-format on
 

@@ -28,14 +28,22 @@ enum class Extraction : std::uint8_t { Vivid, Balanced, Soft };
 struct ArtworkAnalysis {
     // Palette seed, or nullopt when the artwork has no usable colour (grayscale, nearly black or white).
     std::optional<color::OkLch> seed;
+    // The artwork is black and white, or nearly: too few coloured pixels, or no colour covering enough of it.
+    // Such artwork gets neutralSeed() rather than a hue read from noise or a speck.
+    bool achromatic = false;
     // Up to four dominant colours, most populous first (as found in the artwork, not adjusted).
     std::vector<color::OkLch> swatches;
 };
 
-// Picks the palette seed of an artwork. Pure and deterministic: the image is reduced to at most 64x64,
-// converted to OKLab and clustered with k-means (fixed, farthest-point initialisation); clusters are scored
-// by population x chroma, with penalties for near-black, near-white and dull colours.
+// Picks the palette seed of an artwork. Pure and deterministic: the image is reduced to at most 64x64 and
+// converted to OKLab. Only coloured pixels take part (chroma above a threshold that rises for dark pixels, where
+// chroma is mostly compression noise); they are clustered with k-means (fixed, farthest-point initialisation) and
+// the clusters that cover enough of the artwork are scored by population x chroma, with penalties for
+// near-black, near-white and dull colours. A muted colour stays muted: the modes lift its chroma only by a
+// bounded factor.
 [[nodiscard]] ArtworkAnalysis analyseArtwork(const QImage& image, Extraction mode);
+// The accent seed for black-and-white artwork: achromatic (the palette then uses its neutral hue).
+[[nodiscard]] color::OkLch neutralSeed() noexcept;
 
 // The artwork as a heavily blurred backdrop for one scheme: blurred at low resolution, its lightness remapped
 // into the scheme's legible backdrop range (SchemeTones::backdropMinL..MaxL) and its chroma reduced (strongly
@@ -68,8 +76,8 @@ public:
     static constexpr std::size_t kCacheEntries = 16;
 
 Q_SIGNALS:
-    // nullopt: no artwork (the theme falls back to the static accent). Artwork without usable colour does not
-    // emit, so the previous accent stays.
+    // nullopt: no artwork (the theme falls back to the static accent). Black-and-white artwork sends
+    // neutralSeed().
     void seedChanged(std::optional<noctara::color::OkLch> seed);
     void artworkChanged();
 

@@ -6,6 +6,7 @@
 #include "i18n/LanguageManager.hpp"
 #include "media/PlaybackQueue.hpp"
 #include "media/QueueModel.hpp"
+#include "models/CollectionFilter.hpp"
 #include "models/CollectionModel.hpp"
 #include "models/Details.hpp"
 #include "settings/ConfigFile.hpp"
@@ -1171,6 +1172,95 @@ TEST_SUITE("ui.components")
             const qreal top = list->property("contentY").toReal();
             return top <= 120 * 40 && 121 * 40 <= top + 400;
         }));
+    }
+
+    TEST_CASE("the list search field drives its filter; Escape and the clear button empty it")
+    {
+        static const bool registered = [] {
+            qmlRegisterType<models::CollectionFilter>("Noctara", 1, 0, "CollectionFilter");
+            return true;
+        }();
+        (void)registered;
+        const WindowHarness harness(R"(Window {
+            width: 400; height: 100; visible: true
+            property Item field: field
+            property QtObject filter: listFilter
+            CollectionFilter { id: listFilter }
+            FilterField { id: field; x: 10; y: 10; width: 300; filter: listFilter; focus: true }
+        })");
+        QQuickItem* field = harness.item("field");
+        QObject* filter = harness.object("filter");
+        field->forceActiveFocus();
+        const auto type = [&](const char* text) {
+            for (const char* c = text; *c != '\0'; ++c) {  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+                QTest::keyClick(harness.window.get(), *c);
+            }
+        };
+        type("neon");
+        CHECK(filter->property("text").toString() == u"neon");
+        QTest::keyClick(harness.window.get(), Qt::Key_Escape);
+        CHECK(filter->property("text").toString().isEmpty());
+        CHECK(field->property("text").toString().isEmpty());
+
+        // Emptied from outside (another playlist opened in the same page): the field follows.
+        type("drive");
+        REQUIRE(filter->property("text").toString() == u"drive");
+        filter->setProperty("text", QString());
+        CHECK(field->property("text").toString().isEmpty());
+    }
+
+    TEST_CASE("dragging a queue row moves it once, where it is dropped; a click still plays")
+    {
+        media::PlaybackQueue queue;
+        media::QueueModel model(queue);
+        queue.replace(queueItems(6), 0);
+        model.reload();
+        QQmlEngine::setObjectOwnership(&model, QQmlEngine::CppOwnership);
+        QJSValue player;
+        const WindowHarness harness(R"(Window {
+            width: 300; height: 400; visible: true
+            property Item list: list
+            QueueList { id: list; anchors.fill: parent }
+        })",
+                                    nullptr, [&model, &player](QJSEngine* js) {
+                                        player = js->evaluate(
+                                            QStringLiteral("({ moves: [], played: [],"
+                                                           "   moveQueueItem(from, to) { this.moves.push([from, to]) },"
+                                                           "   playQueueItem(index) { this.played.push(index) } })"));
+                                        player.setProperty(QStringLiteral("queue"), js->newQObject(&model));
+                                        return player;
+                                    });
+        QQuickItem* list = harness.item("list");
+        REQUIRE(test::waitUntil([&] { return list->property("count").toInt() == 6; }));
+        QQuickWindow* window = harness.window.get();
+        const auto moves = [&] {
+            return player.property(QStringLiteral("moves")).toVariant().toList();
+        };
+
+        // Row 0 (y 0..40) dragged down by a little over two rows: it lands at index 2.
+        QTest::mousePress(window, Qt::LeftButton, {}, QPoint(100, 20));
+        for (int y = 24; y <= 108; y += 4) {
+            QTest::mouseMove(window, QPoint(100, y));
+        }
+        CHECK(list->property("dragFrom").toInt() == 0);
+        CHECK(list->property("dragTo").toInt() == 2);
+        CHECK(moves().isEmpty());  // the queue changes only on drop
+        QTest::mouseRelease(window, Qt::LeftButton, {}, QPoint(100, 108));
+        CHECK(list->property("dragFrom").toInt() == -1);
+        REQUIRE(moves().size() == 1);
+        CHECK(moves().front().toList() == QVariantList{0, 2});
+        CHECK(player.property(QStringLiteral("played")).property(QStringLiteral("length")).toInt() == 0);
+
+        // Dropped where it started: nothing moves. A plain click plays the row.
+        QTest::mousePress(window, Qt::LeftButton, {}, QPoint(100, 100));
+        for (int y = 104; y <= 120; y += 4) {
+            QTest::mouseMove(window, QPoint(100, y));
+        }
+        QTest::mouseRelease(window, Qt::LeftButton, {}, QPoint(100, 105));
+        CHECK(moves().size() == 1);
+        QTest::mouseClick(window, Qt::LeftButton, {}, QPoint(100, 60));
+        CHECK(player.property(QStringLiteral("played")).toVariant().toList() == QVariantList{1});
+        QTest::mouseMove(window, QPoint(295, 395));
     }
 }
 

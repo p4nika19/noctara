@@ -645,6 +645,7 @@ TEST_SUITE("cache.audio")
         test::waitUntil([] { return false; }, 200);
         CHECK_FALSE(reader->complete());
         CHECK(audio.cache->usage().completeEntries == 0);
+        CHECK(audio.cache->completeTracks().empty());  // a partial entry is no download
         const auto sidecarComplete = [&] {
             const Result<QByteArray> sidecar = readWholeFile(audio.entryDir(info) + QStringLiteral("/meta.json"));
             REQUIRE(sidecar);
@@ -656,6 +657,9 @@ TEST_SUITE("cache.audio")
         CHECK(Audio::piece(*reader, 0).data == segment);
         REQUIRE(test::waitUntil([&] { return audio.cache->usage().completeEntries == 1; }));
         CHECK(sidecarComplete());
+        const std::vector<TrackInfo> downloads = audio.cache->completeTracks();
+        REQUIRE(downloads.size() == 1);
+        CHECK(downloads.front().key == info.key);
     }
 
     TEST_CASE("least recently used entries are evicted to stay within the byte cap; open ones are kept")

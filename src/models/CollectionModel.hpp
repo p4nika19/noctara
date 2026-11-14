@@ -88,6 +88,9 @@ public:
     [[nodiscard]] bool stale() const noexcept { return m_stale; }
     [[nodiscard]] bool complete() const noexcept;
     [[nodiscard]] const std::vector<api::Entry>& entries() const noexcept { return m_entries; }
+    [[nodiscard]] api::IApiClient& client() const noexcept { return m_client; }
+    // Another list's contents take over (a filter changed what it shows): views and the queue let go of the old.
+    void announceReset() { Q_EMIT sourceReset(); }
 
     [[nodiscard]] int rowCount(const QModelIndex& parent = {}) const override;
     [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override;

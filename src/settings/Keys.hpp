@@ -78,6 +78,7 @@ inline constexpr std::string_view StartupVolume = "playback.volume.startup";
 inline constexpr std::string_view Autoplay = "playback.queue.autoplay";
 inline constexpr std::string_view RestoreQueue = "playback.queue.restore";
 inline constexpr std::string_view MediaControls = "playback.desktop.media_controls";
+inline constexpr std::string_view PauseForOthers = "playback.desktop.pause_for_others";
 inline constexpr std::string_view TrayIcon = "playback.desktop.tray";
 inline constexpr std::string_view TrackNotifications = "playback.desktop.notifications";
 inline constexpr std::string_view ProtectedEnabled = "playback.protected.enabled";
