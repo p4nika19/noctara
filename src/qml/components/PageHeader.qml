@@ -26,10 +26,21 @@ Item {
         id: titles
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
-        width: Math.max(0, Math.min(Math.max(titleText.implicitWidth, subtitleText.visible ? subtitleText.implicitWidth
-                                                                                         : 0),
+        // TextMetrics stays independent of the elided texts' widths; their implicit widths do not.
+        width: Math.max(0, Math.min(Math.max(titleMetrics.advanceWidth,
+                                             subtitleText.visible ? subtitleMetrics.advanceWidth : 0),
                                     controlRow.x - root.searchReserve))
         spacing: Theme.space.xxs
+        TextMetrics {
+            id: titleMetrics
+            font: titleText.font
+            text: root.title
+        }
+        TextMetrics {
+            id: subtitleMetrics
+            font: subtitleText.font
+            text: root.subtitle
+        }
         Text {
             id: titleText
             width: parent.width

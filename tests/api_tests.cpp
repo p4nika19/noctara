@@ -1270,7 +1270,9 @@ TEST_SUITE("zz.scratch")
             const QString ids = QUrlQuery(request.url).queryItemValue(QStringLiteral("ids"), QUrl::FullyDecoded);
             QByteArrayList parts;
             for (const QString& id : ids.split(u',', Qt::SkipEmptyParts)) {
-                parts << trackJson(id.toLongLong(), QStringLiteral("Hydrated %1 %2").arg(id, id.toLongLong() % 2 ? QStringLiteral("odd") : QStringLiteral("even")));
+                parts << trackJson(id.toLongLong(),
+                                   QStringLiteral("Hydrated %1 %2")
+                                       .arg(id, id.toLongLong() % 2 ? QStringLiteral("odd") : QStringLiteral("even")));
             }
             return FakeApi::reply(200, "[" + parts.join(',') + "]");
         });
@@ -1282,7 +1284,8 @@ TEST_SUITE("zz.scratch")
             track.id = id * 7 % 61;  // ids not sorted
             track.stub = id > 40;
             if (!track.stub) {
-                track.title = QStringLiteral("%1 %2").arg(QString::fromUtf8(words[id % 5]), QString::fromUtf8(words[id * 3 % 5]));
+                track.title =
+                    QStringLiteral("%1 %2").arg(QString::fromUtf8(words[id % 5]), QString::fromUtf8(words[id * 3 % 5]));
                 track.user.username = QString::fromUtf8(words[id * 2 % 5]);
             }
             entries.push_back({.item = track, .at = {}, .repostedBy = std::nullopt});
@@ -1291,24 +1294,39 @@ TEST_SUITE("zz.scratch")
         const std::vector<Id> sourceOrder = idsOf(source);
         models::CollectionFilter filter;
         filter.setSource(&source);
-        const QStringList texts{u"a"_s, u"al"_s, u"alp"_s, u"al"_s, u"a"_s, u""_s, u"o"_s, u"om"_s, u"o"_s, u"odd"_s, u"hydrated"_s, u"e"_s, u"be"_s, u"b"_s, u""_s, u"g"_s, u"ga"_s, u"gamma beta"_s, u"gamma"_s, u""_s};
+        const QStringList texts{u"a"_s,  u"al"_s, u"alp"_s, u"al"_s,         u"a"_s,     u""_s,   u"o"_s,
+                                u"om"_s, u"o"_s,  u"odd"_s, u"hydrated"_s,   u"e"_s,     u"be"_s, u"b"_s,
+                                u""_s,   u"g"_s,  u"ga"_s,  u"gamma beta"_s, u"gamma"_s, u""_s};
         for (const QString& text : texts) {
             filter.setText(text);
-            { QElapsedTimer t; t.start(); while (t.elapsed() < 50) QCoreApplication::processEvents(QEventLoop::AllEvents, 10); }
+            {
+                QElapsedTimer t;
+                t.start();
+                while (t.elapsed() < 50) {
+                    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+                }
+            }
             const std::vector<Id> now = idsOf(*filter.model());
             const std::vector<Id> src = idsOf(source);
             // subsequence check
             std::size_t j = 0;
             for (Id id : now) {
-                while (j < src.size() && src[j] != id) ++j;
+                while (j < src.size() && src[j] != id) {
+                    ++j;
+                }
                 CHECK_MESSAGE(j < src.size(), "text '" << text.toStdString() << "' out of order");
                 ++j;
             }
             if (src != sourceOrder) {
                 QStringList a, b;
-                for (Id id : sourceOrder) a << QString::number(id);
-                for (Id id : src) b << QString::number(id);
-                MESSAGE("text '" << text.toStdString() << "'\nbefore " << a.join(u' ').toStdString() << "\nnow    " << b.join(u' ').toStdString());
+                for (Id id : sourceOrder) {
+                    a << QString::number(id);
+                }
+                for (Id id : src) {
+                    b << QString::number(id);
+                }
+                MESSAGE("text '" << text.toStdString() << "'\nbefore " << a.join(u' ').toStdString() << "\nnow    "
+                                 << b.join(u' ').toStdString());
             }
             CHECK(src == sourceOrder);
         }
