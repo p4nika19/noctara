@@ -39,8 +39,16 @@ TextField {
     placeholderText: open ? prompt : hintMetrics.text
     rightPadding: open ? (clear.visible ? clear.width + Theme.space.xs * 2 : Theme.space.md)
                        : (keycap.visible ? keycap.width + Theme.space.sm * 2 : Theme.space.md)
-    text: filter ? filter.text : ""
     onTextEdited: if (filter) filter.text = text
+
+    // The filter's text, but only while not typing: the binding would reset the cursor.
+    Binding {
+        target: control
+        property: "text"
+        value: control.filter ? control.filter.text : ""
+        when: !control.activeFocus
+        restoreMode: Binding.RestoreNone
+    }
 
     TextMetrics {
         id: hintMetrics
