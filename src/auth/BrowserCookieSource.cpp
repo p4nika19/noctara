@@ -383,7 +383,10 @@ Result<std::optional<QByteArray>> secretServicePassword(const QString& keyringNa
         auto* item = static_cast<SecretItem*>(node->data);
         gchar* itemLabel = secret_item_get_label(item);
         const bool matches = itemLabel != nullptr && label == itemLabel;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"  // glib's g_free_sized
         g_free(itemLabel);
+#pragma clang diagnostic pop
         if (matches) {
             password = loadItemSecret(service.get(), item);
             break;

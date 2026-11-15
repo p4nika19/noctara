@@ -299,7 +299,10 @@ int main(int argc, char** argv)
     NOCTARA_TRACE_INSTANT("main");
     gfx::RelaunchGuard relaunch;  // destroyed last: performs a requested self-exec after full shutdown
     // A peer closing a connection must surface as a write error, never terminate the process.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"  // glibc's SIG_IGN
     (void)std::signal(SIGPIPE, SIG_IGN);
+#pragma clang diagnostic pop
     log::install();
     QCoreApplication::setApplicationName(QString::fromLatin1(kAppId));
     QCoreApplication::setApplicationVersion(QStringLiteral(NOCTARA_VERSION));

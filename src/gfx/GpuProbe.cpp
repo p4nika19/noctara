@@ -102,10 +102,11 @@ ProbeResult probeVulkan(DevicePreference preference)
     const auto* native = static_cast<const QRhiVulkanNativeHandles*>(rhi->nativeHandles());
     if (native != nullptr && native->physDev != VK_NULL_HANDLE) {
         functions->vkGetPhysicalDeviceProperties(native->physDev, &properties);
+        const auto apiVersion = properties.apiVersion;
         result.driver = QStringLiteral("Vulkan %1.%2.%3, driver 0x%4")
-                            .arg(VK_API_VERSION_MAJOR(properties.apiVersion))
-                            .arg(VK_API_VERSION_MINOR(properties.apiVersion))
-                            .arg(VK_API_VERSION_PATCH(properties.apiVersion))
+                            .arg((apiVersion >> 22U) & 0x7FU)
+                            .arg((apiVersion >> 12U) & 0x3FFU)
+                            .arg(apiVersion & 0xFFFU)
                             .arg(properties.driverVersion, 0, 16);
     }
     return result;

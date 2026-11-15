@@ -49,6 +49,12 @@ struct FrameDeleter {
 };
 
 constexpr int kIoBufferSize = 32 * 1024;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"  // FFmpeg's FFERRTAG-based constants
+constexpr int kAvErrorEof = AVERROR_EOF;
+constexpr int kAvErrorExit = AVERROR_EXIT;
+constexpr std::int64_t kAvNoPtsValue = AV_NOPTS_VALUE;
+#pragma clang diagnostic pop
 
 std::string ffmpegError(int code)
 {
@@ -96,9 +102,9 @@ struct Decoder::Impl {
             self->source.read(std::span(reinterpret_cast<std::byte*>(buffer), static_cast<std::size_t>(size)));
         if (!got) {
             self->sourceError = got.error();
-            return got.error().code == ErrorCode::Cancelled ? AVERROR_EXIT : AVERROR(EIO);
+            return got.error().code == ErrorCode::Cancelled ? kAvErrorExit : AVERROR(EIO);
         }
-        return *got == 0 ? AVERROR_EOF : static_cast<int>(*got);
+        return *got == 0 ? kAvErrorEof : static_cast<int>(*got);
     }
 
     // FFmpeg never opens a URL: a demuxer that would fetch nested resources (DASH, concat, ...) is refused.
@@ -136,7 +142,7 @@ struct Decoder::Impl {
 
     [[nodiscard]] Error failure(int code, const char* what) const
     {
-        if (sourceError && (code == AVERROR_EXIT || code == AVERROR(EIO))) {
+        if (sourceError && (code == kAvErrorExit || code == AVERROR(EIO))) {
             return *sourceError;
         }
         return {ErrorCode::DecodeFailed, std::string(what) + ": " + ffmpegError(code)};
@@ -286,9 +292,9 @@ Result<bool> Decoder::decode(std::vector<float>& out)
         if (received == 0) {
             const AVFrame& frame = *d.frame;
             std::int64_t first = m_position;
-            if (m_usePts && frame.best_effort_timestamp != AV_NOPTS_VALUE && m_trimTo > 0) {
+            if (m_usePts && frame.best_effort_timestamp != kAvNoPtsValue && m_trimTo > 0) {
                 const AVStream* stream = d.format->streams[d.stream];
-                const std::int64_t origin = stream->start_time != AV_NOPTS_VALUE ? stream->start_time : 0;
+                const std::int64_t origin = stream->start_time != kAvNoPtsValue ? stream->start_time : 0;
                 first = av_rescale_q(frame.best_effort_timestamp - origin, stream->time_base,
                                      AVRational{1, m_output.sampleRate});
             }
@@ -308,7 +314,7 @@ Result<bool> Decoder::decode(std::vector<float>& out)
             d.badPackets = 0;
             continue;
         }
-        if (received == AVERROR_EOF) {
+        if (received == kAvErrorEof) {
             // Whatever the resampler still holds.
             const int capacity = std::max(swr_get_out_samples(d.resampler.get(), 0), 0);
             if (capacity > 0) {
@@ -331,7 +337,7 @@ Result<bool> Decoder::decode(std::vector<float>& out)
             return out.size() > before;  // nothing more will come
         }
         const int read = av_read_frame(d.format.get(), d.packet.get());
-        if (read == AVERROR_EOF || (read < 0 && read != AVERROR_EXIT && !d.sourceError)) {
+        if (read == kAvErrorEof || (read < 0 && read != kAvErrorExit && !d.sourceError)) {
             // The end of the stream (or a damaged tail): flush the codec.
             d.draining = true;
             (void)avcodec_send_packet(d.codec.get(), nullptr);
@@ -359,7 +365,7 @@ Result<void> Decoder::seek(std::int64_t frame)
         return fail(ErrorCode::Unsupported, "segmented source");
     }
     const AVStream* stream = d.format->streams[d.stream];
-    const std::int64_t origin = stream->start_time != AV_NOPTS_VALUE ? stream->start_time : 0;
+    const std::int64_t origin = stream->start_time != kAvNoPtsValue ? stream->start_time : 0;
     const std::int64_t timestamp = origin + av_rescale_q(frame, AVRational{1, m_output.sampleRate}, stream->time_base);
     d.sourceError.reset();
     if (const int sought = av_seek_frame(d.format.get(), d.stream, timestamp, AVSEEK_FLAG_BACKWARD); sought < 0) {

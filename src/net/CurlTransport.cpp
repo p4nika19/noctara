@@ -572,7 +572,10 @@ void CurlTransport::launch(std::uint64_t id, const std::vector<QByteArray>& reso
         if (proxy->hasCredentials()) {
             setopt(easy, CURLOPT_PROXYUSERNAME, proxy->username.toUtf8().constData());
             setopt(easy, CURLOPT_PROXYPASSWORD, proxy->password.toUtf8().constData());
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"  // curl's CURLAUTH_ANY
             setopt(easy, CURLOPT_PROXYAUTH, static_cast<long>(CURLAUTH_ANY));
+#pragma clang diagnostic pop
         }
     }
 

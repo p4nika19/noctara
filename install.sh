@@ -152,11 +152,19 @@ available() {
     esac
 }
 
-# The package list for this system: alternatives resolved, unknown names reported and left out.
+# Whether a package is already installed. Other package managers keep their existing install-command behaviour.
+installed() {
+    [[ $PM == pacman ]] && pacman -Qi -- "$1" >/dev/null 2>&1
+}
+
+# The missing packages for this system: alternatives resolved, unknown names reported and left out.
 resolve_packages() {
     local entry choice name kept=() dropped=()
     for entry in $(packages "$PM"); do
         choice=
+        for name in ${entry//|/ }; do
+            if installed "$name"; then continue 2; fi
+        done
         for name in ${entry//|/ }; do
             if available "$name"; then choice=$name; break; fi
         done
@@ -197,15 +205,19 @@ install_dependencies() {
              "В Gentoo каждый пакет компилируется (а xmake есть только в оверлее GURU): выполните команду выше сами и запустите установщик снова."
         return
     fi
+    step "Checking the build dependencies for $OS_NAME ($PM)…" "Проверка зависимостей для сборки в $OS_NAME ($PM)…"
+    if [[ $PM == apt-get ]]; then "${SUDO[@]}" apt-get update -qq || true; fi
+    if [[ $PM == zypper ]]; then "${SUDO[@]}" zypper --non-interactive --quiet refresh || true; fi
+    list=$(resolve_packages)
+    if [[ -z $list ]]; then
+        step "Build dependencies are already installed." "Зависимости для сборки уже установлены."
+        return
+    fi
     if (( ${#SUDO[@]} == 0 )); then
         warn "Neither sudo nor doas found: install the packages from README.md as root, then run this again." \
              "Нет ни sudo, ни doas: установите пакеты из README.md от root и запустите установщик снова."
         return
     fi
-    step "Checking the build dependencies for $OS_NAME ($PM)…" "Проверка зависимостей для сборки в $OS_NAME ($PM)…"
-    if [[ $PM == apt-get ]]; then "${SUDO[@]}" apt-get update -qq || true; fi
-    if [[ $PM == zypper ]]; then "${SUDO[@]}" zypper --non-interactive --quiet refresh || true; fi
-    list=$(resolve_packages)
     printf '    %s %s\n' "$command" "$list"
     ask "Install them now?" "Установить их сейчас?" || { warn "Skipped." "Пропущено."; return; }
     # shellcheck disable=SC2086 # the command and the list are word lists on purpose
