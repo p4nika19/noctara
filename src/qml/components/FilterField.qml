@@ -71,6 +71,13 @@ TextField {
         }
     }
 
+    // Release focus when the page is no longer shown (switching tabs, opening a detail).
+    Connections {
+        target: control.Window.window
+        function onPageChanged() { control.focus = false }
+        function onDetailChanged() { control.focus = false }
+    }
+
     Keys.onShortcutOverride: event => event.accepted = event.key === Qt.Key_Escape
     Keys.onEscapePressed: event => {
         if (text.length > 0) {
