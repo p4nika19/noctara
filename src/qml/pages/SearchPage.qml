@@ -38,6 +38,11 @@ Item {
             Keys.onEnterPressed: Catalog.searchNow()
             Component.onCompleted: text = Catalog.query
             onActiveFocusChanged: if (!activeFocus) deselect()
+
+            Connections {
+                target: field.Window.window
+                function onPageChanged() { field.focus = false }
+            }
         }
 
         SegmentedControl {
