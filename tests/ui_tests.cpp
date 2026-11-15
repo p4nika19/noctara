@@ -1202,10 +1202,13 @@ TEST_SUITE("ui.components")
             }
         };
 
-        // Closed: only the hint, much narrower than the open field.
+        // Closed: only the hint, as wide as it needs (font metrics differ between machines).
+        const qreal collapsedWidth = field->property("collapsedWidth").toReal();
+        const qreal openWidth = std::max(field->property("openWidth").toReal(), collapsedWidth);
         CHECK_FALSE(field->property("open").toBool());
         CHECK(field->property("placeholderText").toString() != u"Search");
-        CHECK(field->property("collapsedWidth").toReal() < field->property("openWidth").toReal());
+        CHECK(field->property("chrome").toReal() == 0);
+        CHECK(field->width() == collapsedWidth);
 
         // Its key opens it (and is not typed into it).
         QTest::keyClick(window, Qt::Key_Slash);
@@ -1213,7 +1216,8 @@ TEST_SUITE("ui.components")
         CHECK(field->property("open").toBool());
         CHECK(window->property("summons").toInt() == 1);
         CHECK(field->property("placeholderText").toString() == u"Search");
-        CHECK(test::waitUntil([&] { return field->width() == field->property("openWidth").toReal(); }));
+        CHECK(test::waitUntil([&] { return field->width() == openWidth; }));
+        CHECK(test::waitUntil([&] { return field->property("chrome").toReal() == 1; }));
         type("neon");
         CHECK(filter->property("text").toString() == u"neon");
 
@@ -1234,6 +1238,12 @@ TEST_SUITE("ui.components")
         filter->setProperty("text", QString());
         CHECK(field->property("text").toString().isEmpty());
         CHECK_FALSE(field->property("open").toBool());
+
+        // A hint wider than the open field (a long translation, a large font): opening never narrows it.
+        field->setProperty("openWidth", collapsedWidth / 2);
+        QTest::keyClick(window, Qt::Key_Slash);
+        REQUIRE(field->hasActiveFocus());
+        CHECK(field->width() == collapsedWidth);
     }
 
     TEST_CASE("dragging a queue row moves it once, where it is dropped; a click still plays")

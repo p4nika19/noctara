@@ -22,13 +22,14 @@ TextField {
         focus = false
     }
 
-    implicitWidth: open ? openWidth : collapsedWidth
+    // Never narrower open than closed (a long hint, a large font).
+    implicitWidth: open ? Math.max(openWidth, collapsedWidth) : collapsedWidth
     Behavior on implicitWidth {
         NumberAnimation { duration: Theme.motion.normal; easing.type: Theme.motion.easingStandard }
     }
     readonly property real collapsedWidth: Math.ceil(leftPadding + hintMetrics.advanceWidth
-                                                     + (keycap.visible ? keycap.width + Theme.space.sm * 2
-                                                                       : Theme.space.md))
+                                                     + (keys.length > 0 ? keycap.width + Theme.space.sm * 2
+                                                                        : Theme.space.md))
     chrome: open ? 1 : 0
     Behavior on chrome { NumberAnimation { duration: Theme.motion.fast } }
     opacity: open ? 1 : hovered ? 0.85 : 0.6
