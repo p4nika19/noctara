@@ -42,6 +42,7 @@ Item {
             Connections {
                 target: field.Window.window
                 function onPageChanged() { field.focus = false }
+                function onDetailChanged() { field.focus = false }
             }
         }
 

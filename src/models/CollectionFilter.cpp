@@ -126,11 +126,11 @@ void CollectionFilter::setText(const QString& text)
     }
     refilter();
     if (active() != wasActive) {
-        // Switching between matches and source: signal the now-visible model so views refresh.
+        Q_EMIT modelChanged();
+        // The source becomes visible only after modelChanged; then ask its views to refresh.
         if (!active() && m_source != nullptr) {
             Q_EMIT m_source->layoutChanged();
         }
-        Q_EMIT modelChanged();
     }
 }
 

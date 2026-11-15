@@ -41,13 +41,17 @@ TextField {
                        : (keycap.visible ? keycap.width + Theme.space.sm * 2 : Theme.space.md)
     onTextEdited: if (filter) filter.text = text
 
-    // The filter's text, but only while not typing: the binding would reset the cursor.
-    Binding {
-        target: control
-        property: "text"
-        value: control.filter ? control.filter.text : ""
-        when: !control.activeFocus
-        restoreMode: Binding.RestoreNone
+    // Follow external filter changes without assigning the same text back after each keystroke (which resets the cursor).
+    function syncText() {
+        const filterText = filter ? filter.text : ""
+        if (text !== filterText)
+            text = filterText
+    }
+    Component.onCompleted: syncText()
+    onFilterChanged: syncText()
+    Connections {
+        target: control.filter
+        function onTextChanged() { control.syncText() }
     }
 
     TextMetrics {
