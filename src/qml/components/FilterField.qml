@@ -130,6 +130,7 @@ TextField {
         onClicked: {
             if (control.filter)
                 control.filter.text = ""
+            control.text = ""
             control.forceActiveFocus()
         }
     }

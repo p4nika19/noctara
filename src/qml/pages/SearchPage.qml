@@ -37,6 +37,7 @@ Item {
             Keys.onReturnPressed: Catalog.searchNow()
             Keys.onEnterPressed: Catalog.searchNow()
             Component.onCompleted: text = Catalog.query
+            onActiveFocusChanged: if (!activeFocus) deselect()
         }
 
         SegmentedControl {
