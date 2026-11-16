@@ -981,12 +981,12 @@
 <context>
     <name>FilterField</name>
     <message>
-        <location filename="../src/qml/components/FilterField.qml" line="+47"/>
+        <location filename="../src/qml/components/FilterField.qml" line="+60"/>
         <source>Click to search</source>
         <translation>Нажмите, чтобы искать</translation>
     </message>
     <message>
-        <location line="+66"/>
+        <location line="+73"/>
         <source>Clear the search</source>
         <translation>Очистить поиск</translation>
     </message>
@@ -1099,7 +1099,17 @@
 <context>
     <name>FullPlayer</name>
     <message>
-        <location filename="../src/qml/components/FullPlayer.qml" line="+33"/>
+        <location filename="../src/qml/components/FullPlayer.qml" line="+26"/>
+        <source>Save artwork</source>
+        <translation>Сохранить обложку</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Images (*.png *.jpg *.jpeg)</source>
+        <translation>Изображения (*.png *.jpg *.jpeg)</translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <location line="+65"/>
         <source>Now playing</source>
         <translation>Сейчас играет</translation>
@@ -1676,12 +1686,12 @@
         <location line="+11"/>
         <location line="+16"/>
         <location line="+19"/>
-        <location line="+22"/>
+        <location line="+29"/>
         <source>Play</source>
         <translation>Воспроизвести</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-63"/>
         <location line="+16"/>
         <location line="+19"/>
         <source>Play next</source>
@@ -1696,12 +1706,12 @@
     <message>
         <location line="-12"/>
         <location line="+37"/>
-        <location line="+32"/>
+        <location line="+39"/>
         <source>Go to artist</source>
         <translation>Перейти к исполнителю</translation>
     </message>
     <message>
-        <location line="-64"/>
+        <location line="-71"/>
         <source>Remove the download</source>
         <translation>Удалить из скачанного</translation>
     </message>
@@ -1732,6 +1742,16 @@
     </message>
     <message>
         <location line="+9"/>
+        <source>Download artwork…</source>
+        <translation>Скачать обложку…</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Copy artwork</source>
+        <translation>Скопировать обложку</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Pause</source>
         <translation>Пауза</translation>
     </message>
@@ -2077,7 +2097,7 @@
 <context>
     <name>PageHeader</name>
     <message>
-        <location filename="../src/qml/components/PageHeader.qml" line="+72"/>
+        <location filename="../src/qml/components/PageHeader.qml" line="+83"/>
         <source>List</source>
         <translation>Список</translation>
     </message>
@@ -2445,17 +2465,17 @@
     <name>SearchPage</name>
     <message>
         <location filename="../src/qml/pages/SearchPage.qml" line="+25"/>
-        <location line="+46"/>
+        <location line="+53"/>
         <source>Search</source>
         <translation>Поиск</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-43"/>
         <source>Tracks, playlists, albums and people</source>
         <translation>Треки, плейлисты, альбомы и люди</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+18"/>
         <source>All</source>
         <translation>Всё</translation>
     </message>
@@ -5534,7 +5554,7 @@
 <context>
     <name>noctara::ui::AppController</name>
     <message>
-        <location filename="../src/ui/AppController.cpp" line="+52"/>
+        <location filename="../src/ui/AppController.cpp" line="+54"/>
         <source>Safe Mode: hardware acceleration and glass effects are off for this session. Start Noctara without --safe-mode to return to normal.</source>
         <translation>Безопасный режим: аппаратное ускорение и эффекты стекла отключены в этом сеансе. Запустите Noctara без --safe-mode, чтобы вернуться к обычному режиму.</translation>
     </message>
@@ -5564,7 +5584,29 @@
         <translation>Не удалось запустить выбранный графический API; вместо него используется другой.</translation>
     </message>
     <message>
-        <location line="+72"/>
+        <location line="+15"/>
+        <location line="+5"/>
+        <source>The artwork could not be loaded.</source>
+        <translation>Не удалось загрузить обложку.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Artwork copied.</source>
+        <translation>Обложка скопирована.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+5"/>
+        <source>The artwork could not be saved.</source>
+        <translation>Не удалось сохранить обложку.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Artwork saved.</source>
+        <translation>Обложка сохранена.</translation>
+    </message>
+    <message>
+        <location line="+64"/>
         <source>More configuration problems were found. See the log for details.</source>
         <translation>Найдены и другие проблемы в настройках. Подробности — в журнале.</translation>
     </message>
@@ -5587,38 +5629,38 @@
 <context>
     <name>noctara::ui::CatalogController</name>
     <message>
-        <location filename="../src/ui/CatalogController.cpp" line="+208"/>
+        <location filename="../src/ui/CatalogController.cpp" line="+213"/>
         <source>Sign in to like tracks.</source>
         <translation>Войдите, чтобы ставить лайки.</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+19"/>
         <source>Could not change the like: %1</source>
         <translation>Не удалось изменить лайк: %1</translation>
     </message>
     <message>
-        <location line="+52"/>
-        <location line="+67"/>
+        <location line="+55"/>
+        <location line="+74"/>
         <source>Sign in to add tracks to playlists.</source>
         <translation>Войдите, чтобы добавлять треки в плейлисты.</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-52"/>
         <source>Could not add the track: %1</source>
         <translation>Не удалось добавить трек: %1</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+18"/>
         <source>Already in “%1”.</source>
         <translation>Трек уже есть в «%1».</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+14"/>
         <source>Added to “%1”.</source>
         <translation>Добавлено в «%1».</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+36"/>
         <source>Could not create the playlist: %1</source>
         <translation>Не удалось создать плейлист: %1</translation>
     </message>
@@ -5726,12 +5768,12 @@
     <message>
         <location line="+0"/>
         <location line="+219"/>
-        <location line="+27"/>
+        <location line="+28"/>
         <source>direct</source>
         <translation>напрямую</translation>
     </message>
     <message>
-        <location line="-230"/>
+        <location line="-231"/>
         <source>With SOCKS4 and SOCKS5 Noctara looks up server names itself, using the DNS settings above, and sends only addresses to the proxy. Choose SOCKS5 with remote DNS to let the proxy look them up.</source>
         <translation>С SOCKS4 и SOCKS5 Noctara сама определяет адреса серверов по настройкам DNS выше и передаёт прокси только адреса. Выберите «SOCKS5 с удалённым DNS», чтобы это делал прокси.</translation>
     </message>
@@ -5871,7 +5913,7 @@
         <translation>Доступен (HTTP %1, %2)</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+48"/>
         <source>Noctara network report (%1, %2)</source>
         <extracomment>Title of the copied network report; %1 = app version, %2 = date and time</extracomment>
         <translation>Сетевой отчёт Noctara (%1, %2)</translation>
@@ -6012,12 +6054,12 @@
         <translation>Строка %1: «%2» — не токен темы, пропущено.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>Line %1: “%2” has an invalid value and was skipped.</source>
         <translation>Строка %1: у «%2» неверное значение, пропущено.</translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+55"/>
         <source>The theme “%1” is not in the themes folder; the built-in look is used.</source>
         <translation>Темы «%1» нет в папке тем; используется встроенное оформление.</translation>
     </message>

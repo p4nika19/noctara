@@ -411,6 +411,7 @@ int main(int argc, char** argv)
         [&appController](const QString& kind, const QString& message) { appController.showToast(kind, message); });
     // Caches (audio RAM + disk, images, HTTP) on their own thread; the API client will use cache.transport().
     cache::CacheService cache(store, network.transport(), paths.cacheDir);
+    appController.setImageCache(cache.images());
     ui::StorageController storageUi(cache, languages, settingsUi);
     QObject::connect(
         &storageUi, &ui::StorageController::notice, &appController,

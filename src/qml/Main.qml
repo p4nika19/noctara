@@ -216,8 +216,15 @@ Window {
         contextMenu.show(queueActions.concat(trackActions(trackId), artistActions, linkActions(permalink), clearActions),
                          item, point)
     }
-    function showPlayerMenu(item, point) {
+    function showPlayerMenu(item, point, artwork = false) {
         const has = Player.hasTrack
+        const artworkActions = artwork ? [
+            { text: qsTr("Download artwork…"), icon: "download", enabled: Player.artworkUrl.length > 0,
+              run: () => fullPlayerView.downloadArtwork() },
+            { text: qsTr("Copy artwork"), icon: "copy", enabled: Player.artworkUrl.length > 0,
+              run: () => App.copyArtwork(Player.artworkUrl) },
+            { separator: true }
+        ] : []
         contextMenu.show([
             { text: Player.playing ? qsTr("Pause") : qsTr("Play"), icon: Player.playing ? "pause" : "play",
               enabled: has, run: () => Player.playPause() },
@@ -235,7 +242,7 @@ Window {
             { text: queuePanel ? qsTr("Hide the queue") : qsTr("Show the queue"), icon: "list-music",
               enabled: !(fullPlayer && fullPlayerView.showQueue), run: () => toggleQueue() },
             { separator: true }
-        ].concat(trackActions(has ? Number(Player.trackId) : 0)).concat([
+        ].concat(artworkActions).concat(trackActions(has ? Number(Player.trackId) : 0)).concat([
             { separator: true },
             { text: qsTr("Go to artist"), icon: "user", enabled: Player.artistId > 0,
               run: () => openUser(Player.artistId) }

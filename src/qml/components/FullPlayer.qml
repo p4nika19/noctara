@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Dialogs
 import QtQuick.Window
 import Noctara
 
@@ -13,6 +14,21 @@ FocusScope {
     // Where the player bar shows the cover, in window coordinates (the flight starts and ends there).
     property rect sourceRect: Qt.rect(0, 0, 0, 0)
     signal closeRequested()
+
+    function downloadArtwork() {
+        artworkDialog.artworkUrl = Player.artworkUrl
+        artworkDialog.open()
+    }
+
+    FileDialog {
+        id: artworkDialog
+        property string artworkUrl
+        title: qsTr("Save artwork")
+        fileMode: FileDialog.SaveFile
+        defaultSuffix: "jpg"
+        nameFilters: [qsTr("Images (*.png *.jpg *.jpeg)")]
+        onAccepted: App.saveArtwork(artworkUrl, selectedFile)
+    }
 
     readonly property bool wide: width > 1100 * Theme.scale
     readonly property bool showQueue: Layout.fullPlayerQueue && wide
@@ -382,7 +398,7 @@ FocusScope {
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.RightButton
-            onClicked: mouse => Window.window.showPlayerMenu(flyer, Qt.point(mouse.x, mouse.y))
+            onClicked: mouse => Window.window.showPlayerMenu(flyer, Qt.point(mouse.x, mouse.y), true)
         }
     }
 }

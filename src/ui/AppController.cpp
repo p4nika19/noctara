@@ -1,5 +1,6 @@
 #include "ui/AppController.hpp"
 
+#include "cache/ImageCache.hpp"
 #include "core/FileIo.hpp"
 #include "core/Log.hpp"
 #include "gfx/GraphicsBootstrap.hpp"
@@ -14,6 +15,7 @@
 #include <QDesktopServices>
 #include <QGuiApplication>
 #include <QHash>
+#include <QImage>
 #include <QUrl>
 
 namespace noctara::ui {
@@ -72,6 +74,44 @@ QString AppController::graphicsNotice() const
 void AppController::copyText(const QString& text)
 {
     QGuiApplication::clipboard()->setText(text);
+}
+
+void AppController::requestArtwork(const QString& url, std::function<void(const QImage&)> done)
+{
+    if (m_images == nullptr || url.isEmpty()) {
+        showToast(QStringLiteral("error"), tr("The artwork could not be loaded."));
+        return;
+    }
+    m_images->request(QUrl(url), QSize(), this, [this, done = std::move(done)](const Result<QImage>& image) {
+        if (!image || image->isNull()) {
+            showToast(QStringLiteral("error"), tr("The artwork could not be loaded."));
+            return;
+        }
+        done(*image);
+    });
+}
+
+void AppController::copyArtwork(const QString& url)
+{
+    requestArtwork(url, [this](const QImage& image) {
+        QGuiApplication::clipboard()->setImage(image);
+        showToast(QStringLiteral("success"), tr("Artwork copied."));
+    });
+}
+
+void AppController::saveArtwork(const QString& url, const QUrl& destination)
+{
+    if (!destination.isLocalFile()) {
+        showToast(QStringLiteral("error"), tr("The artwork could not be saved."));
+        return;
+    }
+    requestArtwork(url, [this, path = destination.toLocalFile()](const QImage& image) {
+        if (!image.save(path)) {
+            showToast(QStringLiteral("error"), tr("The artwork could not be saved."));
+            return;
+        }
+        showToast(QStringLiteral("success"), tr("Artwork saved."));
+    });
 }
 
 void AppController::openLink(const QString& url)

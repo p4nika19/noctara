@@ -1,8 +1,12 @@
 #include "TestUtil.hpp"
+#include "mock/FakeOrigin.hpp"
 
+#include "cache/FileOps.hpp"
+#include "cache/ImageCache.hpp"
 #include "gfx/FrameMonitor.hpp"
 #include "gfx/GraphicsBootstrap.hpp"
 #include "gfx/PowerMonitor.hpp"
+#include "gfx/Relaunch.hpp"
 #include "i18n/LanguageManager.hpp"
 #include "media/PlaybackQueue.hpp"
 #include "media/QueueModel.hpp"
@@ -13,6 +17,7 @@
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
 #include "theme/Theme.hpp"
+#include "ui/AppController.hpp"
 #include "ui/CoverImageProvider.hpp"
 #include "ui/EffectsController.hpp"
 #include "ui/GlobalShortcuts.hpp"
@@ -22,9 +27,12 @@
 #include "ui/WaveformItem.hpp"
 
 #include <QAbstractItemModelTester>
+#include <QBuffer>
+#include <QClipboard>
 #include <QColor>
 #include <QDateTime>
 #include <QElapsedTimer>
+#include <QGuiApplication>
 #include <QJSEngine>
 #include <QQmlComponent>
 #include <QQmlContext>
@@ -112,6 +120,65 @@ TEST_SUITE("ui.effects")
         }
         CHECK(effects.tier() == u"kawase");
         CHECK(theme.glass().style == u"kawase");
+    }
+}
+
+TEST_SUITE("ui.artwork")
+{
+    TEST_CASE("artwork actions use the image cache for the clipboard and saving")
+    {
+        settings::SettingsStore store(settings::Schema::builtin());
+        gfx::GraphicsInfo graphics(gfx::GraphicsDecision{});
+        gfx::RelaunchGuard relaunch;
+        i18n::LanguageManager languages(store);
+        test::FakeOrigin origin;
+        cache::ImageCache images(origin, cache::FileOps::posix(), 16 << 20);
+        ui::AppController app(store, graphics, relaunch, languages);
+        app.setImageCache(images);
+
+        QImage source(7, 5, QImage::Format_RGB32);
+        source.fill(QColor(QStringLiteral("#3366ff")));
+        QByteArray bytes;
+        QBuffer buffer(&bytes);
+        REQUIRE(buffer.open(QIODevice::WriteOnly));
+        REQUIRE(source.save(&buffer, "PNG"));
+        const QString url = QStringLiteral("https://cdn.test/artwork.png");
+        test::FakeOrigin::Resource resource;
+        resource.body = bytes;
+        resource.type = "image/png";
+        origin.serve(url, resource);
+        QSignalSpy toasts(&app, &ui::AppController::toastRequested);
+
+        QGuiApplication::clipboard()->setImage(QImage());
+        app.copyArtwork(url);
+        REQUIRE(test::waitUntil([] { return !QGuiApplication::clipboard()->image().isNull(); }));
+        CHECK(QGuiApplication::clipboard()->image().size() == source.size());
+        CHECK(QGuiApplication::clipboard()->image().pixelColor(0, 0) == source.pixelColor(0, 0));
+
+        QTemporaryDir dir;
+        const QString path = dir.filePath(QStringLiteral("saved artwork.png"));
+        app.saveArtwork(url, QUrl::fromLocalFile(path));
+        REQUIRE(test::waitUntil([&] { return QFileInfo::exists(path); }));
+        const QImage saved(path);
+        CHECK(saved.size() == source.size());
+        CHECK(saved.pixelColor(0, 0) == source.pixelColor(0, 0));
+        CHECK(toasts.count() == 2);
+        CHECK(toasts.at(0).at(0).toString() == u"success");
+        CHECK(toasts.at(1).at(0).toString() == u"success");
+    }
+
+    TEST_CASE("artwork save rejects a non-local destination")
+    {
+        settings::SettingsStore store(settings::Schema::builtin());
+        gfx::GraphicsInfo graphics(gfx::GraphicsDecision{});
+        gfx::RelaunchGuard relaunch;
+        i18n::LanguageManager languages(store);
+        ui::AppController app(store, graphics, relaunch, languages);
+        QSignalSpy toasts(&app, &ui::AppController::toastRequested);
+
+        app.saveArtwork(QStringLiteral("https://cdn.test/artwork.png"), QUrl(QStringLiteral("https://example.test/a")));
+        REQUIRE(toasts.count() == 1);
+        CHECK(toasts.at(0).at(0).toString() == u"error");
     }
 }
 
@@ -595,6 +662,7 @@ void installStubs(stub::Factory player)
                                              "fullPlayerWaveform: false, playerSize: 'normal', playerTime: true, "
                                              "playerWaveform: true, playerVolume: true, playerQueueButton: true})"));
     stub::singleton("Artwork", QStringLiteral("({hasArtwork: false, revision: 0})"));
+    stub::singleton("App", QStringLiteral("({copyArtwork: url => {}, saveArtwork: (url, file) => {}})"));
     if (player) {
         stub::singleton("Player", std::move(player));
     } else {
@@ -992,6 +1060,25 @@ TEST_SUITE("ui.components")
         };
         CHECK(scrollAt(queue->mapToScene(QPointF(queue->width() / 2, queue->height() / 2))) == doctest::Approx(1.0));
         CHECK(scrollAt(QPointF(100, 100)) == doctest::Approx(0.9));
+    }
+
+    TEST_CASE("the full player's cover requests the artwork context menu")
+    {
+        const WindowHarness harness(R"(Window {
+            width: 1000; height: 800; visible: true
+            property Item player: player
+            property bool artworkMenu: false
+            function showPlayerMenu(item, point, artwork) { artworkMenu = artwork }
+            FullPlayer { id: player; anchors.fill: parent; sourceRect: Qt.rect(20, 720, 64, 64) }
+        })");
+        QQuickItem* player = harness.item("player");
+        player->setProperty("open", true);
+        REQUIRE(test::waitUntil([&] { return player->property("shown").toReal() == 1.0; }));
+        auto* flyer = player->findChild<QQuickItem*>(QStringLiteral("flyingCover"));
+        REQUIRE(flyer != nullptr);
+        QTest::mouseClick(harness.window.get(), Qt::RightButton, Qt::NoModifier,
+                          flyer->mapToScene(QPointF(flyer->width() / 2, flyer->height() / 2)).toPoint());
+        CHECK(harness.window->property("artworkMenu").toBool());
     }
 
     TEST_CASE("the full player's volume slider and scrubber are centred on the play button")

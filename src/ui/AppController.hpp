@@ -5,6 +5,14 @@
 #include <QObject>
 #include <QString>
 
+#include <functional>
+
+class QImage;
+class QUrl;
+
+namespace noctara::cache {
+class ImageCache;
+}
 namespace noctara::settings {
 class SettingsStore;
 }
@@ -36,6 +44,10 @@ public:
     Q_INVOKABLE void dismissGraphicsNotice();
     // Puts text on the clipboard (links from context menus).
     Q_INVOKABLE static void copyText(const QString& text);
+    void setImageCache(cache::ImageCache& images) noexcept { m_images = &images; }
+    // Loads the original decoded artwork through the image cache, then copies or saves it.
+    Q_INVOKABLE void copyArtwork(const QString& url);
+    Q_INVOKABLE void saveArtwork(const QString& url, const QUrl& destination);
     // Opens a web link in the default browser.
     Q_INVOKABLE static void openLink(const QString& url);
     // Bundled license texts shown in About (allow-listed ids: "manrope", "inter", "jetbrains-mono", "lucide").
@@ -56,10 +68,12 @@ Q_SIGNALS:
 
 private:
     void onGraphicsFailed();
+    void requestArtwork(const QString& url, std::function<void(const QImage&)> done);
 
     settings::SettingsStore& m_settings;
     gfx::GraphicsInfo& m_graphics;
     gfx::RelaunchGuard& m_relaunch;
+    cache::ImageCache* m_images = nullptr;
 };
 
 }  // namespace noctara::ui

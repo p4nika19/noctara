@@ -978,12 +978,12 @@
 <context>
     <name>FilterField</name>
     <message>
-        <location filename="../src/qml/components/FilterField.qml" line="+47"/>
+        <location filename="../src/qml/components/FilterField.qml" line="+60"/>
         <source>Click to search</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+66"/>
+        <location line="+73"/>
         <source>Clear the search</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1090,7 +1090,17 @@
 <context>
     <name>FullPlayer</name>
     <message>
-        <location filename="../src/qml/components/FullPlayer.qml" line="+33"/>
+        <location filename="../src/qml/components/FullPlayer.qml" line="+26"/>
+        <source>Save artwork</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Images (*.png *.jpg *.jpeg)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <location line="+65"/>
         <source>Now playing</source>
         <translation type="unfinished"></translation>
@@ -1664,12 +1674,12 @@
         <location line="+11"/>
         <location line="+16"/>
         <location line="+19"/>
-        <location line="+22"/>
+        <location line="+29"/>
         <source>Play</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-63"/>
         <location line="+16"/>
         <location line="+19"/>
         <source>Play next</source>
@@ -1684,12 +1694,12 @@
     <message>
         <location line="-12"/>
         <location line="+37"/>
-        <location line="+32"/>
+        <location line="+39"/>
         <source>Go to artist</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-64"/>
+        <location line="-71"/>
         <source>Remove the download</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1720,6 +1730,16 @@
     </message>
     <message>
         <location line="+9"/>
+        <source>Download artwork…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Copy artwork</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Pause</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2065,7 +2085,7 @@
 <context>
     <name>PageHeader</name>
     <message>
-        <location filename="../src/qml/components/PageHeader.qml" line="+72"/>
+        <location filename="../src/qml/components/PageHeader.qml" line="+83"/>
         <source>List</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2431,17 +2451,17 @@
     <name>SearchPage</name>
     <message>
         <location filename="../src/qml/pages/SearchPage.qml" line="+25"/>
-        <location line="+46"/>
+        <location line="+53"/>
         <source>Search</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-43"/>
         <source>Tracks, playlists, albums and people</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+18"/>
         <source>All</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5514,7 +5534,7 @@
 <context>
     <name>noctara::ui::AppController</name>
     <message>
-        <location filename="../src/ui/AppController.cpp" line="+52"/>
+        <location filename="../src/ui/AppController.cpp" line="+54"/>
         <source>Safe Mode: hardware acceleration and glass effects are off for this session. Start Noctara without --safe-mode to return to normal.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5544,7 +5564,29 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+72"/>
+        <location line="+15"/>
+        <location line="+5"/>
+        <source>The artwork could not be loaded.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Artwork copied.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+5"/>
+        <source>The artwork could not be saved.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Artwork saved.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+64"/>
         <source>More configuration problems were found. See the log for details.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5567,38 +5609,38 @@
 <context>
     <name>noctara::ui::CatalogController</name>
     <message>
-        <location filename="../src/ui/CatalogController.cpp" line="+208"/>
+        <location filename="../src/ui/CatalogController.cpp" line="+213"/>
         <source>Sign in to like tracks.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+19"/>
         <source>Could not change the like: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+52"/>
-        <location line="+67"/>
+        <location line="+55"/>
+        <location line="+74"/>
         <source>Sign in to add tracks to playlists.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-52"/>
         <source>Could not add the track: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+18"/>
         <source>Already in “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+14"/>
         <source>Added to “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+36"/>
         <source>Could not create the playlist: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5706,12 +5748,12 @@
     <message>
         <location line="+0"/>
         <location line="+219"/>
-        <location line="+27"/>
+        <location line="+28"/>
         <source>direct</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-230"/>
+        <location line="-231"/>
         <source>With SOCKS4 and SOCKS5 Noctara looks up server names itself, using the DNS settings above, and sends only addresses to the proxy. Choose SOCKS5 with remote DNS to let the proxy look them up.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5851,7 +5893,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+48"/>
         <source>Noctara network report (%1, %2)</source>
         <extracomment>Title of the copied network report; %1 = app version, %2 = date and time</extracomment>
         <translation type="unfinished"></translation>
@@ -5992,12 +6034,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>Line %1: “%2” has an invalid value and was skipped.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+55"/>
         <source>The theme “%1” is not in the themes folder; the built-in look is used.</source>
         <translation type="unfinished"></translation>
     </message>
