@@ -44,7 +44,7 @@ Column {
                     width: parent.width
                     visible: result.modelData.ok
                     //: %1 = how the answer was obtained (server, cache …), %2 = duration
-                    text: qsTr("via %1 · %2").arg(result.modelData.via || "").arg(result.modelData.latency || "")
+                    text: qsTr("via %1 · %2").arg(result.modelData.via || "", result.modelData.latency || "")
                     font: Theme.font.caption
                     color: Theme.colors.textTertiary
                     wrapMode: Text.Wrap

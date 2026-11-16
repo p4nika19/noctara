@@ -587,10 +587,65 @@ TEST_SUITE("ui.catalog")
 
 TEST_SUITE("ui.catalog-writes")
 {
+    class HeldApi final : public FakeApi {
+    public:
+        net::RequestHandle send(net::Request request, QObject* context, net::Callbacks callbacks) override
+        {
+            {
+                const std::scoped_lock guard(m_lock);
+                if (!m_heldPath.isEmpty() && request.url.path() == m_heldPath) {
+                    m_held.push_back({QPointer<QObject>(context), std::move(callbacks)});
+                    return {};
+                }
+            }
+            return FakeApi::send(std::move(request), context, std::move(callbacks));
+        }
+        void hold(const QString& path)
+        {
+            const std::scoped_lock guard(m_lock);
+            m_heldPath = path;
+        }
+        [[nodiscard]] int heldCount() const
+        {
+            const std::scoped_lock guard(m_lock);
+            return static_cast<int>(m_held.size());
+        }
+        [[nodiscard]] int completed() const { return m_completed.load(); }
+        void release()
+        {
+            std::vector<Held> held;
+            {
+                const std::scoped_lock guard(m_lock);
+                held = std::exchange(m_held, {});
+            }
+            for (Held& item : held) {
+                QMetaObject::invokeMethod(
+                    item.context,
+                    [this, context = item.context, callbacks = std::move(item.callbacks)] {
+                        if (context) {
+                            callbacks.onFinished(FakeApi::reply(200, "{}", jsonHeaders()));
+                        }
+                        ++m_completed;
+                    },
+                    Qt::QueuedConnection);
+            }
+        }
+
+    private:
+        struct Held {
+            QPointer<QObject> context;
+            net::Callbacks callbacks;
+        };
+        mutable std::mutex m_lock;
+        QString m_heldPath;
+        std::vector<Held> m_held;
+        std::atomic<int> m_completed = 0;
+    };
+
     // A signed-in account (id 1) with playlist 5 = [1, 2]; PUTs change it, so a later read sees the change.
     struct WriteHarness {
         settings::SettingsStore store{settings::Schema::builtin()};
-        FakeApi transport;
+        HeldApi transport;
         std::shared_ptr<std::mutex> lock = std::make_shared<std::mutex>();
         std::shared_ptr<std::vector<qint64>> playlist =
             std::make_shared<std::vector<qint64>>(std::vector<qint64>{1, 2});
@@ -717,6 +772,35 @@ TEST_SUITE("ui.catalog-writes")
         REQUIRE(test::waitUntil([&] { return notice.count() == 1; }, 5000));
         CHECK(notice.at(0).at(0).toString() == u"error");
         CHECK(h.catalog->isLiked(9));
+    }
+
+    TEST_CASE("a like response from the previous account is ignored")
+    {
+        WriteHarness h;
+        h.transport.hold(QStringLiteral("/users/1/track_likes/9"));
+        h.catalog->toggleLike(9);
+        REQUIRE(test::waitUntil([&] { return h.transport.heldCount() == 1; }, 3000));
+        h.account->signOut();
+        CHECK(h.catalog->likes()->count() == 0);
+        h.transport.release();
+        REQUIRE(test::waitUntil([&] { return h.transport.completed() == 1; }, 3000));
+        QCoreApplication::processEvents();
+        CHECK(h.catalog->likes()->count() == 0);
+        CHECK_FALSE(h.catalog->isLiked(9));
+    }
+
+    TEST_CASE("a playlist read from the previous account does not start a write")
+    {
+        WriteHarness h;
+        h.transport.hold(QStringLiteral("/playlists/5"));
+        h.catalog->addToPlaylist(5, 9);
+        REQUIRE(test::waitUntil([&] { return h.transport.heldCount() == 1; }, 3000));
+        h.account->signOut();
+        h.transport.release();
+        REQUIRE(test::waitUntil([&] { return h.transport.completed() == 1; }, 3000));
+        QCoreApplication::processEvents();
+        CHECK(h.puts() == 0);
+        CHECK(h.tracks() == std::vector<qint64>{1, 2});
     }
 
     TEST_CASE("a new playlist is created with the track")

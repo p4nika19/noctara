@@ -5,6 +5,9 @@
 #include "core/Log.hpp"
 #include "drm/DrmHost.hpp"
 
+#include <cmath>
+#include <optional>
+
 namespace noctara::drm {
 
 using media::BackendState;
@@ -28,6 +31,19 @@ ErrorCode errorFor(const QString& code)
         return ErrorCode::Unsupported;
     }
     return ErrorCode::ProtectedPlayerFailed;
+}
+
+std::optional<std::int64_t> milliseconds(const QJsonValue& value)
+{
+    if (!value.isDouble()) {
+        return std::nullopt;
+    }
+    const double number = value.toDouble();
+    constexpr double limit = 9223372036854775808.0;  // 2^63; int64_t's upper bound is one below this
+    if (!std::isfinite(number) || number < -limit || number >= limit) {
+        return std::nullopt;
+    }
+    return static_cast<std::int64_t>(number);
 }
 
 }  // namespace
@@ -217,9 +233,15 @@ void DrmBackend::onEvent(const QJsonObject& message)
             Q_EMIT ended();
         }
     } else if (type == u"position") {
-        m_position = static_cast<std::int64_t>(message.value(u"ms").toDouble());
-        if (const auto duration = static_cast<std::int64_t>(message.value(u"durationMs").toDouble()); duration > 0) {
-            Q_EMIT durationKnown(duration);
+        const auto position = milliseconds(message.value(u"ms"));
+        const auto duration = milliseconds(message.value(u"durationMs"));
+        if (!position || !duration) {
+            qCWarning(lcDrm) << "ignored a position with an invalid timestamp from the protected player";
+            return;
+        }
+        m_position = *position;
+        if (*duration > 0) {
+            Q_EMIT durationKnown(*duration);
         }
         Q_EMIT positionChanged();
     } else if (type == u"error") {

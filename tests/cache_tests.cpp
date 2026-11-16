@@ -470,6 +470,28 @@ TEST_SUITE("cache.audio")
         CHECK(fresh->info().mediaEtag == "\"b\"");
     }
 
+    TEST_CASE("changed media also resets an entry reopened from the retired generation")
+    {
+        Audio audio;
+        const QByteArray first = randomBytes(70'000, 18);
+        const QByteArray second = randomBytes(80'000, 19);
+        audio.origin.serve(QString::fromLatin1(kTrackUrl), {.body = first, .etag = "\"a\""});
+        TrackInfo info = track(QStringLiteral("retired-media"));
+        info.mediaEtag = "\"a\"";
+        {
+            AudioReaderPtr reader = audio.open(info);
+            CHECK(Audio::readAll(*reader) == first);
+        }
+        audio.settle();
+
+        audio.origin.serve(QString::fromLatin1(kTrackUrl), {.body = second, .etag = "\"b\""});
+        info.mediaEtag = "\"b\"";
+        AudioReaderPtr fresh = audio.open(info);
+        CHECK(Audio::readAll(*fresh) == second);
+        CHECK(fresh->info().mediaEtag == "\"b\"");
+        CHECK(audio.origin.count() == 2);
+    }
+
     TEST_CASE("corrupt and truncated stored data is dropped silently and fetched again")
     {
         Audio audio;
@@ -1231,7 +1253,11 @@ TEST_SUITE("cache.http")
     {
         Http http;
         const QString url = QStringLiteral("https://api.test/tracks/1");
-        http.origin.serve(url, {.body = "{\"id\":1}", .etag = "\"e1\"", .headers = {{"cache-control", "max-age=60"}}});
+        http.origin.serve(url, {.body = "{\"id\":1}",
+                                .etag = "\"e1\"",
+                                .headers = {{"cache-control", "max-age=60"},
+                                            {"content-type", "application/json"},
+                                            {"set-cookie", "session=private"}}});
         CHECK(http.get(url)->body == "{\"id\":1}");
         const Result<net::Response> cached = http.get(url);
         CHECK(cached->fromCache);
@@ -1249,6 +1275,9 @@ TEST_SUITE("cache.http")
         bool conditional = false;
         for (const auto& [name, value] : http.origin.requests().back().headers) {
             conditional = conditional || (name == "if-none-match" && value == "\"e1\"");
+            CHECK(name != "content-length");
+            CHECK(name != "content-type");
+            CHECK(name != "set-cookie");
         }
         CHECK(conditional);
     }

@@ -283,6 +283,11 @@ void DrmHost::onStdout()
     m_stdout += m_process->readAllStandardOutput();
     qsizetype newline = 0;
     while ((newline = m_stdout.indexOf('\n')) >= 0) {
+        if (newline > kMaxLine) {
+            qCWarning(lcDrm) << "dropped an overlong line from the protected player";
+            m_stdout.remove(0, newline + 1);
+            continue;
+        }
         const QByteArray line = m_stdout.left(newline);
         m_stdout.remove(0, newline + 1);
         Result<QJsonObject> message = decode(line, Direction::FromHelper);

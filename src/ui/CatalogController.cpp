@@ -105,6 +105,11 @@ void CatalogController::accountChanged()
     }
     const qint64 previous = m_accountId;
     m_accountId = id;
+    ++m_accountGeneration;
+    m_likeOverrides.clear();
+    m_playlistWrites.clear();
+    ++m_likedRevision;
+    Q_EMIT likedChanged();
     // Saved lists belong to one account: another account (or none) never sees them, and they are deleted.
     m_snapshots.setAccount(std::max<qint64>(id, 0));
     if (previous > 0 && previous != id) {
@@ -275,8 +280,12 @@ void CatalogController::toggleLike(qint64 trackId)
     m_likeOverrides.insert(trackId, like);
     ++m_likedRevision;
     Q_EMIT likedChanged();
+    const quint64 generation = m_accountGeneration;
     api::fetch(m_api.client(), api::endpoints::likeTrack(me, trackId, like), this,
-               [this, trackId, like](Result<api::Done> done) {
+               [this, trackId, like, generation](Result<api::Done> done) {
+                   if (generation != m_accountGeneration) {
+                       return;
+                   }
                    if (!done) {
                        m_likeOverrides.remove(trackId);
                        ++m_likedRevision;
@@ -298,7 +307,10 @@ void CatalogController::toggleLike(qint64 trackId)
                    }
                    // The new like goes on top of the list, as SoundCloud orders it.
                    api::fetch(m_api.client(), api::endpoints::track(trackId), this,
-                              [this, trackId](Result<api::Track> track) {
+                              [this, trackId, generation](Result<api::Track> track) {
+                                  if (generation != m_accountGeneration) {
+                                      return;
+                                  }
                                   m_likeOverrides.remove(trackId);
                                   if (track) {
                                       std::vector<api::Entry> entries = m_likes.entries();
@@ -354,11 +366,15 @@ void CatalogController::writeNextToPlaylist(api::Id playlistId)
         return;
     }
     const api::Id trackId = queue->front();
+    const quint64 generation = m_accountGeneration;
     const auto failed = [this](ErrorCode code) {
         Q_EMIT notice(QStringLiteral("error"), tr("Could not add the track: %1").arg(i18n::errorMessage(code)));
     };
     api::fetch(m_api.client(), api::endpoints::playlistForEdit(playlistId), this,
-               [this, playlistId, trackId, failed](Result<api::Playlist> current) {
+               [this, playlistId, trackId, failed, generation](Result<api::Playlist> current) {
+                   if (generation != m_accountGeneration) {
+                       return;
+                   }
                    if (!current) {
                        failed(current.error().code);
                        finishPlaylistWrite(playlistId);
@@ -376,7 +392,10 @@ void CatalogController::writeNextToPlaylist(api::Id playlistId)
                    }
                    ids.push_back(trackId);
                    api::fetch(m_api.client(), api::endpoints::setPlaylistTracks(playlistId, ids), this,
-                              [this, playlistId, failed](Result<api::Playlist> updated) {
+                              [this, playlistId, failed, generation](Result<api::Playlist> updated) {
+                                  if (generation != m_accountGeneration) {
+                                      return;
+                                  }
                                   if (!updated) {
                                       failed(updated.error().code);
                                   } else {
@@ -411,7 +430,10 @@ void CatalogController::createPlaylist(const QString& title, bool isPrivate, qin
     const std::vector<api::Id> ids{trackId};
     api::fetch(
         m_api.client(), api::endpoints::createPlaylist(name, isPrivate, ids), this,
-        [this](Result<api::Playlist> created) {
+        [this, generation = m_accountGeneration](Result<api::Playlist> created) {
+            if (generation != m_accountGeneration) {
+                return;
+            }
             if (!created) {
                 Q_EMIT notice(QStringLiteral("error"),
                               tr("Could not create the playlist: %1").arg(i18n::errorMessage(created.error().code)));

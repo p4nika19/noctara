@@ -304,6 +304,22 @@ TEST_SUITE("cache.hls")
         CHECK(test::errorOf(parseHls("not a playlist", base)) == ErrorCode::ParseError);
     }
 
+    TEST_CASE("non-finite and unrepresentable segment and target durations are rejected")
+    {
+        const QUrl base(QStringLiteral("https://cdn.test/"));
+        for (const QByteArray& duration :
+             {QByteArray("nan"), QByteArray("inf"), QByteArray("-inf"), QByteArray("1e308")}) {
+            CAPTURE(duration);
+            const QByteArray text = "#EXTM3U\n#EXTINF:" + duration + ",\nseg.ts\n#EXT-X-ENDLIST\n";
+            CHECK(test::errorOf(parseHls(text, base)) == ErrorCode::ParseError);
+            const QByteArray target =
+                "#EXTM3U\n#EXT-X-TARGETDURATION:" + duration + "\n#EXTINF:1,\nseg.ts\n#EXT-X-ENDLIST\n";
+            CHECK(test::errorOf(parseHls(target, base)) == ErrorCode::ParseError);
+        }
+        CHECK(test::errorOf(parseHls("#EXTM3U\n#EXTINF:3e9,\na.ts\n#EXTINF:3e9,\nb.ts\n#EXT-X-ENDLIST\n", base)) ==
+              ErrorCode::ParseError);
+    }
+
     TEST_CASE("byte ranges whose end does not fit in 64 bits are rejected")
     {
         const QUrl base(QStringLiteral("https://cdn.test/"));
@@ -367,6 +383,19 @@ TEST_SUITE("cache.http.policy")
         stored.headers.append(qMakePair(QByteArray("age"), QByteArray("4")));
         CHECK(isFresh(stored, 1000));
         CHECK_FALSE(isFresh(stored, 1001));
+    }
+
+    TEST_CASE("extreme ages and dates use saturating freshness arithmetic")
+    {
+        StoredResponse stored;
+        stored.storedAt = std::numeric_limits<std::int64_t>::min();
+        stored.ttlFallback = std::numeric_limits<std::int64_t>::max();
+        stored.headers = {{"age", "9223372036854775807"}};
+        CHECK_FALSE(isFresh(stored, std::numeric_limits<std::int64_t>::max()));
+
+        stored.storedAt = 1000;
+        stored.headers = {{"expires", "Fri, 31 Dec 9999 23:59:59 GMT"}, {"date", "Sun, 06 Nov 1994 08:49:37 GMT"}};
+        CHECK(freshnessLifetime(stored) >= 0);
     }
 
     TEST_CASE("repeated Cache-Control and Vary field lines are combined")

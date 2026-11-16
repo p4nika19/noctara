@@ -11,6 +11,7 @@
 #include <QDBusMessage>
 #include <QUrl>
 
+#include <limits>
 #include <unistd.h>
 
 namespace noctara::media {
@@ -326,7 +327,12 @@ void MprisPlayerAdaptor::Play()
 void MprisPlayerAdaptor::Seek(qlonglong offset)
 {
     PlaybackController& player = m_service->player();
-    const qint64 target = player.position() + (offset / kUsPerMs);
+    const qint64 delta = offset / kUsPerMs;
+    const qint64 current = player.position();
+    const qint64 target =
+        delta > 0 && current > std::numeric_limits<qint64>::max() - delta   ? std::numeric_limits<qint64>::max()
+        : delta < 0 && current < std::numeric_limits<qint64>::min() - delta ? std::numeric_limits<qint64>::min()
+                                                                            : current + delta;
     if (player.duration() > 0 && target >= player.duration()) {
         player.next();  // as the specification asks
         return;

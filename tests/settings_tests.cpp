@@ -15,6 +15,7 @@
 #include <QFile>
 #include <QRegularExpression>
 #include <QScopeGuard>
+#include <QSemaphore>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 
@@ -58,6 +59,19 @@ bool writeText(const QString& path, const QByteArray& content)
 }
 
 }  // namespace
+
+namespace noctara::settings {
+struct ConfigFileTestAccess {
+    static void blockIo(ConfigFile& file, QSemaphore& started, QSemaphore& release)
+    {
+        file.m_io.start([&started, &release] {
+            started.release();
+            release.acquire();
+        });
+    }
+    static void reload(ConfigFile& file) { file.reloadFromDisk(); }
+};
+}  // namespace noctara::settings
 
 TEST_SUITE("settings.schema")
 {
@@ -195,6 +209,13 @@ TEST_SUITE("settings.toml")
         CHECK(parsed.values.empty());
         REQUIRE(parsed.issues.size() == 1);
         CHECK(parsed.issues.front().code == ErrorCode::ConfigSyntaxError);
+    }
+
+    TEST_CASE("placeholders in config paths are literal in issue logs")
+    {
+        const auto parsed = parseConfig("[appearance.theme\n", QStringLiteral("/tmp/%2-%3.toml"), schema());
+        REQUIRE(parsed.issues.size() == 1);
+        CHECK(parsed.issues.front().logText().startsWith(QStringLiteral("/tmp/%2-%3.toml:1:")));
     }
 
     TEST_CASE("unknown keys survive a rewrite and documented defaults stay commented")
@@ -442,6 +463,29 @@ TEST_SUITE("settings.file")
         const QString backup = path + QStringLiteral(".bak");
         REQUIRE(QFile::exists(backup));
         CHECK(readWholeFile(backup)->contains("[appearance.theme\n"));
+    }
+
+    TEST_CASE("a reload that read before a save cannot restore stale values")
+    {
+        QTemporaryDir dir;
+        const QString path = dir.filePath(QStringLiteral("config.toml"));
+        SettingsStore store(schema());
+        ConfigFile file(store, path, {});
+        REQUIRE(store.setUserValue(keys::GlassGrain, 0.2).has_value());
+        file.flush();
+
+        QSemaphore started;
+        QSemaphore release;
+        ConfigFileTestAccess::blockIo(file, started, release);
+        REQUIRE(test::waitUntil([&] { return started.tryAcquire(); }));
+        REQUIRE(writeText(path, "config_version = 6\n[appearance.glass]\ngrain = 0.4\n"));
+        ConfigFileTestAccess::reload(file);  // reads 0.4, behind the blocker
+
+        REQUIRE(store.setUserValue(keys::GlassGrain, 0.8).has_value());
+        release.release();
+        file.flush();                       // the save supersedes that reload
+        QCoreApplication::processEvents();  // deliver both queued I/O continuations
+        CHECK(store.realValue(keys::GlassGrain) == doctest::Approx(0.8));
     }
 
     TEST_CASE("a broken file is backed up before being overwritten, and reset/import/export work")

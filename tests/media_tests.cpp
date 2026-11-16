@@ -40,6 +40,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <numbers>
 #include <thread>
 
@@ -1712,6 +1713,19 @@ TEST_SUITE("media.mpris")
         CHECK(player.backend.seeks == std::vector<std::int64_t>{200'000});
         adaptor->SetPosition(current, 1'500'000LL);
         CHECK(player.backend.seeks == std::vector<std::int64_t>{200'000, 1500});
+    }
+
+    TEST_CASE("Seek clamps extreme offsets without overflowing the target")
+    {
+        Player player;
+        MprisService service(*player.controller, nullptr);
+        auto* adaptor = service.findChild<MprisPlayerAdaptor*>();
+        REQUIRE(adaptor != nullptr);
+        player.controller->playTracks({apiTrack(1), apiTrack(2)}, 0, {});
+        adaptor->Seek(std::numeric_limits<qlonglong>::max());
+        CHECK(player.controller->trackId() == u"2");
+        adaptor->Seek(std::numeric_limits<qlonglong>::min());
+        CHECK(player.backend.seeks == std::vector<std::int64_t>{0});
     }
 
     TEST_CASE("a cover asked for twice at once is kept once, so a later eviction never deletes its current file")

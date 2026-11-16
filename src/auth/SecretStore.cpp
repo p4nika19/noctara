@@ -288,16 +288,14 @@ void SecretServiceStore::remove(const QString& key, QObject* context, WriteCallb
     removeFromFallbacks(key);
     // Always ask the keyring, even after it failed this session: a copy saved there in an earlier session would
     // otherwise come back at the next launch. Queued behind any pending keyring write for the same key.
-    const bool expected = m_available;
     deliver(QtConcurrent::run(&m_pool, [keyring = m_keyring.get(), key] { return keyring->clear(key); }), this,
-            [expected, context = QPointer(context), callback = std::move(callback)](const Result<void>& result) {
-                if (!result && expected) {
+            [context = QPointer(context), callback = std::move(callback)](const Result<void>& result) {
+                if (!result) {
                     qCWarning(lcAuth).noquote() << QString::fromStdString(result.error().describe())
                                                 << "- could not remove a secret from the keyring";
                 }
                 if (context != nullptr) {
-                    // Without a keyring there was nothing to remove there.
-                    callback(expected ? result : Result<void>{});
+                    callback(result);
                 }
             });
 }

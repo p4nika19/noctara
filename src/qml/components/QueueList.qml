@@ -114,7 +114,7 @@ ListView {
         implicitHeight: list.rowHeight
         z: dragged ? 2 : 0
         Accessible.role: Accessible.ListItem
-        Accessible.name: pending ? qsTr("Loading") : qsTr("%1, %2").arg(title).arg(subtitle)
+        Accessible.name: pending ? qsTr("Loading") : qsTr("%1, %2").arg(title, subtitle)
 
         readonly property bool dragged: list.dragFrom === index
         // Making room for the dragged row: animated while it moves, back in place at once when it is dropped

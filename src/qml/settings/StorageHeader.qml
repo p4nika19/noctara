@@ -120,7 +120,7 @@ Column {
                 }
                 Text {
                     //: Legend entry of the cache usage meter: %1 = category, %2 = size
-                    text: qsTr("%1 · %2").arg(root.label(modelData.id)).arg(Format.bytes(modelData.bytes))
+                    text: qsTr("%1 · %2").arg(root.label(modelData.id), Format.bytes(modelData.bytes))
                     font: Theme.font.caption
                     color: Theme.colors.textSecondary
                 }
@@ -139,7 +139,7 @@ Column {
         width: root.width
         name: qsTr("In memory")
         //: %1 = memory in use, %2 = memory budget
-        info: qsTr("%1 of %2").arg(Format.bytes(Storage.memoryBytes)).arg(Format.bytes(Storage.memoryBudget))
+        info: qsTr("%1 of %2").arg(Format.bytes(Storage.memoryBytes), Format.bytes(Storage.memoryBudget))
     }
     InfoRow {
         width: root.width

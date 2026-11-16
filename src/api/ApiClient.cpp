@@ -69,6 +69,7 @@ struct ApiClient::Flight {
     std::vector<std::shared_ptr<Subscriber>> subscribers;
     int attempts = 0;
     bool anonymous = false;  // the token was refused; the endpoint is repeated without it
+    QByteArray token;        // captured with the flight key so account changes cannot retarget it
     QByteArray tokenSent;
     QString clientIdSent;
 };
@@ -140,6 +141,7 @@ void ApiClient::admit(ApiRequest request, const std::shared_ptr<Subscriber>& sub
     }
     const auto flight = std::make_shared<Flight>();
     flight->key = key;
+    flight->token = token;
     flight->request = std::move(request);
     flight->subscribers.push_back(subscriber);
     if (!key.isEmpty()) {
@@ -212,7 +214,7 @@ void ApiClient::transmit(const std::shared_ptr<Flight>& flight)
     }
     flight->tokenSent.clear();
     if (api.auth != Auth::None && !flight->anonymous) {
-        flight->tokenSent = api.candidateToken.isEmpty() ? m_session.token() : api.candidateToken;
+        flight->tokenSent = flight->token;
         if (!flight->tokenSent.isEmpty()) {
             request.headers.append({QByteArrayLiteral("authorization"), "OAuth " + flight->tokenSent});
         } else if (api.auth == Auth::Required) {

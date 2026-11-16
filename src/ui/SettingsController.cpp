@@ -14,6 +14,9 @@
 #include <QQmlEngine>
 #include <QUrl>
 
+#include <cmath>
+#include <limits>
+
 namespace noctara::ui {
 
 namespace {
@@ -289,7 +292,13 @@ QString SettingsController::setValue(const QString& key, const QVariant& value)
     // QML numbers arrive as double; integer settings need integral values.
     QVariant candidate = value;
     if (def->type == settings::Type::Int && candidate.canConvert<double>()) {
-        candidate = QVariant::fromValue(static_cast<qint64>(std::llround(candidate.toDouble())));
+        const double number = candidate.toDouble();
+        // qint64's upper endpoint rounds to 2^63 as a double and must stay excluded.
+        if (!std::isfinite(number) || number < static_cast<double>(std::numeric_limits<qint64>::min()) ||
+            number >= -static_cast<double>(std::numeric_limits<qint64>::min())) {
+            return i18n::errorMessage(ErrorCode::ConfigInvalidValue);
+        }
+        candidate = QVariant::fromValue(static_cast<qint64>(std::llround(number)));
     } else if (def->type == settings::Type::Real && candidate.canConvert<double>()) {
         candidate = QVariant::fromValue(candidate.toDouble());
     } else if (def->type == settings::Type::StringList) {

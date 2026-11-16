@@ -26,7 +26,7 @@ Item {
     implicitHeight: coverSize + Theme.space.sm + titleText.implicitHeight + subtitleText.implicitHeight
                     + Theme.space.xxs + Theme.space.md
     Accessible.role: Accessible.ListItem
-    Accessible.name: pending ? qsTr("Loading") : qsTr("%1, %2").arg(title).arg(subtitle)
+    Accessible.name: pending ? qsTr("Loading") : qsTr("%1, %2").arg(title, subtitle)
 
     CoverArt {
         id: cover

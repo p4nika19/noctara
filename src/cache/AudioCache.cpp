@@ -666,7 +666,15 @@ Result<std::shared_ptr<EntryState>> AudioCache::createEntry(const TrackInfo& inf
         entry->dir = retired->dir;
         entry->info = retired->info;
         entry->playlist = retired->playlist;
+        const bool mediaChanged =
+            !info.mediaEtag.isEmpty() && !entry->info.mediaEtag.isEmpty() && info.mediaEtag != entry->info.mediaEtag;
+        if (mediaChanged) {
+            resetStored(*entry, "media changed");
+        }
         entry->info.refreshFrom(info);
+        if (!info.mediaEtag.isEmpty()) {
+            entry->info.mediaEtag = info.mediaEtag;
+        }
         m_retired.erase(retired);
         if (!entry->dir.isEmpty()) {
             writeSidecar(*entry);

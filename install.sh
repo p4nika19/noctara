@@ -386,7 +386,7 @@ SHARE="$PREFIX/share"
 staging=$(mktemp -d)
 trap 'rm -rf "$staging"' EXIT
 # The desktop entry starts the installed binary by its full path: ~/.local/bin is not in every desktop's PATH.
-sed "s|^Exec=noctara|Exec=$PREFIX/bin/noctara|" resources/app/noctara.desktop > "$staging/noctara.desktop"
+bash "$SOURCE_DIR/tools/desktop-entry.sh" "$PREFIX" resources/app/noctara.desktop > "$staging/noctara.desktop"
 revision=$(git -C "$SOURCE_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)
 cat > "$staging/manifest" <<EOF
 $PREFIX/bin/noctara

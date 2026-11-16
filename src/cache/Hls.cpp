@@ -10,6 +10,12 @@ namespace noctara::cache {
 
 namespace {
 
+// Segment positions are later converted to signed 64-bit milliseconds and sample frames. Leaving one double ULP
+// below the exact quotient keeps the frame conversion below 2^63 even after floating-point rounding.
+const double kMaxDuration = std::nextafter(static_cast<double>(std::numeric_limits<std::int64_t>::max()) /
+                                               static_cast<double>(std::numeric_limits<int>::max()),
+                                           0.0);
+
 // Value of NAME=value or NAME="value" in an attribute list.
 QByteArray attribute(QByteArrayView list, QByteArrayView name)
 {
@@ -126,6 +132,7 @@ Result<HlsPlaylist> parseHls(QByteArrayView text, const QUrl& base)
     std::optional<double> pendingDuration;
     std::optional<HlsSegment> pendingRange;
     std::int64_t previousEnd = 0;
+    double totalDuration = 0;
     for (const QByteArray& raw : lines) {
         const QByteArrayView line = QByteArrayView(raw).trimmed();
         if (line.isEmpty()) {
@@ -141,7 +148,13 @@ Result<HlsPlaylist> parseHls(QByteArrayView text, const QUrl& base)
         } else if (line.startsWith("#EXT-X-VERSION:")) {
             playlist.version = line.sliced(15).toInt();
         } else if (line.startsWith("#EXT-X-TARGETDURATION:")) {
-            playlist.targetDuration = line.sliced(22).toDouble();
+            bool ok = false;
+            const double duration = line.sliced(22).toDouble(&ok);
+            if (!ok || !std::isfinite(duration) || duration < 0 ||
+                duration > static_cast<double>(std::numeric_limits<int>::max())) {
+                return fail(ErrorCode::ParseError, "bad target duration");
+            }
+            playlist.targetDuration = duration;
         } else if (line.startsWith("#EXT-X-ENDLIST")) {
             endList = true;
         } else if (line.startsWith("#EXT-X-MAP:")) {
@@ -158,7 +171,8 @@ Result<HlsPlaylist> parseHls(QByteArrayView text, const QUrl& base)
             const qsizetype comma = value.indexOf(',');
             bool ok = false;
             pendingDuration = (comma < 0 ? value : value.first(comma)).toDouble(&ok);
-            if (!ok || *pendingDuration < 0) {
+            if (!ok || !std::isfinite(*pendingDuration) || *pendingDuration < 0 ||
+                *pendingDuration > kMaxDuration - totalDuration) {
                 return fail(ErrorCode::ParseError, "bad EXTINF duration");
             }
         } else if (line.startsWith("#EXT-X-BYTERANGE:")) {
@@ -174,6 +188,7 @@ Result<HlsPlaylist> parseHls(QByteArrayView text, const QUrl& base)
             HlsSegment segment = pendingRange.value_or(HlsSegment{});
             segment.url = base.resolved(QUrl::fromEncoded(line.toByteArray()));
             segment.duration = *pendingDuration;
+            totalDuration += segment.duration;
             if (segment.rangeOffset >= 0) {
                 previousEnd = segment.rangeOffset + segment.rangeLength;
             }

@@ -26,6 +26,7 @@ struct KeyringState {
     QHash<QString, QByteArray> entries;
     bool failLookup = false;
     bool failStore = false;
+    bool failClear = false;
     bool holdStores = false;  // store() waits until the test releases it
     int clears = 0;
 
@@ -73,6 +74,9 @@ public:
     {
         const std::scoped_lock lock(m_state->mutex);
         ++m_state->clears;
+        if (m_state->failClear) {
+            return fail(ErrorCode::Unsupported, "fake keyring: clear refused");
+        }
         m_state->entries.remove(key);
         return {};
     }
@@ -175,6 +179,26 @@ TEST_SUITE("auth.secret-chain")
         auth::EncryptedFileSecretStore file(directory.path());
         CHECK_FALSE(read(file).has_value());
         CHECK_FALSE(read(store).has_value());
+    }
+
+    TEST_CASE("remove reports a keyring failure after an earlier lookup failed")
+    {
+        QTemporaryDir directory;
+        auto keyring = std::make_shared<KeyringState>();
+        keyring->entries.insert(kKey, "from-an-earlier-session");
+        keyring->failLookup = true;
+        keyring->failClear = true;
+        auth::SecretServiceStore store(std::make_unique<FakeKeyring>(keyring), directory.path());
+        CHECK_FALSE(read(store).has_value());
+        REQUIRE_FALSE(store.keyringBacked());
+
+        QObject context;
+        std::optional<Result<void>> removed;
+        store.remove(kKey, &context, [&](const Result<void>& result) { removed = result; });
+        REQUIRE(test::waitUntil([&] { return removed.has_value(); }));
+        REQUIRE_FALSE(*removed);
+        CHECK(removed->error().code == ErrorCode::Unsupported);
+        CHECK(keyring->entry(kKey) == QByteArray("from-an-earlier-session"));
     }
 
     TEST_CASE("a removal while a keyring write is pending is not undone by its fallback")

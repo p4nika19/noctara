@@ -36,7 +36,7 @@ Item {
 
     implicitHeight: Theme.space.rowHeight
     Accessible.role: Accessible.ListItem
-    Accessible.name: pending ? qsTr("Loading") : qsTr("%1, %2").arg(title).arg(subtitle)
+    Accessible.name: pending ? qsTr("Loading") : qsTr("%1, %2").arg(title, subtitle)
 
     // Play/like/repost counter. Fixed instances: a Repeater over a model built from the row's numbers destroyed and
     // recreated all three (icons included) each time a reused row took another track's numbers.

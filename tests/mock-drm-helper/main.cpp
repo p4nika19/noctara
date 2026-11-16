@@ -8,7 +8,9 @@
 //   NOCTARA_MOCK_DRM_CRASH_ON_LOAD=1   abort on every "load"
 //   NOCTARA_MOCK_DRM_CRASH_ONCE=<file> abort on "load" unless <file> exists (it is created first)
 //   NOCTARA_MOCK_DRM_CHILD=1           start a child process in its group and log "child <pid>"
-//   NOCTARA_MOCK_DRM_DURATION_MS=<n>   length of every track (default 3000)
+//   NOCTARA_MOCK_DRM_DURATION_MS=<n>   length of every track (default 3000); emitted as a JSON number
+//   NOCTARA_MOCK_DRM_POSITION_MS=<n>   override the emitted position JSON number
+//   NOCTARA_MOCK_DRM_OVERLONG_LOG=1    send a log line over 1 MiB, then an "after-overlong" marker
 //   NOCTARA_MOCK_DRM_CONFIGURE_ERROR=1 answer "configure" with an error outside a track (empty id)
 //   NOCTARA_MOCK_DRM_EXIT_FILE=<name>  on its way out, write <name> into its profile 100 ms later (as Chromium
 //                                      writes its profile on exit)
@@ -57,6 +59,10 @@ public:
             }
             log(QStringLiteral("child %1").arg(child));
         }
+        if (qEnvironmentVariableIntValue("NOCTARA_MOCK_DRM_OVERLONG_LOG") == 1) {
+            log(QString(1024 * 1024, u'x'));
+            log(QStringLiteral("after-overlong"));
+        }
     }
 
 private:
@@ -83,10 +89,16 @@ private:
 
     void position() const
     {
+        const double position = qEnvironmentVariableIsSet("NOCTARA_MOCK_DRM_POSITION_MS")
+                                    ? qgetenv("NOCTARA_MOCK_DRM_POSITION_MS").toDouble()
+                                    : static_cast<double>(currentMs());
+        const double duration = qEnvironmentVariableIsSet("NOCTARA_MOCK_DRM_DURATION_MS")
+                                    ? qgetenv("NOCTARA_MOCK_DRM_DURATION_MS").toDouble()
+                                    : static_cast<double>(m_duration);
         send({{QStringLiteral("type"), QStringLiteral("position")},
               {QStringLiteral("id"), m_id},
-              {QStringLiteral("ms"), static_cast<double>(currentMs())},
-              {QStringLiteral("durationMs"), static_cast<double>(m_duration)}});
+              {QStringLiteral("ms"), position},
+              {QStringLiteral("durationMs"), duration}});
     }
 
     [[nodiscard]] qint64 currentMs() const

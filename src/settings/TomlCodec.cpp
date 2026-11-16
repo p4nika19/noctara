@@ -178,7 +178,8 @@ void appendUnknownLeaves(QString& out, toml::table& from)
 
 QString ConfigIssue::logText() const
 {
-    return QStringLiteral("%1:%2:%3: %4 [%5]").arg(file).arg(line).arg(column).arg(detail, latin(errorCodeName(code)));
+    return QStringLiteral("%1:%2:%3: %4 [%5]")
+        .arg(file, QString::number(line), QString::number(column), detail, latin(errorCodeName(code)));
 }
 
 ParsedConfig parseConfig(std::string_view text, const QString& fileName, const Schema& schema)

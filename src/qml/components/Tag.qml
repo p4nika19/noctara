@@ -15,7 +15,7 @@ Rectangle {
     border.width: Theme.space.hairline
     border.color: Theme.colors.outline
     Accessible.role: Accessible.StaticText
-    Accessible.name: tooltip.length > 0 ? qsTr("%1: %2").arg(text).arg(tooltip) : text
+    Accessible.name: tooltip.length > 0 ? qsTr("%1: %2").arg(text, tooltip) : text
 
     Text {
         id: label

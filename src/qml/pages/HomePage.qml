@@ -126,7 +126,7 @@ Flickable {
                     Text {
                         width: parent.width
                         text: Player.hasTrack
-                              ? (Player.context.length > 0 ? qsTr("%1 · from %2").arg(Player.artist).arg(Player.context)
+                              ? (Player.context.length > 0 ? qsTr("%1 · from %2").arg(Player.artist, Player.context)
                                                            : Player.artist)
                               : (Account.signedIn ? qsTr("Find something in Search and it starts here.")
                                                   : qsTr("Connect your SoundCloud account to see your feed, likes and playlists."))

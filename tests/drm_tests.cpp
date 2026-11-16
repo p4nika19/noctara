@@ -679,6 +679,25 @@ TEST_SUITE("drm.host")
         CHECK(stopped.first().first().toBool());
     }
 
+    TEST_CASE("completed stdout lines over the protocol limit are dropped before decoding")
+    {
+        QTemporaryDir profile;
+        ScopedEnv env{{"NOCTARA_MOCK_DRM_OVERLONG_LOG", "1"}};
+        WarningLog warnings;
+        DrmHost host(mockOptions(profile.path()));
+        bool oversized = false;
+        bool followingLine = false;
+        QObject::connect(&host, &DrmHost::received, &host, [&](const QJsonObject& message) {
+            const QString text = message.value(u"message").toString();
+            oversized = oversized || text.size() > 1024 * 1024;
+            followingLine = followingLine || text == u"after-overlong";
+        });
+        REQUIRE(host.send(ping()));
+        REQUIRE(test::waitUntil([&] { return followingLine; }, 10000));
+        CHECK_FALSE(oversized);
+        CHECK(warnings.contains(QStringLiteral("dropped an overlong line")));
+    }
+
     TEST_CASE("an error outside a track (a refused network configuration) is logged")
     {
         QTemporaryDir profile;
@@ -827,6 +846,26 @@ TEST_SUITE("drm.backend")
 
         backend.stop();
         CHECK(backend.state() == media::BackendState::Idle);
+    }
+
+    TEST_CASE("out-of-range position and duration numbers are ignored")
+    {
+        for (const char* variable : {"NOCTARA_MOCK_DRM_POSITION_MS", "NOCTARA_MOCK_DRM_DURATION_MS"}) {
+            QTemporaryDir profile;
+            ScopedEnv env{{variable, "1e308"}};
+            DrmHost host(mockOptions(profile.path()));
+            host.setNetwork(planNetwork(directConfig()));
+            DrmBackend backend(host);
+            QSignalSpy positions(&backend, &DrmBackend::positionChanged);
+            QSignalSpy durations(&backend, &DrmBackend::durationKnown);
+            backend.load(protectedSource([] { return Result<api::ProtectedStream>(stream()); }), 200, false);
+            const qsizetype initialPositionSignals = positions.size();  // load() reports the requested start position
+            // The mock sends position before playing: reaching playing proves that the invalid event was handled.
+            REQUIRE(test::waitUntil([&] { return backend.state() == media::BackendState::Playing; }, 10000));
+            CHECK(backend.position() == 200);
+            CHECK(positions.size() == initialPositionSignals);
+            CHECK(durations.isEmpty());
+        }
     }
 
     TEST_CASE("a crash resumes the track where it was with a freshly resolved stream")
@@ -1154,6 +1193,25 @@ TEST_SUITE("drm.installer")
         for (const net::Request& request : origin.requests()) {
             CHECK_FALSE((request.range && request.range->first >= runtime.size()));
         }
+    }
+
+    TEST_CASE("a streamed download is cancelled as soon as it exceeds its pinned size")
+    {
+        QTemporaryDir dir;
+        test::FakeOrigin origin;
+        const QByteArray runtime = fixture("runtime.zip");
+        const HelperRelease release{.electron = artifactFor(QStringLiteral("runtime.zip"), runtime),
+                                    .hlsjs = artifactFor(QStringLiteral("hls.min.js"), "x")};
+        origin.serve(release.electron.url.toString(), resource(runtime + "oversized"));
+        origin.serve(release.hlsjs.url.toString(), resource("x"));
+        HelperInstaller installer(origin, dir.path(), release);
+        QSignalSpy finished(&installer, &HelperInstaller::finished);
+        installer.install(false);
+        REQUIRE(test::waitUntil([&] { return finished.size() == 1; }, 10000));
+        CHECK_FALSE(finished.last().first().toBool());
+        CHECK(installer.error().code == ErrorCode::Corrupt);
+        CHECK(origin.count() == 1);
+        CHECK(QDir(installer.root() + QStringLiteral("/downloads")).isEmpty());
     }
 
     TEST_CASE("a download that does not match its pinned SHA-256 is refused and not kept")

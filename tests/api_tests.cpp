@@ -155,6 +155,21 @@ TEST_SUITE("api.parse")
         CHECK(test::errorOf(parse::track("[]")) == ErrorCode::InvalidResponse);
     }
 
+    TEST_CASE("numbers outside the signed 64-bit range are rejected without unsafe conversions")
+    {
+        for (const QByteArray& id : {QByteArray("1e20"), QByteArray("-1e20"), QByteArray("9223372036854775808")}) {
+            CAPTURE(id);
+            const QByteArray json = "{\"kind\":\"track\",\"id\":" + id + "}";
+            CHECK(test::errorOf(parse::track(json)) == ErrorCode::InvalidResponse);
+        }
+        Result<Track> track = parse::track(R"({"kind":"track","id":1,"duration":1e20})");
+        REQUIRE(track);
+        CHECK(track->durationMs == 0);
+        track = parse::track(R"({"kind":"track","id":1,"duration":9223372036854775808})");
+        REQUIRE(track);
+        CHECK(track->durationMs == 0);
+    }
+
     TEST_CASE("encrypted and snipped transcodings")
     {
         const QByteArray json = R"({"kind":"track","id":5,"title":"Go+","policy":"SNIP","media":{"transcodings":[
@@ -406,6 +421,25 @@ TEST_SUITE("api.client")
         CHECK(FakeApi::query(sent, QStringLiteral("client_id")) == QString::fromLatin1(kClientId));
         CHECK(FakeApi::header(sent, "authorization") == "OAuth secret-token");
         CHECK(sent.cacheTtl > 0s);
+    }
+
+    TEST_CASE("a delayed request keeps the token captured for its flight key")
+    {
+        Harness h(false);
+        h.session.setToken("first-token");
+        h.transport.setHandler([](const net::Request& request) -> Result<net::Response> {
+            if (request.url.host() == u"soundcloud.com") {
+                return FakeApi::reply(200,
+                                      QByteArray(R"({"hydratable":"apiClient","data":{"id":")") + kClientId + "\"}}");
+            }
+            return FakeApi::reply(200, trackJson(7), jsonHeaders());
+        });
+        const auto result = run(h.client, endpoints::track(7), &h.context);
+        REQUIRE(test::waitUntil([&] { return h.transport.count() == 1; }));
+        h.session.setToken("second-token");
+        REQUIRE(await(result));
+        REQUIRE(h.transport.count() == 2);
+        CHECK(FakeApi::header(h.transport.requests().back(), "authorization") == "OAuth first-token");
     }
 
     TEST_CASE("the token never leaves the API hosts")

@@ -451,9 +451,7 @@ void CurlTransport::onRouted(std::uint64_t id, Result<ProxyRoute> route)
     // refused proxy connection), which the guard would turn into a failure.
     const auto add = [&](const QString& host, int port, bool proxyHost) {
         if (const auto literal = IpAddress::parse(host)) {
-            if (literal->family() == AddressFamily::V4) {
-                literals.push_back(resolveEntry(host, port, {*literal}));
-            }
+            literals.push_back(resolveEntry(host, port, {*literal}));
         } else {
             lookups.push_back({host, port, proxyHost});
         }

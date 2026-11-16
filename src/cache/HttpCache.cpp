@@ -11,6 +11,7 @@
 #include <QTimeZone>
 
 #include <algorithm>
+#include <limits>
 
 namespace noctara::cache {
 
@@ -196,6 +197,28 @@ bool isStorable(const net::Request& request, const net::Response& response)
     }
 }
 
+std::int64_t saturatedSubtract(std::int64_t left, std::int64_t right)
+{
+    if (right > 0 && left < std::numeric_limits<std::int64_t>::min() + right) {
+        return std::numeric_limits<std::int64_t>::min();
+    }
+    if (right < 0 && left > std::numeric_limits<std::int64_t>::max() + right) {
+        return std::numeric_limits<std::int64_t>::max();
+    }
+    return left - right;
+}
+
+std::int64_t saturatedAdd(std::int64_t left, std::int64_t right)
+{
+    if (right > 0 && left > std::numeric_limits<std::int64_t>::max() - right) {
+        return std::numeric_limits<std::int64_t>::max();
+    }
+    if (right < 0 && left < std::numeric_limits<std::int64_t>::min() - right) {
+        return std::numeric_limits<std::int64_t>::min();
+    }
+    return left + right;
+}
+
 std::int64_t freshnessLifetime(const StoredResponse& stored)
 {
     const CacheControl control = parseCacheControl(joinedHeader(stored.headers, "cache-control"));
@@ -212,7 +235,7 @@ std::int64_t freshnessLifetime(const StoredResponse& stored)
             return 0;
         }
         const std::int64_t date = httpDate(stored.header("date")).value_or(stored.storedAt);
-        return std::max<std::int64_t>(0, *expires - date);
+        return std::max<std::int64_t>(0, saturatedSubtract(*expires, date));
     }
     return stored.ttlFallback;
 }
@@ -221,7 +244,7 @@ bool isFresh(const StoredResponse& stored, std::int64_t now)
 {
     bool ok = false;
     const std::int64_t age = std::max<std::int64_t>(0, stored.header("age").toLongLong(&ok));
-    return now - stored.storedAt + (ok ? age : 0) < freshnessLifetime(stored);
+    return saturatedAdd(saturatedSubtract(now, stored.storedAt), ok ? age : 0) < freshnessLifetime(stored);
 }
 
 QByteArray httpCacheKey(const net::Request& request)

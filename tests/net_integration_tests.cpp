@@ -672,6 +672,27 @@ TEST_SUITE("net.transport")
         CHECK(test::errorOf(net.fetch(prefetch)) == ErrorCode::MeteredDeferred);
     }
 
+    TEST_CASE("IPv6 literal origins and refused IPv6 proxies never invoke curl's resolver")
+    {
+        test::HttpServer origin([](const test::HttpRequest&) { return text("ipv6"); }, nullptr, true);
+        REQUIRE(origin.port() != 0);
+        Network net;
+        const auto direct = net.get(QStringLiteral("http://[::1]:%1/").arg(origin.port()));
+        REQUIRE_MESSAGE(direct, test::describe(direct));
+        CHECK(direct->body == "ipv6");
+
+        ProxyConfig proxy;
+        proxy.mode = ProxyMode::Manual;
+        proxy.manual = {ProxyType::Http, QStringLiteral("::1"), deadPort(), {}, {}};
+        proxy.bypassLocal = false;
+        net.router.setConfig(proxy);
+        const auto refused = net.get(QStringLiteral("http://app.test/"));
+        REQUIRE_FALSE(refused);
+        CHECK(refused.error().code == ErrorCode::ProxyConnectFailed);
+        CHECK(net.system.calls == 0);
+        CHECK(net.transport.unexpectedCurlResolves() == 0);
+    }
+
     TEST_CASE("HTTP proxy: absolute-form for http, CONNECT for https, destination names stay with the proxy")
     {
         const test::TestCertificate certificate;

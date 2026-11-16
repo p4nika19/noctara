@@ -124,6 +124,7 @@ private:
     models::CollectionModel m_charts;
     QStringList m_loaded;  // lists loaded for the current account
     qint64 m_accountId = -1;
+    quint64 m_accountGeneration = 0;
     QString m_chartGenre = QStringLiteral("all-genres");
     QHash<qint64, std::shared_ptr<models::PlaylistDetail>> m_playlists;
     QHash<qint64, std::shared_ptr<models::UserDetail>> m_users;

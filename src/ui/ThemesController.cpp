@@ -22,12 +22,10 @@ QString issueMessage(const theme::ThemeIssue& issue)
         return ThemesController::tr("Line %1: the file is not valid TOML, so none of it applies.").arg(issue.line);
     case Kind::UnknownToken:
         return ThemesController::tr("Line %1: “%2” is not a theme token and was skipped.")
-            .arg(issue.line)
-            .arg(issue.key);
+            .arg(QString::number(issue.line), issue.key);
     case Kind::InvalidValue:
         return ThemesController::tr("Line %1: “%2” has an invalid value and was skipped.")
-            .arg(issue.line)
-            .arg(issue.key);
+            .arg(QString::number(issue.line), issue.key);
     }
     return {};
 }

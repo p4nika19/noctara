@@ -26,6 +26,7 @@ public:
     struct Action {
         QString id;
         QString description;  // translated
+        bool operator==(const Action&) const = default;
     };
 
     explicit GlobalShortcuts(QObject* parent = nullptr);
@@ -49,13 +50,17 @@ private Q_SLOTS:
                      const QVariantMap& options);
 
 private:
+    friend struct GlobalShortcutsTestAccess;
+
     [[nodiscard]] QString requestPath(const QString& token) const;
+    void bindShortcuts();
     void closeSession();
 
     std::vector<Action> m_actions;
     QString m_session;  // object path of the open session
     QString m_pending;  // request path we wait on
     bool m_enabled = false;
+    bool m_bindDirty = false;
     int m_counter = 0;
 };
 

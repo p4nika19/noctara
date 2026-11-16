@@ -159,9 +159,13 @@ void ConfigFile::onWatchedPathChanged()
 
 void ConfigFile::reloadFromDisk()
 {
+    const quint64 generation = m_ioGeneration;
     QtConcurrent::run(&m_io, [path = m_userPath, schema = &m_store.schema()] {
         return loadFile(path, *schema);
-    }).then(this, [this](const LoadedFile& loaded) {
+    }).then(this, [this, generation](const LoadedFile& loaded) {
+        if (generation != m_ioGeneration) {
+            return;  // a save, import or reset superseded the contents this reload read
+        }
         if (!loaded.exists || loaded.content == m_lastContent) {
             return;  // deleted (keep state) or our own write
         }
@@ -218,6 +222,7 @@ void ConfigFile::saveNow()
     if (content == m_lastContent) {
         return;
     }
+    ++m_ioGeneration;
     const bool backup = std::exchange(m_fileUnparseable, false);
     QByteArray previous = std::exchange(m_lastContent, content);
     m_retrySave = false;
@@ -267,6 +272,7 @@ void ConfigFile::flush()
 Result<void> ConfigFile::resetToDefaults()
 {
     flush();
+    ++m_ioGeneration;
     if (QFileInfo::exists(m_userPath)) {
         const QString backupPath = m_userPath + QStringLiteral(".bak");
         QFile::remove(backupPath);
@@ -296,6 +302,7 @@ Result<ConfigIssues> ConfigFile::importFrom(const QString& path)
         const ConfigIssue& issue = loaded.parsed.issues.front();
         return fail(issue.code, issue.logText().toStdString());
     }
+    ++m_ioGeneration;
     m_unknownToml = loaded.parsed.unknownToml;
     m_store.replaceLayer(Layer::User, loaded.parsed.values);
     scheduleSave();

@@ -378,8 +378,8 @@ QVariantList NetworkController::connectionResults() const
         if (entry.result) {
             //: %1 = HTTP status code, %2 = protocol such as HTTP/2
             item.insert(QStringLiteral("detail"), tr("Reachable (HTTP %1, %2)")
-                                                      .arg(entry.result->status)
-                                                      .arg(QString::fromLatin1(entry.result->httpVersion)));
+                                                      .arg(QString::number(entry.result->status),
+                                                           QString::fromLatin1(entry.result->httpVersion)));
             item.insert(QStringLiteral("via"), entry.result->route == u"direct" ? tr("direct") : entry.result->route);
             item.insert(QStringLiteral("latency"), milliseconds(entry.result->timings.totalMs));
         } else {
@@ -403,9 +403,10 @@ QVariantList NetworkController::recentRequests() const
             {QStringLiteral("method"), QString::fromLatin1(record.method)},
             {QStringLiteral("url"), record.url},
             {QStringLiteral("ok"), !record.error && record.status < 400},
-            {QStringLiteral("result"),
-             record.error ? i18n::errorMessage(*record.error)
-                          : QStringLiteral("%1 %2").arg(record.status).arg(QString::fromLatin1(record.httpVersion))},
+            {QStringLiteral("result"), record.error
+                                           ? i18n::errorMessage(*record.error)
+                                           : QStringLiteral("%1 %2").arg(QString::number(record.status),
+                                                                         QString::fromLatin1(record.httpVersion))},
             {QStringLiteral("latency"), milliseconds(record.timings.totalMs)},
             {QStringLiteral("via"), record.route == u"direct" ? tr("direct") : record.route},
             {QStringLiteral("dns"), dnsSourceText(record)},

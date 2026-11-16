@@ -4,7 +4,9 @@
 
 #include <QTimeZone>
 
+#include <cmath>
 #include <format>
+#include <limits>
 #include <optional>
 #include <simdjson.h>
 #include <string_view>
@@ -67,8 +69,22 @@ std::optional<std::int64_t> integer(element value)
 {
     switch (value.type()) {
     case element_type::INT64: return value.get_int64().value_unsafe();
-    case element_type::UINT64: return static_cast<std::int64_t>(value.get_uint64().value_unsafe());
-    case element_type::DOUBLE: return static_cast<std::int64_t>(value.get_double().value_unsafe());
+    case element_type::UINT64: {
+        const std::uint64_t parsed = value.get_uint64().value_unsafe();
+        if (parsed > static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())) {
+            return std::nullopt;
+        }
+        return static_cast<std::int64_t>(parsed);
+    }
+    case element_type::DOUBLE: {
+        const double parsed = value.get_double().value_unsafe();
+        // INT64_MAX rounds up to 2^63 as a double, so that endpoint must be excluded.
+        if (!std::isfinite(parsed) || parsed < static_cast<double>(std::numeric_limits<std::int64_t>::min()) ||
+            parsed >= -static_cast<double>(std::numeric_limits<std::int64_t>::min())) {
+            return std::nullopt;
+        }
+        return static_cast<std::int64_t>(parsed);
+    }
     case element_type::STRING: {
         // Ids occasionally arrive as strings.
         bool ok = false;

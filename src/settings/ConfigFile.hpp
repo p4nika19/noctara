@@ -52,6 +52,8 @@ Q_SIGNALS:
     void saveFailed(const noctara::Error& error);
 
 private:
+    friend struct ConfigFileTestAccess;
+
     void scheduleSave();
     void saveNow();
     void onWatchedPathChanged();
@@ -72,6 +74,7 @@ private:
     std::int64_t m_fileVersion = 0;
     bool m_fileUnparseable = false;  // back the file up before the first overwrite
     bool m_retrySave = false;        // the last save failed: flush() writes the state again
+    quint64 m_ioGeneration = 0;      // saves supersede reloads that read the old file
 };
 
 }  // namespace noctara::settings

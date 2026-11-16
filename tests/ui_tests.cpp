@@ -15,6 +15,7 @@
 #include "theme/Theme.hpp"
 #include "ui/CoverImageProvider.hpp"
 #include "ui/EffectsController.hpp"
+#include "ui/GlobalShortcuts.hpp"
 #include "ui/IconProvider.hpp"
 #include "ui/SettingsController.hpp"
 #include "ui/SettingsModel.hpp"
@@ -39,11 +40,40 @@
 #include <atomic>
 #include <cmath>
 #include <functional>
+#include <limits>
 #include <map>
 #include <memory>
 #include <set>
 
 using namespace noctara;
+
+namespace noctara::ui {
+struct GlobalShortcutsTestAccess {
+    static void openSession(GlobalShortcuts& shortcuts, std::vector<GlobalShortcuts::Action> actions)
+    {
+        shortcuts.m_enabled = true;
+        shortcuts.m_session = QStringLiteral("/org/freedesktop/portal/desktop/session/test");
+        shortcuts.m_actions = std::move(actions);
+    }
+    static bool binding(const GlobalShortcuts& shortcuts) { return !shortcuts.m_pending.isEmpty(); }
+    static void bound(GlobalShortcuts& shortcuts) { shortcuts.onBound(0, {}); }
+};
+}  // namespace noctara::ui
+
+TEST_SUITE("ui.global-shortcuts")
+{
+    TEST_CASE("changed actions rebind an open session, including while a bind is pending")
+    {
+        ui::GlobalShortcuts shortcuts;
+        ui::GlobalShortcutsTestAccess::openSession(shortcuts, {{QStringLiteral("play"), QStringLiteral("Play")}});
+        shortcuts.setEnabled(true, {{QStringLiteral("next"), QStringLiteral("Next")}});
+        CHECK(ui::GlobalShortcutsTestAccess::binding(shortcuts));
+
+        shortcuts.setEnabled(true, {{QStringLiteral("previous"), QStringLiteral("Previous")}});
+        ui::GlobalShortcutsTestAccess::bound(shortcuts);
+        CHECK(ui::GlobalShortcutsTestAccess::binding(shortcuts));
+    }
+}
 
 TEST_SUITE("ui.effects")
 {
@@ -223,6 +253,11 @@ TEST_SUITE("ui.settings")
         CHECK(controller.setValue(QStringLiteral("appearance.text.ui_scale"), 125.0).isEmpty());
         CHECK(store.intValue(settings::keys::UiScale) == 125);
         CHECK_FALSE(controller.setValue(QStringLiteral("appearance.text.ui_scale"), 900.0).isEmpty());
+        CHECK_FALSE(
+            controller.setValue(QStringLiteral("appearance.text.ui_scale"), std::numeric_limits<double>::infinity())
+                .isEmpty());
+        CHECK_FALSE(controller.setValue(QStringLiteral("appearance.text.ui_scale"), 1e308).isEmpty());
+        CHECK(store.intValue(settings::keys::UiScale) == 125);
 
         CHECK_FALSE(controller.restartPending());
         CHECK(controller.setValue(QStringLiteral("performance.gpu.acceleration"), QStringLiteral("off")).isEmpty());

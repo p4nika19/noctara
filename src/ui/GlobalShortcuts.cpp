@@ -68,12 +68,19 @@ QString GlobalShortcuts::requestPath(const QString& token) const
 void GlobalShortcuts::setEnabled(bool enabled, std::vector<Action> actions)
 {
     m_enabled = enabled;
+    m_bindDirty = m_bindDirty || m_actions != actions;
     m_actions = std::move(actions);
     if (!enabled) {
         closeSession();
         return;
     }
-    if (!m_session.isEmpty() || !m_pending.isEmpty() || !available()) {
+    if (!m_session.isEmpty()) {
+        if (m_bindDirty && m_pending.isEmpty()) {
+            bindShortcuts();
+        }
+        return;
+    }
+    if (!m_pending.isEmpty() || !available()) {
         return;
     }
     QDBusConnection bus = QDBusConnection::sessionBus();
@@ -105,12 +112,19 @@ void GlobalShortcuts::onSessionCreated(uint response, const QVariantMap& results
     bus.connect(kService, kPath, kInterface, QStringLiteral("Activated"), this,
                 SLOT(onActivated(QDBusObjectPath, QString, qulonglong, QVariantMap)));
 
+    bindShortcuts();
+}
+
+void GlobalShortcuts::bindShortcuts()
+{
+    QDBusConnection bus = QDBusConnection::sessionBus();
     QList<PortalShortcut> shortcuts;
     for (const Action& action : m_actions) {
         shortcuts.append({action.id, {{QStringLiteral("description"), action.description}}});
     }
     const QString token = QStringLiteral("noctara%1").arg(++m_counter);
     m_pending = requestPath(token);
+    m_bindDirty = false;
     bus.connect(kService, m_pending, kRequest, QStringLiteral("Response"), this, SLOT(onBound(uint, QVariantMap)));
     QDBusMessage call = QDBusMessage::createMethodCall(kService, kPath, kInterface, QStringLiteral("BindShortcuts"));
     call << QVariant::fromValue(QDBusObjectPath(m_session)) << QVariant::fromValue(shortcuts) << QString()
@@ -126,6 +140,8 @@ void GlobalShortcuts::onBound(uint response, const QVariantMap& /*results*/)
     qCInfo(lcUi) << "global shortcuts:" << (response == 0 ? "bound" : "not bound") << m_actions.size() << "actions";
     if (m_enabled && m_session.isEmpty()) {
         setEnabled(true, m_actions);  // turned off and on again while this bind was pending: open a new session
+    } else if (m_enabled && m_bindDirty) {
+        bindShortcuts();  // the actions changed while the previous bind was in flight
     }
 }
 

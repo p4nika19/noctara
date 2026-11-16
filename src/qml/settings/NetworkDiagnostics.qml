@@ -68,7 +68,7 @@ Column {
             Text {
                 width: parent.width
                 //: %1 = status or error, %2 = duration, %3 = "direct" or the proxy
-                text: qsTr("%1 · %2 · %3").arg(entry.modelData.result).arg(entry.modelData.latency).arg(entry.modelData.via)
+                text: qsTr("%1 · %2 · %3").arg(entry.modelData.result, entry.modelData.latency, entry.modelData.via)
                 font: Theme.font.caption
                 color: entry.modelData.ok ? Theme.colors.textTertiary : Theme.colors.danger
                 wrapMode: Text.Wrap

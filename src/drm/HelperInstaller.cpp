@@ -207,9 +207,14 @@ private:
                 restartFile();  // the server sent the whole file instead of the rest
             }
         };
-        callbacks.onData = [this](const QByteArray& chunk) {
-            if (m_writeFailed) {
-                return;  // already on its way when a write failed: it would land after a gap
+        callbacks.onData = [this, artifact](const QByteArray& chunk) {
+            if (m_writeFailed || m_downloadTooLarge) {
+                return;  // callbacks already queued when the transfer was cancelled
+            }
+            if (chunk.size() > artifact.size - m_offset) {
+                m_downloadTooLarge = true;
+                m_request.cancel();
+                return;
             }
             if (m_file->write(chunk) != chunk.size()) {
                 (void)m_file->resize(m_offset);  // drop a partly written chunk: the part stays a prefix
@@ -247,6 +252,11 @@ private:
         }
         if (m_writeFailed) {
             done(Error{ErrorCode::NoSpace, "cannot write the download"});
+            return;
+        }
+        if (m_downloadTooLarge) {
+            (void)QFile::remove(m_file->fileName());
+            done(Error{ErrorCode::Corrupt, artifact.file.toStdString() + " is larger than its pinned size"});
             return;
         }
         if (!response) {
@@ -415,6 +425,7 @@ private:
     std::int64_t m_done = 0;      // bytes of finished files
     std::int64_t m_total = 0;
     bool m_writeFailed = false;
+    bool m_downloadTooLarge = false;
     bool m_cancelled = false;
 };
 

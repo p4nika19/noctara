@@ -99,10 +99,12 @@ Useful options: `--werror=y` (always on in release and CI), `--march=native`, `-
 ```
 noctara [--config <file>] [--print-config] [--reset-config] [--safe-mode] [--disable-gpu]
         [--set key=value ...] [--gpu=auto|on|off] [--graphics-api=auto|vulkan|opengl]
-        [--theme=system|dark|light] [--lang=system|en|ru]
+        [--theme=system|dark|light] [--lang=system|en|ru] [--play <SoundCloud URL>]
 ```
 
 Settings are layered with this precedence: defaults < `/etc/xdg/noctara/config.toml` < `~/.config/noctara/config.toml` < `NOCTARA_*` environment variables < command line. See [docs/configuration.md](docs/configuration.md).
+
+The installed desktop entry registers Noctara as an HTTP/HTTPS and `soundcloud://` URL handler. Choose Noctara in the desktop's **Open With** dialog to resolve and play a SoundCloud track or playlist. Registering HTTPS does not restrict handling to SoundCloud, so Noctara should only be selected for links you want it to open; making it the default HTTPS browser is not recommended.
 
 ## Documentation
 
