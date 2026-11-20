@@ -10,9 +10,14 @@ Project memory for agents continuing work on Noctara. This repository was previo
 4. `docs/plan.md` is the product/implementation history: verified toolchain, numbered architectural decisions, vertical slices (a)–(j), completed work, review changes and open verification items. Where its status is older than the imported memory below, the newer status wins.
 5. `README.md` contains installation, dependencies and public build/run commands.
 6. The module-specific documents in `docs/` are authoritative for their subsystems: architecture, design, GPU, network, caching, API, authentication, playback, DRM helper/IPC, themes, localization and performance.
-7. `reports/macOS port feasibility.md` and `research_notes/macOS port feasibility/` contain the later macOS feasibility investigation. `reports/` and `research_notes/` are intentionally ignored by git.
+7. `reports/` and `research_notes/` were deleted on 2026-11-20 (the macOS feasibility investigation is no longer needed) and stay ignored by git.
+8. Curated agent memory for this project lives outside the repository, in
+   `~/.local/share/opencode/memories/noctara/` — start from its `MEMORY.md`. It holds the session chronology, the
+   decision log, the owner's working preferences, the 168-bug audit's open items, the recurring-bug landmines and
+   the verified toolchain commands, plus a `sources/` copy of the imported Claude Code memory and parsed transcripts.
+   It records history and is not authoritative over this file, `CLAUDE.md` or the code.
 
-The local `.claude/` directory is empty, but the user explicitly authorised importing Claude Code's global project memory and history on 2026-11-16. The original prompt and prompt archive are now preserved in this repository; do not claim that they are unavailable.
+The local `.claude/` directory is empty, but the user explicitly authorised importing Claude Code's global project memory and history on 2026-11-16. The original prompt and prompt archive are now preserved in this repository; do not claim that they are unavailable. The project was continued with OpenCode (Kimi) from 2026-11-20; the Claude Code store under `~/.claude/projects/-home-p4nika-projects-cpp-noctara/` is no longer used but kept as raw material.
 
 ## Current project state
 
@@ -31,7 +36,7 @@ The local `.claude/` directory is empty, but the user explicitly authorised impo
 - Use the existing fakes and test utilities; avoid timing-sensitive polling and unsafe asynchronous ownership.
 - Never run `clang-tidy -fix` across multiple files. Fix findings manually.
 - Before handing off substantive changes, run the narrow relevant tests, then the applicable gates listed in `CLAUDE.md` (format, warning-clean build, tests, smoke, i18n, generated docs and lint).
-- The desktop entry invokes `noctara --play %u` and advertises HTTP/HTTPS plus `soundcloud://` URL handling. XDG cannot domain-restrict HTTP(S) associations; do not make Noctara the user's general browser by default.
+- The desktop entry starts `noctara` with no arguments and advertises no URL or MIME associations. URL handling was removed on 2026-11-20 because it did not work: do not re-add `--play %u` or `MimeType=` without a working, tested implementation.
 - Use isolated XDG directories when running the app during development so real user configuration, cache and state are untouched.
 - Do not perform git mutations unless explicitly requested and confirmed.
 
