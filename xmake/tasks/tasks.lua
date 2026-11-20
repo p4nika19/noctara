@@ -245,9 +245,30 @@ task("test-tsan")
                          ["ui.effects"] = true, ["ui.keyboard"] = true, ["ui.network-credentials"] = true,
                          ["ui.pages"] = true, ["ui.settings-panes"] = true}
         local envs = {TSAN_OPTIONS = "halt_on_error=1 suppressions=" .. path.join(os.projectdir(), "tools", "tsan.supp")}
+        -- TSan initialises before main(), so a runtime that cannot map its shadow memory fails every run with a
+        -- one-line FATAL and no test output at all. Say so by itself, rather than as every suite failing in turn.
+        local function checkStartup(output)
+            if output:find("unable to disable ASLR", 1, true) or output:find("can not mmap the shadow memory", 1, true) then
+                raise("ThreadSanitizer could not start, so no test ran: its shadow mapping does not fit this kernel's "
+                    .. "ASLR layout, and the sandbox forbids the personality(ADDR_NO_RANDOMIZE) it re-execs itself with. "
+                    .. "Lower vm.mmap_rnd_bits or use a host image that leaves it at the default; the CI tsan job pins "
+                    .. "ubuntu-24.04 for this reason.\n" .. output)
+            end
+        end
+        -- Runs the binary and returns its exit code and output. `os.iorunv` raises on a non-zero exit, which would hide
+        -- the reason a broken runtime gives.
+        local function capture(args)
+            local log = os.tmpfile()
+            local code = os.execv(binary, args, {envs = envs, try = true, stdout = log, stderr = log})
+            local output = io.readfile(log) or ""
+            os.tryrm(log)
+            return code, output
+        end
         local function names(args)
+            local _, listing = capture(args)
+            checkStartup(listing)
             local result = {}
-            for line in os.iorunv(binary, args, {envs = envs}):gmatch("[^\n]+") do
+            for line in listing:gmatch("[^\n]+") do
                 local name = line:trim()
                 if #name > 0 and not name:startswith("[doctest]") and not name:match("^=+$") then
                     table.insert(result, name)
@@ -257,11 +278,9 @@ task("test-tsan")
         end
         -- "ok", "registry" (TSan's thread registry aborted, no race reported) or "failed" (output is printed)
         local function run(args)
-            local log = os.tmpfile()
-            local code = os.execv(binary, args, {envs = envs, try = true, stdout = log, stderr = log})
-            local output = io.readfile(log) or ""
-            os.tryrm(log)
+            local code, output = capture(args)
             if code == 0 then return "ok" end
+            checkStartup(output)
             if output:find("sanitizer_thread_registry", 1, true) and not output:find("WARNING: ThreadSanitizer", 1, true) then
                 return "registry"
             end

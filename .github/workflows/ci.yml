@@ -43,7 +43,10 @@ jobs:
         run: xmake lint
 
   tsan:
-    runs-on: ubuntu-latest
+    # Pinned, not ubuntu-latest: the 26.04 image's kernel uses high-entropy ASLR, which puts ThreadSanitizer's shadow
+    # mapping out of reach. TSan then re-execs itself through personality(ADDR_NO_RANDOMIZE), a call the container's
+    # seccomp profile refuses, so the runtime dies during init ("unable to disable ASLR") before a single test runs.
+    runs-on: ubuntu-24.04
     container: archlinux:latest
     env:
       # tools/tsan.supp matches Qt's and GLib's internal function names, which only their debug symbols provide.
