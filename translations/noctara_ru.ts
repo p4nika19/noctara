@@ -99,7 +99,12 @@
         <translation>@%1</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+21"/>
+        <source>Your session is saved, but the desktop keyring is locked. Unlock it to sign in.</source>
+        <translation>Сессия сохранена, но связка ключей рабочего стола заблокирована. Разблокируйте её, чтобы войти.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Session saved in the desktop keyring.</source>
         <translation>Сессия сохранена в системной связке ключей.</translation>
     </message>
@@ -114,7 +119,12 @@
         <translation>Сессия хранится только до выхода из Noctara: постоянное хранилище секретов недоступно.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
+        <source>Unlock the keyring</source>
+        <translation>Разблокировать связку ключей&gt;</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>View profile on SoundCloud</source>
         <translation>Открыть профиль в SoundCloud</translation>
     </message>
@@ -2361,6 +2371,11 @@
     </message>
     <message>
         <location line="+8"/>
+        <source>Saved credentials are in the desktop keyring, which is locked. Unlock it to use them.</source>
+        <translation>Сохранённые учётные данные находятся в связке ключей рабочего стола, и она заблокирована. Разблокируйте её, чтобы их использовать.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Optional. Saved in the system keyring, never in the configuration file.</source>
         <translation>Необязательно. Хранятся в системной связке ключей, никогда — в файле настроек.</translation>
     </message>
@@ -2375,7 +2390,12 @@
         <translation>Связка ключей недоступна, поэтому учётные данные хранятся только до выхода из Noctara.</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+9"/>
+        <source>Unlock the keyring</source>
+        <translation>Разблокировать связку ключей&gt;</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Username</source>
         <translation>Имя пользователя</translation>
     </message>
@@ -5448,7 +5468,7 @@
 <context>
     <name>noctara::ui::AccountController</name>
     <message>
-        <location filename="../src/ui/AccountController.cpp" line="+167"/>
+        <location filename="../src/ui/AccountController.cpp" line="+190"/>
         <source>Paste your SoundCloud OAuth token to sign in.</source>
         <translation>Вставьте OAuth-токен SoundCloud, чтобы войти.</translation>
     </message>
@@ -5463,7 +5483,12 @@
         <translation>Не удалось просмотреть установленные профили браузеров.</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-40"/>
+        <source>The desktop keyring is still locked, so the saved session cannot be read.</source>
+        <translation>Связка ключей рабочего стола всё ещё заблокирована, поэтому сохранённую сессию прочитать нельзя.</translation>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>%1 (Flatpak)</source>
         <comment>browser installed as a Flatpak</comment>
         <translation>%1 (Flatpak)</translation>
@@ -5767,13 +5792,13 @@
     </message>
     <message>
         <location line="+0"/>
-        <location line="+219"/>
+        <location line="+240"/>
         <location line="+28"/>
         <source>direct</source>
         <translation>напрямую</translation>
     </message>
     <message>
-        <location line="-231"/>
+        <location line="-252"/>
         <source>With SOCKS4 and SOCKS5 Noctara looks up server names itself, using the DNS settings above, and sends only addresses to the proxy. Choose SOCKS5 with remote DNS to let the proxy look them up.</source>
         <translation>С SOCKS4 и SOCKS5 Noctara сама определяет адреса серверов по настройкам DNS выше и передаёт прокси только адреса. Выберите «SOCKS5 с удалённым DNS», чтобы это делал прокси.</translation>
     </message>
@@ -5783,7 +5808,12 @@
         <translation>Прокси сам определяет адреса серверов, поэтому настройки DNS выше действуют только на прямые соединения и на поиск самого прокси-сервера.</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+23"/>
+        <source>The desktop keyring is still locked, so the saved proxy credentials cannot be read.</source>
+        <translation>Связка ключей рабочего стола всё ещё заблокирована, поэтому сохранённые учётные данные прокси прочитать нельзя.</translation>
+    </message>
+    <message>
+        <location line="+33"/>
         <source>Taken from the proxy environment variables (http_proxy, https_proxy, all_proxy).</source>
         <translation>Взято из переменных окружения прокси (http_proxy, https_proxy, all_proxy).</translation>
     </message>
@@ -5853,8 +5883,8 @@
         <translation>IP-адрес</translation>
     </message>
     <message>
-        <location line="-309"/>
-        <location line="+310"/>
+        <location line="-330"/>
+        <location line="+331"/>
         <source>host override</source>
         <translation>свой адрес хоста</translation>
     </message>
@@ -5864,13 +5894,13 @@
         <translation>кэш</translation>
     </message>
     <message>
-        <location line="-309"/>
-        <location line="+310"/>
+        <location line="-330"/>
+        <location line="+331"/>
         <source>system resolver</source>
         <translation>системный DNS</translation>
     </message>
     <message>
-        <location line="-314"/>
+        <location line="-335"/>
         <source>resolved by the proxy</source>
         <translation>разрешил прокси</translation>
     </message>
@@ -5886,12 +5916,12 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+310"/>
+        <location line="+331"/>
         <source>system resolver (fallback)</source>
         <translation>системный DNS (резервный)</translation>
     </message>
     <message>
-        <location line="-309"/>
+        <location line="-330"/>
         <source>DNS servers</source>
         <translation>DNS-серверы</translation>
     </message>
@@ -5901,7 +5931,7 @@
         <translation>DNS over HTTPS</translation>
     </message>
     <message>
-        <location line="+312"/>
+        <location line="+333"/>
         <source>DNS over HTTPS (%1)</source>
         <extracomment>%1 = DoH server host name</extracomment>
         <translation>DNS over HTTPS (%1)</translation>

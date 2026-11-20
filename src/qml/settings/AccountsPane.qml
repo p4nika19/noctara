@@ -77,21 +77,33 @@ Flickable {
                         width: parent.width
                         spacing: Theme.space.xs
                         Icon {
-                            name: Account.keyringAvailable ? "shield" : "triangle-alert"
+                            name: Account.keyringAvailable && !Account.keyringLocked ? "shield"
+                                  : Account.keyringLocked ? "lock" : "triangle-alert"
                             size: Theme.space.iconSizeSmall
-                            color: Account.keyringAvailable ? Theme.targetColors.iconSecondary : Theme.targetColors.warning
+                            color: Account.keyringAvailable && !Account.keyringLocked ? Theme.targetColors.iconSecondary
+                                                                                      : Theme.targetColors.warning
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
                             width: parent.width - Theme.space.iconSizeSmall - parent.spacing
                             anchors.verticalCenter: parent.verticalCenter
-                            text: Account.keyringAvailable ? qsTr("Session saved in the desktop keyring.")
+                            text: Account.keyringLocked
+                                  ? qsTr("Your session is saved, but the desktop keyring is locked. Unlock it to sign in.")
+                                : Account.keyringAvailable ? qsTr("Session saved in the desktop keyring.")
                                 : Account.persistent ? qsTr("Session saved in Noctara's encrypted local store, because no desktop keyring is available.")
                                 : qsTr("Session kept only until Noctara quits: no persistent secret store is available.")
                             font: Theme.font.caption
-                            color: Account.keyringAvailable ? Theme.colors.textTertiary : Theme.colors.warning
+                            color: Account.keyringAvailable && !Account.keyringLocked ? Theme.colors.textTertiary
+                                                                                      : Theme.colors.warning
                             wrapMode: Text.Wrap
                         }
+                    }
+                    Button {
+                        visible: Account.keyringLocked
+                        small: true
+                        iconName: "lock"
+                        text: qsTr("Unlock the keyring")
+                        onClicked: Account.unlockKeyring()
                     }
                     Button {
                         visible: Account.permalinkUrl.length > 0

@@ -40,6 +40,7 @@ class AccountController : public QObject {
     Q_PROPERTY(bool sessionExpired READ sessionExpired NOTIFY changed)
     Q_PROPERTY(bool persistent READ persistent NOTIFY changed)
     Q_PROPERTY(bool keyringAvailable READ keyringAvailable NOTIFY changed)
+    Q_PROPERTY(bool keyringLocked READ keyringLocked NOTIFY changed)
     Q_PROPERTY(QVariantList browserProfiles READ browserProfiles NOTIFY browserProfilesChanged)
     Q_PROPERTY(bool browserBusy READ browserBusy NOTIFY browserBusyChanged)
     Q_PROPERTY(QString username READ username NOTIFY changed)
@@ -65,6 +66,9 @@ public:
     [[nodiscard]] bool sessionExpired() const noexcept { return m_state == Expired; }
     [[nodiscard]] bool persistent() const;
     [[nodiscard]] bool keyringAvailable() const;
+    // A saved session exists but the desktop keyring is locked, so it cannot be read yet. Distinct from "signed out
+    // because nothing was saved": the session is there and comes back once the keyring is unlocked.
+    [[nodiscard]] bool keyringLocked() const;
     [[nodiscard]] QVariantList browserProfiles() const;
     [[nodiscard]] bool browserBusy() const noexcept { return m_browserBusy; }
     [[nodiscard]] const QString& username() const noexcept { return m_username; }
@@ -76,6 +80,9 @@ public:
 
     Q_INVOKABLE void signInWithToken(const QString& token);
     Q_INVOKABLE void signOut();
+    // Asks the desktop to unlock its keyring (which shows the desktop's own prompt) and reloads the saved session
+    // when that succeeds. Only from an explicit user action.
+    Q_INVOKABLE void unlockKeyring();
     // Discovery reads profile metadata only. importBrowserToken() is called after explicit in-app consent.
     Q_INVOKABLE void discoverBrowsers();
     Q_INVOKABLE void importBrowserToken(const QString& profileId);

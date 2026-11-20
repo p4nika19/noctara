@@ -39,6 +39,17 @@ public:
     // False only when secrets are memory-only and forgotten when Noctara quits.
     [[nodiscard]] virtual bool persistent() const noexcept = 0;
     [[nodiscard]] virtual bool keyringBacked() const noexcept = 0;
+    // The keyring exists but is locked, so a secret saved in it cannot be read until the user unlocks it. This is
+    // why a signed-in account can look signed out right after logging in to the desktop: the keyring unlocks with
+    // the session, and until then its secrets are not visible to anyone.
+    [[nodiscard]] virtual bool keyringLocked() const noexcept { return false; }
+    // Asks the desktop to unlock its keyring, which shows the desktop's own password prompt. `done` receives
+    // whether the keyring is readable afterwards; callers reload their secret then. Stores without a keyring have
+    // nothing to unlock and answer false.
+    virtual void unlock(QObject* context, std::function<void(bool unlocked)> done)
+    {
+        QMetaObject::invokeMethod(context, [done = std::move(done)] { done(false); }, Qt::QueuedConnection);
+    }
 };
 
 // Process memory only; used by tests and as the final fallback when no persistent store can be written.
@@ -73,6 +84,17 @@ public:
     virtual Result<std::optional<QByteArray>> lookup(const QString& key) = 0;
     virtual Result<void> store(const QString& key, const QString& label, const QByteArray& secret) = 0;
     virtual Result<void> clear(const QString& key) = 0;
+    // Whether the collection holding this application's secrets cannot be read right now because it is locked.
+    // A locked collection answers a lookup with "no such secret" rather than an error, and only an unlock prompt
+    // can tell the user apart from someone who never saved anything, so it must be asked before the answer counts.
+    // False when there is no keyring or it cannot tell; implementations may report a definite "no" cheaply.
+    [[nodiscard]] virtual bool locked() { return false; }
+    // Cancels a lookup, store or clear that is waiting on the desktop (an unlock prompt nobody answered). Called
+    // from another thread, for example when Noctara is quitting and must not hang on the worker.
+    virtual void cancel() {}
+    // Asks the desktop to unlock the collection, showing its own prompt. Blocking; only for an explicit user
+    // request. Returns whether the collection is readable afterwards.
+    [[nodiscard]] virtual bool unlock() { return true; }
 };
 
 // The Secret Service API through libsecret (GNOME Keyring, KWallet, KeePassXC …).
@@ -105,6 +127,13 @@ public:
     void remove(const QString& key, QObject* context, WriteCallback callback) override;
     [[nodiscard]] bool persistent() const noexcept override { return m_available.load() || m_fileAvailable.load(); }
     [[nodiscard]] bool keyringBacked() const noexcept override { return m_available.load(); }
+    // The keyring exists but its secrets cannot be read until the user unlocks it. A saved session is then present
+    // but unusable, which is not the same as "never saved" and must not be reported as one.
+    [[nodiscard]] bool keyringLocked() const noexcept override { return m_locked.load(); }
+    // Asks the desktop to unlock, which shows its own password prompt. Runs on the worker thread; `done` receives
+    // whether the keyring is readable afterwards. Only call it for an explicit user request: a startup read must
+    // never raise a dialog.
+    void unlock(QObject* context, std::function<void(bool unlocked)> done) override;
 
 private:
     void fallbackRead(const QString& key, QObject* context, ReadCallback callback);
@@ -117,6 +146,7 @@ private:
     std::unique_ptr<IKeyring> m_keyring;
     std::atomic<bool> m_available{true};
     std::atomic<bool> m_fileAvailable{false};
+    std::atomic<bool> m_locked{false};
     std::unique_ptr<EncryptedFileSecretStore> m_file;
     MemorySecretStore m_fallback;
     // Bumped by every write and remove of a key: a slow write's fallback is dropped once a newer call exists.

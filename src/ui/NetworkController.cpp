@@ -189,6 +189,27 @@ bool NetworkController::keyringAvailable() const
     return m_secrets.keyringBacked();
 }
 
+bool NetworkController::keyringLocked() const
+{
+    return m_secrets.keyringLocked();
+}
+
+void NetworkController::unlockKeyring()
+{
+    if (!m_secrets.keyringLocked()) {
+        return;
+    }
+    m_secrets.unlock(this, [this](const bool unlocked) {
+        Q_EMIT credentialsChanged();
+        if (!unlocked) {
+            Q_EMIT notice(QStringLiteral("warning"),
+                          tr("The desktop keyring is still locked, so the saved proxy credentials cannot be read."));
+            return;
+        }
+        loadCredentials();
+    });
+}
+
 bool NetworkController::secretsPersistent() const
 {
     return m_secrets.persistent();

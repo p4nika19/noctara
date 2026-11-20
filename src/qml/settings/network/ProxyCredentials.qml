@@ -18,14 +18,23 @@ Column {
     }
     Text {
         width: parent.width
-        text: Network.keyringAvailable
+        text: Network.keyringLocked
+              ? qsTr("Saved credentials are in the desktop keyring, which is locked. Unlock it to use them.")
+              : Network.keyringAvailable
               ? qsTr("Optional. Saved in the system keyring, never in the configuration file.")
               : Network.secretsPersistent
                 ? qsTr("Optional. No desktop keyring is available, so credentials are saved in Noctara's encrypted local store, whose owner-only key file does not protect them as well as a keyring.")
                 : qsTr("No keyring is available, so saved credentials are kept only until Noctara quits.")
         font: Theme.font.caption
-        color: Network.keyringAvailable ? Theme.colors.textTertiary : Theme.colors.warning
+        color: Network.keyringAvailable && !Network.keyringLocked ? Theme.colors.textTertiary : Theme.colors.warning
         wrapMode: Text.Wrap
+    }
+    Button {
+        visible: Network.keyringLocked
+        small: true
+        iconName: "lock"
+        text: qsTr("Unlock the keyring")
+        onClicked: Network.unlockKeyring()
     }
     Flow {
         width: parent.width

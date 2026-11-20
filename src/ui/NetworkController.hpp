@@ -38,6 +38,7 @@ class NetworkController : public QObject {
     Q_PROPERTY(bool hasProxyCredentials READ hasProxyCredentials NOTIFY credentialsChanged)
     Q_PROPERTY(QString proxyUsername READ proxyUsername NOTIFY credentialsChanged)
     Q_PROPERTY(bool keyringAvailable READ keyringAvailable NOTIFY credentialsChanged)
+    Q_PROPERTY(bool keyringLocked READ keyringLocked NOTIFY credentialsChanged)
     Q_PROPERTY(bool secretsPersistent READ secretsPersistent NOTIFY credentialsChanged)
     Q_PROPERTY(bool dnsTesting READ dnsTesting NOTIFY dnsTestChanged)
     Q_PROPERTY(QVariantList dnsResults READ dnsResults NOTIFY dnsTestChanged)
@@ -59,6 +60,8 @@ public:
     [[nodiscard]] const QString& proxyUsername() const noexcept { return m_username; }
     // Where saved proxy credentials go: the desktop keyring, else Noctara's encrypted file, else memory only.
     [[nodiscard]] bool keyringAvailable() const;
+    // Saved credentials exist but the desktop keyring is locked, so they cannot be read until it is unlocked.
+    [[nodiscard]] bool keyringLocked() const;
     [[nodiscard]] bool secretsPersistent() const;
     [[nodiscard]] bool dnsTesting() const noexcept { return m_dnsTesting; }
     [[nodiscard]] QVariantList dnsResults() const;
@@ -72,6 +75,8 @@ public:
     // Empty password and username forget the credentials.
     Q_INVOKABLE void saveProxyCredentials(const QString& username, const QString& password);
     Q_INVOKABLE void forgetProxyCredentials();
+    // Unlocks the desktop keyring (the desktop prompts) and reloads the saved proxy credentials. User-initiated only.
+    Q_INVOKABLE void unlockKeyring();
     // Copies the redacted diagnostics report to the clipboard.
     Q_INVOKABLE void copyReport();
     [[nodiscard]] QString report() const;

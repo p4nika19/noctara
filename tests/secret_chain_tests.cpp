@@ -28,6 +28,7 @@ struct KeyringState {
     bool failStore = false;
     bool failClear = false;
     bool holdStores = false;  // store() waits until the test releases it
+    bool locked = false;      // the collection is locked: lookups answer "not found", writes are refused
     int clears = 0;
 
     void release()
@@ -54,9 +55,26 @@ public:
     {
         const std::scoped_lock lock(m_state->mutex);
         if (m_state->failLookup) {
-            return fail(ErrorCode::Unsupported, "fake keyring: locked");
+            return fail(ErrorCode::Unsupported, "fake keyring: unavailable");
+        }
+        // A locked collection hides its items: libsecret answers "no such secret", not an error.
+        if (m_state->locked) {
+            return std::nullopt;
         }
         return m_state->entries.contains(key) ? std::optional(m_state->entries.value(key)) : std::nullopt;
+    }
+
+    [[nodiscard]] bool locked() override
+    {
+        const std::scoped_lock lock(m_state->mutex);
+        return m_state->locked;
+    }
+
+    [[nodiscard]] bool unlock() override
+    {
+        const std::scoped_lock lock(m_state->mutex);
+        m_state->locked = false;
+        return true;
     }
 
     Result<void> store(const QString& key, const QString& /*label*/, const QByteArray& secret) override
@@ -283,5 +301,68 @@ TEST_SUITE("auth.secret-chain")
         write(store, "memory-token");
         CHECK_FALSE(store.persistent());
         CHECK(read(store) == QByteArray("memory-token"));
+    }
+
+    // Reported by the owner and a friend on GNOME: after a reboot the session and the proxy credentials are gone.
+    // A desktop keyring starts locked on a new session, and a locked collection answers a lookup with "no such
+    // secret" rather than an error. The store used to take that answer at face value, so a saved session looked
+    // like one that was never saved, and the next write demoted every secret to the local file.
+    TEST_CASE("a locked keyring is reported as locked, not as a missing secret")
+    {
+        QTemporaryDir directory;
+        auto keyring = std::make_shared<KeyringState>();
+        keyring->entries.insert(kKey, "saved-token");
+
+        // The next launch: the keyring is there and holds the token, but it is locked.
+        keyring->locked = true;
+        auth::SecretServiceStore store(std::make_unique<FakeKeyring>(keyring), directory.path());
+        CHECK_FALSE(read(store).has_value());  // nothing readable yet: no encrypted copy exists either
+        CHECK(store.keyringBacked());          // still the keyring's secret, not a promotion to the file
+        CHECK(store.keyringLocked());
+        CHECK(store.persistent());
+    }
+
+    TEST_CASE("unlocking the keyring makes the saved secret readable again")
+    {
+        QTemporaryDir directory;
+        auto keyring = std::make_shared<KeyringState>();
+        keyring->entries.insert(kKey, "saved-token");
+        keyring->locked = true;
+        auth::SecretServiceStore store(std::make_unique<FakeKeyring>(keyring), directory.path());
+        CHECK_FALSE(read(store).has_value());
+        REQUIRE(store.keyringLocked());
+
+        QObject context;
+        std::optional<bool> unlocked;
+        store.unlock(&context, [&unlocked](const bool result) { unlocked = result; });
+        REQUIRE(test::waitUntil([&] { return unlocked.has_value(); }));
+        CHECK(*unlocked);
+        CHECK_FALSE(store.keyringLocked());
+        CHECK(read(store) == QByteArray("saved-token"));  // the session is back without signing in again
+    }
+
+    TEST_CASE("a save while the keyring is locked goes to the local store instead of blocking on a prompt")
+    {
+        QTemporaryDir directory;
+        auto keyring = std::make_shared<KeyringState>();
+        keyring->locked = true;
+        auth::SecretServiceStore store(std::make_unique<FakeKeyring>(keyring), directory.path());
+
+        // Writing to a locked collection would raise an unlock prompt and wait for it forever on a headless session.
+        write(store, "new-token");
+        settle();
+        CHECK(read(store) == QByteArray("new-token"));
+        CHECK_FALSE(keyring->entry(kKey).has_value());
+        CHECK(store.persistent());  // the encrypted file holds it, so it survives a quit
+    }
+
+    TEST_CASE("a keyring that is not locked is not reported as locked")
+    {
+        QTemporaryDir directory;
+        auto keyring = std::make_shared<KeyringState>();
+        keyring->entries.insert(kKey, "saved-token");
+        auth::SecretServiceStore store(std::make_unique<FakeKeyring>(keyring), directory.path());
+        CHECK(read(store) == QByteArray("saved-token"));
+        CHECK_FALSE(store.keyringLocked());
     }
 }

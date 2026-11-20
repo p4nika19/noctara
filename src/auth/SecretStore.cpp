@@ -42,7 +42,8 @@ public:
     {
         const QByteArray id = key.toUtf8();
         GError* error = nullptr;
-        gchar* value = secret_password_lookup_sync(schema(), nullptr, &error, "key", id.constData(), nullptr);
+        GCancellable* cancel = cancellable();
+        gchar* value = secret_password_lookup_sync(schema(), cancel, &error, "key", id.constData(), nullptr);
         if (auto failure = takeError(error)) {
             return std::unexpected(*failure);
         }
@@ -59,8 +60,8 @@ public:
         const QByteArray id = key.toUtf8();
         const QByteArray title = label.toUtf8();
         GError* error = nullptr;
-        secret_password_store_sync(schema(), SECRET_COLLECTION_DEFAULT, title.constData(), secret.constData(), nullptr,
-                                   &error, "key", id.constData(), nullptr);
+        secret_password_store_sync(schema(), SECRET_COLLECTION_DEFAULT, title.constData(), secret.constData(),
+                                   cancellable(), &error, "key", id.constData(), nullptr);
         if (auto failure = takeError(error)) {
             return std::unexpected(*failure);
         }
@@ -71,20 +72,84 @@ public:
     {
         const QByteArray id = key.toUtf8();
         GError* error = nullptr;
-        secret_password_clear_sync(schema(), nullptr, &error, "key", id.constData(), nullptr);
+        secret_password_clear_sync(schema(), cancellable(), &error, "key", id.constData(), nullptr);
         if (auto failure = takeError(error)) {
             return std::unexpected(*failure);
         }
         return {};
     }
+
+    // A locked collection makes a lookup answer "no such secret" instead of failing, which is indistinguishable from
+    // an account that never saved a session. Asking the collection costs a cheap local property read and needs no
+    // prompt, so the answer can be told apart. Deliberately does not unlock: only an explicit user request may
+    // raise a password dialog, and this runs while the app is still starting.
+    [[nodiscard]] bool locked() override
+    {
+        GError* error = nullptr;
+        SecretService* service = secret_service_get_sync(SECRET_SERVICE_NONE, cancellable(), &error);
+        if (takeError(error) || service == nullptr) {
+            return false;  // no Secret Service: the store reports that separately
+        }
+        SecretCollection* collection = secret_collection_for_alias_sync(service, SECRET_COLLECTION_DEFAULT,
+                                                                        SecretCollectionFlags{}, cancellable(), &error);
+        const bool isLocked = !takeError(error) && collection != nullptr && secret_collection_get_locked(collection);
+        if (collection != nullptr) {
+            g_object_unref(collection);
+        }
+        g_object_unref(service);
+        return isLocked;
+    }
+
+    void cancel() override { g_cancellable_cancel(m_cancellable); }
+
+    // Shows the desktop's unlock prompt (gcr-prompter under GNOME, the wallet dialog on Plasma). Only an explicit
+    // user request may reach this: it blocks until the user answers or dismisses the dialog.
+    [[nodiscard]] bool unlock() override
+    {
+        GError* error = nullptr;
+        SecretService* service = secret_service_get_sync(SECRET_SERVICE_OPEN_SESSION, cancellable(), &error);
+        if (takeError(error) || service == nullptr) {
+            return false;
+        }
+        SecretCollection* collection = secret_collection_for_alias_sync(service, SECRET_COLLECTION_DEFAULT,
+                                                                        SecretCollectionFlags{}, cancellable(), &error);
+        bool unlocked = false;
+        if (takeError(error) == std::nullopt && collection != nullptr) {
+            GList* objects = g_list_append(nullptr, collection);
+            GList* done = nullptr;
+            const gint count = secret_service_unlock_sync(service, objects, cancellable(), &done, &error);
+            (void)takeError(error);
+            unlocked = count > 0 && secret_collection_get_locked(collection) == FALSE;
+            if (done != nullptr) {
+                g_list_free_full(done, g_object_unref);
+            }
+            g_list_free(objects);  // not owned: the collection is released below
+            g_object_unref(collection);
+        }
+        g_object_unref(service);
+        return unlocked;
+    }
+
+private:
+    GCancellable* cancellable() const { return g_cancellable_is_cancelled(m_cancellable) ? nullptr : m_cancellable; }
+
+    // Created with the keyring and never reset: a cancelled lookup answers Cancelled instead of blocking, which is
+    // what lets Noctara quit while the desktop waits for an unlock prompt nobody will answer.
+    GCancellable* m_cancellable = g_cancellable_new();
 };
 
 template <class T, class Callback> void deliver(QFuture<T> future, QObject* context, Callback callback)
 {
-    future.then(context, [callback = std::move(callback)](T result) mutable { callback(std::move(result)); });
+    future.then(context, [callback = std::move(callback)](const T& result) { callback(result); });
 }
 
 void ignore(const Result<void>& /*result*/) {}
+
+// One worker-thread round trip to the keyring: the answer, plus whether the collection was locked when it was given.
+struct KeyringAnswer {
+    Result<std::optional<QByteArray>> secret;
+    bool locked = false;
+};
 
 }  // namespace
 
@@ -136,6 +201,11 @@ SecretServiceStore::SecretServiceStore(std::unique_ptr<IKeyring> keyring, QStrin
 
 SecretServiceStore::~SecretServiceStore()
 {
+    // A keyring call may be waiting on an unlock prompt that will never be answered (a locked collection on a fresh
+    // desktop session). Cancelling makes libsecret return instead of leaving quit hanging on waitForDone().
+    if (m_keyring) {
+        m_keyring->cancel();
+    }
     m_pool.waitForDone();
 }
 
@@ -226,14 +296,19 @@ void SecretServiceStore::read(const QString& key, QObject* context, ReadCallback
         fallbackRead(key, context, std::move(callback));
         return;
     }
-    deliver(QtConcurrent::run(&m_pool, [keyring = m_keyring.get(), key] { return keyring->lookup(key); }), this,
-            [this, key, context = QPointer(context),
-             callback = std::move(callback)](Result<std::optional<QByteArray>> result) mutable {
+    deliver(QtConcurrent::run(&m_pool,
+                              [keyring = m_keyring.get(), key] {
+                                  return KeyringAnswer{.secret = keyring->lookup(key), .locked = keyring->locked()};
+                              }),
+            this,
+            [this, key, context = QPointer(context), callback = std::move(callback)](const KeyringAnswer& answer) {
                 if (context == nullptr) {
                     return;
                 }
+                const Result<std::optional<QByteArray>>& result = answer.secret;
                 if (result && *result) {
-                    callback(std::move(result));
+                    m_locked = false;
+                    callback(result);
                     return;
                 }
                 if (!result) {
@@ -241,10 +316,19 @@ void SecretServiceStore::read(const QString& key, QObject* context, ReadCallback
                     qCInfo(lcAuth).noquote()
                         << QString::fromStdString(result.error().describe()) << "- using the local secret fallback";
                     m_available = false;
+                    m_locked = false;
+                } else if (answer.locked) {
+                    // The collection is locked, so "no such secret" means "not readable yet" rather than "never
+                    // saved". Keep the keyring and say so: the UI can offer to unlock it, and the next save must
+                    // still try the keyring instead of demoting every secret to the local file.
+                    m_locked = true;
+                    qCInfo(lcAuth) << "the desktop keyring is locked; its secrets cannot be read until it is unlocked";
+                } else {
+                    m_locked = false;
                 }
                 // A keyring miss still checks the fallbacks: the secret may have been saved there in a session
                 // without a keyring. The next write moves it into the keyring.
-                fallbackRead(key, context, std::move(callback));
+                fallbackRead(key, context, callback);
             });
 }
 
@@ -256,11 +340,21 @@ void SecretServiceStore::write(const QString& key, const QString& label, const Q
         fallbackWrite(key, label, secret, epoch, context, std::move(callback));
         return;
     }
-    deliver(QtConcurrent::run(&m_pool, [keyring = m_keyring.get(), key, label,
-                                        secret] { return keyring->store(key, label, secret); }),
+    deliver(QtConcurrent::run(&m_pool,
+                              [keyring = m_keyring.get(), key, label, secret] {
+                                  // A locked collection cannot take a write: libsecret would open an unlock prompt and
+                                  // block this worker thread until somebody answered it, which on a fresh desktop
+                                  // session is nobody. Report it as a locked keyring instead, so the secret goes to the
+                                  // local file and the user is told why.
+                                  if (keyring->locked()) {
+                                      return Result<void>(
+                                          fail(ErrorCode::PermissionDenied, "secret service: the keyring is locked"));
+                                  }
+                                  return keyring->store(key, label, secret);
+                              }),
             this,
             [this, key, label, secret, epoch, context = QPointer(context),
-             callback = std::move(callback)](const Result<void>& result) mutable {
+             callback = std::move(callback)](const Result<void>& result) {
                 if (result) {
                     removeFromFallbacks(key);  // an older copy there must not outlive this one
                     if (context != nullptr) {
@@ -278,7 +372,26 @@ void SecretServiceStore::write(const QString& key, const QString& label, const Q
                     }
                     return;
                 }
-                fallbackWrite(key, label, secret, epoch, context, std::move(callback));
+                fallbackWrite(key, label, secret, epoch, context, callback);
+            });
+}
+
+void SecretServiceStore::unlock(QObject* context, std::function<void(bool)> done)
+{
+    deliver(QtConcurrent::run(&m_pool,
+                              [this] -> bool {
+                                  if (!m_keyring->locked()) {
+                                      return true;  // already readable (or not our kind of keyring)
+                                  }
+                                  return m_keyring->unlock();
+                              }),
+            this, [this, context = QPointer(context), done = std::move(done)](const bool& unlocked) {
+                if (unlocked) {
+                    m_locked = false;
+                }
+                if (context != nullptr) {
+                    done(unlocked);
+                }
             });
 }
 
@@ -288,8 +401,13 @@ void SecretServiceStore::remove(const QString& key, QObject* context, WriteCallb
     removeFromFallbacks(key);
     // Always ask the keyring, even after it failed this session: a copy saved there in an earlier session would
     // otherwise come back at the next launch. Queued behind any pending keyring write for the same key.
-    deliver(QtConcurrent::run(&m_pool, [keyring = m_keyring.get(), key] { return keyring->clear(key); }), this,
-            [context = QPointer(context), callback = std::move(callback)](const Result<void>& result) {
+    deliver(QtConcurrent::run(&m_pool,
+                              [keyring = m_keyring.get(), key] {
+                                  // Removing needs no unlock: a locked collection still deletes the item. Do not let it
+                                  // block on a prompt that would show up for a mere sign-out.
+                                  return keyring->clear(key);
+                              }),
+            this, [context = QPointer(context), callback = std::move(callback)](const Result<void>& result) {
                 if (!result) {
                     qCWarning(lcAuth).noquote() << QString::fromStdString(result.error().describe())
                                                 << "- could not remove a secret from the keyring";

@@ -34,6 +34,18 @@ active protection: keyring, encrypted local store (with a warning), or memory on
 - After a keyring error, reads and writes skip the keyring for the rest of the session, so a dismissed unlock prompt
   is not shown again for every request. One unreadable `.secret` file is logged and ignored; it does not disable the
   file tier.
+- **A locked collection is not a miss.** A desktop keyring starts locked in a new session, and a locked collection
+  answers a lookup with "no such secret" instead of an error. Taken at face value that looks exactly like an account
+  that never saved a session: the app came up signed out after every reboot, with the token still in the keyring.
+  `IKeyring::locked()` now reports the collection's state (a cheap local property read, no prompt), and a read that
+  finds nothing while the collection is locked sets `keyringLocked()` instead of treating the secret as absent. The
+  Accounts page and the proxy credentials row then say the session is saved but the keyring is locked, and offer
+  *Unlock the keyring*: `unlock()` shows the desktop's own prompt and the secret is read afterwards.
+- **A write to a locked collection is refused up front.** libsecret's store call opens an unlock prompt and blocks
+  the worker thread until somebody answers it, which on a fresh session can be nobody; quitting then waited on that
+  thread in `waitForDone()`. A locked collection now sends the secret to the encrypted file instead. `unlock()` is
+  only ever reached from an explicit user action, never from a startup read.
+- **Quitting cancels a keyring call in flight**, so an unanswered prompt cannot keep the process alive.
 
 The encrypted fallback lives under the platform state directory (`~/.local/state/noctara/secrets/` on Linux), not in
 the config or cache. Each secret has its own versioned AES-256-GCM file (`NOCTSEC1`, 12-byte random nonce, 16-byte
@@ -154,7 +166,10 @@ Keychain are not implemented: a Windows or macOS reader would be another `IBrows
   key (AAD), of a wrong master key, and that the master key is never replaced.
 - `tests/secret_chain_tests.cpp` drives `SecretServiceStore` with a fake `IKeyring`: keyring-only storage, fallback
   to the file and recovery in a later session, removal from every tier after a keyring error, a sign-out racing a
-  slow failing keyring write, and memory-only operation.
+  slow failing keyring write, memory-only operation, and the locked-keyring cases: a locked collection reported as
+  locked rather than as a missing secret, unlocking making the saved secret readable again (the reboot symptom), a
+  save while locked going to the encrypted file instead of blocking on a prompt, and an unlocked collection never
+  reported as locked.
 - `tests/auth_tests.cpp` covers the memory store and the Accounts view-model against `tests/mock/FakeApi.hpp`: manual
   and browser sign-in, verification and persistence, empty/rejected/CR-LF tokens, a refused token while signed in
   (session, other requests and `Session::rejected` untouched), cache bypass for candidates, sign-out during a check,

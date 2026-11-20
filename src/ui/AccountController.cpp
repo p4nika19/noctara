@@ -55,6 +55,29 @@ bool AccountController::keyringAvailable() const
     return m_secrets.keyringBacked();
 }
 
+bool AccountController::keyringLocked() const
+{
+    return m_secrets.keyringLocked();
+}
+
+void AccountController::unlockKeyring()
+{
+    if (!m_secrets.keyringLocked()) {
+        return;
+    }
+    // The desktop shows its own password prompt; on success the saved token becomes readable and loadStored() picks
+    // it up. A failure leaves the account signed out and says so through the same notice as a refused secret.
+    m_secrets.unlock(this, [this](const bool unlocked) {
+        Q_EMIT changed();
+        if (!unlocked) {
+            Q_EMIT notice(QStringLiteral("warning"),
+                          tr("The desktop keyring is still locked, so the saved session cannot be read."));
+            return;
+        }
+        loadStored();
+    });
+}
+
 QVariantList AccountController::browserProfiles() const
 {
     QVariantList result;
