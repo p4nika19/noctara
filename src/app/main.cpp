@@ -102,7 +102,7 @@ struct CommandLine {
     QString page;                                    // dev/testing: initial page id
     QString navigate;                                // dev/testing: pages to switch to after startup, comma-separated
     QString artwork;                                 // dev/testing: image file used as the current track's artwork
-    QString play;                                    // SoundCloud link to resolve and play after startup
+    QString play;                                    // dev/testing: a SoundCloud link to play after startup
     bool smokeTest = false;                          // visit every page and settings category; fail on any warning
     QList<settings::CommandLineOverride> overrides;  // --set and the schema's aliases, in command-line order
 };
@@ -140,8 +140,8 @@ CommandLine parseCommandLine(const QCoreApplication& app, const settings::Schema
     QCommandLineOption artwork(QStringLiteral("artwork"), QStringLiteral("Use an image file as the artwork."),
                                QStringLiteral("file"));
     artwork.setFlags(QCommandLineOption::HiddenFromHelp);
-    const QCommandLineOption play(QStringLiteral("play"), QStringLiteral("Play a SoundCloud link."),
-                                  QStringLiteral("url"));
+    QCommandLineOption play(QStringLiteral("play"), QStringLiteral("Play a SoundCloud link."), QStringLiteral("url"));
+    play.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOptions(
         {config, print, reset, safe, disableGpu, set, pgo, screenshot, page, smoke, navigate, artwork, play});
 
@@ -694,11 +694,7 @@ int main(int argc, char** argv)
         runSmokeTest(engine, settingsUi);
     }
     if (!cli.play.isEmpty()) {
-        QUrl playUrl(cli.play);
-        if (playUrl.scheme().compare(QStringLiteral("soundcloud"), Qt::CaseInsensitive) == 0) {
-            playUrl.setScheme(QStringLiteral("https"));
-        }
-        (void)api::fetch(soundcloud.client(), api::endpoints::resolve(playUrl), &player,
+        (void)api::fetch(soundcloud.client(), api::endpoints::resolve(QUrl(cli.play)), &player,
                          [&player, &appController](Result<api::Item> item) {
                              if (item) {
                                  player.playItem(*item);

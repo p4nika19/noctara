@@ -386,7 +386,7 @@ SHARE="$PREFIX/share"
 staging=$(mktemp -d)
 trap 'rm -rf "$staging"' EXIT
 # The desktop entry starts the installed binary by its full path: ~/.local/bin is not in every desktop's PATH.
-bash "$SOURCE_DIR/tools/desktop-entry.sh" "$PREFIX" resources/app/noctara.desktop > "$staging/noctara.desktop"
+sed "s|^Exec=noctara|Exec=$PREFIX/bin/noctara|" resources/app/noctara.desktop > "$staging/noctara.desktop"
 revision=$(git -C "$SOURCE_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)
 cat > "$staging/manifest" <<EOF
 $PREFIX/bin/noctara
@@ -403,11 +403,8 @@ printf 'revision=%s\ninstalled=%s\nprefix=%s\n' "$revision" "$(date -u +%Y-%m-%d
 "${INSTALL[@]}" install -Dm755 uninstall.sh "$LIBDIR/uninstall.sh"
 "${INSTALL[@]}" install -Dm644 "$staging/version" "$LIBDIR/version"
 "${INSTALL[@]}" install -Dm644 "$staging/manifest" "$LIBDIR/manifest"
-# Refresh the desktop's caches where they exist; never create one (a new icon cache in ~/.local would hide icons other
-# programs add there later without updating it).
-if [[ -f $SHARE/applications/mimeinfo.cache ]] && command -v update-desktop-database >/dev/null; then
-    "${INSTALL[@]}" update-desktop-database -q "$SHARE/applications" || true
-fi
+# Refresh the desktop's icon cache where it exists; never create one (a new icon cache in ~/.local would hide icons
+# other programs add there later without updating it).
 if [[ -f $SHARE/icons/hicolor/icon-theme.cache ]] && command -v gtk-update-icon-cache >/dev/null; then
     "${INSTALL[@]}" gtk-update-icon-cache -qtf "$SHARE/icons/hicolor" || true
 fi

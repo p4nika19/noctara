@@ -13,4 +13,3 @@ Keywords=SoundCloud;music;audio;player;
 Keywords[ru]=SoundCloud;музыка;аудио;проигрыватель;
 StartupNotify=true
 StartupWMClass=noctara
-MimeType=x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/soundcloud;
