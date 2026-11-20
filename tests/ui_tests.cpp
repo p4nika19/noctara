@@ -1,3 +1,4 @@
+#include "ModelTester.hpp"
 #include "TestUtil.hpp"
 #include "mock/FakeOrigin.hpp"
 
@@ -1818,6 +1819,92 @@ TEST_SUITE("ui.settings-panes")
             total += clock.nsecsElapsed();
         }
         MESSAGE("creating 300 tooltip hosts: " << static_cast<double>(total) / 1e6 / kRounds << " ms");
+    }
+
+    // Reported: after clearing a search in Likes or a playlist the rows showed the old, filtered content until the
+    // list was scrolled. CollectionFilter asked the source's views to re-read by emitting layoutChanged() alone,
+    // which breaks QAbstractItemModel's protocol (layoutChanged must follow layoutAboutToBeChanged), so views
+    // remapped their persistent indexes against a stale set and kept the rows they had.
+    TEST_CASE("clearing a list search re-reads the rows and keeps the model protocol")
+    {
+        static const bool registered = [] {
+            qmlRegisterType<models::CollectionFilter>("Noctara", 1, 0, "CollectionFilter");
+            qmlRegisterUncreatableType<models::CollectionModel>("Noctara", 1, 0, "CollectionModel",
+                                                                QStringLiteral("test"));
+            return true;
+        }();
+        (void)registered;
+        stub::singleton("Catalog", QStringLiteral("({likedRevision: 0, isLiked: id => false, ensure: l => {}, "
+                                                  "toggleLike: id => {}})"));
+        stub::singleton("Account", QStringLiteral("({signedIn: true})"));
+        stub::singleton("Format", QStringLiteral("({revision: 0, duration: ms => '0:00', error: code => '', "
+                                                 "count: n => String(n)})"));
+        stub::singleton("Layout",
+                        QStringLiteral("({rowPlays: false, rowLikes: false, rowReposts: false, rowDuration: false,"
+                                       " rowCover: true, density: 'comfortable', views: {}, cardSize: 'medium'})"));
+        RecordingClient client;
+        models::CollectionModel source(client);
+        std::vector<api::Entry> entries;
+        const auto titleOf = [](int i) {
+            return QStringLiteral("Track %1").arg(i, 3, 10, QLatin1Char('0'));
+        };
+        for (int i = 0; i < 60; ++i) {
+            api::Track track;
+            track.id = i + 1;
+            track.title = i == 45 ? QStringLiteral("Ya boleyu") : titleOf(i);
+            track.user.username = QStringLiteral("artist");
+            entries.push_back({.item = track, .at = {}, .repostedBy = std::nullopt});
+        }
+        source.setEntries(entries);
+        QQmlEngine::setObjectOwnership(&source, QQmlEngine::CppOwnership);
+        const WindowHarness harness(R"(Window {
+            width: 500; height: 400; visible: true
+            property QtObject filter: listFilter
+            property Item view: view
+            property QtObject src: null
+            CollectionFilter { id: listFilter; source: src }
+            CollectionView { id: view; anchors.fill: parent; model: listFilter.model; underPlayer: false }
+        })");
+        harness.window->setProperty("src", QVariant::fromValue<QObject*>(&source));
+        QQuickItem* view = harness.item("view");
+        QObject* filter = harness.object("filter");
+        QQuickItem* list = nullptr;
+        for (QQuickItem* child : view->findChildren<QQuickItem*>()) {
+            if (QByteArrayView(child->metaObject()->className()).startsWith("QQuickListView")) {
+                list = child;
+            }
+        }
+        REQUIRE(list != nullptr);
+        REQUIRE(test::waitUntil([&] { return list->property("count").toInt() == 60; }));
+        // Every signal the filter emits on the source must obey the model protocol, in particular the paired
+        // layoutAboutToBeChanged/layoutChanged it uses to make the rows re-read.
+        test::ModelTester tester(&source);
+        const auto rowTitle = [list](int row) {
+            QQuickItem* item = nullptr;
+            (void)QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem*, item), Q_ARG(int, row));
+            return item != nullptr ? item->property("title").toString() : QStringLiteral("<not created>");
+        };
+
+        // Scrolled down, as when browsing a long Likes list.
+        list->setProperty("contentY", 40.0 * 40.0);
+        REQUIRE(test::waitUntil([&] { return rowTitle(40) == titleOf(40); }));
+
+        filter->setProperty("text", QStringLiteral("boleyu"));
+        REQUIRE(test::waitUntil([&] { return list->property("count").toInt() == 1; }));
+        REQUIRE(test::waitUntil([&] { return rowTitle(0) == u"Ya boleyu"; }));
+
+        filter->setProperty("text", QString());
+        REQUIRE(test::waitUntil([&] { return list->property("count").toInt() == 60; }));
+        // Whatever row the view sits on, the delegates there show that row of the source list.
+        REQUIRE(test::waitUntil([&] {
+            const int top = std::max(0, static_cast<int>(list->property("contentY").toReal() / 40.0));
+            for (int row = top; row < std::min(60, top + 8); ++row) {
+                if (rowTitle(row) != titleOf(row)) {
+                    return false;
+                }
+            }
+            return true;
+        }));
     }
 
     TEST_CASE("a number-field settings row shows its unit")

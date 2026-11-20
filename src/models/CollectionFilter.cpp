@@ -127,9 +127,10 @@ void CollectionFilter::setText(const QString& text)
     refilter();
     if (active() != wasActive) {
         Q_EMIT modelChanged();
-        // The source becomes visible only after modelChanged; then ask its views to refresh.
+        // The source becomes visible only after modelChanged; then ask its views to refresh. A layout change must be
+        // announced in pairs, or views remap persistent indexes against a stale set and keep showing old rows.
         if (!active() && m_source != nullptr) {
-            Q_EMIT m_source->layoutChanged();
+            m_source->announceLayoutChanged();
         }
     }
 }
