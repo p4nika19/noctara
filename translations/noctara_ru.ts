@@ -1598,12 +1598,12 @@
 <context>
     <name>Main</name>
     <message>
-        <location filename="../src/qml/Main.qml" line="+60"/>
+        <location filename="../src/qml/Main.qml" line="+67"/>
         <source>Noctara</source>
         <translation>Noctara</translation>
     </message>
     <message>
-        <location line="-33"/>
+        <location line="-40"/>
         <source>Home</source>
         <translation>Главная</translation>
     </message>
@@ -1638,12 +1638,12 @@
         <translation>Скачанное</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+8"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
-        <location line="+83"/>
+        <location line="+85"/>
         <source>Link copied.</source>
         <translation>Ссылка скопирована.</translation>
     </message>
@@ -5468,7 +5468,7 @@
 <context>
     <name>noctara::ui::AccountController</name>
     <message>
-        <location filename="../src/ui/AccountController.cpp" line="+190"/>
+        <location filename="../src/ui/AccountController.cpp" line="+198"/>
         <source>Paste your SoundCloud OAuth token to sign in.</source>
         <translation>Вставьте OAuth-токен SoundCloud, чтобы войти.</translation>
     </message>
@@ -5478,7 +5478,7 @@
         <translation>Сессия SoundCloud в Noctara</translation>
     </message>
     <message>
-        <location line="-128"/>
+        <location line="-136"/>
         <source>Could not inspect the installed browser profiles.</source>
         <translation>Не удалось просмотреть установленные профили браузеров.</translation>
     </message>
@@ -5536,7 +5536,7 @@
         <translation>Выбранный профиль браузера больше недоступен. Выполните сканирование снова.</translation>
     </message>
     <message>
-        <location line="+61"/>
+        <location line="+69"/>
         <source>That does not look like an OAuth token. Copy only the oauth_token value, without spaces.</source>
         <translation>Это не похоже на OAuth-токен. Скопируйте только значение oauth_token, без пробелов.</translation>
     </message>
@@ -5792,13 +5792,13 @@
     </message>
     <message>
         <location line="+0"/>
-        <location line="+240"/>
+        <location line="+244"/>
         <location line="+28"/>
         <source>direct</source>
         <translation>напрямую</translation>
     </message>
     <message>
-        <location line="-252"/>
+        <location line="-256"/>
         <source>With SOCKS4 and SOCKS5 Noctara looks up server names itself, using the DNS settings above, and sends only addresses to the proxy. Choose SOCKS5 with remote DNS to let the proxy look them up.</source>
         <translation>С SOCKS4 и SOCKS5 Noctara сама определяет адреса серверов по настройкам DNS выше и передаёт прокси только адреса. Выберите «SOCKS5 с удалённым DNS», чтобы это делал прокси.</translation>
     </message>
@@ -5853,7 +5853,7 @@
         <translation>Этот файл не существует, поэтому защищённые соединения не будут работать.</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+37"/>
         <source>Noctara proxy credentials</source>
         <translation>Учётные данные прокси Noctara</translation>
     </message>
@@ -5883,8 +5883,8 @@
         <translation>IP-адрес</translation>
     </message>
     <message>
-        <location line="-330"/>
-        <location line="+331"/>
+        <location line="-334"/>
+        <location line="+335"/>
         <source>host override</source>
         <translation>свой адрес хоста</translation>
     </message>
@@ -5894,13 +5894,13 @@
         <translation>кэш</translation>
     </message>
     <message>
-        <location line="-330"/>
-        <location line="+331"/>
+        <location line="-334"/>
+        <location line="+335"/>
         <source>system resolver</source>
         <translation>системный DNS</translation>
     </message>
     <message>
-        <location line="-335"/>
+        <location line="-339"/>
         <source>resolved by the proxy</source>
         <translation>разрешил прокси</translation>
     </message>
@@ -5916,12 +5916,12 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+331"/>
+        <location line="+335"/>
         <source>system resolver (fallback)</source>
         <translation>системный DNS (резервный)</translation>
     </message>
     <message>
-        <location line="-330"/>
+        <location line="-334"/>
         <source>DNS servers</source>
         <translation>DNS-серверы</translation>
     </message>
@@ -5931,7 +5931,7 @@
         <translation>DNS over HTTPS</translation>
     </message>
     <message>
-        <location line="+333"/>
+        <location line="+337"/>
         <source>DNS over HTTPS (%1)</source>
         <extracomment>%1 = DoH server host name</extracomment>
         <translation>DNS over HTTPS (%1)</translation>

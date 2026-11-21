@@ -50,6 +50,16 @@ public:
     {
         QMetaObject::invokeMethod(context, [done = std::move(done)] { done(false); }, Qt::QueuedConnection);
     }
+    // Startup read: read the secret, and if the keyring is locked show its own unlock prompt and read again. This
+    // is the one path allowed to raise the prompt without a click — only once, at startup, so a fresh desktop
+    // session with a locked keyring restores the saved session and proxy credentials before the user can notice.
+    // `done` gets the secret (or nullopt) and whether the desktop refused/could not unlock the keyring.
+    using StartupReadCallback = std::function<void(Result<std::optional<QByteArray>> secret, bool unlockRefused)>;
+    virtual void readAtStartup(const QString& key, QObject* context, StartupReadCallback done)
+    {
+        read(key, context,
+             [done = std::move(done)](Result<std::optional<QByteArray>> secret) { done(std::move(secret), false); });
+    }
 };
 
 // Process memory only; used by tests and as the final fallback when no persistent store can be written.
@@ -134,6 +144,8 @@ public:
     // whether the keyring is readable afterwards. Only call it for an explicit user request: a startup read must
     // never raise a dialog.
     void unlock(QObject* context, std::function<void(bool unlocked)> done) override;
+    // Startup read: read once, and if the collection is locked, unlock it (with its prompt) and read again.
+    void readAtStartup(const QString& key, QObject* context, StartupReadCallback done) override;
 
 private:
     void fallbackRead(const QString& key, QObject* context, ReadCallback callback);
@@ -141,12 +153,18 @@ private:
                        QObject* context, WriteCallback callback);
     void removeFromFallbacks(const QString& key);
     [[nodiscard]] bool superseded(const QString& key, quint64 epoch) const { return m_epochs.value(key) != epoch; }
+    // Single-flight for the startup unlock: the account and proxy controllers both read at startup, but the desktop
+    // must show its password prompt only once. Later readers get the result of the first unlock.
+    void finishStartupUnlock(bool unlocked, QObject* context);
 
     QThreadPool m_pool;
     std::unique_ptr<IKeyring> m_keyring;
     std::atomic<bool> m_available{true};
     std::atomic<bool> m_fileAvailable{false};
     std::atomic<bool> m_locked{false};
+    bool m_unlockInFlight = false;
+    bool m_startupUnlockRefused = false;
+    QList<std::function<void(bool)>> m_unlockWaiters;
     std::unique_ptr<EncryptedFileSecretStore> m_file;
     MemorySecretStore m_fallback;
     // Bumped by every write and remove of a key: a slow write's fallback is dropped once a newer call exists.

@@ -27,8 +27,9 @@ struct KeyringState {
     bool failLookup = false;
     bool failStore = false;
     bool failClear = false;
-    bool holdStores = false;  // store() waits until the test releases it
-    bool locked = false;      // the collection is locked: lookups answer "not found", writes are refused
+    bool holdStores = false;    // store() waits until the test releases it
+    bool locked = false;        // the collection is locked: lookups answer "not found", writes are refused
+    bool refuseUnlock = false;  // the user dismissed the desktop's unlock prompt
     int clears = 0;
 
     void release()
@@ -73,6 +74,9 @@ public:
     [[nodiscard]] bool unlock() override
     {
         const std::scoped_lock lock(m_state->mutex);
+        if (m_state->refuseUnlock) {
+            return false;
+        }
         m_state->locked = false;
         return true;
     }
@@ -339,6 +343,48 @@ TEST_SUITE("auth.secret-chain")
         CHECK(*unlocked);
         CHECK_FALSE(store.keyringLocked());
         CHECK(read(store) == QByteArray("saved-token"));  // the session is back without signing in again
+    }
+
+    // Reported: on GNOME the token and proxy credentials were lost after a reboot even though the unlock prompt
+    // was answered. The startup read now unlocks once and reads again, so signing in again is not needed.
+    TEST_CASE("a startup read unlocks the keyring and returns the saved secret")
+    {
+        QTemporaryDir directory;
+        auto keyring = std::make_shared<KeyringState>();
+        keyring->entries.insert(kKey, "saved-token");
+        keyring->locked = true;
+        auth::SecretServiceStore store(std::make_unique<FakeKeyring>(keyring), directory.path());
+
+        QObject context;
+        std::optional<Result<std::optional<QByteArray>>> result;
+        std::optional<bool> refused;
+        store.readAtStartup(kKey, &context, [&](Result<std::optional<QByteArray>> secret, bool unlockRefused) {
+            result = std::move(secret);
+            refused = unlockRefused;
+        });
+        REQUIRE(test::waitUntil([&] { return result.has_value() && refused.has_value(); }));
+        CHECK_FALSE(*refused);
+        REQUIRE(*result);
+        CHECK(**result == QByteArray("saved-token"));
+        CHECK_FALSE(store.keyringLocked());
+    }
+
+    TEST_CASE("a dismissed unlock prompt is reported so the navigation badge stays")
+    {
+        QTemporaryDir directory;
+        auto keyring = std::make_shared<KeyringState>();
+        keyring->entries.insert(kKey, "saved-token");
+        keyring->locked = true;
+        keyring->refuseUnlock = true;
+        auth::SecretServiceStore store(std::make_unique<FakeKeyring>(keyring), directory.path());
+
+        QObject context;
+        std::optional<bool> refused;
+        store.readAtStartup(kKey, &context,
+                            [&](Result<std::optional<QByteArray>>, bool unlockRefused) { refused = unlockRefused; });
+        REQUIRE(test::waitUntil([&] { return refused.has_value(); }));
+        CHECK(*refused);
+        CHECK(store.keyringLocked());
     }
 
     TEST_CASE("a save while the keyring is locked goes to the local store instead of blocking on a prompt")

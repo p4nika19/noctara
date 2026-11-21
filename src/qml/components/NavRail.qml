@@ -115,6 +115,22 @@ GlassPanel {
             size: Theme.space.iconSize
             color: item.selected ? Theme.targetColors.accent : Theme.targetColors.iconSecondary
         }
+        // A locked keyring needs attention: a small accent dot on the entry (a compact icon button has no room for
+        // text). It stays visible whenever the collection is still locked, not just inside the Network page.
+        Rectangle {
+            id: badge
+            objectName: "keyringBadge"
+            visible: item.modelData.badge === true
+            x: icon.x + icon.width - width / 2
+            y: icon.y
+            width: Theme.space.xs + Theme.space.hairline * 2
+            height: width
+            radius: width / 2
+            color: Theme.colors.accent
+            border.width: Theme.space.hairline
+            border.color: Theme.dark ? Theme.colors.surfaceBase : Theme.colors.onAccent
+            Accessible.ignored: true
+        }
         Text {
             visible: root.expanded
             x: root.horizontal ? (parent.width - width) / 2 : icon.x + icon.width + Theme.space.md

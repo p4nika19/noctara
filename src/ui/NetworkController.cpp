@@ -273,18 +273,22 @@ void NetworkController::updateRowStatuses()
 
 void NetworkController::loadCredentials()
 {
-    m_secrets.read(QString::fromLatin1(kCredentialsKey), this,
-                   [this, generation = m_credentialsGeneration](Result<std::optional<QByteArray>> secret) {
-                       if (generation != m_credentialsGeneration || !secret || !*secret) {
-                           Q_EMIT credentialsChanged();
-                           return;
-                       }
-                       const QJsonObject object = QJsonDocument::fromJson(**secret).object();
-                       m_username = object.value(QStringLiteral("username")).toString();
-                       m_password = object.value(QStringLiteral("password")).toString();
-                       m_service.setProxyCredentials(m_username, m_password);
-                       Q_EMIT credentialsChanged();
-                   });
+    m_secrets.readAtStartup(
+        QString::fromLatin1(kCredentialsKey), this,
+        [this, generation = m_credentialsGeneration](Result<std::optional<QByteArray>> secret, bool unlockRefused) {
+            if (unlockRefused) {
+                qInfo() << "the desktop keyring is locked; proxy credentials are not restored";
+            }
+            if (generation != m_credentialsGeneration || !secret || !*secret) {
+                Q_EMIT credentialsChanged();
+                return;
+            }
+            const QJsonObject object = QJsonDocument::fromJson(**secret).object();
+            m_username = object.value(QStringLiteral("username")).toString();
+            m_password = object.value(QStringLiteral("password")).toString();
+            m_service.setProxyCredentials(m_username, m_password);
+            Q_EMIT credentialsChanged();
+        });
 }
 
 void NetworkController::saveProxyCredentials(const QString& username, const QString& password)

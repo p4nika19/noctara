@@ -37,14 +37,17 @@ active protection: keyring, encrypted local store (with a warning), or memory on
 - **A locked collection is not a miss.** A desktop keyring starts locked in a new session, and a locked collection
   answers a lookup with "no such secret" instead of an error. Taken at face value that looks exactly like an account
   that never saved a session: the app came up signed out after every reboot, with the token still in the keyring.
-  `IKeyring::locked()` now reports the collection's state (a cheap local property read, no prompt), and a read that
-  finds nothing while the collection is locked sets `keyringLocked()` instead of treating the secret as absent. The
-  Accounts page and the proxy credentials row then say the session is saved but the keyring is locked, and offer
-  *Unlock the keyring*: `unlock()` shows the desktop's own prompt and the secret is read afterwards.
+  `IKeyring::locked()` reports the collection's state (a cheap local property read, no prompt), and a read that finds
+  nothing while the collection is locked sets `keyringLocked()` instead of treating the secret as absent.
+- **The startup read unlocks once, on its own.** `readAtStartup()` reads, and if the collection is locked shows the
+  desktop's own prompt and reads again, so the saved session and proxy credentials come back without a click. The
+  account and proxy controllers both read at startup, so it is single-flight: one prompt for both. If the prompt is
+  dismissed, `unlockRefused` comes back true, `keyringLocked()` stays set and an accent dot appears on the Settings
+  entry in the navigation (the Accounts and Network pages say why and offer the unlock again).
 - **A write to a locked collection is refused up front.** libsecret's store call opens an unlock prompt and blocks
   the worker thread until somebody answers it, which on a fresh session can be nobody; quitting then waited on that
   thread in `waitForDone()`. A locked collection now sends the secret to the encrypted file instead. `unlock()` is
-  only ever reached from an explicit user action, never from a startup read.
+  only ever reached from an explicit user action or the startup read, never from an ordinary read.
 - **Quitting cancels a keyring call in flight**, so an unanswered prompt cannot keep the process alive.
 
 The encrypted fallback lives under the platform state directory (`~/.local/state/noctara/secrets/` on Linux), not in

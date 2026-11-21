@@ -33,7 +33,14 @@ Window {
         downloads: { id: "downloads", icon: "download", label: qsTr("Downloaded") }
     })
     readonly property var destinations: Layout.navItems.map(id => pageInfo[id]).filter(p => p !== undefined)
-    readonly property var footer: [{ id: "settings", icon: "settings", label: qsTr("Settings") }]
+    // A locked keyring that the user refused to unlock at startup: the accent badge on the Settings entry points
+    // there (Accounts and Network explain and offer the unlock).
+    readonly property var footer: [{
+        id: "settings",
+        icon: "settings",
+        label: qsTr("Settings"),
+        badge: Account.keyringLocked
+    }]
 
     // Where the navigation sits and whether it takes room (auto-hide floats over the content).
     readonly property string railSide: Layout.navPosition

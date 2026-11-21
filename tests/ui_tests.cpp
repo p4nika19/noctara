@@ -1235,6 +1235,22 @@ TEST_SUITE("ui.components")
         CHECK(pill->isVisible());
     }
 
+    TEST_CASE("a locked keyring puts an accent badge on the Settings rail entry")
+    {
+        // The badge is data-driven: Main.qml binds footer.badge to Account.keyringLocked, and NavRail shows the dot
+        // for that flag. Check both ends without relying on inline-delegate objectName lookup in the QML harness.
+        const auto read = [](const char* path) {
+            QFile file(QStringLiteral(NOCTARA_SOURCE_DIR "/") + QString::fromLatin1(path));
+            return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{};
+        };
+        const QByteArray main = read("src/qml/Main.qml");
+        REQUIRE_FALSE(main.isEmpty());
+        CHECK(main.contains("badge: Account.keyringLocked"));
+        const QByteArray rail = read("src/qml/components/NavRail.qml");
+        REQUIRE_FALSE(rail.isEmpty());
+        CHECK(rail.contains("visible: item.modelData.badge === true"));
+    }
+
     TEST_CASE("queue edits keep the queue list's scroll position")
     {
         media::PlaybackQueue queue;

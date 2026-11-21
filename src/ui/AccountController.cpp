@@ -166,21 +166,28 @@ void AccountController::importBrowserToken(const QString& profileId)
 void AccountController::loadStored()
 {
     const int generation = m_generation;
-    m_secrets.read(QString::fromLatin1(kTokenKey), this, [this, generation](Result<std::optional<QByteArray>> stored) {
-        Q_EMIT changed();  // the store knows its protection level after its first answer
-        if (generation != m_generation) {
-            return;  // the user signed in or out while the keyring was still answering
-        }
-        if (!stored || !*stored || !auth::isPlausibleToken(**stored)) {
-            return;  // nothing usable saved: stay signed out
-        }
-        // A saved token is presumed good until SoundCloud says otherwise, so the app is usable at
-        // once; the account details (and any expiry) follow from the background check.
-        m_session.setToken(**stored);
-        setState(SignedIn);
-        Q_EMIT changed();
-        checkSession();
-    });
+    // A startup read may unlock the keyring for us: on GNOME the collection starts locked, and asking the desktop
+    // once here means the saved session comes back without the user having to click anything.
+    m_secrets.readAtStartup(QString::fromLatin1(kTokenKey), this,
+                            [this, generation](Result<std::optional<QByteArray>> stored, bool unlockRefused) {
+                                Q_EMIT changed();  // the store knows its protection level after its first answer
+                                if (generation != m_generation) {
+                                    return;  // the user signed in or out while the keyring was still answering
+                                }
+                                if (unlockRefused) {
+                                    qInfo() << "the desktop keyring is locked and the unlock prompt was dismissed";
+                                    return;
+                                }
+                                if (!stored || !*stored || !auth::isPlausibleToken(**stored)) {
+                                    return;  // nothing usable saved: stay signed out
+                                }
+                                // A saved token is presumed good until SoundCloud says otherwise, so the app is usable
+                                // at once; the account details (and any expiry) follow from the background check.
+                                m_session.setToken(**stored);
+                                setState(SignedIn);
+                                Q_EMIT changed();
+                                checkSession();
+                            });
 }
 
 void AccountController::signInWithToken(const QString& token)

@@ -38,6 +38,19 @@ std::optional<Error> takeError(GError* error)
 
 class SecretServiceKeyring final : public IKeyring {
 public:
+    SecretServiceKeyring() = default;
+    ~SecretServiceKeyring() override
+    {
+        if (m_cancellable != nullptr) {
+            g_object_unref(m_cancellable);
+            m_cancellable = nullptr;
+        }
+    }
+    SecretServiceKeyring(const SecretServiceKeyring&) = delete;
+    SecretServiceKeyring& operator=(const SecretServiceKeyring&) = delete;
+    SecretServiceKeyring(SecretServiceKeyring&&) = delete;
+    SecretServiceKeyring& operator=(SecretServiceKeyring&&) = delete;
+
     Result<std::optional<QByteArray>> lookup(const QString& key) override
     {
         const QByteArray id = key.toUtf8();
@@ -376,6 +389,72 @@ void SecretServiceStore::write(const QString& key, const QString& label, const Q
             });
 }
 
+void SecretServiceStore::finishStartupUnlock(bool unlocked, QObject* context)
+{
+    if (context != nullptr) {
+        m_locked = !unlocked;
+        m_startupUnlockRefused = !unlocked;
+    }
+    m_unlockInFlight = false;
+    const QList<std::function<void(bool)>> waiters = std::exchange(m_unlockWaiters, {});
+    for (const auto& waiter : waiters) {
+        QMetaObject::invokeMethod(context, [waiter, unlocked] { waiter(unlocked); }, Qt::QueuedConnection);
+    }
+}
+
+void SecretServiceStore::readAtStartup(const QString& key, QObject* context, StartupReadCallback done)
+{
+    const QPointer<QObject> guard(context);
+    const auto donePtr = std::make_shared<StartupReadCallback>(std::move(done));
+    const auto resume = [this, key, guard, donePtr](bool unlockRefused) {
+        if (guard == nullptr) {
+            return;
+        }
+        // The first read discovers the lock state and already returned the secret when it was readable. Read again
+        // here after an unlock (or use the remembered refusal for a concurrent reader).
+        read(key, guard, [donePtr, unlockRefused](Result<std::optional<QByteArray>> secret) {
+            (*donePtr)(std::move(secret), unlockRefused);
+        });
+    };
+
+    if (!m_unlockInFlight && m_startupUnlockRefused) {
+        // The prompt was already shown and dismissed: do not raise it again for the second startup reader.
+        resume(true);
+        return;
+    }
+
+    read(key, context, [this, key, guard, resume](Result<std::optional<QByteArray>> secret) {
+        if (guard == nullptr) {
+            return;
+        }
+        if (secret && *secret) {
+            // Already readable (the keyring got unlocked on its own): no prompt needed.
+            resume(false);
+            return;
+        }
+        if (!keyringLocked()) {
+            resume(false);
+            return;
+        }
+        if (m_unlockInFlight) {
+            // Another startup reader is already showing the desktop's prompt: wait for its answer.
+            m_unlockWaiters.append([resume](bool unlocked) { resume(!unlocked); });
+            return;
+        }
+        m_unlockInFlight = true;
+        unlock(guard, [this, guard, resume](const bool unlocked) {
+            if (guard == nullptr) {
+                if (m_unlockInFlight) {
+                    finishStartupUnlock(unlocked, nullptr);
+                }
+                return;
+            }
+            finishStartupUnlock(unlocked, guard);
+            resume(!unlocked);
+        });
+    });
+}
+
 void SecretServiceStore::unlock(QObject* context, std::function<void(bool)> done)
 {
     deliver(QtConcurrent::run(&m_pool,
@@ -388,6 +467,7 @@ void SecretServiceStore::unlock(QObject* context, std::function<void(bool)> done
             this, [this, context = QPointer(context), done = std::move(done)](const bool& unlocked) {
                 if (unlocked) {
                     m_locked = false;
+                    m_startupUnlockRefused = false;  // a later unlock clears the startup refusal
                 }
                 if (context != nullptr) {
                     done(unlocked);
