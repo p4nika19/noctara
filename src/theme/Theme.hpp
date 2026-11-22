@@ -61,6 +61,9 @@ public:
     // A user theme's overrides (null: the built-in look). Applied on top of the generated palette and tokens;
     // the colours crossfade unless `animate` is false (startup, before the window shows).
     void setUserTheme(std::shared_ptr<const UserTheme> theme, bool animate = true);
+    // What the active user theme contributes to a settings key, or an invalid variant when that key is left to
+    // the setting itself. Used by the generated settings UI to say where an effective value comes from.
+    [[nodiscard]] QVariant themeValue(std::string_view key) const;
 
     // False in the software renderer: blur styles fall back to Solid.
     void setBlurAvailable(bool available);
@@ -76,6 +79,8 @@ Q_SIGNALS:
     void fontsChanged();
     void motionChanged();
     void glassChanged();
+    // The active user theme changed (not emitted on every crossfade frame).
+    void userThemeChanged();
 
 private:
     void onSettingChanged(const QString& key);

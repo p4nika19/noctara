@@ -65,6 +65,14 @@ Column {
     }
     Text {
         width: parent.width
+        visible: Themes.customized
+        text: qsTr("Customized: your changed settings apply on top of this theme. Reset a setting to return it to the theme.")
+        font: Theme.font.caption
+        color: Theme.colors.textSecondary
+        wrapMode: Text.Wrap
+    }
+    Text {
+        width: parent.width
         visible: Themes.selected.length > 0 && !Theme.contrastOk
         text: qsTr("Some colors of this theme fall below WCAG AA contrast. Turn on “Enforce readable contrast” to "
                    + "correct them.")

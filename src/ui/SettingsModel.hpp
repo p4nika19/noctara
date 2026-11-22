@@ -10,6 +10,9 @@ namespace noctara::settings {
 class SettingsStore;
 struct Definition;
 }  // namespace noctara::settings
+namespace noctara::theme {
+class Theme;
+}
 
 namespace noctara::ui {
 
@@ -53,10 +56,12 @@ public:
         CategoryLabelRole,
         SectionStartRole,  // first shown row of its section: the delegate draws the section header
         StatusRole,        // live state shown under the description (e.g. current power source)
+        ThemeNoteRole,     // what the active user theme contributes, or empty when the setting decides
     };
     Q_ENUM(Role)
 
-    SettingsModel(settings::SettingsStore& store, const Availability& availability, QObject* parent = nullptr);
+    SettingsModel(settings::SettingsStore& store, const Availability& availability, const theme::Theme* theme = nullptr,
+                  QObject* parent = nullptr);
 
     void setRows(std::vector<std::size_t> rows);
     void setShowAdvanced(bool show);
@@ -78,6 +83,7 @@ private:
 
     settings::SettingsStore& m_store;
     const Availability& m_availability;
+    const theme::Theme* m_theme;
     std::vector<std::size_t> m_rows;
     bool m_showAdvanced = false;
 };

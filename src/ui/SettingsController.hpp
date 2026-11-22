@@ -17,6 +17,9 @@ class SettingsStore;
 namespace noctara::i18n {
 class LanguageManager;
 }
+namespace noctara::theme {
+class Theme;
+}
 
 namespace noctara::ui {
 
@@ -36,7 +39,7 @@ class SettingsController : public QObject {
 
 public:
     SettingsController(settings::SettingsStore& store, settings::ConfigFile& config, i18n::LanguageManager& languages,
-                       QObject* parent = nullptr);
+                       const theme::Theme* theme = nullptr, QObject* parent = nullptr);
     ~SettingsController() override;
 
     [[nodiscard]] QVariantList categories() const;
@@ -86,6 +89,7 @@ private:
 
     settings::SettingsStore& m_store;
     settings::ConfigFile& m_config;
+    const theme::Theme* m_theme;
     Availability m_availability;
     std::map<QString, std::unique_ptr<SettingsModel>> m_pages;
     std::map<QString, std::unique_ptr<SettingsModel>> m_subsets;

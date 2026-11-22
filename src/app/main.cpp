@@ -387,7 +387,7 @@ int main(int argc, char** argv)
     QObject::connect(&accent, &theme::AccentEngine::seedChanged, &theme,
                      [&theme](std::optional<color::OkLch> seed) { theme.setArtworkSeed(seed); });
 
-    ui::SettingsController settingsUi(store, config, languages);
+    ui::SettingsController settingsUi(store, config, languages, &theme);
     settingsUi.setAvailability(availability(decision, *curl));
     gfx::PowerMonitor power;
     const ui::PowerStatusPresenter powerStatus(power, store, languages, settingsUi);
@@ -395,7 +395,7 @@ int main(int argc, char** argv)
     gfx::FrameMonitor frames;
     ui::EffectsController effects(store, theme, power, frames, graphics, languages, settingsUi);
     ui::AppController appController(store, graphics, relaunch, languages);
-    ui::ThemesController themesUi(themeLibrary, store, languages);
+    ui::ThemesController themesUi(themeLibrary, store, languages, &theme);
     QObject::connect(
         &themesUi, &ui::ThemesController::notice, &appController,
         [&appController](const QString& kind, const QString& message) { appController.showToast(kind, message); });
@@ -423,9 +423,9 @@ int main(int argc, char** argv)
     // Browser discovery never reads cookies; Account asks for consent before importing the selected profile.
     ui::AccountController account(soundcloud.client(), session, secrets, &browserCookies);
     // Files kept beside the caches, never in a root another instance holds: there, "Clear all" would delete them.
-    const QString cacheRoot = cache.privateRoot();
-    const auto besideCaches = [&cacheRoot](const QString& name) {
-        return cacheRoot.isEmpty() ? QString() : cacheRoot + u'/' + name;
+    const auto besideCaches = [&cache](const QString& name) {
+        const QString root = cache.privateRoot();
+        return root.isEmpty() ? QString() : root + u'/' + name;
     };
     // The account's likes, library and playlists, saved between runs (a cache: "Clear all" and sign-out remove it).
     api::SnapshotStore snapshots(besideCaches(QStringLiteral("library")));
@@ -443,6 +443,11 @@ int main(int argc, char** argv)
     media::NativeBackend nativePlayback(cache.audio(), audioOutput);
     drm::DrmService protectedPlayback(store, network, besideCaches(QStringLiteral("electron")),
                                       QCoreApplication::applicationDirPath(), paths.dataDir);
+    QObject::connect(&cache, &cache::CacheService::statusChanged, &protectedPlayback,
+                     [&snapshots, &protectedPlayback, &besideCaches] {
+                         snapshots.setRoot(besideCaches(QStringLiteral("library")));
+                         protectedPlayback.setProfileDir(besideCaches(QStringLiteral("electron")));
+                     });
     QObject::connect(
         &protectedPlayback, &drm::DrmService::notice, &appController,
         [&appController](const QString& kind, const QString& message) { appController.showToast(kind, message); });

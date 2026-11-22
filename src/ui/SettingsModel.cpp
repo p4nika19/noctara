@@ -3,6 +3,7 @@
 #include "core/Strings.hpp"
 #include "settings/Schema.hpp"
 #include "settings/SettingsStore.hpp"
+#include "theme/Theme.hpp"
 
 #include <QCoreApplication>
 
@@ -36,12 +37,17 @@ QString typeId(settings::Type type)
 
 }  // namespace
 
-SettingsModel::SettingsModel(settings::SettingsStore& store, const Availability& availability, QObject* parent)
+SettingsModel::SettingsModel(settings::SettingsStore& store, const Availability& availability,
+                             const theme::Theme* theme, QObject* parent)
     : QAbstractListModel(parent)
     , m_store(store)
     , m_availability(availability)
+    , m_theme(theme)
 {
     connect(&m_store, &settings::SettingsStore::valueChanged, this, &SettingsModel::onValueChanged);
+    if (m_theme != nullptr) {
+        connect(m_theme, &theme::Theme::userThemeChanged, this, &SettingsModel::refreshAll);
+    }
 }
 
 void SettingsModel::setRows(std::vector<std::size_t> rows)
@@ -74,8 +80,9 @@ void SettingsModel::onValueChanged(const QString& /*key*/)
     // availability, row status, advanced rows): re-reading them here rebuilt every option list and made the
     // segmented controls recreate their segments on each step of a slider.
     if (!m_rows.empty()) {
-        Q_EMIT dataChanged(index(0), index(count() - 1),
-                           {ValueRole, IsDefaultRole, OverriddenRole, OverrideHintRole, ShownRole, SectionStartRole});
+        Q_EMIT dataChanged(
+            index(0), index(count() - 1),
+            {ValueRole, IsDefaultRole, OverriddenRole, OverrideHintRole, ShownRole, SectionStartRole, ThemeNoteRole});
     }
 }
 
@@ -174,6 +181,20 @@ QVariant SettingsModel::data(const QModelIndex& index, int role) const
     }
     case CategoryLabelRole: return translated(settings::categoryLabel(def.category));
     case StatusRole: return m_availability.statuses.value(latin(def.key));
+    case ThemeNoteRole: {
+        if (m_theme == nullptr) {
+            return QString();
+        }
+        const QVariant contribution = m_theme->themeValue(def.key);
+        if (!contribution.isValid()) {
+            return QString();
+        }
+        if (contribution.typeId() == QMetaType::Bool) {
+            return QCoreApplication::translate("Settings", "From the active theme.");
+        }
+        //: %1 = value supplied by the active user theme (a colour, font family or size)
+        return QCoreApplication::translate("Settings", "From the active theme: %1").arg(contribution.toString());
+    }
     case SectionStartRole: {
         if (!isShown(def)) {
             return false;
@@ -220,6 +241,7 @@ QHash<int, QByteArray> SettingsModel::roleNames() const
         {CategoryLabelRole, "categoryLabel"},
         {SectionStartRole, "sectionStart"},
         {StatusRole, "status"},
+        {ThemeNoteRole, "themeNote"},
     };
 }
 

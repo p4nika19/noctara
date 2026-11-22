@@ -11,8 +11,9 @@ namespace noctara::i18n {
 class LanguageManager;
 }
 namespace noctara::theme {
+class Theme;
 class ThemeLibrary;
-}
+}  // namespace noctara::theme
 
 namespace noctara::ui {
 
@@ -25,14 +26,17 @@ class ThemesController : public QObject {
     Q_PROPERTY(QString selected READ selected NOTIFY themesChanged)
     // The selected theme's problems, or that it is missing.
     Q_PROPERTY(QStringList selectedIssues READ selectedIssues NOTIFY themesChanged)
+    // The selected theme is the base, with explicit setting overrides on top of it.
+    Q_PROPERTY(bool customized READ customized NOTIFY themesChanged)
 
 public:
     ThemesController(theme::ThemeLibrary& library, settings::SettingsStore& settings, i18n::LanguageManager& languages,
-                     QObject* parent = nullptr);
+                     const theme::Theme* theme = nullptr, QObject* parent = nullptr);
 
     [[nodiscard]] QVariantList themes() const;
     [[nodiscard]] QString selected() const;
     [[nodiscard]] QStringList selectedIssues() const;
+    [[nodiscard]] bool customized() const;
 
     // "" selects the built-in look.
     Q_INVOKABLE void select(const QString& id);
@@ -48,6 +52,7 @@ Q_SIGNALS:
 private:
     theme::ThemeLibrary& m_library;
     settings::SettingsStore& m_settings;
+    const theme::Theme* m_theme;
 };
 
 }  // namespace noctara::ui

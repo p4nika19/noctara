@@ -22,6 +22,24 @@ theme* (an advanced setting; config key `appearance.theme.custom` = the file nam
 Settings still win over a theme: a font chosen in the settings beats the theme's, and blur, tint, grain, glow and
 the corner/zoom/density sliders scale whatever the theme sets.
 
+### Base theme and your overrides
+
+A selected theme is the **base** for the settings it touches, not a replacement for them. Each setting keeps its own
+override:
+
+```text
+built-in default → selected theme → your explicit setting
+```
+
+For example, a theme with `radius.button = 12` is used while *Button shape* is left at its default. Choosing *Soft*
+applies 14 px on top of that theme; resetting *Button shape* goes back to the theme's 12 px, not to the built-in
+pill. The same applies to fonts, motion and accent colours. A theme's accent is also used while *Adaptive accent*
+is on but there is no artwork seed yet.
+
+The Appearance rows say **From the active theme** when the theme supplies a value, and the picker says
+**Customized** once you override one of them. Resetting a row removes your override; it does not edit the theme
+file. Switching to another theme changes only the values you have not overridden yourself.
+
 ## Format
 
 ```toml

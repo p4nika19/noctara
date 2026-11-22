@@ -206,6 +206,42 @@ rowHeight = 80
         CHECK(theme.contrastOk());
     }
 
+    TEST_CASE("a theme's button radius applies until an explicit Button shape overrides it")
+    {
+        settings::SettingsStore store(settings::Schema::builtin());
+        Theme theme(store, bundled());
+        std::vector<ThemeIssue> issues;
+        theme.setUserTheme(std::make_shared<const UserTheme>(
+            *parseUserTheme("[radius]\nbutton = 12\n", QStringLiteral("rounded"), issues)));
+        CHECK(theme.radius().button == doctest::Approx(12));
+        CHECK(theme.themeValue(keys::ButtonShape).toDouble() == doctest::Approx(12));
+
+        // An explicit user setting is an override on top of the theme, not a value the theme may overwrite.
+        REQUIRE(store.setUserValue(keys::ButtonShape, QStringLiteral("soft")));
+        CHECK(theme.radius().button == doctest::Approx(14));
+        REQUIRE(store.setUserValue(keys::ButtonShape, QStringLiteral("sharp")));
+        CHECK(theme.radius().button == doctest::Approx(6));
+
+        // Resetting that override returns to the theme, not to the schema's default "pill".
+        store.resetUserValue(keys::ButtonShape);
+        CHECK(theme.radius().button == doctest::Approx(12));
+    }
+
+    TEST_CASE("a theme's accent is also the fallback while adaptive accent has no artwork")
+    {
+        settings::SettingsStore store(settings::Schema::builtin());
+        REQUIRE(store.setUserValue(keys::AccentAdaptive, true));
+        REQUIRE(store.setUserValue(keys::AnimationSpeed, 0.0));
+        Theme theme(store, bundled());
+        const QColor before = theme.colors().accent;
+        std::vector<ThemeIssue> issues;
+        theme.setUserTheme(std::make_shared<const UserTheme>(
+            *parseUserTheme("[theme]\naccent = \"#e04a2a\"\n", QStringLiteral("ember"), issues)));
+        const QColor after = theme.colors().accent;
+        CHECK(after != before);
+        CHECK(std::abs(after.hueF() - QColor(0xe0, 0x4a, 0x2a).hueF()) < 0.05F);
+    }
+
     TEST_CASE("a theme's accent seeds the palette when the cover art does not decide")
     {
         settings::SettingsStore store(settings::Schema::builtin());

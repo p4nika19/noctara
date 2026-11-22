@@ -4,6 +4,7 @@
 #include "i18n/LanguageManager.hpp"
 #include "settings/Keys.hpp"
 #include "settings/SettingsStore.hpp"
+#include "theme/Theme.hpp"
 #include "theme/ThemeLibrary.hpp"
 
 #include <QDesktopServices>
@@ -33,19 +34,24 @@ QString issueMessage(const theme::ThemeIssue& issue)
 }  // namespace
 
 ThemesController::ThemesController(theme::ThemeLibrary& library, settings::SettingsStore& settings,
-                                   i18n::LanguageManager& languages, QObject* parent)
+                                   i18n::LanguageManager& languages, const theme::Theme* theme, QObject* parent)
     : QObject(parent)
     , m_library(library)
     , m_settings(settings)
+    , m_theme(theme)
 {
     connect(&m_library, &theme::ThemeLibrary::themesChanged, this, &ThemesController::themesChanged);
     connect(&m_library, &theme::ThemeLibrary::activeChanged, this, &ThemesController::themesChanged);
     connect(&languages, &i18n::LanguageManager::languageChanged, this, &ThemesController::themesChanged);
     connect(&m_settings, &settings::SettingsStore::valueChanged, this, [this](const QString& key) {
-        if (key == QLatin1StringView(settings::keys::CustomTheme)) {
+        if (key == QLatin1StringView(settings::keys::CustomTheme) ||
+            (m_theme != nullptr && m_theme->themeValue(key.toStdString()).isValid())) {
             Q_EMIT themesChanged();
         }
     });
+    if (m_theme != nullptr) {
+        connect(m_theme, &theme::Theme::userThemeChanged, this, &ThemesController::themesChanged);
+    }
 }
 
 QVariantList ThemesController::themes() const
@@ -69,6 +75,21 @@ QVariantList ThemesController::themes() const
 QString ThemesController::selected() const
 {
     return m_library.selectedId();
+}
+
+bool ThemesController::customized() const
+{
+    if (m_theme == nullptr) {
+        return false;
+    }
+    const auto& definitions = m_settings.schema().definitions();
+    for (std::size_t i = 0; i < definitions.size(); ++i) {
+        if (m_theme->themeValue(definitions[i].key).isValid() &&
+            m_settings.effectiveLayer(i) != settings::Layer::Default) {
+            return true;
+        }
+    }
+    return false;
 }
 
 QStringList ThemesController::selectedIssues() const

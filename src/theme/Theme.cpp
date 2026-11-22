@@ -123,13 +123,21 @@ int Theme::animated(int durationMs) const
 
 color::OkLch Theme::currentSeed() const
 {
-    if (m_settings.boolValue(keys::AccentAdaptive)) {
-        if (m_artworkSeed) {
-            return *m_artworkSeed;
+    const bool adaptive = m_settings.boolValue(keys::AccentAdaptive);
+    if (adaptive && m_artworkSeed) {
+        return *m_artworkSeed;
+    }
+    if (m_userTheme && m_userTheme->accent) {
+        if (adaptive) {
+            return *m_userTheme->accent;  // no artwork yet: the theme's accent stands in for it
         }
-    } else if (m_userTheme && m_userTheme->accent) {
-        return *m_userTheme->accent;  // the theme's accent stands in for the static accent colour
-    } else {
+        const auto accentIndex = m_settings.schema().indexOf(keys::AccentColor);
+        const bool explicitAccent = accentIndex && m_settings.effectiveLayer(*accentIndex) != settings::Layer::Default;
+        if (!explicitAccent) {
+            return *m_userTheme->accent;
+        }
+    }
+    if (!adaptive) {
         const QColor seed = QColor::fromString(m_settings.stringValue(keys::AccentColor));
         if (seed.isValid()) {
             return color::toOkLch(color::Srgb{static_cast<double>(seed.redF()), static_cast<double>(seed.greenF()),
@@ -237,10 +245,17 @@ void Theme::updateMetrics()
         radiusFactor = m_settings.realValue(keys::CornerRadiusMultiplier);
     }
     RadiusTokens radius;
-    const QString buttonShape = m_settings.stringValue(keys::ButtonShape);
-    radius.button = buttonShape == u"soft" ? 14.0 : (buttonShape == u"sharp" ? 6.0 : radius.pill);
     if (m_userTheme) {
         applyRadius(*m_userTheme, radius);
+    }
+    // A user theme supplies the base values; an explicitly chosen Button shape is an override on top of them.
+    // Without that override the theme's own radius.button applies instead of the schema's default "pill".
+    const auto buttonShapeIndex = m_settings.schema().indexOf(keys::ButtonShape);
+    const bool explicitButtonShape =
+        buttonShapeIndex && m_settings.effectiveLayer(*buttonShapeIndex) != settings::Layer::Default;
+    if (!m_userTheme || explicitButtonShape) {
+        const QString buttonShape = m_settings.stringValue(keys::ButtonShape);
+        radius.button = buttonShape == u"soft" ? 14.0 : (buttonShape == u"sharp" ? 6.0 : radius.pill);
     }
     m_radius = radius.scaled(m_scale * radiusFactor);
 
@@ -397,6 +412,45 @@ void Theme::setUserTheme(std::shared_ptr<const UserTheme> theme, bool animate)
     updateMotion();
     updateGlass();
     updatePalette(animate ? m_motion.theme : 0);
+    Q_EMIT userThemeChanged();
+}
+
+QVariant Theme::themeValue(std::string_view key) const
+{
+    if (!m_userTheme) {
+        return {};
+    }
+    const auto is = [&key](std::string_view candidate) {
+        return key == candidate;
+    };
+    if (is(keys::ButtonShape)) {
+        if (const auto it = m_userTheme->radius.find("button"); it != m_userTheme->radius.end()) {
+            return it->second;
+        }
+    }
+    if (is(keys::HeadingFont) && !m_userTheme->headingFont.isEmpty()) {
+        return m_userTheme->headingFont;
+    }
+    if (is(keys::BodyFont) && !m_userTheme->bodyFont.isEmpty()) {
+        return m_userTheme->bodyFont;
+    }
+    if (is(keys::MonoFont) && !m_userTheme->monoFont.isEmpty()) {
+        return m_userTheme->monoFont;
+    }
+    if ((is(keys::AccentAdaptive) || is(keys::AccentColor)) && m_userTheme->accent) {
+        const color::Srgb c = color::toSrgbGamutMapped(*m_userTheme->accent);
+        return QColor::fromRgbF(static_cast<float>(c.r), static_cast<float>(c.g), static_cast<float>(c.b)).name();
+    }
+    if (is(keys::Density) && !m_userTheme->space.empty()) {
+        return true;
+    }
+    if ((is(keys::CornerRadius) || is(keys::CornerRadiusMultiplier)) && !m_userTheme->radius.empty()) {
+        return true;
+    }
+    if ((is(keys::AnimationSpeed) || is(keys::ReduceMotion)) && !m_userTheme->motion.empty()) {
+        return true;
+    }
+    return {};
 }
 
 void Theme::setBlurAvailable(bool available)

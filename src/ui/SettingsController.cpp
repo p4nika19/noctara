@@ -70,11 +70,12 @@ QString withoutPastedJunk(const QString& text)
 }  // namespace
 
 SettingsController::SettingsController(settings::SettingsStore& store, settings::ConfigFile& config,
-                                       i18n::LanguageManager& languages, QObject* parent)
+                                       i18n::LanguageManager& languages, const theme::Theme* theme, QObject* parent)
     : QObject(parent)
     , m_store(store)
     , m_config(config)
-    , m_search(std::make_unique<SettingsModel>(store, m_availability))
+    , m_theme(theme)
+    , m_search(std::make_unique<SettingsModel>(store, m_availability, theme))
 {
     QQmlEngine::setObjectOwnership(m_search.get(), QQmlEngine::CppOwnership);
     for (std::size_t i = 0; i < store.schema().size(); ++i) {
@@ -152,7 +153,7 @@ SettingsModel* SettingsController::page(const QString& categoryId)
             rows.push_back(i);
         }
     }
-    auto model = std::make_unique<SettingsModel>(m_store, m_availability);
+    auto model = std::make_unique<SettingsModel>(m_store, m_availability, m_theme);
     // Returned to QML from an invokable: without this the JS garbage collector would take ownership.
     QQmlEngine::setObjectOwnership(model.get(), QQmlEngine::CppOwnership);
     model->setShowAdvanced(m_showAdvanced);
@@ -174,7 +175,7 @@ SettingsModel* SettingsController::subset(const QStringList& keys)
             rows.push_back(*index);
         }
     }
-    auto model = std::make_unique<SettingsModel>(m_store, m_availability);
+    auto model = std::make_unique<SettingsModel>(m_store, m_availability, m_theme);
     QQmlEngine::setObjectOwnership(model.get(), QQmlEngine::CppOwnership);
     model->setShowAdvanced(true);  // an explicit list shows exactly what it names
     model->setRows(std::move(rows));

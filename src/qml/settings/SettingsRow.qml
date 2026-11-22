@@ -30,6 +30,8 @@ Item {
     required property string categoryLabel
     required property bool sectionStart
     required property string status
+    // What the active user theme contributes to this row (empty when the setting itself decides).
+    property string themeNote: ""
     property bool showCategory: false
     // Drawer mode: tighter spacing, descriptions only for toggles, no per-section reset.
     property bool compact: false
@@ -189,6 +191,24 @@ Item {
                     font: Theme.font.caption
                     color: Theme.colors.textTertiary
                     wrapMode: Text.Wrap
+                }
+                Row {
+                    width: parent.width
+                    visible: row.themeNote.length > 0
+                    topPadding: Theme.space.xxs
+                    spacing: Theme.space.xs
+                    Icon {
+                        name: "info"
+                        size: Theme.space.iconSizeSmall
+                        color: Theme.targetColors.iconSecondary
+                    }
+                    Text {
+                        width: parent.width - Theme.space.iconSizeSmall - parent.spacing
+                        text: row.themeNote
+                        font: Theme.font.caption
+                        color: Theme.colors.textSecondary
+                        wrapMode: Text.Wrap
+                    }
                 }
                 Row {
                     width: parent.width
