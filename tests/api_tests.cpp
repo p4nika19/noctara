@@ -323,6 +323,47 @@ TEST_SUITE("api.endpoints")
     }
 }
 
+TEST_SUITE("api.discovery")
+{
+    TEST_CASE("Daily Drops and Weekly Wave resolve for the signed-in account and hydrate as stubs")
+    {
+        const auto daily = endpoints::dailyDrops();
+        const auto weekly = endpoints::weeklyWave();
+        CHECK(daily.request.auth == Auth::Required);
+        CHECK(weekly.request.auth == Auth::Required);
+        CHECK(daily.request.url.path() == u"/resolve");
+        CHECK(weekly.request.url.path() == u"/resolve");
+        CHECK(QUrlQuery(daily.request.url).queryItemValue(QStringLiteral("url"), QUrl::FullyDecoded) ==
+              u"https://soundcloud.com/discover/sets/new-for-you");
+        CHECK(QUrlQuery(weekly.request.url).queryItemValue(QStringLiteral("url"), QUrl::FullyDecoded) ==
+              u"https://soundcloud.com/discover/sets/weekly");
+
+        // The real response is a system playlist with stub tracks only (no next_href, no track_count).
+        const QByteArray body = R"({
+            "urn":"soundcloud:system-playlists:new-for-you:1075800865",
+            "kind":"system-playlist",
+            "title":"Daily Drops",
+            "description":"New releases based on your taste. Updated every day",
+            "made_for":{"id":1075800865,"kind":"user"},
+            "last_updated":"2026-11-20T17:36:31Z",
+            "tracks":[
+                {"id":2440441077,"kind":"track","monetization_model":"NOT_APPLICABLE","policy":"ALLOW"},
+                {"id":2439126990,"kind":"track","monetization_model":"AD_SUPPORTED","policy":"SNIP"}
+            ]})";
+        const auto page = daily.parse(body);
+        REQUIRE_MESSAGE(page, test::describe(page));
+        REQUIRE(page->items.size() == 2);
+        CHECK(page->next.isEmpty());
+        const auto& first = std::get<api::Track>(page->items[0].item);
+        CHECK(first.stub);
+        CHECK(first.id == 2440441077);
+        CHECK(first.policy == api::Policy::Allow);
+        const auto& second = std::get<api::Track>(page->items[1].item);
+        CHECK(second.stub);
+        CHECK(second.policy == api::Policy::Snip);
+    }
+}
+
 TEST_SUITE("api.clientid")
 {
     TEST_CASE("found in hydration data, assignments and URLs")

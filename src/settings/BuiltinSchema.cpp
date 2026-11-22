@@ -45,13 +45,13 @@ Result<void> invalid(const QString& item, const char* expected)
 // Navigation pages: known ids, each at most once.
 Result<void> validateNavItems(const QVariant& value)
 {
-    static const QStringList known{QStringLiteral("home"),     QStringLiteral("search"),  QStringLiteral("library"),
-                                   QStringLiteral("likes"),    QStringLiteral("history"), QStringLiteral("charts"),
-                                   QStringLiteral("downloads")};
+    static const QStringList known{QStringLiteral("home"),     QStringLiteral("search"),   QStringLiteral("library"),
+                                   QStringLiteral("likes"),    QStringLiteral("history"),  QStringLiteral("charts"),
+                                   QStringLiteral("discover"), QStringLiteral("downloads")};
     QStringList seen;
     for (const QString& item : value.toStringList()) {
         if (!known.contains(item)) {
-            return invalid(item, "home, search, library, likes, history, charts or downloads");
+            return invalid(item, "home, search, library, likes, history, charts, discover or downloads");
         }
         if (seen.contains(item)) {
             return invalid(item, "listed once");
@@ -818,9 +818,10 @@ std::vector<Definition> builtinDefinitions()
     defs.push_back(
         {.key = keys::NavItems,
          .type = Type::StringList,
-         .defaultValue = QVariant::fromValue(QStringList{
-             QStringLiteral("home"), QStringLiteral("search"), QStringLiteral("library"), QStringLiteral("likes"),
-             QStringLiteral("history"), QStringLiteral("charts"), QStringLiteral("downloads")}),
+         .defaultValue = QVariant::fromValue(QStringList{QStringLiteral("home"), QStringLiteral("search"),
+                                                         QStringLiteral("library"), QStringLiteral("likes"),
+                                                         QStringLiteral("history"), QStringLiteral("charts"),
+                                                         QStringLiteral("discover"), QStringLiteral("downloads")}),
          .category = Layout,
          .label = QT_TRANSLATE_NOOP("Settings", "Pages in the navigation"),
          .description = QT_TRANSLATE_NOOP("Settings", "Their order and which are shown. Settings is always there."),

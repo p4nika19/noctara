@@ -227,3 +227,17 @@ Windows DPAPI/app-bound cookies and macOS Keychain remain platform-specific foll
 - The tray icon and notifications were checked on Hyprland (StatusNotifierItem through a bar); GNOME without the
   AppIndicator extension has no tray, and the setting then has no effect.
 - Glass GPU timings on a mainstream iGPU. The dev machine has a GTX 1070, so iGPU numbers need another machine; documented as such.
+
+## Daily Drops and Weekly Wave (2026-11-22)
+
+- New Discover page (`src/qml/pages/DiscoverPage.qml`) with Daily Drops and Weekly Wave tabs, list search, Play and
+  Shuffle. It reuses `CollectionModel`, `CollectionFilter`, stub hydration and the existing player/queue paths.
+- `endpoints::dailyDrops()` and `endpoints::weeklyWave()` resolve the generic Discover permalinks with
+  `Auth::Required`, so SoundCloud selects the signed-in account. `parse::playlistTracks` turns their stub tracks into
+  ordinary collection entries; no new model or parser is needed.
+- The page appears in the navigation after Charts. `Schema::kConfigVersion` is 9; the v8→v9 migration inserts
+  `discover` there (and v7 configs gain it together with Downloaded).
+- Verified against the real account: both lists return the owner's system playlists and hydrate to playable tracks
+  with waveforms and transcodings. The Discover page was also rendered with the real account (Daily Drops visible).
+- Tests: endpoint URL/auth/parser and both navigation migrations; full debug/release suites, smoke 18/18, lint,
+  format, i18n and generated docs checks pass.

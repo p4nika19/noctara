@@ -255,6 +255,28 @@ Endpoint<Page<Entry>> trending(const QString& genre)
         parse::playlistTracks, kListing);
 }
 
+namespace {
+
+// A personalized system playlist, resolved for the signed-in account rather than for whoever the URL names.
+Endpoint<Page<Entry>> personalized(const char* permalink)
+{
+    return get<Page<Entry>>(
+        apiUrl(QStringLiteral("/resolve"), {{QStringLiteral("url"), QString::fromLatin1(permalink)}}),
+        parse::playlistTracks, kListing, Auth::Required);
+}
+
+}  // namespace
+
+Endpoint<Page<Entry>> dailyDrops()
+{
+    return personalized("https://soundcloud.com/discover/sets/new-for-you");
+}
+
+Endpoint<Page<Entry>> weeklyWave()
+{
+    return personalized("https://soundcloud.com/discover/sets/weekly");
+}
+
 Endpoint<Waveform> waveform(const QString& url)
 {
     Endpoint<Waveform> endpoint = get<Waveform>(QUrl(url), parse::waveform, kImmutable, Auth::None);

@@ -30,6 +30,7 @@ Window {
         likes: { id: "likes", icon: "heart", label: qsTr("Likes") },
         history: { id: "history", icon: "clock", label: qsTr("History") },
         charts: { id: "charts", icon: "trending-up", label: qsTr("Charts") },
+        discover: { id: "discover", icon: "radio", label: qsTr("Discover") },
         downloads: { id: "downloads", icon: "download", label: qsTr("Downloaded") }
     })
     readonly property var destinations: Layout.navItems.map(id => pageInfo[id]).filter(p => p !== undefined)
@@ -481,6 +482,7 @@ Window {
         Page { pageId: "likes"; sourceComponent: LikesPage {} }
         Page { pageId: "history"; sourceComponent: HistoryPage {} }
         Page { pageId: "charts"; sourceComponent: ChartsPage {} }
+        Page { pageId: "discover"; sourceComponent: DiscoverPage {} }
         Page { pageId: "downloads"; sourceComponent: DownloadsPage {} }
         Page {
             pageId: "settings"

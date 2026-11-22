@@ -75,6 +75,8 @@ CatalogController::CatalogController(api::ApiService& api, AccountController& ac
     , m_library(api.client())
     , m_following(api.client())
     , m_charts(api.client())
+    , m_dailyDrops(api.client())
+    , m_weeklyWave(api.client())
 {
     m_debounce.setSingleShot(true);
     m_debounce.setInterval(kTypingPause);
@@ -125,7 +127,8 @@ void CatalogController::accountChanged()
     // loaded for it (above). Pages ask again once signed in.
     const QStringList shown = m_loaded;
     m_loaded.clear();
-    for (models::CollectionModel* model : {&m_feed, &m_likes, &m_history, &m_library, &m_following}) {
+    for (models::CollectionModel* model :
+         {&m_feed, &m_likes, &m_history, &m_library, &m_following, &m_dailyDrops, &m_weeklyWave}) {
         model->clear();
     }
     for (const QString& list : shown) {
@@ -167,6 +170,16 @@ void CatalogController::load(const QString& list)
     if (list == u"charts") {
         m_charts.clear();
         m_charts.setSource([genre = m_chartGenre](int /*limit*/) { return api::endpoints::trending(genre); }, page);
+    } else if (list == u"daily-drops") {
+        if (me == 0) {
+            return;
+        }
+        m_dailyDrops.setSource([](int /*limit*/) { return api::endpoints::dailyDrops(); }, page);
+    } else if (list == u"weekly-wave") {
+        if (me == 0) {
+            return;
+        }
+        m_weeklyWave.setSource([](int /*limit*/) { return api::endpoints::weeklyWave(); }, page);
     } else if (list == u"feed") {
         m_feed.setSource([](int limit) { return api::endpoints::stream(limit); }, page);
     } else if (list == u"history") {

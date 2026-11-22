@@ -343,12 +343,28 @@ TEST_SUITE("settings.toml")
         REQUIRE(chosen.syntaxOk);
         CHECK(chosen.issues.empty());
         CHECK(parsedValue(chosen, keys::NavItems)->toStringList() ==
-              QStringList{QStringLiteral("likes"), QStringLiteral("charts"), QStringLiteral("downloads"),
-                          QStringLiteral("home")});
+              QStringList{QStringLiteral("likes"), QStringLiteral("charts"), QStringLiteral("discover"),
+                          QStringLiteral("downloads"), QStringLiteral("home")});
         const auto noCharts = parse("config_version = 7\n[layout.navigation]\nitems = [\"home\"]\n");
         CHECK(parsedValue(noCharts, keys::NavItems)->toStringList() ==
-              QStringList{QStringLiteral("home"), QStringLiteral("downloads")});
-        const auto current = parse("config_version = 8\n[layout.navigation]\nitems = [\"home\"]\n");
+              QStringList{QStringLiteral("home"), QStringLiteral("downloads"), QStringLiteral("discover")});
+        const auto current = parse("config_version = 9\n[layout.navigation]\nitems = [\"home\"]\n");
+        CHECK(parsedValue(current, keys::NavItems)->toStringList() == QStringList{QStringLiteral("home")});
+    }
+
+    TEST_CASE("v8 navigation lists gain Discover after Charts and before Downloaded")
+    {
+        const auto chosen = parse("config_version = 8\n[layout.navigation]\nitems = [\"likes\", \"charts\", "
+                                  "\"downloads\", \"home\"]\n");
+        REQUIRE(chosen.syntaxOk);
+        CHECK(chosen.issues.empty());
+        CHECK(parsedValue(chosen, keys::NavItems)->toStringList() ==
+              QStringList{QStringLiteral("likes"), QStringLiteral("charts"), QStringLiteral("discover"),
+                          QStringLiteral("downloads"), QStringLiteral("home")});
+        const auto noCharts = parse("config_version = 8\n[layout.navigation]\nitems = [\"home\"]\n");
+        CHECK(parsedValue(noCharts, keys::NavItems)->toStringList() ==
+              QStringList{QStringLiteral("home"), QStringLiteral("discover")});
+        const auto current = parse("config_version = 9\n[layout.navigation]\nitems = [\"home\"]\n");
         CHECK(parsedValue(current, keys::NavItems)->toStringList() == QStringList{QStringLiteral("home")});
     }
 

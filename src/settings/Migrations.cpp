@@ -119,6 +119,27 @@ void downloadsPage(toml::table& root)
     items->insert(items->cbegin() + static_cast<std::ptrdiff_t>(at), "downloads");
 }
 
+// v8 -> v9: the Discover page (Daily Drops and Weekly Wave) joins the navigation right after Charts, before
+// Downloaded when that page is present.
+void discoverPage(toml::table& root)
+{
+    toml::array* items = root.at_path("layout.navigation.items").as_array();
+    if (items == nullptr) {
+        return;
+    }
+    std::size_t at = items->size();
+    for (std::size_t i = 0; i < items->size(); ++i) {
+        const std::optional<std::string_view> id = (*items)[i].value<std::string_view>();
+        if (id == "discover") {
+            return;
+        }
+        if (id == "charts") {
+            at = i + 1;
+        }
+    }
+    items->insert(items->cbegin() + static_cast<std::ptrdiff_t>(at), "discover");
+}
+
 // Files without `config_version` are v0 (same format as v1). Append future migrations here.
 // clang-format off
 constexpr Migration kMigrations[] = {
@@ -130,6 +151,7 @@ constexpr Migration kMigrations[] = {
     {5, shiftedGlassTint},
     {6, splitGlassStyle},
     {7, downloadsPage},
+    {8, discoverPage},
 };
 // clang-format on
 

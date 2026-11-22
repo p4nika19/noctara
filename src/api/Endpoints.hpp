@@ -92,6 +92,12 @@ inline constexpr std::size_t kMaxTrackIds = 50;
 // last part of "soundcloud:system-playlists:trending-by-genre:<genre>" ("all-genres", "electronic", "hip-hop", …).
 // One page of up to 50 tracks; later tracks arrive as ids and are hydrated by the list.
 [[nodiscard]] Endpoint<Page<Entry>> trending(const QString& genre);
+
+// Personalized discovery system playlists. The generic permalink (no user suffix) resolves to the signed-in
+// account's own list: Daily Drops (fresh uploads daily) or Weekly Wave (updated Mondays). The answer carries
+// stub tracks only; CollectionModel hydrates them. No pagination and no ordinary public/playlist cache.
+[[nodiscard]] Endpoint<Page<Entry>> dailyDrops();
+[[nodiscard]] Endpoint<Page<Entry>> weeklyWave();
 // The page after `page`, from its next_href, with the same auth and freshness as the first request. A next_href
 // that does not point at an API host yields a request the client refuses.
 template <class T> [[nodiscard]] Endpoint<Page<T>> next(const Endpoint<Page<T>>& first, const QString& href)

@@ -37,6 +37,8 @@ class CatalogController : public QObject {
     Q_PROPERTY(noctara::models::CollectionModel* library READ library CONSTANT)
     Q_PROPERTY(noctara::models::CollectionModel* following READ following CONSTANT)
     Q_PROPERTY(noctara::models::CollectionModel* charts READ charts CONSTANT)
+    Q_PROPERTY(noctara::models::CollectionModel* dailyDrops READ dailyDrops CONSTANT)
+    Q_PROPERTY(noctara::models::CollectionModel* weeklyWave READ weeklyWave CONSTANT)
     Q_PROPERTY(QString chartGenre READ chartGenre NOTIFY chartChanged)
     // [{id, label}] with translated labels.
     Q_PROPERTY(QVariantList genres READ genres NOTIFY genresChanged)
@@ -55,6 +57,8 @@ public:
     [[nodiscard]] models::CollectionModel* library() noexcept { return &m_library; }
     [[nodiscard]] models::CollectionModel* following() noexcept { return &m_following; }
     [[nodiscard]] models::CollectionModel* charts() noexcept { return &m_charts; }
+    [[nodiscard]] models::CollectionModel* dailyDrops() noexcept { return &m_dailyDrops; }
+    [[nodiscard]] models::CollectionModel* weeklyWave() noexcept { return &m_weeklyWave; }
     [[nodiscard]] const QString& chartGenre() const noexcept { return m_chartGenre; }
     [[nodiscard]] QVariantList genres() const;
 
@@ -122,6 +126,8 @@ private:
     models::CollectionModel m_library;
     models::CollectionModel m_following;
     models::CollectionModel m_charts;
+    models::CollectionModel m_dailyDrops;
+    models::CollectionModel m_weeklyWave;
     QStringList m_loaded;  // lists loaded for the current account
     qint64 m_accountId = -1;
     quint64 m_accountGeneration = 0;

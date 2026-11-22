@@ -88,12 +88,22 @@ closure that runs on `context`'s thread. `fetch(client, endpoint, context, done)
 | `stream()` | `/stream` (the feed) | required |
 | `history()` | `/me/play-history/tracks` | required |
 | `trending(genre)` | `/system-playlists/soundcloud:system-playlists:trending-by-genre:<genre>` | optional |
+| `dailyDrops()` | `/resolve?url=https://soundcloud.com/discover/sets/new-for-you` | required |
+| `weeklyWave()` | `/resolve?url=https://soundcloud.com/discover/sets/weekly` | required |
 | `followings(user)` | `/users/{id}/followings` | optional |
 | `library()` | `/me/library/all` | required |
 | `waveform(url)` | the track's `waveform_url` (wave.sndcdn.com) | none |
 | `streamUrl(transcoding, track_authorization)` | the transcoding's URL → `{"url": signed media URL}` | optional |
 
 Lists ask for `limit=<library.loading.page_size>&linked_partitioning=1` and follow `next_href`.
+
+Daily Drops and Weekly Wave are personalized system playlists, not ordinary playlists. The generic `/resolve`
+permalink (without a user suffix) selects the signed-in account; explicit URNs would otherwise select another
+account. Their responses contain only stub tracks, so `parse::playlistTracks` feeds the existing `CollectionModel`
+stub hydration (`/tracks?ids=`). `made_for` identifies the recipient; `user` is SoundCloud itself. There is no
+`next_href`, `track_count` or `last_modified`; use `last_updated` for display. Responses are private
+(`Cache-Control: private, max-age=0`) and require the account, so they are never treated as public playlist
+metadata or shared across accounts. Track counts vary and stubs may be SNIP previews.
 
 Writes (`endpoints::write`) need the account (`SignInRequired` before anything is sent), carry a compact JSON body
 (`content-type: application/json`), bypass the HTTP cache and are never shared like identical GETs; POST is not
