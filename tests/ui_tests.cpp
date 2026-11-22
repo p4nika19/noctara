@@ -383,7 +383,8 @@ TEST_SUITE("ui.settings")
         CHECK(std::set<int>(roles.begin(), roles.end()) ==
               std::set<int>{ui::SettingsModel::ValueRole, ui::SettingsModel::IsDefaultRole,
                             ui::SettingsModel::OverriddenRole, ui::SettingsModel::OverrideHintRole,
-                            ui::SettingsModel::ShownRole, ui::SettingsModel::SectionStartRole});
+                            ui::SettingsModel::ShownRole, ui::SettingsModel::SectionStartRole,
+                            ui::SettingsModel::ThemeNoteRole});
         CHECK(changed.at(0).at(0).value<QModelIndex>().row() == 0);
         CHECK(changed.at(0).at(1).value<QModelIndex>().row() == page->rowCount() - 1);
 
@@ -659,11 +660,15 @@ void installStubs(stub::Factory player)
         "Graphics",
         QStringLiteral("({hardware: false, ndcYUp: true, api: '', deviceName: '', driver: '', safeMode: false})"));
     stub::singleton("Format", QStringLiteral("({revision: 0, duration: ms => '0:00', error: code => ''})"));
-    stub::singleton("Layout", QStringLiteral("({fullPlayerQueue: false, fullPlayerArt: 'large', "
-                                             "fullPlayerWaveform: false, playerSize: 'normal', playerTime: true, "
-                                             "playerWaveform: true, playerVolume: true, playerQueueButton: true})"));
+    stub::singleton("Layout",
+                    QStringLiteral("({fullPlayerQueue: false, fullPlayerArt: 'large', "
+                                   "fullPlayerWaveform: false, playerSize: 'normal', playerTime: true, "
+                                   "playerWaveform: true, playerVolume: true, playerQueueButton: true, "
+                                   "navItems: [], navPosition: 'left', navMode: 'expanded', "
+                                   "playerPosition: 'bottom', customDecorations: false, closeToTray: false})"));
     stub::singleton("Artwork", QStringLiteral("({hasArtwork: false, revision: 0})"));
-    stub::singleton("App", QStringLiteral("({copyArtwork: url => {}, saveArtwork: (url, file) => {}})"));
+    stub::singleton("App", QStringLiteral("({copyArtwork: url => {}, saveArtwork: (url, file) => {}, "
+                                          "graphicsNotice: ''})"));
     if (player) {
         stub::singleton("Player", std::move(player));
     } else {
@@ -721,6 +726,8 @@ public:
 private:
     std::atomic<int>& m_requests;
 };
+
+void registerDetailTypes();
 
 std::vector<media::QueueItem> queueItems(int count)
 {
@@ -1157,6 +1164,112 @@ TEST_SUITE("ui.components")
         check();
     }
 
+    TEST_CASE("closing the full player always restores its flight target and leaves full screen")
+    {
+        registerDetailTypes();
+        stub::singleton("Account", QStringLiteral("({keyringLocked: false, signedIn: false})"));
+        stub::singleton("SettingsUi", QStringLiteral("({presets: [], currentPreset: 'auto', subset: keys => null})"));
+        stub::singleton("Shortcuts", QStringLiteral("({sequences: {}, cheatSheet: []})"));
+        stub::singleton("Tray", QStringLiteral("({active: false})"));
+        const WindowHarness harness(
+            R"(import QtQuick.Window
+import "../" as Root
+Root.Main {
+    visible: true
+    page: ""  // keep the page Loaders inactive; this test exercises only the window's overlays
+    playerPreview: true
+})",
+            nullptr, [](QJSEngine* js) {
+                return js->evaluate(
+                    QStringLiteral("({artworkUrl: '', coverUrl: '', title: 'Title', artist: 'Artist', artistId: 0, "
+                                   "context: '', duration: 0, position: 0, playing: false, canGoNext: false, "
+                                   "shuffle: false, repeat: 'off', volume: 1, muted: false, waveform: [], "
+                                   "cachedRanges: [], errorCode: 0, queue: {count: 0, currentIndex: -1}, "
+                                   "hasTrack: true, trackId: '1'})"));
+            });
+        QQmlContext* context = qmlContext(harness.window.get());
+        REQUIRE(context != nullptr);
+        const auto named = [&](const QString& id) -> QQuickItem* {
+            for (QQmlContext* child : context->childContexts()) {
+                if (auto* item = qobject_cast<QQuickItem*>(child->objectForName(id))) {
+                    return item;
+                }
+            }
+            return nullptr;
+        };
+        QQuickItem* bar = named(QStringLiteral("player"));
+        QQuickItem* full = named(QStringLiteral("fullPlayerView"));
+        REQUIRE(bar != nullptr);
+        REQUIRE(full != nullptr);
+        auto* cover = qobject_cast<QQuickItem*>(bar->property("coverItem").value<QObject*>());
+        REQUIRE(cover != nullptr);
+        REQUIRE(cover->width() > 0);
+        const QRectF target(cover->mapToScene(QPointF(0, 0)), cover->size());
+
+        const auto checkClose = [&](bool direct) {
+            full->setProperty("sourceRect", QRectF(1, 2, 3, 4));
+            harness.window->setProperty("fullPlayer", true);
+            harness.window->setVisibility(QWindow::FullScreen);
+            REQUIRE(harness.window->visibility() == QWindow::FullScreen);
+            if (direct) {
+                // Navigation and page requests assign fullPlayer directly rather than calling closeFullPlayer().
+                harness.window->setProperty("fullPlayer", false);
+            } else {
+                REQUIRE(QMetaObject::invokeMethod(harness.window.get(), "goBack"));
+            }
+            CHECK_FALSE(harness.window->property("fullPlayer").toBool());
+            CHECK(harness.window->visibility() == QWindow::Windowed);
+            CHECK(full->property("sourceRect").toRectF() == target);
+        };
+        checkClose(false);  // Back / Escape through goBack()
+        checkClose(true);   // every direct fullPlayer = false path
+    }
+
+    TEST_CASE("recording a shortcut overrides window play/pause keys only while recording")
+    {
+        stub::singleton("Shortcuts", QStringLiteral("({fromKeyEvent: key => key === Qt.Key_Space ? 'Space' "
+                                                    ": key === Qt.Key_Return ? 'Return' : 'Enter', "
+                                                    "display: text => text})"));
+        const WindowHarness harness(R"(Window {
+            id: window
+            width: 300; height: 100; visible: true
+            property Item recorder: recorder
+            property Item other: other
+            property int playPauses: 0
+            property var picks: []
+            Shortcut {
+                sequences: ["Space", "Return", "Enter"]
+                onActivated: window.playPauses++
+            }
+            ShortcutRecorder {
+                id: recorder
+                onPicked: sequence => window.picks = window.picks.concat([sequence])
+            }
+            Item { id: other; focus: true }
+        })");
+        QQuickItem* recorder = harness.item("recorder");
+        QQuickItem* other = harness.item("other");
+        REQUIRE(recorder != nullptr);
+        REQUIRE(other != nullptr);
+        harness.window->requestActivate();
+        for (const auto key : {Qt::Key_Space, Qt::Key_Return, Qt::Key_Enter}) {
+            recorder->forceActiveFocus();
+            REQUIRE(test::waitUntil([&] { return recorder->hasActiveFocus(); }));
+            recorder->setProperty("recording", true);
+            QTest::keyClick(harness.window.get(), key);
+            CHECK_FALSE(recorder->property("recording").toBool());
+            CHECK(harness.window->property("playPauses").toInt() == 0);
+        }
+        const QStringList expected{QStringLiteral("Space"), QStringLiteral("Return"), QStringLiteral("Enter")};
+        CHECK(harness.window->property("picks").toStringList() == expected);
+
+        other->forceActiveFocus();
+        REQUIRE(test::waitUntil([&] { return other->hasActiveFocus(); }));
+        QTest::keyClick(harness.window.get(), Qt::Key_Space);
+        CHECK(harness.window->property("playPauses").toInt() == 1);
+        CHECK_FALSE(recorder->property("recording").toBool());
+    }
+
     TEST_CASE("the keypad Delete key clears a shortcut like the main Delete key")
     {
         // Like the real KeyboardController: only Ctrl/Shift/Alt/Meta count, so keypad Delete would read as "Del".
@@ -1315,11 +1428,7 @@ TEST_SUITE("ui.components")
 
     TEST_CASE("the list search field opens on its key, drives its filter, and Escape empties then closes it")
     {
-        static const bool registered = [] {
-            qmlRegisterType<models::CollectionFilter>("Noctara", 1, 0, "CollectionFilter");
-            return true;
-        }();
-        (void)registered;
+        registerDetailTypes();
         stub::singleton("Shortcuts", QStringLiteral("({sequences: {find_in_list: '/'}, display: text => text, "
                                                     "fromKeyEvent: (key, mods) => ''})"));
         const WindowHarness harness(R"(Window {
@@ -1467,9 +1576,12 @@ void registerDetailTypes()
 {
     static const bool registered = [] {
         qmlRegisterUncreatableType<models::UserDetail>("Noctara", 1, 0, "UserDetail", QStringLiteral("test"));
+        qmlRegisterUncreatableType<models::PlaylistDetail>("Noctara", 1, 0, "PlaylistDetail", QStringLiteral("test"));
         qmlRegisterUncreatableType<models::CollectionModel>("Noctara", 1, 0, "CollectionModel", QStringLiteral("test"));
+        qmlRegisterType<models::CollectionFilter>("Noctara", 1, 0, "CollectionFilter");
         qmlRegisterUncreatableType<models::TrackDetail>("Noctara", 1, 0, "TrackDetail", QStringLiteral("test"));
         qmlRegisterUncreatableType<models::CommentModel>("Noctara", 1, 0, "CommentModel", QStringLiteral("test"));
+        qmlRegisterUncreatableType<media::QueueModel>("Noctara", 1, 0, "QueueModel", QStringLiteral("test"));
         return true;
     }();
     (void)registered;
@@ -1843,13 +1955,7 @@ TEST_SUITE("ui.settings-panes")
     // remapped their persistent indexes against a stale set and kept the rows they had.
     TEST_CASE("clearing a list search re-reads the rows and keeps the model protocol")
     {
-        static const bool registered = [] {
-            qmlRegisterType<models::CollectionFilter>("Noctara", 1, 0, "CollectionFilter");
-            qmlRegisterUncreatableType<models::CollectionModel>("Noctara", 1, 0, "CollectionModel",
-                                                                QStringLiteral("test"));
-            return true;
-        }();
-        (void)registered;
+        registerDetailTypes();
         stub::singleton("Catalog", QStringLiteral("({likedRevision: 0, isLiked: id => false, ensure: l => {}, "
                                                   "toggleLike: id => {}})"));
         stub::singleton("Account", QStringLiteral("({signedIn: true})"));

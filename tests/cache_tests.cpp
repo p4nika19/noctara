@@ -2,6 +2,7 @@
 // entries, RAM and disk tiers, single flight, resume, URL changes and expiry, corruption and ENOSPC recovery,
 // eviction, covers, tagging, HLS, the DRM policy, and the service's settings wiring.
 #include "TestUtil.hpp"
+#include "api/Snapshot.hpp"
 #include "mock/FakeOrigin.hpp"
 
 #include "cache/AudioCache.hpp"
@@ -1046,7 +1047,7 @@ TEST_SUITE("cache.audio")
         audio.origin.pauseAfter(std::nullopt);
     }
 
-    TEST_CASE("an open reader keeps working when the cache moves to another location")
+    TEST_CASE("moving the cache wakes an open reader so it can reopen")
     {
         Audio audio;
         const QByteArray content = randomBytes(600'000, 66);
@@ -1056,16 +1057,17 @@ TEST_SUITE("cache.audio")
         AudioReaderPtr reader = audio.open(info);
         CHECK(Audio::piece(*reader, 0).status == AudioReader::Status::Ready);
         CHECK(Audio::piece(*reader, 1).status == AudioReader::Status::Ready);
+        Result<QByteArray> interrupted;
+        std::jthread blocking([&] { interrupted = reader->read(2, {}, 5s); });
         QTemporaryDir elsewhere;
         const CacheLayout moved = *prepareLayout(elsewhere.filePath(QStringLiteral("cache")));
         audio.cache->setLayout(moved);  // the user picked another cache location
+        blocking.join();
+        REQUIRE_FALSE(interrupted);
+        CHECK(interrupted.error().code == ErrorCode::ContentChanged);
         audio.origin.pauseAfter(std::nullopt);
-        CHECK(Audio::readAll(*reader) == content);
-        audio.memory.clear();  // pieces stored before the move come from the old file, later ones again
-        CHECK(Audio::piece(*reader, 0).data == content.first(PieceMap::kChunkSize));
-        CHECK(Audio::piece(*reader, 5).data == content.sliced(5 * PieceMap::kChunkSize, PieceMap::kChunkSize));
-        const QByteArray name = info.key.name();
-        CHECK_FALSE(QFileInfo::exists(moved.audio() + u'/' + QString::fromLatin1(name.first(2))));
+        AudioReaderPtr reopened = audio.open(info);
+        CHECK(Audio::readAll(*reopened) == content);
     }
 
     TEST_CASE("prefetch warms upcoming tracks in the background and stops when the queue changes")
@@ -1338,6 +1340,33 @@ TEST_SUITE("cache.http")
         http.origin.serve(url, {.body = "ok"});
         CHECK(http.send(post)->body == "ok");
         CHECK(test::errorOf(http.get(url, net::CacheMode::OnlyIfCached, 0s, alice)) == ErrorCode::Offline);
+    }
+}
+
+TEST_SUITE("cache.snapshots")
+{
+    TEST_CASE("changing the root flushes pending lists and saves later lists under the new root")
+    {
+        QTemporaryDir dir;
+        const QString oldRoot = dir.filePath(QStringLiteral("old/library"));
+        const QString newRoot = dir.filePath(QStringLiteral("new/library"));
+        api::SnapshotStore store(oldRoot);
+        api::Snapshot snapshot;
+        api::Track track;
+        track.id = 5;
+        track.stub = true;
+        snapshot.entries.push_back({.item = track, .at = {}, .repostedBy = std::nullopt});
+        store.setAccount(7);
+        store.save(QStringLiteral("likes"), snapshot);
+
+        store.setRoot(newRoot);
+        CHECK(store.root() == newRoot);
+        CHECK(QFile::exists(oldRoot + QStringLiteral("/7/likes.json")));  // the pending save was flushed
+
+        store.save(QStringLiteral("likes"), snapshot);
+        store.flush();
+        CHECK(QFile::exists(newRoot + QStringLiteral("/7/likes.json")));
+        CHECK(api::SnapshotStore(newRoot).lastAccount() == 7);
     }
 }
 

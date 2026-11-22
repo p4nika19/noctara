@@ -994,6 +994,39 @@ TEST_SUITE("drm.service")
         CHECK(QDir(profile).entryList(QDir::AllEntries | QDir::Hidden | QDir::NoDotAndDotDot) ==
               QStringList{QStringLiteral("WidevineCdm")});
     }
+
+    TEST_CASE("a profile change stops an idle helper and applies on its next start")
+    {
+        QTemporaryDir dir;
+        const QString helper = dir.path() + QStringLiteral("/helper");
+        REQUIRE(QDir().mkpath(helper + QStringLiteral("/electron")));
+        REQUIRE(QDir().mkpath(helper + QStringLiteral("/app")));
+        REQUIRE(QFile::link(QCoreApplication::applicationDirPath() + QStringLiteral("/noctara-mock-drm-helper"),
+                            helper + QStringLiteral("/electron/electron")));
+        QFile main(helper + QStringLiteral("/app/main.js"));
+        REQUIRE(main.open(QIODevice::WriteOnly));
+        main.close();
+        const QString oldProfile = dir.path() + QStringLiteral("/old/electron");
+        const QString newProfile = dir.path() + QStringLiteral("/new/electron");
+
+        settings::SettingsStore store(settings::Schema::builtin());
+        REQUIRE(store.setUserValue(settings::keys::ProxyMode, QStringLiteral("none")));
+        REQUIRE(store.setUserValue(settings::keys::ProtectedHelper, helper));
+        net::NetworkService network(store, net::processEnvironment(), false);
+        DrmService service(store, network, oldProfile, QCoreApplication::applicationDirPath(), dir.path());
+        Transcript transcript(service.host());
+        QSignalSpy ready(&service.host(), &DrmHost::ready);
+        QSignalSpy stopped(&service.host(), &DrmHost::stopped);
+        service.host().warm();
+        REQUIRE(test::waitUntil([&] { return ready.size() == 1; }, 10000));
+        CHECK(transcript.arguments.contains(QStringLiteral("--noctara-user-data=") + oldProfile));
+
+        service.setProfileDir(newProfile);
+        REQUIRE(test::waitUntil([&] { return stopped.size() == 1; }, 5000));
+        service.host().warm();
+        REQUIRE(test::waitUntil([&] { return ready.size() == 2; }, 10000));
+        CHECK(transcript.arguments.contains(QStringLiteral("--noctara-user-data=") + newProfile));
+    }
 }
 
 namespace {

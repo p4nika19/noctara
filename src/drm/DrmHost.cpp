@@ -107,6 +107,11 @@ void DrmHost::setCommand(std::optional<HelperCommand> command)
     }
 }
 
+void DrmHost::setProfileDir(QString profileDir)
+{
+    m_options.profileDir = std::move(profileDir);
+}
+
 void DrmHost::setGpu(bool gpu)
 {
     m_options.gpu = gpu;

@@ -131,6 +131,18 @@ QString DrmService::networkWarning() const
     return QCoreApplication::translate("Drm", "Protected tracks do not follow: %1.").arg(names.join(u"; "));
 }
 
+void DrmService::setProfileDir(QString profileDir)
+{
+    if (profileDir == m_profileDir) {
+        return;
+    }
+    m_profileDir = std::move(profileDir);
+    m_host.setProfileDir(m_profileDir);
+    if (m_backend.state() == media::BackendState::Idle) {
+        m_host.shutdown();
+    }
+}
+
 void DrmService::clearProfile()
 {
     if (m_backend.state() != media::BackendState::Idle || m_profileDir.isEmpty()) {

@@ -63,7 +63,8 @@ std::optional<Transcoding> pickProtectedTranscoding(const Track& track, StreamPr
 cache::TrackInfo toTrackInfo(const Track& track, const Transcoding& transcoding, const QString& context)
 {
     cache::TrackInfo info;
-    info.key = {.trackId = QString::number(track.id), .preset = transcoding.cacheName()};
+    info.key = {.trackId = QString::number(track.id),
+                .preset = transcoding.snipped ? transcoding.cacheName() + u"/preview" : transcoding.cacheName()};
     info.drm = transcoding.encrypted;
     info.title = track.title;
     info.artist = track.artist();

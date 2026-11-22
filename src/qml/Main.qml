@@ -85,7 +85,7 @@ Window {
         if (cheatSheet)
             cheatSheet = false
         else if (fullPlayer)
-            fullPlayer = false
+            closeFullPlayer()
         else if (appearancePanel)
             appearancePanel = false
         else if (queuePanel)
@@ -100,7 +100,17 @@ Window {
         else
             queuePanel = !queuePanel
     }
-    onFullPlayerChanged: if (fullPlayer && fullPlayerView.showQueue) queuePanel = false
+    onFullPlayerChanged: {
+        if (fullPlayer) {
+            if (fullPlayerView.showQueue)
+                queuePanel = false
+        } else {
+            const cover = player.coverItem.mapToItem(null, 0, 0)
+            fullPlayerView.sourceRect = Qt.rect(cover.x, cover.y, player.coverItem.width, player.coverItem.height)
+            if (window.visibility === Window.FullScreen)
+                window.visibility = Window.Windowed
+        }
+    }
     function toggleFullScreen() {
         window.visibility = window.visibility === Window.FullScreen ? Window.Windowed : Window.FullScreen
     }
@@ -111,13 +121,7 @@ Window {
         fullPlayerView.sourceRect = Qt.rect(cover.x, cover.y, player.coverItem.width, player.coverItem.height)
         fullPlayer = true
     }
-    function closeFullPlayer() {
-        const cover = player.coverItem.mapToItem(null, 0, 0)
-        fullPlayerView.sourceRect = Qt.rect(cover.x, cover.y, player.coverItem.width, player.coverItem.height)
-        fullPlayer = false
-        if (window.visibility === Window.FullScreen)
-            window.visibility = Window.Windowed
-    }
+    function closeFullPlayer() { fullPlayer = false }
 
     // --- Context menus ---------------------------------------------------------------------------
 

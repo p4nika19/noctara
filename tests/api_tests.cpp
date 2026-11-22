@@ -721,6 +721,24 @@ TEST_SUITE("api.streams")
         CHECK(info.sourceUpdatedAt == u"2023-01-02T03:04:05Z");
     }
 
+    TEST_CASE("preview and whole transcodings use different cache keys")
+    {
+        Track track;
+        track.id = 77;
+        Transcoding whole;
+        whole.protocolName = QStringLiteral("progressive");
+        whole.preset = QStringLiteral("mp3_1_0");
+        whole.quality = QStringLiteral("sq");
+        Transcoding preview = whole;
+        preview.snipped = true;
+
+        const cache::TrackKey wholeKey = toTrackInfo(track, whole).key;
+        const cache::TrackKey previewKey = toTrackInfo(track, preview).key;
+        CHECK(wholeKey.preset == u"progressive/mp3_1_0/sq");
+        CHECK(previewKey.preset == u"progressive/mp3_1_0/sq/preview");
+        CHECK(previewKey != wholeKey);
+    }
+
     TEST_CASE("a stored track comes back from its cache record and plays the stored transcoding")
     {
         const Result<Track> track = parse::track(trackJson(77));

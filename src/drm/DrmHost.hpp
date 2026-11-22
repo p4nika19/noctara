@@ -70,6 +70,7 @@ public:
 
     // Settings changes; they apply from the next start (the network applies live, see setNetwork()).
     void setCommand(std::optional<HelperCommand> command);
+    void setProfileDir(QString profileDir);
     // What a start without a command reports (ProtectedPlayerMissing, or ProtectedPlayerInstalling meanwhile).
     void setMissingReason(Error reason) { m_missingReason = std::move(reason); }
     void setGpu(bool gpu);

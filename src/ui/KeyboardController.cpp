@@ -124,9 +124,9 @@ void KeyboardController::refresh()
         const QString key = latin(def.key);
         const QStringList others = clashes.value(key).toStringList();
         m_settingsUi.setRowStatus(
-            key, others.isEmpty()
-                     ? QString()
-                     : tr("Also used by: %1. Only one of them works.").arg(others.join(QStringLiteral(", "))));
+            key, others.isEmpty() ? QString()
+                                  : tr("Also used by: %1. Neither shortcut works until you change one of them.")
+                                        .arg(others.join(QStringLiteral(", "))));
     });
     Q_EMIT changed();
 }

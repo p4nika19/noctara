@@ -57,8 +57,10 @@ public:
     void clear();
     // Waits for pending writes (tests, shutdown).
     void flush();
+    // Flushes pending writes, then keeps later lists under the new root.
+    void setRoot(QString root);
 
-    [[nodiscard]] QString root() const { return m_root; }
+    [[nodiscard]] QString root() const;
 
 private:
     struct Shared;

@@ -576,7 +576,7 @@
         <translation>Защищённые треки не учитывают: %1.</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+74"/>
         <source>Setting up the protected player: downloading, %1 % of %2 MB…</source>
         <extracomment>%1 = percent done, %2 = total size in MB</extracomment>
         <translation>Установка защищённого плеера: загрузка, %1 % из %2 МБ…</translation>
@@ -1643,7 +1643,7 @@
         <translation>Настройки</translation>
     </message>
     <message>
-        <location line="+85"/>
+        <location line="+89"/>
         <source>Link copied.</source>
         <translation>Ссылка скопирована.</translation>
     </message>
@@ -4859,7 +4859,7 @@
         <translation>О программе</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsModel.cpp" line="+158"/>
+        <location filename="../src/ui/SettingsModel.cpp" line="+165"/>
         <source>Set by a command-line flag for this session.</source>
         <translation>Задано флагом командной строки на этот сеанс.</translation>
     </message>
@@ -4869,11 +4869,22 @@
         <extracomment>%1 = environment variable name</extracomment>
         <translation>Задано переменной окружения %1.</translation>
     </message>
+    <message>
+        <location line="+25"/>
+        <source>From the active theme.</source>
+        <translation>Из активной темы.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>From the active theme: %1</source>
+        <extracomment>%1 = value supplied by the active user theme (a colour, font family or size)</extracomment>
+        <translation>Из активной темы: %1</translation>
+    </message>
 </context>
 <context>
     <name>SettingsRow</name>
     <message>
-        <location filename="../src/qml/settings/SettingsRow.qml" line="+116"/>
+        <location filename="../src/qml/settings/SettingsRow.qml" line="+118"/>
         <source>Reset section</source>
         <translation>Сбросить раздел</translation>
     </message>
@@ -4888,7 +4899,7 @@
         <translation>Сбросить по умолчанию</translation>
     </message>
     <message>
-        <location line="+155"/>
+        <location line="+173"/>
         <source>Default</source>
         <translation>По умолчанию</translation>
     </message>
@@ -5170,6 +5181,11 @@
     </message>
     <message>
         <location line="+21"/>
+        <source>Customized: your changed settings apply on top of this theme. Reset a setting to return it to the theme.</source>
+        <translation>Изменено: ваши настройки применяются поверх этой темы. Сбросьте параметр, чтобы вернуть его к теме.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Some colors of this theme fall below WCAG AA contrast. Turn on “Enforce readable contrast” to correct them.</source>
         <translation>Некоторые цвета этой темы не дотягивают до контраста WCAG AA. Включите «Обеспечивать читаемый контраст», чтобы исправить их.</translation>
     </message>
@@ -5466,9 +5482,17 @@
     </message>
 </context>
 <context>
+    <name>noctara::auth::SecretServiceStore</name>
+    <message>
+        <location filename="../src/auth/SecretStore.cpp" line="+348"/>
+        <source>Noctara saved secret</source>
+        <translation>Сохранённый секрет Noctara</translation>
+    </message>
+</context>
+<context>
     <name>noctara::ui::AccountController</name>
     <message>
-        <location filename="../src/ui/AccountController.cpp" line="+198"/>
+        <location filename="../src/ui/AccountController.cpp" line="+197"/>
         <source>Paste your SoundCloud OAuth token to sign in.</source>
         <translation>Вставьте OAuth-токен SoundCloud, чтобы войти.</translation>
     </message>
@@ -5478,7 +5502,7 @@
         <translation>Сессия SoundCloud в Noctara</translation>
     </message>
     <message>
-        <location line="-136"/>
+        <location line="-135"/>
         <source>Could not inspect the installed browser profiles.</source>
         <translation>Не удалось просмотреть установленные профили браузеров.</translation>
     </message>
@@ -5536,7 +5560,7 @@
         <translation>Выбранный профиль браузера больше недоступен. Выполните сканирование снова.</translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+68"/>
         <source>That does not look like an OAuth token. Copy only the oauth_token value, without spaces.</source>
         <translation>Это не похоже на OAuth-токен. Скопируйте только значение oauth_token, без пробелов.</translation>
     </message>
@@ -5719,11 +5743,11 @@
     </message>
     <message>
         <location line="+49"/>
-        <source>Also used by: %1. Only one of them works.</source>
-        <translation>Также используется для: %1. Работает только одно из них.</translation>
+        <source>Also used by: %1. Neither shortcut works until you change one of them.</source>
+        <translation>Используется также в: %1. Ни один шорткат не будет работать, пока вы не измените один из них.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Play or pause</source>
         <translation>Воспроизведение или пауза</translation>
     </message>
@@ -6074,7 +6098,7 @@
 <context>
     <name>noctara::ui::ThemesController</name>
     <message>
-        <location filename="../src/ui/ThemesController.cpp" line="+22"/>
+        <location filename="../src/ui/ThemesController.cpp" line="+23"/>
         <source>Line %1: the file is not valid TOML, so none of it applies.</source>
         <translation>Строка %1: файл не является корректным TOML, поэтому ничего из него не применяется.</translation>
     </message>
@@ -6089,7 +6113,7 @@
         <translation>Строка %1: у «%2» неверное значение, пропущено.</translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+75"/>
         <source>The theme “%1” is not in the themes folder; the built-in look is used.</source>
         <translation>Темы «%1» нет в папке тем; используется встроенное оформление.</translation>
     </message>

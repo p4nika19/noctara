@@ -442,24 +442,17 @@ AudioCache::~AudioCache()
 void AudioCache::setLayout(std::optional<CacheLayout> layout)
 {
     flush();
-    // Entries still being read go on in RAM only: their readers need further fetches, and the old location
-    // is no longer ours to write to. Pieces already stored there stay readable through the open file.
-    for (auto it = m_live.begin(); it != m_live.end();) {
-        Live& l = **it;
-        if (l.readers.isEmpty()) {
-            cancelFetch(l);
-            it = m_live.erase(it);
-            continue;
-        }
-        l.writeFd.reset();
-        l.volatilePieces.clear();
-        l.doomed = false;
+    for (const auto& live : std::as_const(m_live)) {
+        cancelFetch(*live);
         {
-            const std::scoped_lock lock(l.entry->mutex);
-            l.entry->dir.clear();
+            const std::scoped_lock lock(live->entry->mutex);
+            live->entry->failure = Error{ErrorCode::ContentChanged, "the cache location changed"};
+            ++live->entry->failureSeq;
         }
-        ++it;
+        live->entry->changed.notify_all();
+        m_memory.setActive(live->entry->id, false);
     }
+    m_live.clear();
     m_ledger.clear();
     m_entryCovers.clear();
     m_entryComplete.clear();

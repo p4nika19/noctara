@@ -240,6 +240,7 @@ task("test-tsan")
         local perCase = {["auth.browser-cookies"] = true, ["auth.encrypted-secret-store"] = true,
                          ["auth.secret-chain"] = true, ["media.controller"] = true, ["media.backend"] = true,
                          ["theme.library"] = true, ["shutdown"] = true, ["drm.installer"] = true, ["drm.relay"] = true,
+                         ["drm.service"] = true,
                          ["media.mpris"] = true, ["ui.catalog"] = true, ["ui.catalog-writes"] = true,
                          ["ui.components"] = true,
                          ["ui.effects"] = true, ["ui.keyboard"] = true, ["ui.network-credentials"] = true,

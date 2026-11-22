@@ -5,6 +5,7 @@
 #include "auth/EncryptedFileSecretStore.hpp"
 #include "auth/SecretStore.hpp"
 
+#include <QDir>
 #include <QFile>
 #include <QHash>
 #include <QTemporaryDir>
@@ -343,6 +344,28 @@ TEST_SUITE("auth.secret-chain")
         CHECK(*unlocked);
         CHECK_FALSE(store.keyringLocked());
         CHECK(read(store) == QByteArray("saved-token"));  // the session is back without signing in again
+    }
+
+    TEST_CASE("a newer secret from the encrypted file replaces the keyring's older copy")
+    {
+        QTemporaryDir directory;
+        auto keyring = std::make_shared<KeyringState>();
+        keyring->failStore = true;
+        keyring->failLookup = true;
+        {
+            auth::SecretServiceStore store(std::make_unique<FakeKeyring>(keyring), directory.path());
+            write(store, "new-token");  // the keyring was down: this one goes to the encrypted file
+        }
+
+        // A later session: the keyring is back, but it still holds the older value.
+        keyring->failStore = false;
+        keyring->failLookup = false;
+        keyring->entries.insert(kKey, "old-token");
+        auth::SecretServiceStore store(std::make_unique<FakeKeyring>(keyring), directory.path());
+        CHECK(read(store) == QByteArray("new-token"));
+        settle();
+        CHECK(keyring->entry(kKey) == QByteArray("new-token"));
+        CHECK(QDir(directory.path()).entryList({QStringLiteral("*.secret")}).isEmpty());  // moved back, no shadow copy
     }
 
     // Reported: on GNOME the token and proxy credentials were lost after a reboot even though the unlock prompt

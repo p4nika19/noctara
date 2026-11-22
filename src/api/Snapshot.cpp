@@ -220,20 +220,31 @@ struct SnapshotStore::Shared {
     int pending = 0;
 };
 
+namespace {
+
+Id readRememberedAccount(const QString& root)
+{
+    QFile remembered(root + QStringLiteral("/account"));
+    if (root.isEmpty() || !remembered.open(QIODevice::ReadOnly)) {
+        return 0;
+    }
+    return remembered.read(32).trimmed().toLongLong();  // a few bytes, at start or after a root change
+}
+
+}  // namespace
+
 SnapshotStore::SnapshotStore(QString root)
     : m_root(std::move(root))
     , m_shared(std::make_shared<Shared>())
 {
-    QFile remembered(m_root + QStringLiteral("/account"));
-    if (!m_root.isEmpty() && remembered.open(QIODevice::ReadOnly)) {
-        m_lastAccount.store(remembered.read(32).trimmed().toLongLong());  // a few bytes, once at start
-    }
+    m_lastAccount.store(readRememberedAccount(m_root));
 }
 
 void SnapshotStore::setAccount(Id account)
 {
     m_account.store(account);
-    if (account <= 0 || account == m_lastAccount.load() || m_root.isEmpty()) {
+    const QString root = this->root();
+    if (account <= 0 || account == m_lastAccount.load() || root.isEmpty()) {
         return;
     }
     m_lastAccount.store(account);
@@ -242,11 +253,11 @@ void SnapshotStore::setAccount(Id account)
         ++m_shared->pending;
     }
     // Writes whatever is current when it runs, under the store's lock: quick changes never land out of order.
-    (void)QtConcurrent::run([this, shared = m_shared] {
+    (void)QtConcurrent::run([this, shared = m_shared, root] {
         const std::scoped_lock lock(shared->mutex);
         const Id current = m_lastAccount.load();
-        const QString path = m_root + QStringLiteral("/account");
-        if (current > 0 && ensureDirectory(m_root) &&
+        const QString path = root + QStringLiteral("/account");
+        if (current > 0 && ensureDirectory(root) &&
             !writeFileAtomic(path, QByteArray::number(current), 0600, Durability::Atomic)) {
             qCWarning(lcApi).noquote() << "cannot remember the account of the saved lists";
         }
@@ -260,11 +271,35 @@ SnapshotStore::~SnapshotStore()
     flush();
 }
 
+QString SnapshotStore::root() const
+{
+    const std::scoped_lock lock(m_shared->mutex);
+    return m_root;
+}
+
+void SnapshotStore::setRoot(QString root)
+{
+    if (root == this->root()) {
+        return;
+    }
+    flush();
+    {
+        const std::scoped_lock lock(m_shared->mutex);
+        if (root == m_root) {
+            return;
+        }
+        m_root = std::move(root);
+        m_lastAccount.store(readRememberedAccount(m_root));
+    }
+    setAccount(m_account.load());  // remember the signed-in account in the new root too
+}
+
 QString SnapshotStore::pathFor(Id account, const QString& key) const
 {
     static const QRegularExpression unsafe(QStringLiteral("[^a-z0-9-]"));
     QString name = key.toLower();
     name.replace(unsafe, QStringLiteral("-"));
+    const std::scoped_lock lock(m_shared->mutex);
     // One multi-arg pass: chained arg() calls would also replace "%2" and the like inside the root path.
     return QStringLiteral("%1/%2/%3.json").arg(m_root, QString::number(account), name);
 }
@@ -272,7 +307,7 @@ QString SnapshotStore::pathFor(Id account, const QString& key) const
 void SnapshotStore::load(const QString& key, QObject* context, std::function<void(std::optional<Snapshot>)> done) const
 {
     const Id account = m_account.load();
-    if (account == 0 || m_root.isEmpty()) {
+    if (account == 0 || root().isEmpty()) {
         QMetaObject::invokeMethod(context, [done = std::move(done)] { done(std::nullopt); }, Qt::QueuedConnection);
         return;
     }
@@ -302,7 +337,7 @@ void SnapshotStore::load(const QString& key, QObject* context, std::function<voi
 void SnapshotStore::save(const QString& key, Snapshot snapshot)
 {
     const Id account = m_account.load();
-    if (account == 0 || m_root.isEmpty()) {
+    if (account == 0 || root().isEmpty()) {
         return;
     }
     {
@@ -325,26 +360,28 @@ void SnapshotStore::save(const QString& key, Snapshot snapshot)
 
 void SnapshotStore::forget(Id account)
 {
-    if (m_root.isEmpty()) {
+    const QString root = this->root();
+    if (root.isEmpty()) {
         return;
     }
     flush();
     const std::scoped_lock lock(m_shared->mutex);
-    (void)QDir(QStringLiteral("%1/%2").arg(m_root, QString::number(account))).removeRecursively();
+    (void)QDir(QStringLiteral("%1/%2").arg(root, QString::number(account))).removeRecursively();
     if (account == m_lastAccount.load()) {
         m_lastAccount.store(0);
-        (void)QFile::remove(m_root + QStringLiteral("/account"));
+        (void)QFile::remove(root + QStringLiteral("/account"));
     }
 }
 
 void SnapshotStore::clear()
 {
-    if (m_root.isEmpty()) {
+    const QString root = this->root();
+    if (root.isEmpty()) {
         return;  // QDir("") would be the working directory
     }
     flush();
     const std::scoped_lock lock(m_shared->mutex);
-    (void)QDir(m_root).removeRecursively();
+    (void)QDir(root).removeRecursively();
     m_lastAccount.store(0);
 }
 

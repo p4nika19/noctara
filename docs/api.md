@@ -121,7 +121,8 @@ the DRM helper; `pickProtectedTranscoding` picks those, `ctr-encrypted-hls` only
 ranks by estimated bitrate (`aac_160k` → 160, mp3 → 128, opus → 64), and progressive breaks ties because it is
 simpler to cache by range. `Track::drm()` is true when the whole track exists only encrypted. Lists mark such
 tracks "Not cacheable", and `toTrackInfo()` sets `drm`, which makes the audio cache refuse them. `toTrackInfo()`
-builds the cache's sidecar record: the key is the track id plus `protocol/preset/quality`, never a URL.
+builds the cache's sidecar record: the key is the track id plus `protocol/preset/quality`, never a URL. A preview
+(`snipped`) appends `/preview` to that preset, keeping its cache entry separate from the whole track.
 
 ## Models
 

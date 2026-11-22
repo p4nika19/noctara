@@ -309,40 +309,65 @@ void SecretServiceStore::read(const QString& key, QObject* context, ReadCallback
         fallbackRead(key, context, std::move(callback));
         return;
     }
-    deliver(QtConcurrent::run(&m_pool,
-                              [keyring = m_keyring.get(), key] {
-                                  return KeyringAnswer{.secret = keyring->lookup(key), .locked = keyring->locked()};
-                              }),
-            this,
-            [this, key, context = QPointer(context), callback = std::move(callback)](const KeyringAnswer& answer) {
-                if (context == nullptr) {
+    deliver(
+        QtConcurrent::run(&m_pool,
+                          [keyring = m_keyring.get(), key] {
+                              return KeyringAnswer{.secret = keyring->lookup(key), .locked = keyring->locked()};
+                          }),
+        this, [this, key, context = QPointer(context), callback = std::move(callback)](const KeyringAnswer& answer) {
+            if (context == nullptr) {
+                return;
+            }
+            const Result<std::optional<QByteArray>>& result = answer.secret;
+            if (result && *result) {
+                m_locked = false;
+                const std::optional<QByteArray> keyringSecret = *result;
+                if (!m_file) {
+                    callback(keyringSecret);
                     return;
                 }
-                const Result<std::optional<QByteArray>>& result = answer.secret;
-                if (result && *result) {
-                    m_locked = false;
-                    callback(result);
-                    return;
-                }
-                if (!result) {
-                    // No keyring on this system is an expected state, and the UI says so.
-                    qCInfo(lcAuth).noquote()
-                        << QString::fromStdString(result.error().describe()) << "- using the local secret fallback";
-                    m_available = false;
-                    m_locked = false;
-                } else if (answer.locked) {
-                    // The collection is locked, so "no such secret" means "not readable yet" rather than "never
-                    // saved". Keep the keyring and say so: the UI can offer to unlock it, and the next save must
-                    // still try the keyring instead of demoting every secret to the local file.
-                    m_locked = true;
-                    qCInfo(lcAuth) << "the desktop keyring is locked; its secrets cannot be read until it is unlocked";
-                } else {
-                    m_locked = false;
-                }
-                // A keyring miss still checks the fallbacks: the secret may have been saved there in a session
-                // without a keyring. The next write moves it into the keyring.
-                fallbackRead(key, context, callback);
-            });
+                // A secret saved to the encrypted file while the keyring was unavailable is newer than the
+                // keyring's older copy (every successful keyring write removes the file copy). Prefer it and
+                // move it back into the keyring, so the next launch sees the same value in both places.
+                const quint64 epoch = m_epochs.value(key);
+                m_file->read(key, this,
+                             [this, key, epoch, keyringSecret, context,
+                              callback](Result<std::optional<QByteArray>> local) mutable {
+                                 if (context == nullptr) {
+                                     return;
+                                 }
+                                 if (!local || !*local) {
+                                     callback(keyringSecret);  // no newer file copy (or it is unreadable)
+                                     return;
+                                 }
+                                 if (m_epochs.value(key) != epoch) {
+                                     callback(keyringSecret);  // rewritten or signed out meanwhile: do not resurrect
+                                     return;
+                                 }
+                                 write(key, tr("Noctara saved secret"), **local, context,
+                                       [callback, local](const Result<void>&) { callback(local); });
+                             });
+                return;
+            }
+            if (!result) {
+                // No keyring on this system is an expected state, and the UI says so.
+                qCInfo(lcAuth).noquote() << QString::fromStdString(result.error().describe())
+                                         << "- using the local secret fallback";
+                m_available = false;
+                m_locked = false;
+            } else if (answer.locked) {
+                // The collection is locked, so "no such secret" means "not readable yet" rather than "never
+                // saved". Keep the keyring and say so: the UI can offer to unlock it, and the next save must
+                // still try the keyring instead of demoting every secret to the local file.
+                m_locked = true;
+                qCInfo(lcAuth) << "the desktop keyring is locked; its secrets cannot be read until it is unlocked";
+            } else {
+                m_locked = false;
+            }
+            // A keyring miss still checks the fallbacks: the secret may have been saved there in a session
+            // without a keyring. The next write moves it into the keyring.
+            fallbackRead(key, context, callback);
+        });
 }
 
 void SecretServiceStore::write(const QString& key, const QString& label, const QByteArray& secret, QObject* context,

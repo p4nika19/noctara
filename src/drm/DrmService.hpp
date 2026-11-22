@@ -43,6 +43,8 @@ public:
     // Which network settings protected tracks do not follow, as one translated sentence; empty when none.
     [[nodiscard]] QString networkWarning() const;
 
+    // Uses the profile on the next start. An idle helper is stopped now; active playback is not interrupted.
+    void setProfileDir(QString profileDir);
     // "Clear all caches": stops an idle helper and empties its profile, except the Widevine component itself.
     // A helper playing a track keeps its profile until the next clear.
     void clearProfile();
