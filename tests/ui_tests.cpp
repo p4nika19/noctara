@@ -1591,6 +1591,56 @@ void registerDetailTypes()
 
 TEST_SUITE("ui.pages")
 {
+    TEST_CASE("clicking a Home discovery card opens its track list")
+    {
+        registerDetailTypes();
+        RecordingClient client;
+        models::CollectionModel history(client);
+        models::CollectionModel feed(client);
+        models::CollectionModel daily(client);
+        models::CollectionModel weekly(client);
+        const auto entries = [] {
+            api::Track track;
+            track.id = 7;
+            track.title = QStringLiteral("Discovery track");
+            track.artworkUrl = QStringLiteral("https://i1.sndcdn.com/artworks-a-large.jpg");
+            return std::vector<api::Entry>{{.item = track, .at = {}, .repostedBy = std::nullopt}};
+        };
+        for (models::CollectionModel* model : {&history, &feed, &daily, &weekly}) {
+            model->setEntries(entries());
+            QQmlEngine::setObjectOwnership(model, QQmlEngine::CppOwnership);
+        }
+        stub::singleton("Account", QStringLiteral("({signedIn: true})"));
+        stub::singleton("Catalog", [&](QJSEngine* js) {
+            QJSValue catalog = js->evaluate(QStringLiteral("({ensure: list => {}})"));
+            catalog.setProperty(QStringLiteral("history"), js->newQObject(&history));
+            catalog.setProperty(QStringLiteral("feed"), js->newQObject(&feed));
+            catalog.setProperty(QStringLiteral("dailyDrops"), js->newQObject(&daily));
+            catalog.setProperty(QStringLiteral("weeklyWave"), js->newQObject(&weekly));
+            return catalog;
+        });
+        stub::singleton("Layout",
+                        QStringLiteral("({views: {charts: 'list'}, cardSize: 'medium', playerTime: true,"
+                                       " playerWaveform: true, playerVolume: true, playerQueueButton: true})"));
+        const WindowHarness harness(R"(import "../pages"
+        Window {
+            width: 1100; height: 800; visible: true
+            property string opened: ""
+            function openDiscovery(kind) { opened = kind }
+            function openPlaylist(id) {}
+            function openUser(id) {}
+            function openTrack(id) {}
+            HomePage { anchors.fill: parent }
+        })");
+        REQUIRE(test::waitUntil([&] { return daily.count() == 1 && weekly.count() == 1; }));
+        QQuickWindow* window = harness.window.get();
+        window->requestActivate();
+        REQUIRE(test::waitUntil([&] { return QGuiApplication::focusWindow() == window; }));
+        // The left card under Now playing, away from its Play and Shuffle buttons.
+        QTest::mouseClick(window, Qt::LeftButton, {}, QPoint(300, 500));
+        CHECK(window->property("opened").toString() == QStringLiteral("daily-drops"));
+    }
+
     TEST_CASE("a user page reused for another user loads that user's playlists on the Playlists tab")
     {
         registerDetailTypes();

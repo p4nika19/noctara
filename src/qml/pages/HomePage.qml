@@ -244,6 +244,7 @@ Flickable {
                 elide: Text.ElideRight
             }
             Row {
+                z: 2  // Play/Shuffle must not open the list when clicked themselves
                 spacing: Theme.space.sm
                 Button {
                     variant: "primary"
@@ -261,8 +262,10 @@ Flickable {
             }
         }
         // The card itself opens the full track list; its Play and Shuffle buttons do their own actions instead.
-        TapHandler {
-            onTapped: Window.window.openDiscovery(card.kind)
+        MouseArea {
+            z: 1  // above CoverArt's own MouseArea, below the Play/Shuffle row
+            anchors.fill: parent
+            onClicked: Window.window.openDiscovery(card.kind)
         }
     }
 

@@ -473,6 +473,8 @@ QVariant CollectionModel::originalArtworkAt(int row) const
         return {};
     }
     if (const auto* track = std::get_if<api::Track>(&m_entries[static_cast<std::size_t>(row)].item)) {
+        // data() is what requests hydration for a stub track; without it the original URL would never arrive.
+        (void)data(index(row), ArtworkRole);
         return api::originalArtwork(track->artwork());
     }
     return data(index(row), ArtworkRole);

@@ -380,6 +380,19 @@ TEST_SUITE("api.discovery")
               u"https://i1.sndcdn.com/artworks-a-original.png");
         CHECK(api::originalArtwork(QStringLiteral("https://i1.sndcdn.com/artworks-a-original.jpg")) ==
               u"https://i1.sndcdn.com/artworks-a-original.jpg");
+
+        // originalArtworkAt must trigger the same stub hydration as artworkAt; otherwise discovery cards stay blank.
+        h.transport.setHandler([](const net::Request& request) -> Result<net::Response> {
+            CHECK(request.url.path() == u"/tracks");
+            return FakeApi::reply(200, "[" + trackJson(7, QStringLiteral("Hydrated")) + "]");
+        });
+        api::Track stub;
+        stub.id = 7;
+        stub.stub = true;
+        model.setEntries({{.item = stub, .at = {}, .repostedBy = std::nullopt}});
+        REQUIRE(test::waitUntil([&] {
+            return model.originalArtworkAt(0).toString().contains(u"-original.");
+        }));
     }
 }
 
