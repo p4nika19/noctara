@@ -190,6 +190,7 @@ Flickable {
     // Now playing, with equal width and the same height.
     component DiscoveryCard: GlassPanel {
         id: card
+        objectName: "discoveryCard_" + kind
         property CollectionModel model
         property string title
         property string description
@@ -245,12 +246,9 @@ Flickable {
             }
             Row {
                 id: buttonRow
-                // NOTE: no `z` here. z-values only reorder siblings inside one parent, so a z on this Row can
-                // never lift the buttons above the full-card MouseArea (a sibling of cardContent). Instead, that
-                // MouseArea stops short of this strip via its `height`, so presses over Play/Shuffle reach the
-                // buttons; clicks anywhere else on the card still open the full track list.
                 spacing: Theme.space.sm
                 Button {
+                    objectName: "discoveryPlayButton"
                     variant: "primary"
                     iconName: "play"
                     text: qsTr("Play")
@@ -258,6 +256,7 @@ Flickable {
                     onClicked: Player.playCollection(card.model, 0, card.context)
                 }
                 IconButton {
+                    objectName: "discoveryShuffleButton"
                     iconName: "shuffle"
                     text: qsTr("Shuffle")
                     enabled: card.model && card.model.count > 0
@@ -266,20 +265,10 @@ Flickable {
             }
         }
         // The card itself opens the full track list; its Play and Shuffle buttons do their own actions instead.
-        // z-values only reorder siblings, so a `z` on the Row cannot lift the buttons above this area — instead
-        // the area stops short of the button strip: its bottom is pinned to the Row's top in *card* coordinates
-        // (Row.y is relative to cardContent, which starts at the content margin), so presses over Play/Shuffle
-        // reach the buttons while clicks anywhere else still open the full track list.
         MouseArea {
             id: cardTap
-            z: 1  // above CoverArt's own MouseArea, below the Play/Shuffle row
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            // Bottom edge pinned to the top of the Play/Shuffle strip, converted from cardContent coordinates
-            // (the Row lives inside the Column) to card coordinates; minus half the row spacing so a click in
-            // the gap between the texts and the buttons still opens the list rather than hitting nothing.
-            height: buttonRow.mapToItem(card, 0, 0).y - Theme.space.sm / 2
+            z: -1
+            anchors.fill: parent
             onClicked: Window.window.openDiscovery(card.kind)
         }
     }

@@ -660,6 +660,7 @@ void installStubs(stub::Factory player)
         "Graphics",
         QStringLiteral("({hardware: false, ndcYUp: true, api: '', deviceName: '', driver: '', safeMode: false})"));
     stub::singleton("Format", QStringLiteral("({revision: 0, duration: ms => '0:00', error: code => ''})"));
+    stub::singleton("Language", QStringLiteral("({localeName: 'en_US'})"));
     stub::singleton("Layout",
                     QStringLiteral("({fullPlayerQueue: false, fullPlayerArt: 'large', "
                                    "fullPlayerWaveform: false, playerSize: 'normal', playerTime: true, "
@@ -1622,7 +1623,9 @@ TEST_SUITE("ui.pages")
         stub::singleton("Layout",
                         QStringLiteral("({views: {charts: 'list'}, cardSize: 'medium', playerTime: true,"
                                        " playerWaveform: true, playerVolume: true, playerQueueButton: true})"));
-        const WindowHarness harness(R"(import "../pages"
+        QJSValue playerObj;
+        const WindowHarness harness(
+            R"(import "../pages"
         Window {
             width: 1100; height: 800; visible: true
             property string opened: ""
@@ -1631,13 +1634,46 @@ TEST_SUITE("ui.pages")
             function openUser(id) {}
             function openTrack(id) {}
             HomePage { anchors.fill: parent }
-        })");
+        })",
+            nullptr, [&playerObj](QJSEngine* js) {
+                playerObj = js->evaluate(QString::fromUtf8(kPlayerStub));
+                playerObj.setProperty(QStringLiteral("playCalls"), 0);
+                playerObj.setProperty(QStringLiteral("shuffleCalls"), 0);
+                js->evaluate(QStringLiteral("(function(p) {"
+                                            "   p.playCollection = function(m, i, c) { this.playCalls++ };"
+                                            "   p.shufflePlay = function(m, c) { this.shuffleCalls++ };"
+                                            "})"))
+                    .call({playerObj});
+                return playerObj;
+            });
         REQUIRE(test::waitUntil([&] { return daily.count() == 1 && weekly.count() == 1; }));
         QQuickWindow* window = harness.window.get();
         window->requestActivate();
         REQUIRE(test::waitUntil([&] { return QGuiApplication::focusWindow() == window; }));
-        // The left card under Now playing, away from its Play and Shuffle buttons.
-        QTest::mouseClick(window, Qt::LeftButton, {}, QPoint(300, 500));
+
+        // Clicking Play on the daily-drops card starts playback and does NOT open the track list.
+        auto* playButton = window->findChild<QQuickItem*>(QStringLiteral("discoveryPlayButton"));
+        REQUIRE(playButton != nullptr);
+        const QPoint playCenter =
+            playButton->mapToScene(QPointF(playButton->width() / 2, playButton->height() / 2)).toPoint();
+        QTest::mouseClick(window, Qt::LeftButton, {}, playCenter);
+        CHECK(playerObj.property(QStringLiteral("playCalls")).toInt() == 1);
+        CHECK(window->property("opened").toString().isEmpty());
+
+        // Clicking Shuffle on the daily-drops card shuffles and does NOT open the track list.
+        auto* shuffleButton = window->findChild<QQuickItem*>(QStringLiteral("discoveryShuffleButton"));
+        REQUIRE(shuffleButton != nullptr);
+        const QPoint shuffleCenter =
+            shuffleButton->mapToScene(QPointF(shuffleButton->width() / 2, shuffleButton->height() / 2)).toPoint();
+        QTest::mouseClick(window, Qt::LeftButton, {}, shuffleCenter);
+        CHECK(playerObj.property(QStringLiteral("shuffleCalls")).toInt() == 1);
+        CHECK(window->property("opened").toString().isEmpty());
+
+        // Clicking the card itself away from the buttons opens the full track list.
+        auto* dailyCard = window->findChild<QQuickItem*>(QStringLiteral("discoveryCard_daily-drops"));
+        REQUIRE(dailyCard != nullptr);
+        const QPoint cardPoint = dailyCard->mapToScene(QPointF(dailyCard->width() / 2, 50)).toPoint();
+        QTest::mouseClick(window, Qt::LeftButton, {}, cardPoint);
         CHECK(window->property("opened").toString() == QStringLiteral("daily-drops"));
     }
 
