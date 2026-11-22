@@ -467,6 +467,17 @@ QVariant CollectionModel::artworkAt(int row) const
     return data(index(row), ArtworkRole);
 }
 
+QVariant CollectionModel::originalArtworkAt(int row) const
+{
+    if (row < 0 || row >= count()) {
+        return {};
+    }
+    if (const auto* track = std::get_if<api::Track>(&m_entries[static_cast<std::size_t>(row)].item)) {
+        return api::originalArtwork(track->artwork());
+    }
+    return data(index(row), ArtworkRole);
+}
+
 QHash<int, QByteArray> CollectionModel::roleNames() const
 {
     return {

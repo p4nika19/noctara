@@ -82,6 +82,8 @@ public:
     Q_INVOKABLE void reload();
     // Artwork of one row, for large discovery cards on Home (empty when there is no such row).
     Q_INVOKABLE QVariant artworkAt(int row) const;
+    // Full-resolution artwork for large discovery cards (no downscaling or cropping).
+    Q_INVOKABLE QVariant originalArtworkAt(int row) const;
 
     [[nodiscard]] int count() const noexcept { return static_cast<int>(m_entries.size()); }
     [[nodiscard]] bool loading() const noexcept { return m_loading; }

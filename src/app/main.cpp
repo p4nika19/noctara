@@ -248,6 +248,7 @@ void runSmokeTest(const QQmlApplicationEngine& engine, const ui::SettingsControl
     steps.append(QStringLiteral("queue"));
     steps.append(QStringLiteral("cheat-sheet"));
     steps.append(QStringLiteral("full-player"));
+    steps.append(QStringLiteral("discovery-detail"));
     steps.append(QStringLiteral("track-page"));
     const auto index = std::make_shared<qsizetype>(0);
     auto* timer = new QTimer(root);  // NOLINT(cppcoreguidelines-owning-memory): owned by its QObject parent
@@ -274,6 +275,10 @@ void runSmokeTest(const QQmlApplicationEngine& engine, const ui::SettingsControl
         if (step == u"full-player") {
             root->setProperty("cheatSheet", false);
             root->setProperty("fullPlayer", true);
+            return;
+        }
+        if (step == u"discovery-detail") {
+            QMetaObject::invokeMethod(root, "openDiscovery", Q_ARG(QVariant, QStringLiteral("daily-drops")));
             return;
         }
         if (step == u"track-page") {

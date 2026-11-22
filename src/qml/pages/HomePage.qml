@@ -151,6 +151,7 @@ Flickable {
                 title: qsTr("Daily Drops")
                 description: qsTr("New releases based on your taste. Updated every day")
                 context: qsTr("Daily Drops")
+                kind: "daily-drops"
             }
             DiscoveryCard {
                 width: (column.width - Theme.space.lg) / 2
@@ -158,6 +159,7 @@ Flickable {
                 title: qsTr("Weekly Wave")
                 description: qsTr("The best of SoundCloud just for you. Updated every Monday")
                 context: qsTr("Weekly Wave")
+                kind: "weekly-wave"
             }
         }
 
@@ -192,6 +194,7 @@ Flickable {
         property string title
         property string description
         property string context
+        property string kind
 
         radius: Theme.radius.lg
         height: 312 * Theme.scale  // identical size for both discovery panels
@@ -209,17 +212,18 @@ Flickable {
                 width: parent.width
                 height: 136 * Theme.scale
                 radius: Theme.radius.md
-                source: card.model && card.model.count > 0 ? card.model.artworkAt(0) : ""
+                fillMode: Image.PreserveAspectFit
+                source: card.model && card.model.count > 0 ? card.model.originalArtworkAt(0) : ""
             }
             // Stub tracks hydrate after the first page arrives: method calls are not reactive, so the cover must
             // be re-read when the model's data changes.
             Connections {
                 target: card.model
                 function onDataChanged() {
-                    artworkImage.source = card.model && card.model.count > 0 ? card.model.artworkAt(0) : ""
+                    artworkImage.source = card.model && card.model.count > 0 ? card.model.originalArtworkAt(0) : ""
                 }
                 function onCountChanged() {
-                    artworkImage.source = card.model && card.model.count > 0 ? card.model.artworkAt(0) : ""
+                    artworkImage.source = card.model && card.model.count > 0 ? card.model.originalArtworkAt(0) : ""
                 }
             }
             Text {
@@ -255,6 +259,10 @@ Flickable {
                     onClicked: Player.shufflePlay(card.model, card.context)
                 }
             }
+        }
+        // The card itself opens the full track list; its Play and Shuffle buttons do their own actions instead.
+        TapHandler {
+            onTapped: Window.window.openDiscovery(card.kind)
         }
     }
 

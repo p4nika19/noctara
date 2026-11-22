@@ -230,9 +230,10 @@ Windows DPAPI/app-bound cookies and macOS Keychain remain platform-specific foll
 
 ## Daily Drops and Weekly Wave (2026-11-22)
 
-- Daily Drops and Weekly Wave appear as two equal-sized discovery cards on Home, directly under Now playing. They
-  use `CollectionModel`, stub hydration and the existing player/queue paths. There is no separate Discover page or
-  navigation entry.
+- Daily Drops and Weekly Wave appear as two equal-sized discovery cards on Home, directly under Now playing. A card
+  opens its full track list in Main.qml's detail stack (Back returns Home); there is no separate navigation entry.
+  Artwork uses `api::originalArtwork` and `CoverArt.fillMode = PreserveAspectFit`, so cards show the whole,
+  full-resolution cover instead of a cropped thumbnail.
 - `endpoints::dailyDrops()` and `endpoints::weeklyWave()` resolve the generic Discover permalinks with
   `Auth::Required`, so SoundCloud selects the signed-in account. `parse::playlistTracks` turns their stub tracks into
   ordinary collection entries; no new model or parser is needed.

@@ -11,6 +11,8 @@ Item {
     property url source
     property string shape: Theme.coverShape  // "rounded" | "square" | "circle"
     property real radius: Theme.radius.sm
+    // PreserveAspectCrop for list thumbnails; large cards may use PreserveAspectFit to show the whole cover.
+    property int fillMode: Image.PreserveAspectCrop
 
     readonly property real cornerRadius: shape === "circle" ? Math.min(width, height) / 2
                                        : shape === "square" ? 0 : Math.min(radius, Math.min(width, height) / 2)
@@ -28,7 +30,7 @@ Item {
         id: image
         anchors.fill: parent
         asynchronous: true
-        fillMode: Image.PreserveAspectCrop
+        fillMode: root.fillMode
         sourceSize: Qt.size(Math.ceil(root.width * Screen.devicePixelRatio),
                             Math.ceil(root.height * Screen.devicePixelRatio))
         source: root.source.toString().length > 0 && root.width > 0

@@ -183,5 +183,7 @@ struct Waveform {
 // SoundCloud serves artwork in fixed sizes encoded in the file name ("…-large.jpg" is 100 px). Returns the
 // smallest variant that is at least `pixels` wide (up to 500 px), or `url` unchanged if it has no size suffix.
 [[nodiscard]] QString sizedArtwork(const QString& url, int pixels);
+// The full-resolution variant (the CDN's `original` name), with any query string preserved.
+QString originalArtwork(const QString& url);
 
 }  // namespace noctara::api

@@ -80,6 +80,8 @@ Window {
     function openPlaylist(id) { openDetail("playlist", id) }
     function openUser(id) { openDetail("user", id) }
     function openTrack(id) { if (id > 0) openDetail("track", id) }
+    // A discovery card on Home opens its full list in the same Back stack as playlist and track pages.
+    function openDiscovery(kind) { openDetail("discovery", kind) }
     // Leaves the innermost overlay: the full player, a panel, then the detail pages.
     function goBack() {
         if (cheatSheet)
@@ -511,6 +513,7 @@ Window {
                 // when a playlist opens would look up a user with the playlist's id.
                 sourceComponent: !window.detail ? null
                                  : window.detail.kind === "playlist" ? playlistPage
+                                 : window.detail.kind === "discovery" ? discoveryPage
                                  : window.detail.kind === "track" ? trackPage : userPage
             }
             Component {
@@ -524,6 +527,10 @@ Window {
             Component {
                 id: trackPage
                 TrackPage { detail: Catalog.track(window.detail.id) }
+            }
+            Component {
+                id: discoveryPage
+                DiscoveryDetailPage { kind: window.detail.id }
             }
         }
     }

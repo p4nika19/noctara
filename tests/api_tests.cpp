@@ -373,6 +373,13 @@ TEST_SUITE("api.discovery")
         MESSAGE("artworkAt: " << artwork.toString());
         CHECK(artwork.toString() == track.artworkUrl);  // query strings are preserved
         CHECK(model.artworkAt(4).isNull());
+        CHECK(model.originalArtworkAt(0).toString() == u"https://al.sndcdn.com/labs-abc-original.jpg?q=abc");
+        CHECK(api::originalArtwork(QStringLiteral("https://i1.sndcdn.com/artworks-a-large.jpg")) ==
+              u"https://i1.sndcdn.com/artworks-a-original.jpg");
+        CHECK(api::originalArtwork(QStringLiteral("https://i1.sndcdn.com/artworks-a-t500x500.png")) ==
+              u"https://i1.sndcdn.com/artworks-a-original.png");
+        CHECK(api::originalArtwork(QStringLiteral("https://i1.sndcdn.com/artworks-a-original.jpg")) ==
+              u"https://i1.sndcdn.com/artworks-a-original.jpg");
     }
 }
 

@@ -454,6 +454,54 @@
     </message>
 </context>
 <context>
+    <name>DiscoveryDetailPage</name>
+    <message>
+        <location filename="../src/qml/pages/DiscoveryDetailPage.qml" line="+12"/>
+        <source>Weekly Wave</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Daily Drops</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The best of SoundCloud just for you. Updated every Monday</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New releases based on your taste. Updated every day</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Search in discoveries</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Play</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Shuffle</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Nothing here matches “%1”.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>There are no tracks here right now.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>DnsTools</name>
     <message>
         <location filename="../src/qml/settings/network/DnsTools.qml" line="+15"/>
@@ -1420,7 +1468,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <location line="+2"/>
         <source>Weekly Wave</source>
         <translation type="unfinished"></translation>
@@ -1431,7 +1479,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Recently played</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1471,7 +1519,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+67"/>
         <source>Play</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1481,7 +1529,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-127"/>
+        <location line="-143"/>
         <source>Now playing</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1663,7 +1711,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+91"/>
         <source>Link copied.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1861,7 +1909,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+100"/>
+        <location line="+105"/>
         <source>New playlist</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2751,13 +2799,13 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+612"/>
+        <location line="+611"/>
         <location line="+347"/>
         <source>System</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-958"/>
+        <location line="-957"/>
         <source>Midnight (dark)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2843,12 +2891,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+624"/>
+        <location line="+623"/>
         <source>Volume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-623"/>
+        <location line="-622"/>
         <source>Volume when Noctara starts.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3121,7 +3169,7 @@
     <message>
         <location line="+4"/>
         <location line="+182"/>
-        <location line="+365"/>
+        <location line="+364"/>
         <location line="+13"/>
         <location line="+12"/>
         <location line="+58"/>
@@ -3131,19 +3179,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-867"/>
+        <location line="-866"/>
         <source>Low</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+407"/>
+        <location line="+406"/>
         <location line="+25"/>
         <source>Medium</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-431"/>
+        <location line="-430"/>
         <source>High</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3307,13 +3355,13 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+591"/>
+        <location line="+590"/>
         <location line="+23"/>
         <source>Custom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-612"/>
+        <location line="-611"/>
         <source>Corner radius</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3436,12 +3484,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+199"/>
+        <location line="+198"/>
         <source>Regular</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-198"/>
+        <location line="-197"/>
         <source>Bold</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3457,12 +3505,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+188"/>
+        <location line="+187"/>
         <source>Compact</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-187"/>
+        <location line="-186"/>
         <source>Comfortable</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3643,18 +3691,18 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+28"/>
+        <location line="+27"/>
         <source>Bottom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-26"/>
-        <location line="+29"/>
+        <location line="-25"/>
+        <location line="+28"/>
         <source>Position</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-27"/>
         <source>Which edge of the window the navigation sits on.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3679,7 +3727,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+9"/>
         <source>Pages in the navigation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4311,8 +4359,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-618"/>
-        <location line="+569"/>
+        <location line="-617"/>
+        <location line="+568"/>
         <location line="+11"/>
         <location line="+12"/>
         <location line="+96"/>
@@ -4321,7 +4369,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1166"/>
+        <location line="-1165"/>
         <source>Navigation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4362,12 +4410,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+773"/>
+        <location line="+772"/>
         <source>Full-screen player</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-772"/>
+        <location line="-771"/>
         <source>The large player with the cover art.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4477,7 +4525,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+207"/>
+        <location line="+206"/>
         <source>Hide to the tray when closed</source>
         <translation type="unfinished"></translation>
     </message>

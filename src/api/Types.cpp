@@ -134,4 +134,30 @@ QString sizedArtwork(const QString& url, int pixels)
     return url.first(dash) + u'-' + QLatin1StringView(name) + url.sliced(dot);
 }
 
+QString originalArtwork(const QString& url)
+{
+    if (url.isEmpty()) {
+        return url;
+    }
+    const QStringView view(url);
+    const qsizetype query = view.indexOf(u'?');
+    const QStringView body = query >= 0 ? view.first(query) : view;
+    qsizetype dot = -1;
+    for (const QStringView extension : {QStringView(u".jpg"), QStringView(u".jpeg"), QStringView(u".png")}) {
+        if (body.endsWith(extension)) {
+            dot = body.size() - extension.size();
+            break;
+        }
+    }
+    if (dot <= 0) {
+        return url;
+    }
+    const qsizetype dash = body.first(dot).lastIndexOf(u'-');
+    if (dash < 0 || !isSizeToken(body.sliced(dash + 1, dot - dash - 1)) || !view.isValidUtf16()) {
+        return url;
+    }
+    return body.first(dash) + QStringLiteral("-original") + body.sliced(dot) +
+           (query >= 0 ? view.sliced(query).toString() : QString());
+}
+
 }  // namespace noctara::api

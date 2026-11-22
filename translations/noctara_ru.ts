@@ -455,6 +455,54 @@
     </message>
 </context>
 <context>
+    <name>DiscoveryDetailPage</name>
+    <message>
+        <location filename="../src/qml/pages/DiscoveryDetailPage.qml" line="+12"/>
+        <source>Weekly Wave</source>
+        <translation>Weekly Wave</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Daily Drops</source>
+        <translation>Daily Drops</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The best of SoundCloud just for you. Updated every Monday</source>
+        <translation>Лучшее на SoundCloud специально для вас. Обновляется каждый понедельник</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New releases based on your taste. Updated every day</source>
+        <translation>Новинки по вашему вкусу. Обновляется каждый день</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Search in discoveries</source>
+        <translation>Поиск в рекомендациях</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Play</source>
+        <translation>Воспроизвести</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Shuffle</source>
+        <translation>Перемешать</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Nothing here matches “%1”.</source>
+        <translation>Здесь нет совпадений с «%1».</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>There are no tracks here right now.</source>
+        <translation>Сейчас здесь нет треков.</translation>
+    </message>
+</context>
+<context>
     <name>DnsTools</name>
     <message>
         <location filename="../src/qml/settings/network/DnsTools.qml" line="+15"/>
@@ -1429,7 +1477,7 @@
         <translation>Новинки по вашему вкусу. Обновляется каждый день</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <location line="+2"/>
         <source>Weekly Wave</source>
         <translation>Weekly Wave</translation>
@@ -1440,7 +1488,7 @@
         <translation>Лучшее на SoundCloud специально для вас. Обновляется каждый понедельник</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Recently played</source>
         <translation>Недавно прослушанное</translation>
     </message>
@@ -1480,7 +1528,7 @@
         <translation>Чарты</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+67"/>
         <source>Play</source>
         <translation>Воспроизвести</translation>
     </message>
@@ -1490,7 +1538,7 @@
         <translation>Перемешать</translation>
     </message>
     <message>
-        <location line="-127"/>
+        <location line="-143"/>
         <source>Now playing</source>
         <translation>Сейчас играет</translation>
     </message>
@@ -1675,7 +1723,7 @@
         <translation>Настройки</translation>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+91"/>
         <source>Link copied.</source>
         <translation>Ссылка скопирована.</translation>
     </message>
@@ -1873,7 +1921,7 @@
         <translation>Назад</translation>
     </message>
     <message>
-        <location line="+100"/>
+        <location line="+105"/>
         <source>New playlist</source>
         <translation>Новый плейлист</translation>
     </message>
@@ -2765,13 +2813,13 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+612"/>
+        <location line="+611"/>
         <location line="+347"/>
         <source>System</source>
         <translation>Как в системе</translation>
     </message>
     <message>
-        <location line="-958"/>
+        <location line="-957"/>
         <source>Midnight (dark)</source>
         <translation>Midnight (тёмная)</translation>
     </message>
@@ -2857,12 +2905,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+624"/>
+        <location line="+623"/>
         <source>Volume</source>
         <translation>Громкость</translation>
     </message>
     <message>
-        <location line="-623"/>
+        <location line="-622"/>
         <source>Volume when Noctara starts.</source>
         <translation>Громкость при запуске Noctara.</translation>
     </message>
@@ -3135,7 +3183,7 @@
     <message>
         <location line="+4"/>
         <location line="+182"/>
-        <location line="+365"/>
+        <location line="+364"/>
         <location line="+13"/>
         <location line="+12"/>
         <location line="+58"/>
@@ -3145,19 +3193,19 @@
         <translation>Авто</translation>
     </message>
     <message>
-        <location line="-867"/>
+        <location line="-866"/>
         <source>Low</source>
         <translation>Низкое</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+407"/>
+        <location line="+406"/>
         <location line="+25"/>
         <source>Medium</source>
         <translation>Среднее</translation>
     </message>
     <message>
-        <location line="-431"/>
+        <location line="-430"/>
         <source>High</source>
         <translation>Высокое</translation>
     </message>
@@ -3321,13 +3369,13 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+591"/>
+        <location line="+590"/>
         <location line="+23"/>
         <source>Custom</source>
         <translation>Свои</translation>
     </message>
     <message>
-        <location line="-612"/>
+        <location line="-611"/>
         <source>Corner radius</source>
         <translation>Скругление углов</translation>
     </message>
@@ -3450,12 +3498,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+199"/>
+        <location line="+198"/>
         <source>Regular</source>
         <translation>Обычные</translation>
     </message>
     <message>
-        <location line="-198"/>
+        <location line="-197"/>
         <source>Bold</source>
         <translation>Жирные</translation>
     </message>
@@ -3471,12 +3519,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+188"/>
+        <location line="+187"/>
         <source>Compact</source>
         <translation>Плотно</translation>
     </message>
     <message>
-        <location line="-187"/>
+        <location line="-186"/>
         <source>Comfortable</source>
         <translation>Обычно</translation>
     </message>
@@ -3657,18 +3705,18 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+28"/>
+        <location line="+27"/>
         <source>Bottom</source>
         <translation>Снизу</translation>
     </message>
     <message>
-        <location line="-26"/>
-        <location line="+29"/>
+        <location line="-25"/>
+        <location line="+28"/>
         <source>Position</source>
         <translation>Положение</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-27"/>
         <source>Which edge of the window the navigation sits on.</source>
         <translation>У какого края окна находится навигация.</translation>
     </message>
@@ -3693,7 +3741,7 @@
         <translation>При автоскрытии навигация появляется, когда указатель доходит до её края.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+9"/>
         <source>Pages in the navigation</source>
         <translation>Страницы в навигации</translation>
     </message>
@@ -3985,7 +4033,7 @@
     <message>
         <location line="+1"/>
         <source>Shuffle</source>
-        <translation>Перемешивание</translation>
+        <translation>Перемешать</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4330,8 +4378,8 @@
         <translation>HTTP подходит и для сайтов по HTTPS и работает с большинством прокси, в том числе с указанными как HTTP(S). HTTPS шифрует соединение с самим прокси и работает, только если прокси это поддерживает. С SOCKS4 и SOCKS5 Noctara сама определяет адреса серверов, остальные типы поручают это прокси.</translation>
     </message>
     <message>
-        <location line="-618"/>
-        <location line="+569"/>
+        <location line="-617"/>
+        <location line="+568"/>
         <location line="+11"/>
         <location line="+12"/>
         <location line="+96"/>
@@ -4340,7 +4388,7 @@
         <translation>с</translation>
     </message>
     <message>
-        <location line="-1166"/>
+        <location line="-1165"/>
         <source>Navigation</source>
         <translation>Навигация</translation>
     </message>
@@ -4381,12 +4429,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+773"/>
+        <location line="+772"/>
         <source>Full-screen player</source>
         <translation>Полноэкранный плеер</translation>
     </message>
     <message>
-        <location line="-772"/>
+        <location line="-771"/>
         <source>The large player with the cover art.</source>
         <translation>Большой плеер с обложкой.</translation>
     </message>
@@ -4496,7 +4544,7 @@
         <translation>Папка с вашим собственным защищённым плеером (как создаёт `xmake drm-helper`). Если пусто, используется плеер рядом с Noctara, в её каталоге установки или установленный самой Noctara.</translation>
     </message>
     <message>
-        <location line="+207"/>
+        <location line="+206"/>
         <source>Hide to the tray when closed</source>
         <translation>Сворачивать в трей при закрытии</translation>
     </message>
