@@ -390,9 +390,7 @@ TEST_SUITE("api.discovery")
         stub.id = 7;
         stub.stub = true;
         model.setEntries({{.item = stub, .at = {}, .repostedBy = std::nullopt}});
-        REQUIRE(test::waitUntil([&] {
-            return model.originalArtworkAt(0).toString().contains(u"-original.");
-        }));
+        REQUIRE(test::waitUntil([&] { return model.originalArtworkAt(0).toString().contains(u"-original."); }));
     }
 }
 
