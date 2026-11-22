@@ -343,29 +343,38 @@ TEST_SUITE("settings.toml")
         REQUIRE(chosen.syntaxOk);
         CHECK(chosen.issues.empty());
         CHECK(parsedValue(chosen, keys::NavItems)->toStringList() ==
-              QStringList{QStringLiteral("likes"), QStringLiteral("charts"), QStringLiteral("discover"),
-                          QStringLiteral("downloads"), QStringLiteral("home")});
+              QStringList{QStringLiteral("likes"), QStringLiteral("charts"), QStringLiteral("downloads"),
+                          QStringLiteral("home")});
         const auto noCharts = parse("config_version = 7\n[layout.navigation]\nitems = [\"home\"]\n");
         CHECK(parsedValue(noCharts, keys::NavItems)->toStringList() ==
-              QStringList{QStringLiteral("home"), QStringLiteral("downloads"), QStringLiteral("discover")});
-        const auto current = parse("config_version = 9\n[layout.navigation]\nitems = [\"home\"]\n");
+              QStringList{QStringLiteral("home"), QStringLiteral("downloads")});
+        const auto current = parse("config_version = 10\n[layout.navigation]\nitems = [\"home\"]\n");
         CHECK(parsedValue(current, keys::NavItems)->toStringList() == QStringList{QStringLiteral("home")});
     }
 
-    TEST_CASE("v8 navigation lists gain Discover after Charts and before Downloaded")
+    TEST_CASE("v8 discovery is added, then moved from the navigation to Home")
     {
         const auto chosen = parse("config_version = 8\n[layout.navigation]\nitems = [\"likes\", \"charts\", "
                                   "\"downloads\", \"home\"]\n");
         REQUIRE(chosen.syntaxOk);
         CHECK(chosen.issues.empty());
         CHECK(parsedValue(chosen, keys::NavItems)->toStringList() ==
-              QStringList{QStringLiteral("likes"), QStringLiteral("charts"), QStringLiteral("discover"),
-                          QStringLiteral("downloads"), QStringLiteral("home")});
+              QStringList{QStringLiteral("likes"), QStringLiteral("charts"), QStringLiteral("downloads"),
+                          QStringLiteral("home")});
         const auto noCharts = parse("config_version = 8\n[layout.navigation]\nitems = [\"home\"]\n");
-        CHECK(parsedValue(noCharts, keys::NavItems)->toStringList() ==
-              QStringList{QStringLiteral("home"), QStringLiteral("discover")});
-        const auto current = parse("config_version = 9\n[layout.navigation]\nitems = [\"home\"]\n");
+        CHECK(parsedValue(noCharts, keys::NavItems)->toStringList() == QStringList{QStringLiteral("home")});
+        const auto current = parse("config_version = 10\n[layout.navigation]\nitems = [\"home\"]\n");
         CHECK(parsedValue(current, keys::NavItems)->toStringList() == QStringList{QStringLiteral("home")});
+    }
+
+    TEST_CASE("v9 removes the separate Discover page from the navigation")
+    {
+        const auto parsed = parse("config_version = 9\n[layout.navigation]\nitems = [\"home\", \"charts\", "
+                                  "\"discover\", \"downloads\"]\n");
+        REQUIRE(parsed.syntaxOk);
+        CHECK(parsed.issues.empty());
+        CHECK(parsedValue(parsed, keys::NavItems)->toStringList() ==
+              QStringList{QStringLiteral("home"), QStringLiteral("charts"), QStringLiteral("downloads")});
     }
 
     TEST_CASE("glass tint and grain: v4 relative values become absolute again, v3 values pass unchanged")

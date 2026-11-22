@@ -121,7 +121,7 @@
     <message>
         <location line="+11"/>
         <source>Unlock the keyring</source>
-        <translation>Разблокировать связку ключей&gt;</translation>
+        <translation>Разблокировать связку ключей</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -452,66 +452,6 @@
         <location line="+57"/>
         <source>Cancel</source>
         <translation>Отмена</translation>
-    </message>
-</context>
-<context>
-    <name>DiscoverPage</name>
-    <message>
-        <location filename="../src/qml/pages/DiscoverPage.qml" line="+11"/>
-        <location line="+50"/>
-        <source>Weekly Wave</source>
-        <translation>Weekly Wave&gt;</translation>
-    </message>
-    <message>
-        <location line="-50"/>
-        <location line="+50"/>
-        <source>Daily Drops</source>
-        <translation>Daily Drops&gt;</translation>
-    </message>
-    <message>
-        <location line="-29"/>
-        <source>Discover</source>
-        <translation>Обзор&gt;</translation>
-    </message>
-    <message>
-        <location line="+8"/>
-        <source>Search in discoveries</source>
-        <translation>Поиск в рекомендациях&gt;</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Play</source>
-        <translation>Воспроизвести</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Shuffle</source>
-        <translation>Перемешать&gt;</translation>
-    </message>
-    <message>
-        <location line="+21"/>
-        <source>Nothing here matches “%1”.</source>
-        <translation>Здесь нет совпадений с «%1».</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Your Weekly Wave has no tracks right now.</source>
-        <translation>В Weekly Wave пока нет треков.&gt;</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Your Daily Drops has no tracks right now.</source>
-        <translation>В Daily Drops пока нет треков.&gt;</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Discover new music</source>
-        <translation>Открывайте новую музыку&gt;</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Sign in to your SoundCloud account (Settings → Accounts) to see Daily Drops and Weekly Wave, selected for your taste.</source>
-        <translation>Войдите в аккаунт SoundCloud (Настройки → Аккаунты), чтобы увидеть Daily Drops и Weekly Wave, подобранные по вашему вкусу.&gt;</translation>
     </message>
 </context>
 <context>
@@ -1443,7 +1383,7 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="../src/qml/pages/HomePage.qml" line="+60"/>
+        <location filename="../src/qml/pages/HomePage.qml" line="+62"/>
         <source>Good night</source>
         <translation>Доброй ночи</translation>
     </message>
@@ -1478,7 +1418,29 @@
         <translation>Подключите аккаунт SoundCloud, чтобы видеть ленту, лайки и плейлисты.</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+17"/>
+        <location line="+2"/>
+        <source>Daily Drops</source>
+        <translation>Daily Drops</translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>New releases based on your taste. Updated every day</source>
+        <translation>Новинки по вашему вкусу. Обновляется каждый день</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+2"/>
+        <source>Weekly Wave</source>
+        <translation>Weekly Wave</translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>The best of SoundCloud just for you. Updated every Monday</source>
+        <translation>Лучшее на SoundCloud специально для вас. Обновляется каждый понедельник</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Recently played</source>
         <translation>Недавно прослушанное</translation>
     </message>
@@ -1518,7 +1480,17 @@
         <translation>Чарты</translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="+53"/>
+        <source>Play</source>
+        <translation>Воспроизвести</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Shuffle</source>
+        <translation>Перемешать</translation>
+    </message>
+    <message>
+        <location line="-127"/>
         <source>Now playing</source>
         <translation>Сейчас играет</translation>
     </message>
@@ -1658,12 +1630,12 @@
 <context>
     <name>Main</name>
     <message>
-        <location filename="../src/qml/Main.qml" line="+68"/>
+        <location filename="../src/qml/Main.qml" line="+67"/>
         <source>Noctara</source>
         <translation>Noctara</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-40"/>
         <source>Home</source>
         <translation>Главная</translation>
     </message>
@@ -1691,11 +1663,6 @@
         <location line="+1"/>
         <source>Charts</source>
         <translation>Чарты</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Discover</source>
-        <translation>Обзор&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1901,7 +1868,7 @@
         <translation>Понятно</translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+67"/>
         <source>Back</source>
         <translation>Назад</translation>
     </message>
@@ -1957,11 +1924,6 @@
         <location line="+1"/>
         <source>Charts</source>
         <translation>Чарты</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Discover</source>
-        <translation>Обзор&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2462,7 +2424,7 @@
     <message>
         <location line="+9"/>
         <source>Unlock the keyring</source>
-        <translation>Разблокировать связку ключей&gt;</translation>
+        <translation>Разблокировать связку ключей</translation>
     </message>
     <message>
         <location line="+10"/>

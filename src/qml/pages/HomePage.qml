@@ -33,6 +33,8 @@ Flickable {
         if (Account.signedIn) {
             Catalog.ensure("history")
             Catalog.ensure("feed")
+            Catalog.ensure("daily-drops")
+            Catalog.ensure("weekly-wave")
         } else {
             Catalog.ensure("charts")
         }
@@ -139,6 +141,26 @@ Flickable {
             }
         }
 
+        Row {
+            visible: Account.signedIn
+            width: column.width
+            spacing: Theme.space.lg
+            DiscoveryCard {
+                width: (column.width - Theme.space.lg) / 2
+                model: Catalog.dailyDrops
+                title: qsTr("Daily Drops")
+                description: qsTr("New releases based on your taste. Updated every day")
+                context: qsTr("Daily Drops")
+            }
+            DiscoveryCard {
+                width: (column.width - Theme.space.lg) / 2
+                model: Catalog.weeklyWave
+                title: qsTr("Weekly Wave")
+                description: qsTr("The best of SoundCloud just for you. Updated every Monday")
+                context: qsTr("Weekly Wave")
+            }
+        }
+
         CardRow {
             visible: Account.signedIn
             title: qsTr("Recently played")
@@ -159,6 +181,80 @@ Flickable {
             model: Catalog.charts
             context: qsTr("Charts")
             emptyText: ""
+        }
+    }
+
+    // A large discovery panel: artwork, title, description and play actions. Two of these sit side by side under
+    // Now playing, with equal width and the same height.
+    component DiscoveryCard: GlassPanel {
+        id: card
+        property CollectionModel model
+        property string title
+        property string description
+        property string context
+
+        radius: Theme.radius.lg
+        height: 312 * Theme.scale  // identical size for both discovery panels
+
+        Column {
+            id: cardContent
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.margins: Math.max(Theme.space.xl, card.cornerInset)
+            spacing: Theme.space.md
+
+            CoverArt {
+                id: artworkImage
+                width: parent.width
+                height: 136 * Theme.scale
+                radius: Theme.radius.md
+                source: card.model && card.model.count > 0 ? card.model.artworkAt(0) : ""
+            }
+            // Stub tracks hydrate after the first page arrives: method calls are not reactive, so the cover must
+            // be re-read when the model's data changes.
+            Connections {
+                target: card.model
+                function onDataChanged() {
+                    artworkImage.source = card.model && card.model.count > 0 ? card.model.artworkAt(0) : ""
+                }
+                function onCountChanged() {
+                    artworkImage.source = card.model && card.model.count > 0 ? card.model.artworkAt(0) : ""
+                }
+            }
+            Text {
+                width: parent.width
+                text: card.title
+                font: Theme.font.headline
+                color: Theme.colors.textPrimary
+                elide: Text.ElideRight
+                Accessible.role: Accessible.Heading
+            }
+            Text {
+                width: parent.width
+                text: card.model && card.model.errorCode >= 0 ? Format.error(card.model.errorCode) : card.description
+                font: Theme.font.caption
+                color: Theme.colors.textSecondary
+                wrapMode: Text.Wrap
+                maximumLineCount: 2
+                elide: Text.ElideRight
+            }
+            Row {
+                spacing: Theme.space.sm
+                Button {
+                    variant: "primary"
+                    iconName: "play"
+                    text: qsTr("Play")
+                    enabled: card.model && card.model.count > 0
+                    onClicked: Player.playCollection(card.model, 0, card.context)
+                }
+                IconButton {
+                    iconName: "shuffle"
+                    text: qsTr("Shuffle")
+                    enabled: card.model && card.model.count > 0
+                    onClicked: Player.shufflePlay(card.model, card.context)
+                }
+            }
         }
     }
 

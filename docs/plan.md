@@ -230,14 +230,15 @@ Windows DPAPI/app-bound cookies and macOS Keychain remain platform-specific foll
 
 ## Daily Drops and Weekly Wave (2026-11-22)
 
-- New Discover page (`src/qml/pages/DiscoverPage.qml`) with Daily Drops and Weekly Wave tabs, list search, Play and
-  Shuffle. It reuses `CollectionModel`, `CollectionFilter`, stub hydration and the existing player/queue paths.
+- Daily Drops and Weekly Wave appear as two equal-sized discovery cards on Home, directly under Now playing. They
+  use `CollectionModel`, stub hydration and the existing player/queue paths. There is no separate Discover page or
+  navigation entry.
 - `endpoints::dailyDrops()` and `endpoints::weeklyWave()` resolve the generic Discover permalinks with
   `Auth::Required`, so SoundCloud selects the signed-in account. `parse::playlistTracks` turns their stub tracks into
   ordinary collection entries; no new model or parser is needed.
-- The page appears in the navigation after Charts. `Schema::kConfigVersion` is 9; the v8→v9 migration inserts
-  `discover` there (and v7 configs gain it together with Downloaded).
+- `Schema::kConfigVersion` is 10: the v8→v9 migration inserted `discover` in the navigation, and v9→v10 removes it
+  again after the feature moved to Home cards.
 - Verified against the real account: both lists return the owner's system playlists and hydrate to playable tracks
-  with waveforms and transcodings. The Discover page was also rendered with the real account (Daily Drops visible).
+  with waveforms and transcodings. The Home cards were rendered with the real account (Daily Drops and Weekly Wave, artwork included).
 - Tests: endpoint URL/auth/parser and both navigation migrations; full debug/release suites, smoke 18/18, lint,
   format, i18n and generated docs checks pass.

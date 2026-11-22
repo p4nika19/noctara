@@ -454,66 +454,6 @@
     </message>
 </context>
 <context>
-    <name>DiscoverPage</name>
-    <message>
-        <location filename="../src/qml/pages/DiscoverPage.qml" line="+11"/>
-        <location line="+50"/>
-        <source>Weekly Wave</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="-50"/>
-        <location line="+50"/>
-        <source>Daily Drops</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="-29"/>
-        <source>Discover</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+8"/>
-        <source>Search in discoveries</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Play</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Shuffle</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+21"/>
-        <source>Nothing here matches “%1”.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Your Weekly Wave has no tracks right now.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Your Daily Drops has no tracks right now.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Discover new music</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Sign in to your SoundCloud account (Settings → Accounts) to see Daily Drops and Weekly Wave, selected for your taste.</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>DnsTools</name>
     <message>
         <location filename="../src/qml/settings/network/DnsTools.qml" line="+15"/>
@@ -1434,7 +1374,7 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="../src/qml/pages/HomePage.qml" line="+60"/>
+        <location filename="../src/qml/pages/HomePage.qml" line="+62"/>
         <source>Good night</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1469,7 +1409,29 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+17"/>
+        <location line="+2"/>
+        <source>Daily Drops</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>New releases based on your taste. Updated every day</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+2"/>
+        <source>Weekly Wave</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>The best of SoundCloud just for you. Updated every Monday</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Recently played</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1509,7 +1471,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="+53"/>
+        <source>Play</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Shuffle</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-127"/>
         <source>Now playing</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1646,12 +1618,12 @@
 <context>
     <name>Main</name>
     <message>
-        <location filename="../src/qml/Main.qml" line="+68"/>
+        <location filename="../src/qml/Main.qml" line="+67"/>
         <source>Noctara</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-40"/>
         <source>Home</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1678,11 +1650,6 @@
     <message>
         <location line="+1"/>
         <source>Charts</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Discover</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1889,7 +1856,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+67"/>
         <source>Back</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1944,11 +1911,6 @@
     <message>
         <location line="+1"/>
         <source>Charts</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Discover</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

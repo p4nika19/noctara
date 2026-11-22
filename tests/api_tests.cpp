@@ -361,6 +361,18 @@ TEST_SUITE("api.discovery")
         const auto& second = std::get<api::Track>(page->items[1].item);
         CHECK(second.stub);
         CHECK(second.policy == api::Policy::Snip);
+
+        Harness h;
+        models::CollectionModel model(h.client);
+        api::Track track;
+        track.id = 7;
+        track.title = QStringLiteral("Cover");
+        track.artworkUrl = QStringLiteral("https://al.sndcdn.com/labs-abc-t500x500.jpg?q=abc");
+        model.setEntries({{.item = track, .at = {}, .repostedBy = std::nullopt}});
+        const QVariant artwork = model.artworkAt(0);
+        MESSAGE("artworkAt: " << artwork.toString());
+        CHECK(artwork.toString() == track.artworkUrl);  // query strings are preserved
+        CHECK(model.artworkAt(4).isNull());
     }
 }
 

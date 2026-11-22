@@ -459,6 +459,14 @@ QVariant CollectionModel::data(const QModelIndex& index, int role) const
     return userData(std::get<api::User>(entry.item), role);
 }
 
+QVariant CollectionModel::artworkAt(int row) const
+{
+    if (row < 0 || row >= count()) {
+        return {};
+    }
+    return data(index(row), ArtworkRole);
+}
+
 QHash<int, QByteArray> CollectionModel::roleNames() const
 {
     return {

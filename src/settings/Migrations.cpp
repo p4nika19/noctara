@@ -140,6 +140,22 @@ void discoverPage(toml::table& root)
     items->insert(items->cbegin() + static_cast<std::ptrdiff_t>(at), "discover");
 }
 
+// v9 -> v10: Daily Drops and Weekly Wave moved from their own navigation page to cards on Home.
+void discoveriesOnHome(toml::table& root)
+{
+    toml::array* items = root.at_path("layout.navigation.items").as_array();
+    if (items == nullptr) {
+        return;
+    }
+    for (std::size_t i = 0; i < items->size();) {
+        if ((*items)[i].value<std::string_view>() == "discover") {
+            items->erase(items->begin() + static_cast<std::ptrdiff_t>(i));
+        } else {
+            ++i;
+        }
+    }
+}
+
 // Files without `config_version` are v0 (same format as v1). Append future migrations here.
 // clang-format off
 constexpr Migration kMigrations[] = {
@@ -152,6 +168,7 @@ constexpr Migration kMigrations[] = {
     {6, splitGlassStyle},
     {7, downloadsPage},
     {8, discoverPage},
+    {9, discoveriesOnHome},
 };
 // clang-format on
 

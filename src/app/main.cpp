@@ -236,9 +236,9 @@ void runSmokeTest(const QQmlApplicationEngine& engine, const ui::SettingsControl
 {
     QObject* root = engine.rootObjects().constFirst();
     auto* window = qobject_cast<QQuickWindow*>(root);
-    QStringList steps{QStringLiteral("home"),     QStringLiteral("search"),   QStringLiteral("library"),
-                      QStringLiteral("likes"),    QStringLiteral("history"),  QStringLiteral("charts"),
-                      QStringLiteral("discover"), QStringLiteral("downloads")};
+    QStringList steps{QStringLiteral("home"),     QStringLiteral("search"),  QStringLiteral("library"),
+                      QStringLiteral("likes"),    QStringLiteral("history"), QStringLiteral("charts"),
+                      QStringLiteral("downloads")};
     for (const QVariant& category : settingsUi.categories()) {
         steps.append(QStringLiteral("settings/") + category.toMap().value(QStringLiteral("id")).toString());
     }

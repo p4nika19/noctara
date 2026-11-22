@@ -144,7 +144,7 @@ Where the navigation sits and what it shows.
 |---|---|---|---|---|
 | `position` | enum | `"left"` | `left`, `right`, `bottom` | **Position.** Which edge of the window the navigation sits on. (env `NOCTARA_LAYOUT_NAVIGATION_POSITION`) |
 | `mode` | enum | `"compact"` | `compact`, `expanded`, `auto_hide` | **Style.** Auto-hide shows the navigation when the pointer reaches its edge. (env `NOCTARA_LAYOUT_NAVIGATION_MODE`) |
-| `items` | string list | `["home", "search", "library", "likes", "history", "charts", "discover", "downloads"]` | — | **Pages in the navigation.** Their order and which are shown. Settings is always there. (env `NOCTARA_LAYOUT_NAVIGATION_ITEMS`) |
+| `items` | string list | `["home", "search", "library", "likes", "history", "charts", "downloads"]` | — | **Pages in the navigation.** Their order and which are shown. Settings is always there. (env `NOCTARA_LAYOUT_NAVIGATION_ITEMS`) |
 
 ### `[layout.player]` Player bar
 

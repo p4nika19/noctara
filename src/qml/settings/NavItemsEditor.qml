@@ -16,7 +16,6 @@ Column {
         { id: "likes", icon: "heart", label: qsTr("Likes") },
         { id: "history", icon: "clock", label: qsTr("History") },
         { id: "charts", icon: "trending-up", label: qsTr("Charts") },
-        { id: "discover", icon: "radio", label: qsTr("Discover") },
         { id: "downloads", icon: "download", label: qsTr("Downloaded") }
     ]
     // Shown pages in their order, then the hidden ones.
