@@ -449,7 +449,7 @@
         <translation>OK</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+85"/>
         <source>Cancel</source>
         <translation>Отмена</translation>
     </message>
@@ -540,12 +540,12 @@
         <translation>Публичный: виден всем</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+17"/>
         <source>Tracks (%1 of %2 selected)</source>
         <translation>Треки (выбрано %1 из %2)</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+8"/>
         <source>Deselect all</source>
         <translation>Снять выбор</translation>
     </message>
@@ -1519,7 +1519,7 @@
         <translation>Подключите аккаунт SoundCloud, чтобы видеть ленту, лайки и плейлисты.</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+39"/>
         <location line="+2"/>
         <source>Daily Drops</source>
         <translation>Daily Drops</translation>
@@ -1530,7 +1530,7 @@
         <translation>Новинки по вашему вкусу. Обновляется каждый день</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+10"/>
         <location line="+2"/>
         <source>Weekly Wave</source>
         <translation>Weekly Wave</translation>
@@ -1581,7 +1581,7 @@
         <translation>Чарты</translation>
     </message>
     <message>
-        <location line="+355"/>
+        <location line="+385"/>
         <source>Play</source>
         <translation>Воспроизвести</translation>
     </message>
@@ -1591,12 +1591,7 @@
         <translation>Перемешать</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Create playlist</source>
-        <translation>Создать плейлист</translation>
-    </message>
-    <message>
-        <location line="-464"/>
+        <location line="-487"/>
         <source>Now playing</source>
         <translation>Сейчас играет</translation>
     </message>
@@ -1781,7 +1776,17 @@
         <translation>Настройки</translation>
     </message>
     <message>
-        <location line="+92"/>
+        <location line="+53"/>
+        <source>Shuffle and play next</source>
+        <translation>Перемешать и играть следующим</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Add to playlist</source>
+        <translation>Добавить в плейлист</translation>
+    </message>
+    <message>
+        <location line="+51"/>
         <source>Link copied.</source>
         <translation>Ссылка скопирована.</translation>
     </message>
@@ -1841,7 +1846,8 @@
         <translation>Новый плейлист…</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="-127"/>
+        <location line="+138"/>
         <location line="+16"/>
         <location line="+19"/>
         <location line="+29"/>
@@ -1849,14 +1855,16 @@
         <translation>Воспроизвести</translation>
     </message>
     <message>
-        <location line="-63"/>
+        <location line="-199"/>
+        <location line="+136"/>
         <location line="+16"/>
         <location line="+19"/>
         <source>Play next</source>
         <translation>Играть следующим</translation>
     </message>
     <message>
-        <location line="-34"/>
+        <location line="-172"/>
+        <location line="+138"/>
         <location line="+16"/>
         <source>Add to queue</source>
         <translation>Добавить в очередь</translation>
@@ -1924,7 +1932,8 @@
         <translation>Предыдущий трек</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-204"/>
+        <location line="+206"/>
         <source>Shuffle</source>
         <translation>Перемешать</translation>
     </message>

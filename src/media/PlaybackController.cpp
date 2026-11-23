@@ -281,6 +281,37 @@ void PlaybackController::shufflePlay(models::CollectionModel* model, const QStri
     playCollection(model, rows[pick], context);
 }
 
+void PlaybackController::enqueueEntireCollection(models::CollectionModel* model, bool next, bool shuffle,
+                                                 const QString& context)
+{
+    if (model == nullptr || model->count() == 0) {
+        return;
+    }
+    std::vector<api::Track> tracks;
+    for (const auto& entry : model->entries()) {
+        if (const auto* track = std::get_if<api::Track>(&entry.item)) {
+            tracks.push_back(*track);
+        }
+    }
+    if (tracks.empty()) {
+        return;
+    }
+    if (shuffle) {
+        std::ranges::shuffle(tracks, *QRandomGenerator::global());
+    }
+    const bool wasEmpty = m_queue.empty();
+    if (next) {
+        m_queue.insertNext(itemsFrom(tracks, context));
+    } else {
+        m_queue.append(itemsFrom(tracks, context));
+    }
+    queueEdited();
+    hydrateStubs();
+    if (wasEmpty) {
+        startCurrent(0, true);
+    }
+}
+
 void PlaybackController::enqueueCollection(models::CollectionModel* model, int row, bool next)
 {
     if (model == nullptr || row < 0 || row >= model->count()) {

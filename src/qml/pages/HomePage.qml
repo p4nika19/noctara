@@ -635,22 +635,23 @@ Flickable {
                     enabled: card.model && card.model.count > 0
                     onClicked: Player.shufflePlay(card.model, card.context)
                 }
-                IconButton {
-                    objectName: "discoverySaveButton"
-                    iconName: "plus"
-                    text: qsTr("Create playlist")
-                    enabled: card.model && card.model.count > 0 && Account.signedIn
-                    onClicked: Window.window.openDiscoveryPlaylist(card.kind, card.model)
-                }
             }
         }
 
         // The card itself opens the full track list; its Play and Shuffle buttons do their own actions instead.
+        // Right-click opens the discovery context menu.
         MouseArea {
             id: cardTap
             z: -1
             anchors.fill: parent
-            onClicked: Window.window.openDiscovery(card.kind)
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onClicked: (mouse) => {
+                if (mouse.button === Qt.RightButton) {
+                    Window.window.showDiscoveryMenu(card.kind, card.model, card.context, cardTap, Qt.point(mouse.x, mouse.y))
+                } else {
+                    Window.window.openDiscovery(card.kind)
+                }
+            }
         }
     }
 

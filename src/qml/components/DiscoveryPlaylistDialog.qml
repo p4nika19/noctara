@@ -144,6 +144,8 @@ Dialog {
     ListView {
         id: trackList
         width: parent.width
+        implicitWidth: width
+        implicitHeight: height
         height: Math.min(240 * Theme.scale, Math.max(1, dialog.tracks.length) * 42 * Theme.scale)
         clip: true
         interactive: true
@@ -157,12 +159,10 @@ Dialog {
         WheelHandler {
             target: null
             onWheel: (event) => {
-                var step = 42 * Theme.scale * 3
-                if (event.angleDelta.y > 0) {
-                    trackList.contentY = Math.max(trackList.originY, trackList.contentY - step)
-                } else if (event.angleDelta.y < 0) {
-                    trackList.contentY = Math.min(Math.max(trackList.originY, trackList.originY + trackList.contentHeight - trackList.height),
-                                                  trackList.contentY + step)
+                var maxScroll = Math.max(0, trackList.contentHeight - trackList.height)
+                if (maxScroll > 0) {
+                    var delta = (event.angleDelta.y / 120) * 84 * Theme.scale
+                    trackList.contentY = Math.max(0, Math.min(maxScroll, trackList.contentY - delta))
                 }
             }
         }
@@ -238,13 +238,12 @@ Dialog {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: dialog.toggleTrack(trackRow.modelData.id)
                 onWheel: (wheel) => {
-                    var step = 42 * Theme.scale * 3
-                    if (wheel.angleDelta.y > 0) {
-                        trackList.contentY = Math.max(trackList.originY, trackList.contentY - step)
-                    } else if (wheel.angleDelta.y < 0) {
-                        trackList.contentY = Math.min(Math.max(trackList.originY, trackList.originY + trackList.contentHeight - trackList.height),
-                                                      trackList.contentY + step)
+                    var maxScroll = Math.max(0, trackList.contentHeight - trackList.height)
+                    if (maxScroll > 0) {
+                        var delta = (wheel.angleDelta.y / 120) * 84 * Theme.scale
+                        trackList.contentY = Math.max(0, Math.min(maxScroll, trackList.contentY - delta))
                     }
+                    wheel.accepted = true
                 }
             }
         }

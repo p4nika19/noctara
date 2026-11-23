@@ -99,6 +99,10 @@ public:
     Q_INVOKABLE void shufflePlay(noctara::models::CollectionModel* model, const QString& context = {});
     // Adds a row (a track, or a playlist's tracks) after the current item or at the end of the queue.
     Q_INVOKABLE void enqueueCollection(noctara::models::CollectionModel* model, int row, bool next);
+    // Adds every track in a list to the queue: either to the end (next = false), right after current (next = true),
+    // and optionally shuffled (shuffle = true).
+    Q_INVOKABLE void enqueueEntireCollection(noctara::models::CollectionModel* model, bool next, bool shuffle = false,
+                                             const QString& context = {});
     void playTracks(std::vector<api::Track> tracks, int start, const QString& context);
     // A resolved SoundCloud link: a track, or a playlist's tracks.
     void playItem(const api::Item& item);

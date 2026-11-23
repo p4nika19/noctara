@@ -83,6 +83,20 @@ Window {
     // A discovery card on Home opens its full list in the same Back stack as playlist and track pages.
     function openDiscovery(kind) { openDetail("discovery", kind) }
     function openDiscoveryPlaylist(kind, model) { discoveryPlaylistDialog.openFor(kind, model) }
+    function showDiscoveryMenu(kind, model, context, item, point) {
+        const separator = { separator: true }
+        const hasTracks = model && model.count > 0
+        const actions = [
+            { text: qsTr("Play"), icon: "play", enabled: hasTracks, run: () => Player.playCollection(model, 0, context) },
+            { text: qsTr("Shuffle"), icon: "shuffle", enabled: hasTracks, run: () => Player.shufflePlay(model, context) },
+            { text: qsTr("Add to queue"), icon: "list-plus", enabled: hasTracks, run: () => Player.enqueueEntireCollection(model, false, false, context) },
+            { text: qsTr("Play next"), icon: "list-start", enabled: hasTracks, run: () => Player.enqueueEntireCollection(model, true, false, context) },
+            { text: qsTr("Shuffle and play next"), icon: "shuffle", enabled: hasTracks, run: () => Player.enqueueEntireCollection(model, true, true, context) },
+            separator,
+            { text: qsTr("Add to playlist"), icon: "plus", enabled: hasTracks && Account.signedIn, run: () => openDiscoveryPlaylist(kind, model) }
+        ]
+        contextMenu.show(actions, item, point)
+    }
     // Leaves the innermost overlay: the full player, a panel, then the detail pages.
     function goBack() {
         if (cheatSheet)

@@ -23,6 +23,7 @@ T.Dialog {
     modal: true
     focus: true
     width: Math.min(480 * Theme.scale, parent ? parent.width - Theme.space.xl * 2 : 480 * Theme.scale)
+    height: contentItem ? contentItem.implicitHeight + topPadding + bottomPadding : 400
     padding: Math.max(Theme.space.xl, panel.cornerInset)
     closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside
 
@@ -45,9 +46,9 @@ T.Dialog {
     background: Rectangle {
         id: panel
         radius: Theme.radius.lg
-        color: Theme.colors.solidOverlay
-        border.width: Math.max(1, Theme.space.hairline)
-        border.color: Theme.dark ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(0, 0, 0, 0.18)
+        color: Theme.dark ? "#161922" : "#ffffff"
+        border.width: 1.5 * Theme.scale
+        border.color: Theme.dark ? Qt.rgba(1, 1, 1, 0.22) : Qt.rgba(0, 0, 0, 0.22)
 
         readonly property real cornerInset: radius * (1 - Math.SQRT1_2)
 
