@@ -48,6 +48,43 @@ Error archiveError(archive* a, const char* what)
     return Error{ErrorCode::Corrupt, std::string(what) + ": " + (detail != nullptr ? detail : "unknown")};
 }
 
+QByteArray sha256Of(const QString& path)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return {};
+    }
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    (void)hash.addData(&file);
+    return hash.result().toHex();
+}
+
+Result<void> writeHelperApp(const QString& appDir, const QString& runtimeDir)
+{
+    if (QFileInfo::exists(appDir + QStringLiteral("/main.js"))) {
+        return {};
+    }
+    const QString staging = appDir + QStringLiteral(".staging");
+    (void)QDir(staging).removeRecursively();
+    if (Result<void> made = ensureDirectory(staging + QStringLiteral("/vendor")); !made) {
+        return made;
+    }
+    for (const EmbeddedFile& file : helperAppFiles()) {
+        if (Result<void> written =
+                writeFileAtomic(staging + u'/' + QString::fromLatin1(file.name), file.data, 0644, Durability::Atomic);
+            !written) {
+            return written;
+        }
+    }
+    if (!QFile::copy(runtimeDir + QStringLiteral("/hls.min.js"), staging + QStringLiteral("/vendor/hls.min.js"))) {
+        return fail(ErrorCode::IoError, "cannot copy hls.js into the app");
+    }
+    if (!QDir().rename(staging, appDir)) {
+        return fail(ErrorCode::IoError, "cannot move the app into place");
+    }
+    return {};
+}
+
 }  // namespace
 
 Result<void> extractZip(const QString& zip, const QString& into)
@@ -348,31 +385,7 @@ private:
         done(std::nullopt);
     }
 
-    [[nodiscard]] Result<void> writeApp() const
-    {
-        if (QFileInfo::exists(m_app + QStringLiteral("/main.js"))) {
-            return {};
-        }
-        const QString staging = m_app + QStringLiteral(".staging");
-        (void)QDir(staging).removeRecursively();
-        if (Result<void> made = ensureDirectory(staging + QStringLiteral("/vendor")); !made) {
-            return made;
-        }
-        for (const EmbeddedFile& file : helperAppFiles()) {
-            if (Result<void> written = writeFileAtomic(staging + u'/' + QString::fromLatin1(file.name), file.data, 0644,
-                                                       Durability::Atomic);
-                !written) {
-                return written;
-            }
-        }
-        if (!QFile::copy(m_runtime + QStringLiteral("/hls.min.js"), staging + QStringLiteral("/vendor/hls.min.js"))) {
-            return fail(ErrorCode::IoError, "cannot copy hls.js into the app");
-        }
-        if (!QDir().rename(staging, m_app)) {
-            return fail(ErrorCode::IoError, "cannot move the app into place");
-        }
-        return {};
-    }
+    [[nodiscard]] Result<void> writeApp() const { return writeHelperApp(m_app, m_runtime); }
 
     // Older runtimes and apps, and the downloads, go.
     void tidy() const
@@ -384,17 +397,6 @@ private:
                 (void)QDir(path).removeRecursively();
             }
         }
-    }
-
-    static QByteArray sha256Of(const QString& path)
-    {
-        QFile file(path);
-        if (!file.open(QIODevice::ReadOnly)) {
-            return {};
-        }
-        QCryptographicHash hash(QCryptographicHash::Sha256);
-        (void)hash.addData(&file);
-        return hash.result().toHex();
     }
 
     void report(HelperInstaller::Phase phase)
@@ -475,7 +477,20 @@ std::optional<HelperCommand> HelperInstaller::installed() const
 {
     const QString electron = runtimeDir() + QStringLiteral("/electron/electron");
     if (!QFileInfo::exists(runtimeDir() + QStringLiteral("/.complete")) || !QFileInfo(electron).isExecutable() ||
-        !QFileInfo::exists(appDir() + QStringLiteral("/main.js"))) {
+        sha256Of(runtimeDir() + QStringLiteral("/hls.min.js")) != m_release.hlsjs.sha256) {
+        return std::nullopt;
+    }
+    if (!QFileInfo::exists(appDir() + QStringLiteral("/main.js"))) {
+        (void)writeHelperApp(appDir(), runtimeDir());
+        const QDir root(m_root);
+        for (const QFileInfo& entry : root.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+            if (entry.fileName().startsWith(QLatin1StringView("app-")) &&
+                entry.fileName() != QFileInfo(appDir()).fileName()) {
+                (void)QDir(entry.absoluteFilePath()).removeRecursively();
+            }
+        }
+    }
+    if (!QFileInfo::exists(appDir() + QStringLiteral("/main.js"))) {
         return std::nullopt;
     }
     return HelperCommand{.program = electron, .arguments = {appDir()}};

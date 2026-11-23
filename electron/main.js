@@ -34,9 +34,18 @@ function log(level, message) {
 }
 
 function hasExistingCdm(userDataDir) {
-  if (!userDataDir) return false;
+  const dirs = [];
+  if (userDataDir) dirs.push(userDataDir);
   try {
-    const cdmDir = path.join(userDataDir, 'WidevineCdm');
+    const home = app.getPath('home');
+    if (home) {
+      dirs.push(path.join(home, '.config', 'Electron'));
+      dirs.push(path.join(home, '.config', 'google-chrome'));
+      dirs.push(path.join(home, '.config', 'chromium'));
+    }
+  } catch {}
+
+  const checkDir = (cdmDir) => {
     if (!fs.existsSync(cdmDir)) return false;
     const versions = fs.readdirSync(cdmDir);
     for (const v of versions) {
@@ -54,7 +63,25 @@ function hasExistingCdm(userDataDir) {
       };
       if (checkPath(vDir)) return true;
     }
-  } catch {}
+    return false;
+  };
+
+  for (const dir of dirs) {
+    try {
+      const cdmDir = path.join(dir, 'WidevineCdm');
+      if (checkDir(cdmDir)) {
+        if (userDataDir && dir !== userDataDir) {
+          try {
+            const destDir = path.join(userDataDir, 'WidevineCdm');
+            if (!fs.existsSync(destDir)) {
+              fs.cpSync(cdmDir, destDir, { recursive: true });
+            }
+          } catch {}
+        }
+        return true;
+      }
+    } catch {}
+  }
   return false;
 }
 
@@ -63,6 +90,10 @@ if (userData) {
   app.setPath('userData', userData);
   app.setPath('sessionData', userData);
 }
+// Google component updater domains must bypass proxies so Widevine CDM can download/update even on restricted proxies.
+const googleBypass = '*.googleapis.com;*.gvt1.com;*.google.com';
+const existingBypass = argument('proxy-bypass-list');
+app.commandLine.appendSwitch('proxy-bypass-list', existingBypass ? `${existingBypass};${googleBypass}` : googleBypass);
 // Audio only: no GPU unless Noctara asks for it, no disk cache, no throttling of the hidden page.
 if (!process.argv.includes('--noctara-gpu')) {
   app.disableHardwareAcceleration();
@@ -107,7 +138,9 @@ async function applyNetwork(config) {
     proxyConfig = { mode: 'system' };
     proxyDescription = 'system';
   } else if (proxy.mode === 'manual' && proxy.rules) {
-    proxyConfig = { mode: 'fixed_servers', proxyRules: proxy.rules, proxyBypassRules: proxy.bypass || '' };
+    const googleBypass = '*.googleapis.com;*.gvt1.com;*.google.com';
+    const bypassRules = proxy.bypass ? `${proxy.bypass};${googleBypass}` : googleBypass;
+    proxyConfig = { mode: 'fixed_servers', proxyRules: proxy.rules, proxyBypassRules: bypassRules };
     proxyDescription = proxy.display || 'manual';
   }
   // Both sessions: the player's and the default one (Chromium's own requests, such as the CDM component check).
