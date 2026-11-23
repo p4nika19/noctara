@@ -2,7 +2,13 @@
 
 Noctara is a native SoundCloud desktop client written in C++23 and Qt 6 Quick. It uses glass surfaces over a backdrop taken from the cover art, comes with two themes (Midnight and Frost), and runs with GPU acceleration or a full software fallback. The UI is localized in English and Russian.
 
-> Status: slices (a)–(i) of the plan are done (foundations, glass pipeline, network stack, caches, SoundCloud api-v2 models, authentication, native playback, pages and customization, and protected playback through a castlabs Electron helper). See [docs/plan.md](docs/plan.md).
+![Noctara Home - Midnight Theme](docs/screenshots/home-dark.png)
+
+| Frost (Light Theme) | Now Playing | Glass & Appearance Customization |
+|:---:|:---:|:---:|
+| ![Frost Light Theme](docs/screenshots/home-light.png) | ![Full Player View](docs/screenshots/full-player.png) | ![Appearance Settings Panel](docs/screenshots/appearance.png) |
+
+> Status: slices (a)–(j) of the plan are done (foundations, glass pipeline, network stack, caches, SoundCloud api-v2 models, authentication, native playback, pages and customization, and protected playback through a castlabs Electron helper). See [docs/plan.md](docs/plan.md).
 
 ## Install
 
