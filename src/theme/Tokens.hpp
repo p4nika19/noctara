@@ -256,6 +256,7 @@ class GlassTokens {
     Q_PROPERTY(bool primaryOnAccent MEMBER primaryOnAccent CONSTANT)  // frosted | liquid | tinted | clear | solid
     Q_PROPERTY(QString backdrop MEMBER backdrop CONSTANT)             // aurora | cover | dark
     Q_PROPERTY(bool backdropAnimated MEMBER backdropAnimated CONSTANT)
+    Q_PROPERTY(bool discoveryAnimated MEMBER discoveryAnimated CONSTANT)
     Q_PROPERTY(qreal glow MEMBER glow CONSTANT)  // glow intensity 0..1
     Q_PROPERTY(bool glowCover MEMBER glowCover CONSTANT)
     Q_PROPERTY(bool glowControls MEMBER glowControls CONSTANT)
@@ -298,6 +299,7 @@ public:
     bool primaryOnAccent = true;
     QString backdrop = QStringLiteral("aurora");
     bool backdropAnimated = true;
+    bool discoveryAnimated = true;
     qreal glow = 0.3;
     bool glowCover = true;
     bool glowControls = true;

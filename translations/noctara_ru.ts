@@ -492,6 +492,11 @@
         <translation>Перемешать</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Create playlist</source>
+        <translation>Создать плейлист</translation>
+    </message>
+    <message>
         <location line="+13"/>
         <source>Nothing here matches “%1”.</source>
         <translation>Здесь нет совпадений с «%1».</translation>
@@ -500,6 +505,54 @@
         <location line="+1"/>
         <source>There are no tracks here right now.</source>
         <translation>Сейчас здесь нет треков.</translation>
+    </message>
+</context>
+<context>
+    <name>DiscoveryPlaylistDialog</name>
+    <message>
+        <location filename="../src/qml/components/DiscoveryPlaylistDialog.qml" line="+76"/>
+        <source>Create playlist from Weekly Wave</source>
+        <translation>Создать плейлист из Weekly Wave</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Create playlist from Daily Drops</source>
+        <translation>Создать плейлист из Daily Drops</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Create playlist</source>
+        <translation>Создать плейлист</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Playlist name</source>
+        <translation>Название плейлиста</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Private: only you can see it</source>
+        <translation>Приватный: виден только вам</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Public: visible to everyone</source>
+        <translation>Публичный: виден всем</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Tracks (%1 of %2 selected)</source>
+        <translation>Треки (выбрано %1 из %2)</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Deselect all</source>
+        <translation>Снять выбор</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Select all</source>
+        <translation>Выбрать все</translation>
     </message>
 </context>
 <context>
@@ -1451,7 +1504,7 @@
         <translation>Добрый вечер</translation>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+100"/>
         <source>%1 · from %2</source>
         <translation>%1 · из «%2»</translation>
     </message>
@@ -1466,7 +1519,7 @@
         <translation>Подключите аккаунт SoundCloud, чтобы видеть ленту, лайки и плейлисты.</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+37"/>
         <location line="+2"/>
         <source>Daily Drops</source>
         <translation>Daily Drops</translation>
@@ -1477,7 +1530,7 @@
         <translation>Новинки по вашему вкусу. Обновляется каждый день</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+12"/>
         <location line="+2"/>
         <source>Weekly Wave</source>
         <translation>Weekly Wave</translation>
@@ -1528,17 +1581,22 @@
         <translation>Чарты</translation>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+355"/>
         <source>Play</source>
         <translation>Воспроизвести</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Shuffle</source>
         <translation>Перемешать</translation>
     </message>
     <message>
-        <location line="-143"/>
+        <location line="+7"/>
+        <source>Create playlist</source>
+        <translation>Создать плейлист</translation>
+    </message>
+    <message>
+        <location line="-464"/>
         <source>Now playing</source>
         <translation>Сейчас играет</translation>
     </message>
@@ -1723,7 +1781,7 @@
         <translation>Настройки</translation>
     </message>
     <message>
-        <location line="+91"/>
+        <location line="+92"/>
         <source>Link copied.</source>
         <translation>Ссылка скопирована.</translation>
     </message>
@@ -1738,7 +1796,7 @@
         <translation>Копировать ссылку</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+13"/>
         <source>Open track page</source>
         <translation>Открыть страницу трека</translation>
     </message>
@@ -1758,7 +1816,17 @@
         <translation>Добавить в плейлист…</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+5"/>
+        <source>Remove from playlist</source>
+        <translation>Удалить из плейлиста</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>Added</source>
+        <translation>Добавлено</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Loading your playlists…</source>
         <translation>Загрузка ваших плейлистов…</translation>
     </message>
@@ -2727,12 +2795,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+601"/>
+        <location line="+608"/>
         <source>Icons</source>
         <translation>Значки</translation>
     </message>
     <message>
-        <location line="-600"/>
+        <location line="-607"/>
         <source>Icon appearance.</source>
         <translation>Внешний вид значков.</translation>
     </message>
@@ -2813,13 +2881,13 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+611"/>
+        <location line="+618"/>
         <location line="+347"/>
         <source>System</source>
         <translation>Как в системе</translation>
     </message>
     <message>
-        <location line="-957"/>
+        <location line="-964"/>
         <source>Midnight (dark)</source>
         <translation>Midnight (тёмная)</translation>
     </message>
@@ -2905,12 +2973,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+623"/>
+        <location line="+630"/>
         <source>Volume</source>
         <translation>Громкость</translation>
     </message>
     <message>
-        <location line="-622"/>
+        <location line="-629"/>
         <source>Volume when Noctara starts.</source>
         <translation>Громкость при запуске Noctara.</translation>
     </message>
@@ -3056,12 +3124,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+210"/>
+        <location line="+217"/>
         <source>Soft</source>
         <translation>Мягкие</translation>
     </message>
     <message>
-        <location line="-208"/>
+        <location line="-215"/>
         <source>Palette extraction</source>
         <translation>Извлечение палитры</translation>
     </message>
@@ -3182,7 +3250,7 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+182"/>
+        <location line="+189"/>
         <location line="+364"/>
         <location line="+13"/>
         <location line="+12"/>
@@ -3193,19 +3261,19 @@
         <translation>Авто</translation>
     </message>
     <message>
-        <location line="-866"/>
+        <location line="-873"/>
         <source>Low</source>
         <translation>Низкое</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+406"/>
+        <location line="+413"/>
         <location line="+25"/>
         <source>Medium</source>
         <translation>Среднее</translation>
     </message>
     <message>
-        <location line="-430"/>
+        <location line="-437"/>
         <source>High</source>
         <translation>Высокое</translation>
     </message>
@@ -3236,7 +3304,17 @@
         <translation>Треки, которые SoundCloud передаёт только в зашифрованном виде (DRM). Они играют в небольшом фоновом плеере с Widevine и никогда не сохраняются на этом компьютере.</translation>
     </message>
     <message>
-        <location line="+249"/>
+        <location line="+301"/>
+        <source>Animate discovery cards</source>
+        <translation>Анимировать карточки «Открытия»</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Continuous flowing wave ribbons across Daily Drops and Weekly Wave.</source>
+        <translation>Плавное перетекание фоновых волн через Daily Drops и Weekly Wave.</translation>
+    </message>
+    <message>
+        <location line="-53"/>
         <source>Liquid glass</source>
         <translation>Жидкое стекло</translation>
     </message>
@@ -3322,7 +3400,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+33"/>
+        <location line="+40"/>
         <source>×</source>
         <translation>×</translation>
     </message>
@@ -4388,7 +4466,7 @@
         <translation>с</translation>
     </message>
     <message>
-        <location line="-1165"/>
+        <location line="-1172"/>
         <source>Navigation</source>
         <translation>Навигация</translation>
     </message>
@@ -4429,12 +4507,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+772"/>
+        <location line="+779"/>
         <source>Full-screen player</source>
         <translation>Полноэкранный плеер</translation>
     </message>
     <message>
-        <location line="-771"/>
+        <location line="-778"/>
         <source>The large player with the cover art.</source>
         <translation>Большой плеер с обложкой.</translation>
     </message>
@@ -4529,7 +4607,7 @@
         <translation>Матовое: молочное размытое стекло. Жидкое: глянцевое стекло с яркой кромкой. Тонированное: стекло цвета акцента. Простой: плоская полупрозрачная заливка. Прозрачное: только контур. Сплошное: непрозрачное.</translation>
     </message>
     <message>
-        <location line="+257"/>
+        <location line="+264"/>
         <source>Set up the protected player automatically</source>
         <translation>Устанавливать защищённый плеер автоматически</translation>
     </message>
@@ -5758,7 +5836,7 @@
 <context>
     <name>noctara::ui::CatalogController</name>
     <message>
-        <location filename="../src/ui/CatalogController.cpp" line="+226"/>
+        <location filename="../src/ui/CatalogController.cpp" line="+228"/>
         <source>Sign in to like tracks.</source>
         <translation>Войдите, чтобы ставить лайки.</translation>
     </message>
@@ -5768,13 +5846,12 @@
         <translation>Не удалось изменить лайк: %1</translation>
     </message>
     <message>
-        <location line="+55"/>
-        <location line="+74"/>
+        <location line="+87"/>
         <source>Sign in to add tracks to playlists.</source>
         <translation>Войдите, чтобы добавлять треки в плейлисты.</translation>
     </message>
     <message>
-        <location line="-52"/>
+        <location line="+22"/>
         <source>Could not add the track: %1</source>
         <translation>Не удалось добавить трек: %1</translation>
     </message>
@@ -5784,12 +5861,32 @@
         <translation>Трек уже есть в «%1».</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>Added to “%1”.</source>
         <translation>Добавлено в «%1».</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+11"/>
+        <source>Sign in to edit playlists.</source>
+        <translation>Войдите в аккаунт, чтобы изменять плейлисты.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Could not remove the track: %1</source>
+        <translation>Не удалось удалить трек: %1</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Removed from “%1”.</source>
+        <translation>Удалено из «%1».</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Sign in to create playlists.</source>
+        <translation>Войдите в аккаунт, чтобы создавать плейлисты.</translation>
+    </message>
+    <message>
+        <location line="+24"/>
         <source>Could not create the playlist: %1</source>
         <translation>Не удалось создать плейлист: %1</translation>
     </message>

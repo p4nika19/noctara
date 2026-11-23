@@ -697,7 +697,8 @@ TEST_SUITE("ui.catalog-writes")
                     return FakeApi::reply(201, R"({"kind":"playlist","id":6,"title":"New one","tracks":[{"id":9}]})",
                                           jsonHeaders());
                 }
-                if (path.startsWith(u"/users/1/track_likes/")) {
+                if (path.startsWith(u"/users/1/track_likes/") || path.startsWith(u"/me/track_likes/") ||
+                    path.startsWith(u"/likes/tracks/")) {
                     return FakeApi::reply(*likeStatus, "{}", jsonHeaders());
                 }
                 if (path == u"/tracks/9") {
@@ -748,6 +749,20 @@ TEST_SUITE("ui.catalog-writes")
                 CHECK(request.cache == net::CacheMode::Refresh);
             }
         }
+    }
+
+    TEST_CASE("removing from a playlist removes the track and updates the list")
+    {
+        WriteHarness h;
+        QSignalSpy notice(h.catalog.get(), &ui::CatalogController::notice);
+        h.catalog->addToPlaylist(5, 9);
+        REQUIRE(test::waitUntil([&] { return notice.count() == 1; }, 5000));
+        CHECK(h.tracks() == std::vector<qint64>{1, 2, 9});
+
+        h.catalog->removeFromPlaylist(5, 2);
+        REQUIRE(test::waitUntil([&] { return notice.count() == 2; }, 5000));
+        CHECK(notice.at(1).at(0).toString() == u"success");
+        CHECK(h.tracks() == std::vector<qint64>{1, 9});
     }
 
     TEST_CASE("a like shows at once and goes back when SoundCloud refuses it")
@@ -825,6 +840,15 @@ TEST_SUITE("ui.catalog-writes")
         h.catalog->createPlaylist(QStringLiteral("   "), false, 9);  // a blank name sends nothing
         QTest::qWait(100);
         CHECK(notice.count() == 1);
+    }
+
+    TEST_CASE("a new playlist can be created with multiple tracks")
+    {
+        WriteHarness h;
+        QSignalSpy notice(h.catalog.get(), &ui::CatalogController::notice);
+        h.catalog->createPlaylistWithTracks(QStringLiteral("Multi Track"), true, QVariantList{9, 10, 11});
+        REQUIRE(test::waitUntil([&] { return notice.count() == 1; }, 5000));
+        CHECK(notice.at(0).at(0).toString() == u"success");
     }
 }
 

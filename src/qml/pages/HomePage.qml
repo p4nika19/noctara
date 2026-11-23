@@ -175,10 +175,32 @@ Flickable {
         }
 
         Row {
+            id: discoveryRow
             visible: Account.signedIn
             width: column.width
             spacing: Theme.space.lg
+
+            property real waveProgress: 0
+            readonly property bool animating: Theme.glass.discoveryAnimated
+                && Window.window && Window.window.active
+                && Window.window.visibility !== Window.Minimized
+
+            NumberAnimation {
+                id: waveAnim
+                target: discoveryRow
+                property: "waveProgress"
+                from: 0.0
+                to: 1.0
+                duration: 36000
+                loops: Animation.Infinite
+                running: discoveryRow.visible
+                paused: running && !discoveryRow.animating
+            }
+
             DiscoveryCard {
+                cardIndex: 0
+                totalRowWidth: discoveryRow.width
+                rowSpacing: discoveryRow.spacing
                 width: (column.width - Theme.space.lg) / 2
                 model: Catalog.dailyDrops
                 title: qsTr("Daily Drops")
@@ -187,6 +209,9 @@ Flickable {
                 kind: "daily-drops"
             }
             DiscoveryCard {
+                cardIndex: 1
+                totalRowWidth: discoveryRow.width
+                rowSpacing: discoveryRow.spacing
                 width: (column.width - Theme.space.lg) / 2
                 model: Catalog.weeklyWave
                 title: qsTr("Weekly Wave")
@@ -229,6 +254,9 @@ Flickable {
         property string description
         property string context
         property string kind
+        property int cardIndex: 0
+        property real totalRowWidth: 0
+        property real rowSpacing: Theme.space.lg
 
         readonly property bool isDaily: kind === "daily-drops"
 
@@ -300,11 +328,12 @@ Flickable {
             function onModelReset() { card.refreshCovers() }
         }
 
-        // Native background patterns: clipped strictly to the rounded card bounds
+        // 1. Static background patterns (tint gradient, ambient glow, subtle diagonal hatch)
+        // Painted strictly once into a cached image texture: never repainted during animation!
         Canvas {
             id: bgCanvas
             anchors.fill: parent
-            renderTarget: Canvas.FramebufferObject
+            renderTarget: Canvas.Image
 
             function drawRoundedRect(ctx, x, y, w, h, r) {
                 var radius = Math.max(0, Math.min(r, w / 2, h / 2))
@@ -330,14 +359,14 @@ Flickable {
                 drawRoundedRect(ctx, 0, 0, width, height, card.radius)
                 ctx.clip()
 
-                // 1. Base subtle dark tint gradient
+                // Base subtle dark tint gradient
                 var grad = ctx.createLinearGradient(0, 0, width, 0)
                 grad.addColorStop(0.0, card.tintStart)
                 grad.addColorStop(1.0, card.tintEnd)
                 ctx.fillStyle = grad
                 ctx.fillRect(0, 0, width, height)
 
-                // 2. Ambient radial glow
+                // Ambient radial glow
                 var radial = ctx.createRadialGradient(width * 0.25, height * 0.5, 0,
                                                       width * 0.25, height * 0.5, width * 0.65)
                 radial.addColorStop(0.0, card.glowColor)
@@ -345,51 +374,111 @@ Flickable {
                 ctx.fillStyle = radial
                 ctx.fillRect(0, 0, width, height)
 
-                // 3. Flowing fluid wave curves
-                var waveGrad1 = ctx.createLinearGradient(0, height * 0.8, width, height * 0.2)
-                waveGrad1.addColorStop(0.0, card.waveColor1)
-                waveGrad1.addColorStop(0.5, card.waveColor2)
-                waveGrad1.addColorStop(1.0, "transparent")
-                ctx.strokeStyle = waveGrad1
-                ctx.lineWidth = 2.5 * Theme.scale
-                ctx.beginPath()
-                ctx.moveTo(-10, height * 0.7)
-                ctx.bezierCurveTo(width * 0.2, height * 1.15,
-                                  width * 0.35, height * 0.1,
-                                  width * 0.65, height * 0.4)
-                ctx.bezierCurveTo(width * 0.8, height * 0.55,
-                                  width * 0.9, height * 0.2,
-                                  width + 10, height * 0.15)
-                ctx.stroke()
-
-                var waveGrad2 = ctx.createLinearGradient(width * 0.1, 0, width * 0.8, height)
-                waveGrad2.addColorStop(0.0, card.waveColor2)
-                waveGrad2.addColorStop(1.0, "transparent")
-                ctx.strokeStyle = waveGrad2
-                ctx.lineWidth = 1.5 * Theme.scale
-                ctx.beginPath()
-                ctx.moveTo(width * 0.1, -10)
-                ctx.bezierCurveTo(width * 0.25, height * 0.45,
-                                  width * 0.45, height * 0.9,
-                                  width * 0.75, height * 0.75)
-                ctx.stroke()
-
-                // 4. Subtle diagonal micro-texture hatch
+                // Subtle diagonal micro-texture hatch (batched in 1 draw call)
                 ctx.strokeStyle = Theme.dark ? "rgba(255, 255, 255, 0.035)" : "rgba(0, 0, 0, 0.025)"
                 ctx.lineWidth = 1
-                var step = 6 * Theme.scale
-                for (var lx = -height; lx < width; lx += step) {
-                    ctx.beginPath()
-                    ctx.moveTo(lx, 0)
-                    ctx.lineTo(lx + height, height)
-                    ctx.stroke()
+                var hatchStep = 6 * Theme.scale
+                ctx.beginPath()
+                for (var hx = -height; hx < width; hx += hatchStep) {
+                    ctx.moveTo(hx, 0)
+                    ctx.lineTo(hx + height, height)
                 }
+                ctx.stroke()
 
                 ctx.restore()
             }
 
+            onWidthChanged: requestPaint()
+            onHeightChanged: requestPaint()
             property bool darkTheme: Theme.dark
             onDarkThemeChanged: requestPaint()
+            Component.onCompleted: requestPaint()
+        }
+
+        // 2. Continuous flowing wave curves: painted once onto a periodic strip and translated via GPU matrix
+        // (0% CPU, 0 Canvas redraws, 0 main thread overhead while animating).
+        Item {
+            id: waveContainer
+            anchors.fill: parent
+            clip: true
+
+            Canvas {
+                id: waveCanvas
+                y: 0
+                height: card.height
+                readonly property real period: card.totalRowWidth > 0 ? card.totalRowWidth : (card.width * 2 + card.rowSpacing)
+                width: card.width + period
+                x: - (discoveryRow.waveProgress * period)
+                renderTarget: Canvas.Image
+
+                onPaint: {
+                    var ctx = getContext("2d")
+                    ctx.clearRect(0, 0, width, height)
+                    ctx.save()
+
+                    var globalOffset = card.cardIndex * (card.width + card.rowSpacing)
+                    var L = period > 0 ? period : 1
+                    var step = 4 * Theme.scale
+
+                    // Primary continuous wave ribbon (harmonic period L)
+                    ctx.strokeStyle = card.waveColor1
+                    ctx.lineWidth = 2.5 * Theme.scale
+                    ctx.lineCap = "round"
+                    ctx.lineJoin = "round"
+                    ctx.beginPath()
+                    var first = true
+                    for (var lx = -10; lx <= width + 10; lx += step) {
+                        var gx = globalOffset + lx
+                        var y1 = height * 0.55
+                              + height * 0.22 * Math.sin((gx / L) * Math.PI * 4)
+                              + height * 0.10 * Math.cos((gx / L) * Math.PI * 8)
+                        if (first) {
+                            ctx.moveTo(lx, y1)
+                            first = false
+                        } else {
+                            ctx.lineTo(lx, y1)
+                        }
+                    }
+                    ctx.stroke()
+
+                    // Secondary harmonious ethereal ribbon (harmonic period L)
+                    ctx.strokeStyle = card.waveColor2
+                    ctx.lineWidth = 1.5 * Theme.scale
+                    ctx.lineCap = "round"
+                    ctx.lineJoin = "round"
+                    ctx.beginPath()
+                    first = true
+                    for (var lx2 = -10; lx2 <= width + 10; lx2 += step) {
+                        var gx2 = globalOffset + lx2
+                        var y2 = height * 0.42
+                              + height * 0.18 * Math.cos((gx2 / L) * Math.PI * 6 + 1.2)
+                              + height * 0.07 * Math.sin((gx2 / L) * Math.PI * 10)
+                        if (first) {
+                            ctx.moveTo(lx2, y2)
+                            first = false
+                        } else {
+                            ctx.lineTo(lx2, y2)
+                        }
+                    }
+                    ctx.stroke()
+
+                    ctx.restore()
+                }
+
+                Connections {
+                    target: discoveryRow
+                    function onWidthChanged() {
+                        waveCanvas.requestPaint()
+                        bgCanvas.requestPaint()
+                    }
+                }
+
+                onWidthChanged: requestPaint()
+                onHeightChanged: requestPaint()
+                property bool darkTheme: Theme.dark
+                onDarkThemeChanged: requestPaint()
+                Component.onCompleted: requestPaint()
+            }
         }
 
         // Subtle tinted card border
@@ -545,6 +634,13 @@ Flickable {
                     text: qsTr("Shuffle")
                     enabled: card.model && card.model.count > 0
                     onClicked: Player.shufflePlay(card.model, card.context)
+                }
+                IconButton {
+                    objectName: "discoverySaveButton"
+                    iconName: "plus"
+                    text: qsTr("Create playlist")
+                    enabled: card.model && card.model.count > 0 && Account.signedIn
+                    onClicked: Window.window.openDiscoveryPlaylist(card.kind, card.model)
                 }
             }
         }

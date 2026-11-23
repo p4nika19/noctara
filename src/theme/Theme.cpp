@@ -106,7 +106,7 @@ void Theme::onSettingChanged(const QString& key)
     } else if (is(keys::GlassStyle) || is(keys::GlassSurface) || is(keys::GlassBlurStrength) || is(keys::GlassGrain) ||
                is(keys::ReduceTransparency) || is(keys::GlowCover) || is(keys::GlowControls) ||
                is(keys::GlowProgress) || is(keys::ButtonMaterial) || is(keys::PrimaryButtons) ||
-               is(keys::BackdropStyle) || is(keys::BackdropAnimate)) {
+               is(keys::BackdropStyle) || is(keys::BackdropAnimate) || is(keys::DiscoveryAnimate)) {
         updateGlass();
     }
 }
@@ -345,6 +345,8 @@ void Theme::updateGlass()
     glass.backdrop = m_settings.stringValue(keys::BackdropStyle);
     glass.backdropAnimated = m_settings.boolValue(keys::BackdropAnimate) && m_blurAvailable &&
                              !m_settings.boolValue(keys::ReduceMotion) && m_backdropAnimationAllowed;
+    glass.discoveryAnimated = m_settings.boolValue(keys::DiscoveryAnimate) &&
+                              !m_settings.boolValue(keys::ReduceMotion) && m_backdropAnimationAllowed;
     glass.glow = m_settings.realValue(keys::GlowIntensity);
     glass.glowCover = m_settings.boolValue(keys::GlowCover);
     glass.glowControls = m_settings.boolValue(keys::GlowControls);

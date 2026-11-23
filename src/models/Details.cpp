@@ -46,6 +46,16 @@ QString PlaylistDetail::snapshotKey() const
     return QStringLiteral("playlist-%1").arg(m_id);
 }
 
+bool PlaylistDetail::containsTrack(qint64 trackId) const
+{
+    for (const api::Entry& entry : m_tracks.entries()) {
+        if (const auto* track = std::get_if<api::Track>(&entry.item); track != nullptr && track->id == trackId) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void PlaylistDetail::reload()
 {
     m_request.cancel();

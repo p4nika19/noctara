@@ -93,6 +93,7 @@ Animations and transitions.
 |---|---|---|---|---|
 | `reduce` | bool | `false` | — | **Reduce motion.** Replace movement with simple fades and stop the drifting backdrop. (env `NOCTARA_APPEARANCE_MOTION_REDUCE`) |
 | `speed` | number | `1.0` | 0 … 3 | **Animation speed.** Duration multiplier. 0 turns animations off. (env `NOCTARA_APPEARANCE_MOTION_SPEED`) |
+| `discovery` | bool | `true` | — | **Animate discovery cards.** Continuous flowing wave ribbons across Daily Drops and Weekly Wave. (env `NOCTARA_APPEARANCE_MOTION_DISCOVERY`) |
 | `color_transition` | enum | `"smooth"` | `fast`, `smooth`, `slow` | **Colour transitions.** How quickly colours blend into the new palette when the track or theme changes. (env `NOCTARA_APPEARANCE_MOTION_COLOR_TRANSITION`) |
 
 ### `[appearance.shape]` Shape

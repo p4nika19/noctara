@@ -38,6 +38,7 @@ public:
                    QObject* parent = nullptr);
 
     Q_INVOKABLE void reload();
+    [[nodiscard]] bool containsTrack(qint64 trackId) const;
 
     [[nodiscard]] bool loading() const noexcept { return m_loading; }
     [[nodiscard]] int errorCode() const noexcept { return m_error; }

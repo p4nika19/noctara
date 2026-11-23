@@ -164,8 +164,19 @@ Endpoint<Page<Comment>> comments(Id track, int limit)
 
 Endpoint<Done> likeTrack(Id me, Id track, bool like)
 {
-    return write<Done>(like ? net::Method::Put : net::Method::Delete,
-                       apiUrl(idPath("/users/", me, "/track_likes/") + QString::number(track)), {}, parse::nothing);
+    const QString path = me > 0 ? (idPath("/users/", me, "/track_likes/") + QString::number(track))
+                                : (QStringLiteral("/me/track_likes/") + QString::number(track));
+    Endpoint<Done> endpoint =
+        write<Done>(like ? net::Method::Put : net::Method::Delete, apiUrl(path), {}, parse::nothing);
+    if (like) {
+        endpoint.request.body = QByteArrayLiteral("{}");
+    }
+    return endpoint;
+}
+
+Endpoint<Done> likeTrack(Id track, bool like)
+{
+    return likeTrack(0, track, like);
 }
 
 Endpoint<Playlist> playlistForEdit(Id id)

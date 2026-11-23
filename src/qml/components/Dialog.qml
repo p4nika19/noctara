@@ -18,22 +18,49 @@ T.Dialog {
     default property alias controls: extra.data
 
     parent: T.Overlay.overlay
-    anchors.centerIn: parent
+    x: Math.round(((parent ? parent.width : (T.Overlay.overlay ? T.Overlay.overlay.width : 800)) - width) / 2)
+    y: Math.round(((parent ? parent.height : (T.Overlay.overlay ? T.Overlay.overlay.height : 600)) - height) / 2)
     modal: true
     focus: true
-    width: Math.min(440 * Theme.scale, parent ? parent.width - Theme.space.xl * 2 : 440 * Theme.scale)
+    width: Math.min(480 * Theme.scale, parent ? parent.width - Theme.space.xl * 2 : 480 * Theme.scale)
     padding: Math.max(Theme.space.xl, panel.cornerInset)
     closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside
+
+    function reCenter() {
+        var p = parent || T.Overlay.overlay
+        if (p && p.width > 0 && p.height > 0) {
+            x = Math.round((p.width - width) / 2)
+            y = Math.round((p.height - height) / 2)
+        }
+    }
+
+    onWidthChanged: reCenter()
+    onHeightChanged: reCenter()
+    onAboutToShow: reCenter()
 
     T.Overlay.modal: Rectangle {
         color: Theme.colors.scrim
         Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
     }
-    background: GlassPanel {
+    background: Rectangle {
         id: panel
-        level: 2
-        liquid: true
         radius: Theme.radius.lg
+        color: Theme.colors.solidOverlay
+        border.width: Math.max(1, Theme.space.hairline)
+        border.color: Theme.dark ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(0, 0, 0, 0.18)
+
+        readonly property real cornerInset: radius * (1 - Math.SQRT1_2)
+
+        Shadow {
+            anchors.fill: parent
+            z: -1
+            active: Graphics.hardware
+            radius: panel.radius
+            color: Theme.colors.shadow
+            blur: 64 * Theme.scale
+            spread: 0
+            offsetY: 20 * Theme.scale
+        }
     }
     contentItem: Column {
         spacing: Theme.space.md
@@ -78,7 +105,10 @@ T.Dialog {
             }
         }
     }
-    onOpened: (control.initialFocus || confirm).forceActiveFocus()
+    onOpened: {
+        reCenter()
+        (control.initialFocus || confirm).forceActiveFocus()
+    }
     enter: Transition {
         NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.fast }
         NumberAnimation { property: "scale"; from: 0.96; to: 1; duration: Theme.motion.normal; easing.type: Theme.motion.easingStandard }

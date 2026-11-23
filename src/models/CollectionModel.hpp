@@ -84,6 +84,9 @@ public:
     Q_INVOKABLE QVariant artworkAt(int row) const;
     // Full-resolution artwork for large discovery cards (no downscaling or cropping).
     Q_INVOKABLE QVariant originalArtworkAt(int row) const;
+    Q_INVOKABLE qint64 itemIdAt(int row) const;
+    Q_INVOKABLE QString titleAt(int row) const;
+    Q_INVOKABLE QString artistAt(int row) const;
 
     [[nodiscard]] int count() const noexcept { return static_cast<int>(m_entries.size()); }
     [[nodiscard]] bool loading() const noexcept { return m_loading; }

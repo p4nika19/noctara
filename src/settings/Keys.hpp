@@ -52,6 +52,7 @@ inline constexpr std::string_view StartPage = "layout.window.start_page";
 inline constexpr std::string_view StartMinimized = "layout.window.start_minimized";
 inline constexpr std::string_view CloseToTray = "layout.window.close_to_tray";
 inline constexpr std::string_view BackdropAnimate = "appearance.backdrop.animate";
+inline constexpr std::string_view DiscoveryAnimate = "appearance.motion.discovery";
 inline constexpr std::string_view GlassStyle = "appearance.glass.style";  // the backdrop blur
 inline constexpr std::string_view GlassSurface = "appearance.glass.surface";
 inline constexpr std::string_view GlassBlurStrength = "appearance.glass.blur_strength";

@@ -70,6 +70,7 @@ inline constexpr std::size_t kMaxTrackIds = 50;
 
 // Writes, for the signed-in account (Auth::Required, never cached). The bodies follow what SoundCloud's web client
 // sends; see docs/api.md.
+[[nodiscard]] Endpoint<Done> likeTrack(Id track, bool like);
 [[nodiscard]] Endpoint<Done> likeTrack(Id me, Id track, bool like);
 // A playlist as SoundCloud has it now (revalidated, not from the cache): what a change is applied to.
 [[nodiscard]] Endpoint<Playlist> playlistForEdit(Id id);

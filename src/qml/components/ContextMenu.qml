@@ -140,13 +140,35 @@ T.Popup {
                         visible: !entry.separator
                         x: icon.x + icon.width + Theme.space.md
                         anchors.verticalCenter: parent.verticalCenter
-                        width: parent.width - x - Theme.space.md - (check.visible ? check.width + Theme.space.sm : 0)
+                        width: parent.width - x - Theme.space.md
+                             - (check.visible ? check.width + Theme.space.sm : 0)
+                             - (badge.visible ? badge.width + Theme.space.sm : 0)
                         text: entry.modelData.text || ""
                         font: Theme.font.body
                         color: entry.modelData.danger ? Theme.colors.danger : Theme.colors.textPrimary
-                        opacity: entry.available ? 1 : 0.45
+                        opacity: entry.modelData.dimmed ? 0.45 : (entry.available ? 1 : 0.45)
                         elide: Text.ElideRight
-                        Component.onCompleted: list.widest = Math.max(list.widest, x + implicitWidth + Theme.space.xl * 2)
+                        Component.onCompleted: list.widest = Math.max(list.widest, x + implicitWidth + (badge.visible ? badge.width + Theme.space.md : 0) + Theme.space.xl * 2)
+                    }
+                    Rectangle {
+                        id: badge
+                        visible: !entry.separator && !!entry.modelData.badge
+                        anchors.right: parent.right
+                        anchors.rightMargin: Theme.space.md
+                        anchors.verticalCenter: parent.verticalCenter
+                        height: 20 * Theme.scale
+                        width: badgeLabel.implicitWidth + 12 * Theme.scale
+                        radius: Theme.radius.xs
+                        color: Theme.dark ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.06)
+                        border.width: Theme.space.hairline
+                        border.color: Theme.colors.divider
+                        Text {
+                            id: badgeLabel
+                            anchors.centerIn: parent
+                            text: entry.modelData.badge || ""
+                            font: Theme.font.caption
+                            color: Theme.colors.textSecondary
+                        }
                     }
                     Icon {
                         id: check

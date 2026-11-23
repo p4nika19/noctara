@@ -110,6 +110,8 @@ void CatalogController::accountChanged()
     ++m_accountGeneration;
     m_likeOverrides.clear();
     m_playlistWrites.clear();
+    m_playlistTrackIds.clear();
+    m_loadedTrackPlaylists.clear();
     ++m_likedRevision;
     Q_EMIT likedChanged();
     // Saved lists belong to one account: another account (or none) never sees them, and they are deleted.
@@ -339,7 +341,7 @@ void CatalogController::toggleLike(qint64 trackId)
                });
 }
 
-QVariantList CatalogController::ownPlaylists()
+QVariantList CatalogController::ownPlaylists(qint64 trackId)
 {
     ensure(QStringLiteral("library"));
     const api::Id me = accountId();
@@ -349,11 +351,43 @@ QVariantList CatalogController::ownPlaylists()
         if (playlist == nullptr || playlist->album || playlist->user.id != me) {
             continue;
         }
+        bool inPlaylist = false;
+        if (trackId > 0) {
+            if (const auto it = m_playlistTrackIds.constFind(playlist->id); it != m_playlistTrackIds.cend()) {
+                inPlaylist = it->contains(trackId);
+            }
+            if (!inPlaylist) {
+                if (const auto it2 = m_playlists.constFind(playlist->id); it2 != m_playlists.cend()) {
+                    inPlaylist = (*it2)->containsTrack(trackId);
+                }
+            }
+        }
         out.append(QVariantMap{{QStringLiteral("id"), QVariant::fromValue<qint64>(playlist->id)},
                                {QStringLiteral("title"), playlist->title},
-                               {QStringLiteral("trackCount"), QVariant::fromValue<qint64>(playlist->trackCount)}});
+                               {QStringLiteral("trackCount"), QVariant::fromValue<qint64>(playlist->trackCount)},
+                               {QStringLiteral("alreadyIn"), inPlaylist}});
     }
     return out;
+}
+
+void CatalogController::loadTrackPlaylists(qint64 trackId)
+{
+    if (trackId <= 0 || m_loadedTrackPlaylists.contains(trackId)) {
+        return;
+    }
+    m_loadedTrackPlaylists.insert(trackId);
+    api::fetch(m_api.client(), api::endpoints::trackPlaylists(trackId, 50), this,
+               [this, trackId](Result<api::Page<api::Entry>> result) {
+                   if (!result) {
+                       return;
+                   }
+                   for (const api::Entry& entry : result->items) {
+                       if (const auto* playlist = std::get_if<api::Playlist>(&entry.item)) {
+                           m_playlistTrackIds[playlist->id].insert(trackId);
+                       }
+                   }
+                   Q_EMIT trackPlaylistsChanged(trackId);
+               });
 }
 
 void CatalogController::addToPlaylist(qint64 playlistId, qint64 trackId)
@@ -405,18 +439,71 @@ void CatalogController::writeNextToPlaylist(api::Id playlistId)
                    }
                    ids.push_back(trackId);
                    api::fetch(m_api.client(), api::endpoints::setPlaylistTracks(playlistId, ids), this,
-                              [this, playlistId, failed, generation](Result<api::Playlist> updated) {
+                              [this, playlistId, trackId, failed, generation](Result<api::Playlist> updated) {
                                   if (generation != m_accountGeneration) {
                                       return;
                                   }
                                   if (!updated) {
                                       failed(updated.error().code);
                                   } else {
+                                      m_playlistTrackIds[playlistId].insert(trackId);
                                       Q_EMIT notice(QStringLiteral("success"),
                                                     tr("Added to “%1”.").arg(updated->title));
                                       playlistUpdated(*updated);
                                   }
                                   finishPlaylistWrite(playlistId);
+                              });
+               });
+}
+
+void CatalogController::removeFromPlaylist(qint64 playlistId, qint64 trackId)
+{
+    if (!m_account.signedIn()) {
+        Q_EMIT notice(QStringLiteral("info"), tr("Sign in to edit playlists."));
+        return;
+    }
+    if (playlistId <= 0 || trackId <= 0) {
+        return;
+    }
+    const quint64 generation = m_accountGeneration;
+    const auto failed = [this](ErrorCode code) {
+        Q_EMIT notice(QStringLiteral("error"), tr("Could not remove the track: %1").arg(i18n::errorMessage(code)));
+    };
+    api::fetch(m_api.client(), api::endpoints::playlistForEdit(playlistId), this,
+               [this, playlistId, trackId, failed, generation](Result<api::Playlist> current) {
+                   if (generation != m_accountGeneration) {
+                       return;
+                   }
+                   if (!current) {
+                       failed(current.error().code);
+                       return;
+                   }
+                   std::vector<api::Id> ids;
+                   ids.reserve(current->tracks.size());
+                   bool found = false;
+                   for (const api::Track& track : current->tracks) {
+                       if (track.id == trackId && !found) {
+                           found = true;
+                           continue;
+                       }
+                       ids.push_back(track.id);
+                   }
+                   if (!found) {
+                       return;
+                   }
+                   api::fetch(m_api.client(), api::endpoints::setPlaylistTracks(playlistId, ids), this,
+                              [this, playlistId, trackId, failed, generation](Result<api::Playlist> updated) {
+                                  if (generation != m_accountGeneration) {
+                                      return;
+                                  }
+                                  if (!updated) {
+                                      failed(updated.error().code);
+                                  } else {
+                                      m_playlistTrackIds[playlistId].remove(trackId);
+                                      Q_EMIT notice(QStringLiteral("success"),
+                                                    tr("Removed from “%1”.").arg(updated->title));
+                                      playlistUpdated(*updated);
+                                  }
                               });
                });
 }
@@ -432,15 +519,28 @@ void CatalogController::finishPlaylistWrite(api::Id playlistId)
 
 void CatalogController::createPlaylist(const QString& title, bool isPrivate, qint64 trackId)
 {
+    createPlaylistWithTracks(title, isPrivate, trackId > 0 ? QVariantList{trackId} : QVariantList{});
+}
+
+void CatalogController::createPlaylistWithTracks(const QString& title, bool isPrivate, const QVariantList& trackIds)
+{
     if (!m_account.signedIn()) {
-        Q_EMIT notice(QStringLiteral("info"), tr("Sign in to add tracks to playlists."));
+        Q_EMIT notice(QStringLiteral("info"), tr("Sign in to create playlists."));
         return;
     }
     const QString name = title.trimmed();
     if (name.isEmpty()) {
         return;
     }
-    const std::vector<api::Id> ids{trackId};
+    std::vector<api::Id> ids;
+    ids.reserve(static_cast<std::size_t>(std::max<qsizetype>(trackIds.size(), 0)));
+    for (const QVariant& v : trackIds) {
+        bool ok = false;
+        const qint64 id = v.toLongLong(&ok);
+        if (ok && id > 0) {
+            ids.push_back(id);
+        }
+    }
     api::fetch(
         m_api.client(), api::endpoints::createPlaylist(name, isPrivate, ids), this,
         [this, generation = m_accountGeneration](Result<api::Playlist> created) {
@@ -453,11 +553,11 @@ void CatalogController::createPlaylist(const QString& title, bool isPrivate, qin
                 return;
             }
             Q_EMIT notice(QStringLiteral("success"), tr("Created “%1”.").arg(created->title));
+            playlistUpdated(*created);
             if (m_loaded.contains(QStringLiteral("library"))) {
                 std::vector<api::Entry> entries = m_library.entries();
-                entries.insert(
-                    entries.begin(),
-                    {.item = std::move(*created), .at = QDateTime::currentDateTimeUtc(), .repostedBy = std::nullopt});
+                entries.insert(entries.begin(),
+                               {.item = *created, .at = QDateTime::currentDateTimeUtc(), .repostedBy = std::nullopt});
                 m_library.applyEntries(std::move(entries));
             }
         });
@@ -465,6 +565,11 @@ void CatalogController::createPlaylist(const QString& title, bool isPrivate, qin
 
 void CatalogController::playlistUpdated(const api::Playlist& playlist)
 {
+    auto& set = m_playlistTrackIds[playlist.id];
+    set.clear();
+    for (const api::Track& t : playlist.tracks) {
+        set.insert(t.id);
+    }
     if (const auto page = m_playlists.constFind(playlist.id); page != m_playlists.cend()) {
         (*page)->reload();  // the write dropped the cached copy, so this reads the new list
     }

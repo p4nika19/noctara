@@ -49,6 +49,13 @@ Item {
             text: qsTr("Shuffle")
             onClicked: Player.shufflePlay(listFilter.model, root.title)
         }
+        IconButton {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: (listFilter.model ? listFilter.model.count : 0) > 0 && Account.signedIn
+            iconName: "plus"
+            text: qsTr("Create playlist")
+            onClicked: Window.window.openDiscoveryPlaylist(root.kind, listFilter.model || root.model)
+        }
     }
     CollectionView {
         anchors.top: header.bottom

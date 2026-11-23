@@ -480,6 +480,30 @@ QVariant CollectionModel::originalArtworkAt(int row) const
     return data(index(row), ArtworkRole);
 }
 
+qint64 CollectionModel::itemIdAt(int row) const
+{
+    if (row < 0 || row >= count()) {
+        return 0;
+    }
+    return data(index(row), IdRole).toLongLong();
+}
+
+QString CollectionModel::titleAt(int row) const
+{
+    if (row < 0 || row >= count()) {
+        return {};
+    }
+    return data(index(row), TitleRole).toString();
+}
+
+QString CollectionModel::artistAt(int row) const
+{
+    if (row < 0 || row >= count()) {
+        return {};
+    }
+    return data(index(row), SubtitleRole).toString();
+}
+
 QHash<int, QByteArray> CollectionModel::roleNames() const
 {
     return {

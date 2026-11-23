@@ -200,7 +200,9 @@ void ApiClient::transmit(const std::shared_ptr<Flight>& flight)
     request.cacheTtl = api.cacheTtl;
     request.background = api.background;
     request.headers.append({QByteArrayLiteral("accept"), QByteArrayLiteral("application/json")});
-    if (!api.body.isEmpty()) {
+    request.headers.append({QByteArrayLiteral("origin"), QByteArrayLiteral("https://soundcloud.com")});
+    request.headers.append({QByteArrayLiteral("referer"), QByteArrayLiteral("https://soundcloud.com/")});
+    if (!api.body.isEmpty() || api.method == net::Method::Post || api.method == net::Method::Put) {
         request.headers.append({QByteArrayLiteral("content-type"), QByteArrayLiteral("application/json")});
     }
     flight->clientIdSent.clear();
@@ -267,7 +269,10 @@ void ApiClient::onFinished(const std::shared_ptr<Flight>& flight, Result<net::Re
         }
         complete(flight, fail(ErrorCode::Unauthorized, "401"));
         return;
-    case 403: complete(flight, fail(ErrorCode::Forbidden, "403")); return;
+    case 403:
+        qCWarning(lcApi) << "API 403 Forbidden for" << flight->request.url.toString() << "body:" << response.body;
+        complete(flight, fail(ErrorCode::Forbidden, "403"));
+        return;
     case 404:
     case 410: complete(flight, fail(ErrorCode::NotFound, std::to_string(response.status))); return;
     case 429: {

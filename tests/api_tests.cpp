@@ -1494,12 +1494,12 @@ TEST_SUITE("api.track-page")
     TEST_CASE("writes need the account, carry a JSON body and never come from the cache")
     {
         const std::vector<Id> ids{1, 2, 9};
-        const auto like = endpoints::likeTrack(5, 7, true);
+        const auto like = endpoints::likeTrack(1, 7, true);
         CHECK(like.request.method == net::Method::Put);
-        CHECK(like.request.url.path() == u"/users/5/track_likes/7");
+        CHECK(like.request.url.path() == u"/users/1/track_likes/7");
         CHECK(like.request.auth == Auth::Required);
         CHECK(like.request.cache == net::CacheMode::Bypass);
-        CHECK(endpoints::likeTrack(5, 7, false).request.method == net::Method::Delete);
+        CHECK(endpoints::likeTrack(1, 7, false).request.method == net::Method::Delete);
 
         const auto set = endpoints::setPlaylistTracks(3, ids);
         CHECK(set.request.method == net::Method::Put);

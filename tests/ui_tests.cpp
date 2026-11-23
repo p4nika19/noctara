@@ -635,7 +635,7 @@ constexpr auto kThemeStub = R"js(({
               easingEmphasized: 7 },
     glass: {
         buttons: 'plain', primary: 'material', primaryOnAccent: false, flat: true, surface: 'flat', style: 'solid',
-        blurred: false, translucent: false, backdrop: false, backdropAnimated: false, grain: 0, glow: 0,
+        blurred: false, translucent: false, backdrop: false, backdropAnimated: false, discoveryAnimated: false, grain: 0, glow: 0,
         glowControls: false, glowCover: false, glowProgress: false, blurDownsample: 1, blurIterations: 0,
         blurOffset: 0, blurSigma: 0, brightnessLift: 0, saturationLift: 0, dispersion: 0, fresnel: 0, lightAngle: 0,
         refraction: 0, rimDarkening: 0, specular: 0, thickness: 0
@@ -1630,6 +1630,7 @@ TEST_SUITE("ui.pages")
             width: 1100; height: 800; visible: true
             property string opened: ""
             function openDiscovery(kind) { opened = kind }
+            function openDiscoveryPlaylist(kind, model) {}
             function openPlaylist(id) {}
             function openUser(id) {}
             function openTrack(id) {}

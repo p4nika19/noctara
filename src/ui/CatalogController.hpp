@@ -76,12 +76,15 @@ public:
     Q_INVOKABLE bool isLiked(qint64 trackId) const;
     Q_INVOKABLE void toggleLike(qint64 trackId);
     // The account's own playlists (not albums, not liked ones), from the library: [{id, title, trackCount,
-    // artwork}]. Loads the library on first use.
-    Q_INVOKABLE QVariantList ownPlaylists();
+    // artwork, alreadyIn}]. Loads the library on first use.
+    Q_INVOKABLE QVariantList ownPlaylists(qint64 trackId = 0);
     // Adds the track at the end of one of the account's playlists (unless it is already there) or to a new one.
     // Changes to one playlist are made one after another; the outcome is a notice.
     Q_INVOKABLE void addToPlaylist(qint64 playlistId, qint64 trackId);
+    Q_INVOKABLE void removeFromPlaylist(qint64 playlistId, qint64 trackId);
     Q_INVOKABLE void createPlaylist(const QString& title, bool isPrivate, qint64 trackId);
+    Q_INVOKABLE void createPlaylistWithTracks(const QString& title, bool isPrivate, const QVariantList& trackIds);
+    Q_INVOKABLE void loadTrackPlaylists(qint64 trackId);
     [[nodiscard]] const QString& query() const noexcept { return m_query; }
     [[nodiscard]] const QString& searchKind() const noexcept { return m_kind; }
 
@@ -99,6 +102,7 @@ Q_SIGNALS:
     void chartChanged();
     void genresChanged();
     void likedChanged();
+    void trackPlaylistsChanged(qint64 trackId);
     // kind: "info", "success", "warning", "error" (App.showToast).
     void notice(const QString& kind, const QString& message);
 
@@ -142,6 +146,8 @@ private:
     QHash<api::Id, bool> m_likeOverrides;  // toggled, SoundCloud's answer pending
     int m_likedRevision = 0;
     QHash<api::Id, std::deque<api::Id>> m_playlistWrites;  // playlist -> tracks to add, the first one in progress
+    QHash<api::Id, QSet<api::Id>> m_playlistTrackIds;      // playlist -> track IDs
+    QSet<api::Id> m_loadedTrackPlaylists;
     QString m_query;
     QString m_kind = QStringLiteral("all");
     QString m_started;  // query + kind of the search shown

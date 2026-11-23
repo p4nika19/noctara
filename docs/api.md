@@ -81,7 +81,7 @@ closure that runs on `context`'s thread. `fetch(client, endpoint, context, done)
 | `trackDetail(id)` | `/tracks/{id}`, also reading `tag_list` and `sharing` (lists skip those) | optional |
 | `trackPlaylists(id)` | `/tracks/{id}/playlists_without_albums` | optional |
 | `comments(id)` | `/tracks/{id}/comments?threaded=0&filter_replies=0` | optional |
-| `likeTrack(me, id, like)` | `PUT` / `DELETE /users/{me}/track_likes/{id}` | required |
+| `likeTrack(me, track, like)` | `PUT` / `DELETE /users/{me}/track_likes/{id}` | required |
 | `playlistForEdit(id)` | `/playlists/{id}`, revalidated (never a cached copy) | required |
 | `setPlaylistTracks(id, ids)` | `PUT /playlists/{id}`, body `{"playlist":{"tracks":[ids]}}` | required |
 | `createPlaylist(title, private, ids)` | `POST /playlists`, body `{"playlist":{"title","sharing","tracks"}}` | required |

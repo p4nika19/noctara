@@ -256,6 +256,11 @@ TEST_SUITE("theme.object")
         CHECK(theme.glass().style == QStringLiteral("gaussian"));
         CHECK(theme.glass().surface == QStringLiteral("liquid"));
         CHECK(theme.glass().backdropAnimated);
+        CHECK(theme.glass().discoveryAnimated);
+        REQUIRE(store.setUserValue(keys::DiscoveryAnimate, false).has_value());
+        CHECK_FALSE(theme.glass().discoveryAnimated);
+        REQUIRE(store.setUserValue(keys::DiscoveryAnimate, true).has_value());
+        CHECK(theme.glass().discoveryAnimated);
         REQUIRE(store.setUserValue(keys::ReduceTransparency, true).has_value());
         CHECK(theme.glass().style == QStringLiteral("solid"));
         CHECK(theme.glass().surface == QStringLiteral("frosted"));  // nothing to bend without a blur

@@ -539,6 +539,13 @@ std::vector<Definition> builtinDefinitions()
                     .label = QT_TRANSLATE_NOOP("Settings", "Animation speed"),
                     .description = QT_TRANSLATE_NOOP("Settings", "Duration multiplier. 0 turns animations off."),
                     .unit = QT_TRANSLATE_NOOP("Settings", "×")});
+    defs.push_back({.key = keys::DiscoveryAnimate,
+                    .type = Type::Bool,
+                    .defaultValue = true,
+                    .category = Appearance,
+                    .label = QT_TRANSLATE_NOOP("Settings", "Animate discovery cards"),
+                    .description = QT_TRANSLATE_NOOP(
+                        "Settings", "Continuous flowing wave ribbons across Daily Drops and Weekly Wave.")});
 
     // --- Appearance: shape -----------------------------------------------------------------------
     defs.push_back(

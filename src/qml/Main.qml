@@ -82,6 +82,7 @@ Window {
     function openTrack(id) { if (id > 0) openDetail("track", id) }
     // A discovery card on Home opens its full list in the same Back stack as playlist and track pages.
     function openDiscovery(kind) { openDetail("discovery", kind) }
+    function openDiscoveryPlaylist(kind, model) { discoveryPlaylistDialog.openFor(kind, model) }
     // Leaves the innermost overlay: the full player, a panel, then the detail pages.
     function goBack() {
         if (cheatSheet)
@@ -144,22 +145,57 @@ Window {
         ]
     }
     // Like / remove from likes, open the track's page and add it to a playlist: shared by the track menus.
+    function isCurrentPlaylistOwn() {
+        if (!detail || detail.kind !== "playlist") return false
+        const pl = Catalog.playlist(detail.id)
+        return pl && pl.ownerId === Account.userId
+    }
     function trackActions(trackId) {
         Catalog.ensure("likes")
         const liked = Catalog.likedRevision >= 0 && Catalog.isLiked(trackId)
-        return [
+        let acts = [
             { text: qsTr("Open track page"), icon: "info", enabled: trackId > 0, run: () => openTrack(trackId) },
             { text: liked ? qsTr("Remove from likes") : qsTr("Like"), icon: "heart", checked: liked,
               enabled: Account.signedIn && trackId > 0, run: () => Catalog.toggleLike(trackId) },
             { text: qsTr("Add to playlist…"), icon: "plus", enabled: Account.signedIn && trackId > 0,
               run: () => showPlaylistMenu(trackId, contextMenu.origin) }
         ]
+        if (isCurrentPlaylistOwn()) {
+            acts.push({
+                text: qsTr("Remove from playlist"),
+                icon: "trash",
+                danger: true,
+                enabled: Account.signedIn && trackId > 0,
+                run: () => Catalog.removeFromPlaylist(detail.id, trackId)
+            })
+        }
+        return acts
+    }
+    property real currentPlaylistMenuTrackId: 0
+    Connections {
+        target: Catalog
+        function onTrackPlaylistsChanged(trackId) {
+            if (playlistMenu.opened && window.currentPlaylistMenuTrackId === trackId) {
+                showPlaylistMenu(trackId, playlistMenu.origin)
+            }
+        }
     }
     // The account's playlists for a track, as a menu at `where` (window coordinates; a long list scrolls).
     function showPlaylistMenu(trackId, where) {
-        const own = Catalog.ownPlaylists()
-        let actions = own.map(p => ({ text: p.title, icon: "list-music",
-                                      run: () => Catalog.addToPlaylist(p.id, trackId) }))
+        currentPlaylistMenuTrackId = trackId
+        Catalog.loadTrackPlaylists(trackId)
+        const own = Catalog.ownPlaylists(trackId)
+        let actions = own.map(p => {
+            const already = p.alreadyIn === true
+            return {
+                text: p.title,
+                icon: "list-music",
+                badge: already ? qsTr("Added") : "",
+                dimmed: already,
+                enabled: !already,
+                run: () => Catalog.addToPlaylist(p.id, trackId)
+            }
+        })
         if (actions.length === 0)
             actions = [{ text: Catalog.library.loading ? qsTr("Loading your playlists…") : qsTr("No playlists yet"),
                          enabled: false }]
@@ -635,6 +671,7 @@ Window {
             }
         }
     }
+    DiscoveryPlaylistDialog { id: discoveryPlaylistDialog }
 
     ToastHost { anchors.fill: parent; z: 6 }
     ResizeEdges {

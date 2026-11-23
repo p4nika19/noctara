@@ -491,6 +491,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Create playlist</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+13"/>
         <source>Nothing here matches “%1”.</source>
         <translation type="unfinished"></translation>
@@ -498,6 +503,54 @@
     <message>
         <location line="+1"/>
         <source>There are no tracks here right now.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>DiscoveryPlaylistDialog</name>
+    <message>
+        <location filename="../src/qml/components/DiscoveryPlaylistDialog.qml" line="+76"/>
+        <source>Create playlist from Weekly Wave</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Create playlist from Daily Drops</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Create playlist</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Playlist name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Private: only you can see it</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Public: visible to everyone</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Tracks (%1 of %2 selected)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Deselect all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Select all</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1442,7 +1495,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+100"/>
         <source>%1 · from %2</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1457,7 +1510,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+37"/>
         <location line="+2"/>
         <source>Daily Drops</source>
         <translation type="unfinished"></translation>
@@ -1468,7 +1521,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+12"/>
         <location line="+2"/>
         <source>Weekly Wave</source>
         <translation type="unfinished"></translation>
@@ -1519,17 +1572,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+355"/>
         <source>Play</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Shuffle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-143"/>
+        <location line="+7"/>
+        <source>Create playlist</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-464"/>
         <source>Now playing</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1711,7 +1769,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+91"/>
+        <location line="+92"/>
         <source>Link copied.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1726,7 +1784,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+13"/>
         <source>Open track page</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1746,7 +1804,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+5"/>
+        <source>Remove from playlist</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>Added</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Loading your playlists…</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2713,12 +2781,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+601"/>
+        <location line="+608"/>
         <source>Icons</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-600"/>
+        <location line="-607"/>
         <source>Icon appearance.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2799,13 +2867,13 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+611"/>
+        <location line="+618"/>
         <location line="+347"/>
         <source>System</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-957"/>
+        <location line="-964"/>
         <source>Midnight (dark)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2891,12 +2959,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+623"/>
+        <location line="+630"/>
         <source>Volume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-622"/>
+        <location line="-629"/>
         <source>Volume when Noctara starts.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3042,12 +3110,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+210"/>
+        <location line="+217"/>
         <source>Soft</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-208"/>
+        <location line="-215"/>
         <source>Palette extraction</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3168,7 +3236,7 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+182"/>
+        <location line="+189"/>
         <location line="+364"/>
         <location line="+13"/>
         <location line="+12"/>
@@ -3179,19 +3247,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-866"/>
+        <location line="-873"/>
         <source>Low</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+406"/>
+        <location line="+413"/>
         <location line="+25"/>
         <source>Medium</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-430"/>
+        <location line="-437"/>
         <source>High</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3222,7 +3290,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+249"/>
+        <location line="+301"/>
+        <source>Animate discovery cards</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Continuous flowing wave ribbons across Daily Drops and Weekly Wave.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-53"/>
         <source>Liquid glass</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3308,7 +3386,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+33"/>
+        <location line="+40"/>
         <source>×</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4369,7 +4447,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1165"/>
+        <location line="-1172"/>
         <source>Navigation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4410,12 +4488,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+772"/>
+        <location line="+779"/>
         <source>Full-screen player</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-771"/>
+        <location line="-778"/>
         <source>The large player with the cover art.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4510,7 +4588,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+257"/>
+        <location line="+264"/>
         <source>Set up the protected player automatically</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5738,7 +5816,7 @@
 <context>
     <name>noctara::ui::CatalogController</name>
     <message>
-        <location filename="../src/ui/CatalogController.cpp" line="+226"/>
+        <location filename="../src/ui/CatalogController.cpp" line="+228"/>
         <source>Sign in to like tracks.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5748,13 +5826,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+55"/>
-        <location line="+74"/>
+        <location line="+87"/>
         <source>Sign in to add tracks to playlists.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-52"/>
+        <location line="+22"/>
         <source>Could not add the track: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5764,12 +5841,32 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>Added to “%1”.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+11"/>
+        <source>Sign in to edit playlists.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Could not remove the track: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Removed from “%1”.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Sign in to create playlists.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+24"/>
         <source>Could not create the playlist: %1</source>
         <translation type="unfinished"></translation>
     </message>
