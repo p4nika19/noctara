@@ -114,10 +114,11 @@ Result<void> extractZip(const QString& zip, const QString& into)
 // One installation, on the installer's thread: downloads, checks, unpacks, writes the app, tidies up.
 class InstallJob : public QObject {
 public:
-    InstallJob(HelperInstaller* owner, net::INetworkTransport& network, bool background)
+    InstallJob(HelperInstaller* owner, net::INetworkTransport& network, bool background, bool direct)
         : m_owner(owner)
         , m_network(network)
         , m_background(background)
+        , m_direct(direct)
         , m_root(owner->root())
         , m_runtime(owner->runtimeDir())
         , m_app(owner->appDir())
@@ -196,6 +197,7 @@ private:
         net::Request request;
         request.url = artifact.url;
         request.background = m_background;
+        request.bypassProxy = m_direct;
         request.retry = false;  // a broken transfer resumes from what is on disk instead
         request.cache = net::CacheMode::Bypass;
         if (m_offset > 0) {
@@ -411,6 +413,7 @@ private:
     HelperInstaller* m_owner;
     net::INetworkTransport& m_network;
     bool m_background;
+    bool m_direct;
     QString m_root;
     QString m_runtime;
     QString m_app;
@@ -478,11 +481,12 @@ std::optional<HelperCommand> HelperInstaller::installed() const
     return HelperCommand{.program = electron, .arguments = {appDir()}};
 }
 
-void HelperInstaller::install(bool background)
+void HelperInstaller::install(bool background, bool direct)
 {
     if (running()) {
         return;
     }
+    m_lastInstallDirect = direct;
     m_error = Error{};
     m_received = 0;
     m_total = 0;
@@ -492,11 +496,16 @@ void HelperInstaller::install(bool background)
         m_thread.start(QThread::LowPriority);
     }
     // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): owned by the installer (m_job), deleted on its thread
-    auto* job = new InstallJob(this, m_network, background);
+    auto* job = new InstallJob(this, m_network, background, direct);
     job->moveToThread(&m_thread);
     m_job = job;
-    qCInfo(lcDrm) << "setting up the protected player in" << m_root;
+    qCInfo(lcDrm) << "setting up the protected player in" << m_root << (direct ? "(direct)" : "");
     handoff::post(job, [job] { job->start(); });
+}
+
+void HelperInstaller::uninstall()
+{
+    (void)QDir(m_root).removeRecursively();
 }
 
 void HelperInstaller::onProgress(Phase phase, std::int64_t received, std::int64_t total)

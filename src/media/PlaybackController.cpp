@@ -409,6 +409,12 @@ void PlaybackController::hydrateStubs()
     }
 }
 
+void PlaybackController::invalidateBlockedTracks()
+{
+    m_queue.invalidateBlockedTracks();
+    m_queueModel.refresh();
+}
+
 void PlaybackController::hydrate(const std::vector<api::Id>& ids, std::function<void()> then)
 {
     (void)m_api.lookupTracks(ids, &m_requests,
@@ -520,6 +526,28 @@ void PlaybackController::startCurrent(std::int64_t startMs, bool paused)
     ErrorCode why = ErrorCode::NotPlayable;
     const std::optional<PlaybackSource> source = sourceFor(*item, &why);
     if (!source) {
+        if (why == ErrorCode::NotPlayable && !m_hydratingUnplayable.contains(item->track.id)) {
+            m_hydratingUnplayable.insert(item->track.id);
+            const std::uint64_t serial = m_trackSerial;
+            const api::Id id = item->track.id;
+            hydrate({id}, [this, serial, id, startMs, paused] {
+                m_hydratingUnplayable.remove(id);
+                if (serial != m_trackSerial) {
+                    return;
+                }
+                const QueueItem* now = m_queue.currentItem();
+                if (now == nullptr || now->track.id != id) {
+                    return;
+                }
+                ErrorCode checkWhy = ErrorCode::NotPlayable;
+                if (!sourceFor(*now, &checkWhy)) {
+                    skipAfterError(checkWhy, paused);
+                    return;
+                }
+                startCurrent(startMs, paused);
+            });
+            return;
+        }
         skipAfterError(why, paused);
         return;
     }

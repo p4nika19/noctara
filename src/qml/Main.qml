@@ -686,6 +686,19 @@ Window {
         }
     }
     DiscoveryPlaylistDialog { id: discoveryPlaylistDialog }
+    Connections {
+        target: Drm
+        function onDirectDownloadPromptRequested() {
+            directDownloadDialog.open()
+        }
+    }
+    Dialog {
+        id: directDownloadDialog
+        title: qsTr("Download protected player directly?")
+        message: qsTr("Could not connect to the server through the proxy. Would you like to download the protected player directly (without proxy)?")
+        confirmText: qsTr("Download directly")
+        onAccepted: Drm.install(true, true)
+    }
 
     ToastHost { anchors.fill: parent; z: 6 }
     ResizeEdges {

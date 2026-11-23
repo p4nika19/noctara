@@ -327,6 +327,15 @@ void PlaybackQueue::updateTrack(const api::Track& track)
     }
 }
 
+void PlaybackQueue::invalidateBlockedTracks()
+{
+    for (QueueItem& item : m_items) {
+        if (!item.track.streamable || item.track.policy == api::Policy::Block || item.track.transcodings.empty()) {
+            item.track.stale = true;
+        }
+    }
+}
+
 void PlaybackQueue::markFresh(api::Id id)
 {
     for (QueueItem& item : m_items) {

@@ -23,6 +23,9 @@ namespace noctara::drm {
 // thread.
 class DrmService : public QObject {
     Q_OBJECT
+    Q_PROPERTY(bool installed READ isInstalled NOTIFY statusChanged)
+    Q_PROPERTY(bool installing READ isInstalling NOTIFY statusChanged)
+    Q_PROPERTY(QString statusText READ statusText NOTIFY statusChanged)
 
 public:
     // `profileDir`: the helper's userData (<cache>/electron); `applicationDir`: where a helper shipped with
@@ -33,6 +36,12 @@ public:
     [[nodiscard]] DrmHost& host() noexcept { return m_host; }
     [[nodiscard]] DrmBackend& backend() noexcept { return m_backend; }
     [[nodiscard]] HelperInstaller& installer() noexcept { return m_installer; }
+
+    [[nodiscard]] bool isInstalled() const { return command().has_value(); }
+    [[nodiscard]] bool isInstalling() const { return m_installer.running(); }
+
+    Q_INVOKABLE void install(bool force = false, bool direct = false);
+    Q_INVOKABLE void reinstall(bool direct = false);
 
     // How long after start a missing helper is set up in the background.
     static constexpr std::chrono::seconds kInstallDelay{30};
@@ -51,6 +60,7 @@ public:
 
 Q_SIGNALS:
     void statusChanged();
+    void directDownloadPromptRequested();
     // Something to tell the user (kind: "success" | "warning" | "error"), e.g. that the player was set up.
     void notice(const QString& kind, const QString& message);
 

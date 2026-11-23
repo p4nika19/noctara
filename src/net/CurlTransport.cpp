@@ -420,6 +420,11 @@ void CurlTransport::startAttempt(std::uint64_t id)
         launch(id, {resolveEntry(url.host(QUrl::FullyEncoded), defaultPort(url), transfer->pinned)});
         return;
     }
+    if (transfer->request.bypassProxy) {
+        transfer->route = {};
+        onRouted(id, ProxyRoute{.proxy = std::nullopt, .detail = QStringLiteral("direct")});
+        return;
+    }
     m_router.route(url, [self = QPointer(this), id](Result<ProxyRoute> route) {
         if (self != nullptr) {
             self->onRouted(id, std::move(route));

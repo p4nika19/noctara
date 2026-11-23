@@ -7,6 +7,7 @@
 // record, extract or store media, keys or licenses. userData holds only Chromium's profile and the Widevine CDM
 // component. See docs/drm-helper.md and docs/ipc.md.
 const { app, BrowserWindow, components, ipcMain, session } = require('electron');
+const fs = require('node:fs');
 const path = require('node:path');
 const readline = require('node:readline');
 const protocol = require('./protocol');
@@ -30,6 +31,31 @@ function send(message) {
 }
 function log(level, message) {
   send({ type: 'log', level, message });
+}
+
+function hasExistingCdm(userDataDir) {
+  if (!userDataDir) return false;
+  try {
+    const cdmDir = path.join(userDataDir, 'WidevineCdm');
+    if (!fs.existsSync(cdmDir)) return false;
+    const versions = fs.readdirSync(cdmDir);
+    for (const v of versions) {
+      const vDir = path.join(cdmDir, v);
+      if (!fs.statSync(vDir).isDirectory()) continue;
+      const checkPath = (p) => {
+        try {
+          const files = fs.readdirSync(p, { withFileTypes: true });
+          for (const f of files) {
+            if (f.name.includes('widevinecdm')) return true;
+            if (f.isDirectory() && checkPath(path.join(p, f.name))) return true;
+          }
+        } catch {}
+        return false;
+      };
+      if (checkPath(vDir)) return true;
+    }
+  } catch {}
+  return false;
 }
 
 const userData = argument('noctara-user-data');
@@ -206,6 +232,11 @@ app.whenReady().then(async () => {
     widevine = true;
   } catch (error) {
     detail = String(error && error.message ? error.message : error);
+    if (hasExistingCdm(userData)) {
+      widevine = true;
+      log('info', `component update check failed (${detail}), but existing Widevine CDM is present`);
+      detail = undefined;
+    }
   }
 
   player = new BrowserWindow({

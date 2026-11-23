@@ -69,6 +69,12 @@ DrmService::DrmService(settings::SettingsStore& settings, net::NetworkService& n
             Q_EMIT notice(QStringLiteral("success"),
                           QCoreApplication::translate("Drm", "The protected player is set up: protected tracks play "
                                                              "now."));
+        } else {
+            const ErrorCode code = m_installer.error().code;
+            if (!m_installer.lastInstallDirect() && m_network.config().proxy.mode != net::ProxyMode::None &&
+                code != ErrorCode::MeteredDeferred && code != ErrorCode::Cancelled) {
+                Q_EMIT directDownloadPromptRequested();
+            }
         }
         Q_EMIT statusChanged();
     });
@@ -190,6 +196,29 @@ void DrmService::applyNetwork()
     Q_EMIT statusChanged();
 }
 
+void DrmService::install(bool force, bool direct)
+{
+    if (m_installer.running()) {
+        return;
+    }
+    if (!force && isInstalled()) {
+        return;
+    }
+    m_installer.install(/*background=*/false, direct);
+}
+
+void DrmService::reinstall(bool direct)
+{
+    if (m_installer.running()) {
+        return;
+    }
+    m_host.shutdown();
+    m_installer.uninstall();
+    m_host.setCommand(std::nullopt);
+    Q_EMIT statusChanged();
+    m_installer.install(/*background=*/false, direct);
+}
+
 QString DrmService::statusText() const
 {
     if (!m_settings.boolValue(keys::ProtectedEnabled)) {
@@ -218,7 +247,8 @@ QString DrmService::statusText() const
                                                                "tried again when a protected track plays.")
                                 .arg(i18n::errorMessage(code)));
         } else {
-            lines << i18n::errorMessage(ErrorCode::ProtectedPlayerMissing);
+            lines << QCoreApplication::translate(
+                "Drm", "The protected player is not installed, so protected tracks are skipped.");
         }
     } else if (network.blocked) {
         lines << i18n::errorMessage(network.blocked->code);

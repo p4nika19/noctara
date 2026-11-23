@@ -480,6 +480,10 @@ int main(int argc, char** argv)
                                       .protectedBackend = &protectedPlayback.backend(),
                                       .metered = [&network] { return network.meteredActive(); },
                                       .statePath = paths.stateDir + QStringLiteral("/session.json")});
+    QObject::connect(&network, &net::NetworkService::configChanged, &player, [&cache, &player] {
+        cache.clear(cache::CacheService::Part::Metadata, &cache, [] {});
+        player.invalidateBlockedTracks();
+    });
     QObject::connect(&player, &media::PlaybackController::problem, &appController, [&appController](int code) {
         appController.showToast(QStringLiteral("error"), i18n::errorMessage(static_cast<ErrorCode>(code)));
     });
@@ -579,6 +583,7 @@ int main(int argc, char** argv)
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Performance", &effects);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Artwork", &accent);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Network", &networkUi);
+    qmlRegisterSingletonInstance("Noctara", 1, 0, "Drm", &protectedPlayback);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Storage", &storageUi);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Catalog", &catalog);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Downloads", &downloads);

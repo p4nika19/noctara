@@ -19,6 +19,7 @@ Item {
         "network.dns.mode": dnsTools,
         "network.proxy.mode": connectionTools,
         "network.proxy.port": proxyCredentials,
+        "playback.protected.enabled": protectedTools,
     })
 
     // A category whose rows are all advanced leaves the sidebar when advanced settings are hidden.
@@ -357,6 +358,10 @@ Item {
         Component {
             id: proxyCredentials
             ProxyCredentials {}
+        }
+        Component {
+            id: protectedTools
+            ProtectedTools {}
         }
     }
 }

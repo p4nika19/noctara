@@ -668,13 +668,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+61"/>
+        <location line="+67"/>
         <source>Protected tracks do not follow: %1.</source>
         <extracomment>%1 = list of network settings, e.g. &quot;custom DNS servers (…); the bandwidth limit&quot;</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+74"/>
+        <location line="+97"/>
         <source>Setting up the protected player: downloading, %1 % of %2 MB…</source>
         <extracomment>%1 = percent done, %2 = total size in MB</extracomment>
         <translation type="unfinished"></translation>
@@ -695,7 +695,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+4"/>
+        <source>The protected player is not installed, so protected tracks are skipped.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Running: castlabs Electron %1 with Widevine.</source>
         <extracomment>%1 = Electron version</extracomment>
         <translation type="unfinished"></translation>
@@ -1834,7 +1839,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-127"/>
+        <location line="+480"/>
+        <source>Download protected player directly?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Could not connect to the server through the proxy. Would you like to download the protected player directly (without proxy)?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Download directly</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-609"/>
         <location line="+138"/>
         <location line="+16"/>
         <location line="+19"/>
@@ -2503,6 +2523,24 @@
     <message>
         <location filename="../src/ui/AppearancePresets.cpp" line="+21"/>
         <source>Auto</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ProtectedTools</name>
+    <message>
+        <location filename="../src/qml/settings/ProtectedTools.qml" line="+12"/>
+        <source>Installing…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Reinstall</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Install</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -5065,7 +5103,7 @@
 <context>
     <name>SettingsView</name>
     <message>
-        <location filename="../src/qml/settings/SettingsView.qml" line="+48"/>
+        <location filename="../src/qml/settings/SettingsView.qml" line="+49"/>
         <source>Search settings</source>
         <translation type="unfinished"></translation>
     </message>

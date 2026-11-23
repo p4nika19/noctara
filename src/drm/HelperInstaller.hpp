@@ -42,10 +42,14 @@ public:
     // The installed helper when both folders are complete (a few stat calls).
     [[nodiscard]] std::optional<HelperCommand> installed() const;
     // Starts unless it is running already. `background`: refused on a metered connection (MeteredDeferred).
-    void install(bool background);
+    // `direct`: bypasses any configured proxy (direct connection).
+    void install(bool background, bool direct = false);
+    // Removes the helper folder so the next install starts cleanly from scratch.
+    void uninstall();
 
     [[nodiscard]] Phase phase() const noexcept { return m_phase; }
     [[nodiscard]] bool running() const noexcept { return m_phase == Phase::Downloading || m_phase == Phase::Unpacking; }
+    [[nodiscard]] bool lastInstallDirect() const noexcept { return m_lastInstallDirect; }
     [[nodiscard]] std::int64_t received() const noexcept { return m_received; }
     [[nodiscard]] std::int64_t total() const noexcept { return m_total; }
     [[nodiscard]] const Error& error() const noexcept { return m_error; }
@@ -73,6 +77,7 @@ private:
     Phase m_phase = Phase::Idle;
     std::int64_t m_received = 0;
     std::int64_t m_total = 0;
+    bool m_lastInstallDirect = false;
     Error m_error;
 };
 

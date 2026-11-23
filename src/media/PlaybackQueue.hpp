@@ -69,6 +69,8 @@ public:
 
     // Replaces a track by id (a stub hydrated, a refreshed copy).
     void updateTrack(const api::Track& track);
+    // Marks tracks that were unplayable (blocked / not streamable) as stale so they are re-checked.
+    void invalidateBlockedTracks();
     // Clears the stale mark of a track by id (refreshing it failed: it plays as saved).
     void markFresh(api::Id id);
 

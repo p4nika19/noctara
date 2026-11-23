@@ -46,6 +46,7 @@ struct Request {
     bool background = false;               // prefetch and similar: skipped on metered connections
     std::optional<bool> retry;             // default: retry idempotent methods (GET, HEAD, PUT, DELETE)
     int maxRedirects = 10;
+    bool bypassProxy = false;
     CacheMode cache = CacheMode::Default;
     // Freshness for responses that carry no Cache-Control/Expires: short for volatile endpoints (feed, likes),
     // long for immutable ones (track metadata, waveforms). 0 = revalidate every time.

@@ -9,6 +9,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTimer>
+#include <QUrl>
 
 #include <array>
 #include <chrono>
@@ -407,12 +408,17 @@ private:
         if (m_stage == Stage::Closing) {
             return;
         }
-        qCWarning(lcDrm).noquote() << "proxy relay:" << reason;
-        const char* text = status == kGatewayTimeoutStatus ? "Gateway Timeout"
-                           : status == kForbiddenStatus    ? "Forbidden"
-                           : status == kBadRequestStatus   ? "Bad Request"
-                           : status == kBadGatewayStatus   ? "Bad Gateway"
-                                                           : "Method Not Allowed";
+        if (status == kMethodNotAllowedStatus) {
+            qCDebug(lcDrm).noquote() << "proxy relay:" << reason;
+        } else {
+            qCWarning(lcDrm).noquote() << "proxy relay:" << reason;
+        }
+        const char* text = status == kGatewayTimeoutStatus     ? "Gateway Timeout"
+                           : status == kForbiddenStatus        ? "Forbidden"
+                           : status == kBadRequestStatus       ? "Bad Request"
+                           : status == kBadGatewayStatus       ? "Bad Gateway"
+                           : status == kMethodNotAllowedStatus ? "Method Not Allowed"
+                                                               : "Bad Request";
         reply(status, text, "");
     }
 

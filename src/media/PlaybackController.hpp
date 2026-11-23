@@ -154,6 +154,7 @@ public:
     [[nodiscard]] const QList<qreal>& cachedRanges() const noexcept { return m_cachedRanges; }
     [[nodiscard]] QueueModel* queueModel() noexcept { return &m_queueModel; }
     [[nodiscard]] const PlaybackQueue& queue() const noexcept { return m_queue; }
+    void invalidateBlockedTracks();
 
     // Loudness curve of the volume slider: what the mixer multiplies by.
     [[nodiscard]] static double gainFor(double volume, bool muted) noexcept;
@@ -252,6 +253,7 @@ private:
     QString m_followContext;
     QSet<api::Id> m_followKnown;       // tracks of the list already offered to the queue (removed ones stay out)
     QSet<std::uint64_t> m_followUids;  // queue items that came from the list
+    QSet<api::Id> m_hydratingUnplayable;
     bool m_reconcileQueued = false;
 };
 

@@ -671,13 +671,13 @@
         <translation>Защищённый плеер установлен: защищённые треки теперь воспроизводятся.</translation>
     </message>
     <message>
-        <location line="+61"/>
+        <location line="+67"/>
         <source>Protected tracks do not follow: %1.</source>
         <extracomment>%1 = list of network settings, e.g. &quot;custom DNS servers (…); the bandwidth limit&quot;</extracomment>
         <translation>Защищённые треки не учитывают: %1.</translation>
     </message>
     <message>
-        <location line="+74"/>
+        <location line="+97"/>
         <source>Setting up the protected player: downloading, %1 % of %2 MB…</source>
         <extracomment>%1 = percent done, %2 = total size in MB</extracomment>
         <translation>Установка защищённого плеера: загрузка, %1 % из %2 МБ…</translation>
@@ -698,7 +698,12 @@
         <translation>Не удалось установить защищённый плеер: %1 Попытка повторится, когда заиграет защищённый трек.</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+4"/>
+        <source>The protected player is not installed, so protected tracks are skipped.</source>
+        <translation>Защищённый плеер не установлен, поэтому защищённые треки пропускаются.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Running: castlabs Electron %1 with Widevine.</source>
         <extracomment>%1 = Electron version</extracomment>
         <translation>Работает: castlabs Electron %1 с Widevine.</translation>
@@ -1846,7 +1851,22 @@
         <translation>Новый плейлист…</translation>
     </message>
     <message>
-        <location line="-127"/>
+        <location line="+480"/>
+        <source>Download protected player directly?</source>
+        <translation>Скачать защищённый плеер напрямую?</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Could not connect to the server through the proxy. Would you like to download the protected player directly (without proxy)?</source>
+        <translation>Не удалось подключиться к серверу через прокси. Выполнить скачивание защищённого плеера напрямую (без прокси)?</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Download directly</source>
+        <translation>Скачать напрямую</translation>
+    </message>
+    <message>
+        <location line="-609"/>
         <location line="+138"/>
         <location line="+16"/>
         <location line="+19"/>
@@ -2517,6 +2537,24 @@
         <location filename="../src/ui/AppearancePresets.cpp" line="+21"/>
         <source>Auto</source>
         <translation>Авто</translation>
+    </message>
+</context>
+<context>
+    <name>ProtectedTools</name>
+    <message>
+        <location filename="../src/qml/settings/ProtectedTools.qml" line="+12"/>
+        <source>Installing…</source>
+        <translation>Установка…</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Reinstall</source>
+        <translation>Переустановить</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Install</source>
+        <translation>Установить</translation>
     </message>
 </context>
 <context>
@@ -5079,7 +5117,7 @@
 <context>
     <name>SettingsView</name>
     <message>
-        <location filename="../src/qml/settings/SettingsView.qml" line="+48"/>
+        <location filename="../src/qml/settings/SettingsView.qml" line="+49"/>
         <source>Search settings</source>
         <translation>Поиск настроек</translation>
     </message>

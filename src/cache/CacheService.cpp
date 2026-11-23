@@ -237,7 +237,7 @@ void CacheService::apply()
 void CacheService::usage(QObject* context, std::function<void(CacheUsage)> done)
 {
     const auto channel = std::make_shared<net::ChannelPtr>(
-        net::makeChannel(context, std::make_shared<std::atomic<bool>>(false), &m_thread));
+        net::makeChannel(context != nullptr ? context : this, std::make_shared<std::atomic<bool>>(false), &m_thread));
     handoff::post(m_anchor, [core = m_core, channel, done = std::move(done), memory = &m_memory, root = m_status.root] {
         CacheUsage usage;
         usage.freeBytes = root.isEmpty() ? -1 : freeDiskSpace(root);
@@ -255,7 +255,7 @@ void CacheService::usage(QObject* context, std::function<void(CacheUsage)> done)
 void CacheService::clear(Part part, QObject* context, std::function<void()> done)
 {
     const auto channel = std::make_shared<net::ChannelPtr>(
-        net::makeChannel(context, std::make_shared<std::atomic<bool>>(false), &m_thread));
+        net::makeChannel(context != nullptr ? context : this, std::make_shared<std::atomic<bool>>(false), &m_thread));
     handoff::post(m_anchor, [core = m_core, part, channel, done = std::move(done)] {
         if (part == Part::Audio || part == Part::All) {
             core->audio.clear();
@@ -274,7 +274,7 @@ void CacheService::clear(Part part, QObject* context, std::function<void()> done
 void CacheService::completeTracks(QObject* context, std::function<void(std::vector<TrackInfo>)> done)
 {
     const auto channel = std::make_shared<net::ChannelPtr>(
-        net::makeChannel(context, std::make_shared<std::atomic<bool>>(false), &m_thread));
+        net::makeChannel(context != nullptr ? context : this, std::make_shared<std::atomic<bool>>(false), &m_thread));
     handoff::post(m_anchor, [core = m_core, channel, done = std::move(done)] {
         (*channel)->post([done, tracks = core->audio.completeTracks()] { done(tracks); });
         channel->reset();
@@ -284,7 +284,7 @@ void CacheService::completeTracks(QObject* context, std::function<void(std::vect
 void CacheService::removeTrack(const QString& trackId, QObject* context, std::function<void()> done)
 {
     const auto channel = std::make_shared<net::ChannelPtr>(
-        net::makeChannel(context, std::make_shared<std::atomic<bool>>(false), &m_thread));
+        net::makeChannel(context != nullptr ? context : this, std::make_shared<std::atomic<bool>>(false), &m_thread));
     handoff::post(m_anchor, [core = m_core, trackId, channel, done = std::move(done)] {
         core->audio.removeTrack(trackId);
         (*channel)->post([done] { done(); });
