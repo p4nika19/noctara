@@ -481,7 +481,9 @@ std::optional<HelperCommand> HelperInstaller::installed() const
         return std::nullopt;
     }
     if (!QFileInfo::exists(appDir() + QStringLiteral("/main.js"))) {
-        (void)writeHelperApp(appDir(), runtimeDir());
+        if (const Result<void> written = writeHelperApp(appDir(), runtimeDir()); !written) {
+            return std::nullopt;
+        }
         const QDir root(m_root);
         for (const QFileInfo& entry : root.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
             if (entry.fileName().startsWith(QLatin1StringView("app-")) &&
@@ -489,9 +491,6 @@ std::optional<HelperCommand> HelperInstaller::installed() const
                 (void)QDir(entry.absoluteFilePath()).removeRecursively();
             }
         }
-    }
-    if (!QFileInfo::exists(appDir() + QStringLiteral("/main.js"))) {
-        return std::nullopt;
     }
     return HelperCommand{.program = electron, .arguments = {appDir()}};
 }
