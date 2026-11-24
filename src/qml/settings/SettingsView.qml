@@ -57,10 +57,12 @@ Item {
             anchors.top: search.bottom
             anchors.topMargin: Theme.space.md
             anchors.bottom: advanced.top
+            anchors.bottomMargin: Theme.space.md
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.margins: Theme.space.sm
-            clip: true
+            anchors.leftMargin: Theme.space.sm
+            anchors.rightMargin: Theme.space.sm
+            clip: false
             model: SettingsUi.categories
             spacing: Theme.space.xxs
             keyNavigationEnabled: true

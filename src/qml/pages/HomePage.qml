@@ -92,7 +92,7 @@ Flickable {
                     id: coverWrapper
                     width: Player.hasTrack ? 180 * Theme.scale + Theme.space.xl : 0
                     height: Player.hasTrack ? 180 * Theme.scale : textContent.implicitHeight
-                    clip: true
+                    clip: false
                     Behavior on width {
                         NumberAnimation {
                             duration: Theme.motion.slow
@@ -123,10 +123,10 @@ Flickable {
                         Shadow {
                             anchors.fill: parent
                             z: -1
-                            radius: coverArt.radius
-                            blur: 70 * Theme.scale
-                            offsetY: 24 * Theme.scale
-                            spread: -8 * Theme.scale
+                            radius: coverArt.cornerRadius
+                            blur: 48 * Theme.scale
+                            offsetY: 0
+                            spread: -4 * Theme.scale
                             color: Qt.rgba(Theme.colors.accent.r, Theme.colors.accent.g, Theme.colors.accent.b,
                                            Theme.glass.glowCover ? Theme.glass.glow * 0.9 : 0)
                         }
