@@ -9,7 +9,6 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTimer>
-#include <QUrl>
 
 #include <array>
 #include <chrono>

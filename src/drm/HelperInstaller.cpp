@@ -151,11 +151,12 @@ Result<void> extractZip(const QString& zip, const QString& into)
 // One installation, on the installer's thread: downloads, checks, unpacks, writes the app, tidies up.
 class InstallJob : public QObject {
 public:
-    InstallJob(HelperInstaller* owner, net::INetworkTransport& network, bool background, bool direct)
+    InstallJob(HelperInstaller* owner, net::INetworkTransport& network, bool background, bool direct, bool clean)
         : m_owner(owner)
         , m_network(network)
         , m_background(background)
         , m_direct(direct)
+        , m_clean(clean)
         , m_root(owner->root())
         , m_runtime(owner->runtimeDir())
         , m_app(owner->appDir())
@@ -166,6 +167,9 @@ public:
 
     void start()
     {
+        if (m_clean) {
+            (void)QDir(m_root).removeRecursively();
+        }
         const HelperRelease& release = m_release;
         if (!QFileInfo::exists(m_runtime + QStringLiteral("/.complete"))) {
             m_pending = {release.electron, release.hlsjs};
@@ -416,6 +420,7 @@ private:
     net::INetworkTransport& m_network;
     bool m_background;
     bool m_direct;
+    bool m_clean;
     QString m_root;
     QString m_runtime;
     QString m_app;
@@ -476,31 +481,46 @@ QString HelperInstaller::appDir() const
 std::optional<HelperCommand> HelperInstaller::installed() const
 {
     const QString electron = runtimeDir() + QStringLiteral("/electron/electron");
-    if (!QFileInfo::exists(runtimeDir() + QStringLiteral("/.complete")) || !QFileInfo(electron).isExecutable() ||
-        sha256Of(runtimeDir() + QStringLiteral("/hls.min.js")) != m_release.hlsjs.sha256) {
+    if (!QFileInfo::exists(runtimeDir() + QStringLiteral("/.complete")) || !QFileInfo(electron).isExecutable()) {
+        m_hlsVerified = false;
         return std::nullopt;
     }
-    if (!QFileInfo::exists(appDir() + QStringLiteral("/main.js"))) {
-        if (const Result<void> written = writeHelperApp(appDir(), runtimeDir()); !written) {
-            return std::nullopt;
-        }
-        const QDir root(m_root);
-        for (const QFileInfo& entry : root.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-            if (entry.fileName().startsWith(QLatin1StringView("app-")) &&
-                entry.fileName() != QFileInfo(appDir()).fileName()) {
-                (void)QDir(entry.absoluteFilePath()).removeRecursively();
+    // Fast path: appDir()'s name hashes both the embedded app files and hls.js's pinned SHA-256, so once both
+    // the runtime and app exist we avoid re-reading and hashing hls.min.js on the GUI thread on every property read.
+    if (QFileInfo::exists(appDir() + QStringLiteral("/main.js"))) {
+        if (!m_hlsVerified) {
+            if (sha256Of(runtimeDir() + QStringLiteral("/hls.min.js")) != m_release.hlsjs.sha256) {
+                return std::nullopt;
             }
+            m_hlsVerified = true;
+        }
+        return HelperCommand{.program = electron, .arguments = {appDir()}};
+    }
+    if (sha256Of(runtimeDir() + QStringLiteral("/hls.min.js")) != m_release.hlsjs.sha256) {
+        m_hlsVerified = false;
+        return std::nullopt;
+    }
+    if (const Result<void> written = writeHelperApp(appDir(), runtimeDir()); !written) {
+        return std::nullopt;
+    }
+    m_hlsVerified = true;
+    const QDir root(m_root);
+    for (const QFileInfo& entry : root.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        if (entry.fileName().startsWith(QLatin1StringView("app-")) &&
+            entry.fileName() != QFileInfo(appDir()).fileName()) {
+            (void)QDir(entry.absoluteFilePath()).removeRecursively();
         }
     }
     return HelperCommand{.program = electron, .arguments = {appDir()}};
 }
 
-void HelperInstaller::install(bool background, bool direct)
+void HelperInstaller::install(bool background, bool direct, bool clean)
 {
     if (running()) {
         return;
     }
     m_lastInstallDirect = direct;
+    m_hlsVerified = false;
     m_error = Error{};
     m_received = 0;
     m_total = 0;
@@ -510,7 +530,7 @@ void HelperInstaller::install(bool background, bool direct)
         m_thread.start(QThread::LowPriority);
     }
     // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): owned by the installer (m_job), deleted on its thread
-    auto* job = new InstallJob(this, m_network, background, direct);
+    auto* job = new InstallJob(this, m_network, background, direct, clean);
     job->moveToThread(&m_thread);
     m_job = job;
     qCInfo(lcDrm) << "setting up the protected player in" << m_root << (direct ? "(direct)" : "");
@@ -519,6 +539,7 @@ void HelperInstaller::install(bool background, bool direct)
 
 void HelperInstaller::uninstall()
 {
+    m_hlsVerified = false;
     (void)QDir(m_root).removeRecursively();
 }
 

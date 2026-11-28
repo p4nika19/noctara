@@ -71,8 +71,17 @@ DrmService::DrmService(settings::SettingsStore& settings, net::NetworkService& n
                                                              "now."));
         } else {
             const ErrorCode code = m_installer.error().code;
-            if (!m_installer.lastInstallDirect() && m_network.config().proxy.mode != net::ProxyMode::None &&
-                code != ErrorCode::MeteredDeferred && code != ErrorCode::Cancelled) {
+            const net::ProxyConfig& proxy = m_network.config().proxy;
+            const bool proxyActive =
+                (proxy.mode == net::ProxyMode::Manual && proxy.manual.valid()) ||
+                (proxy.mode == net::ProxyMode::System && m_network.systemProxySource() != net::ProxySource::None);
+            const bool proxyRelatedError =
+                code == ErrorCode::ProxyConnectFailed || code == ErrorCode::ProxyAuthRequired ||
+                code == ErrorCode::ProxyTlsFailed || code == ErrorCode::ConnectionFailed ||
+                code == ErrorCode::ConnectionRefused || code == ErrorCode::Timeout ||
+                code == ErrorCode::DnsResolutionFailed || code == ErrorCode::DnsServerUnreachable ||
+                code == ErrorCode::TlsHandshakeFailed || code == ErrorCode::HttpError;
+            if (!m_installer.lastInstallDirect() && proxyActive && proxyRelatedError) {
                 Q_EMIT directDownloadPromptRequested();
             }
         }
@@ -212,11 +221,19 @@ void DrmService::reinstall(bool direct)
     if (m_installer.running()) {
         return;
     }
-    m_host.shutdown();
-    m_installer.uninstall();
     m_host.setCommand(std::nullopt);
-    Q_EMIT statusChanged();
-    m_installer.install(/*background=*/false, direct);
+    const auto startClean = [this, direct] {
+        m_installer.install(/*background=*/false, direct, /*clean=*/true);
+        Q_EMIT statusChanged();
+    };
+    if (m_host.processId() != 0) {
+        // Wait for the running Electron helper to exit before removing its runtime folder on the worker thread.
+        connect(&m_host, &DrmHost::stopped, this, startClean, Qt::SingleShotConnection);
+        m_host.shutdown();
+        Q_EMIT statusChanged();
+        return;
+    }
+    startClean();
 }
 
 QString DrmService::statusText() const

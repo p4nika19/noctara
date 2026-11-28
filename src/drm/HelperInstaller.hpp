@@ -42,8 +42,9 @@ public:
     // The installed helper when both folders are complete (a few stat calls).
     [[nodiscard]] std::optional<HelperCommand> installed() const;
     // Starts unless it is running already. `background`: refused on a metered connection (MeteredDeferred).
-    // `direct`: bypasses any configured proxy (direct connection).
-    void install(bool background, bool direct = false);
+    // `direct`: bypasses any configured proxy (direct connection). `clean`: removes existing files on the worker
+    // thread first so reinstalls start from scratch without blocking the GUI thread.
+    void install(bool background, bool direct = false, bool clean = false);
     // Removes the helper folder so the next install starts cleanly from scratch.
     void uninstall();
 
@@ -78,6 +79,7 @@ private:
     std::int64_t m_received = 0;
     std::int64_t m_total = 0;
     bool m_lastInstallDirect = false;
+    mutable bool m_hlsVerified = false;
     Error m_error;
 };
 
