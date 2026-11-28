@@ -338,12 +338,15 @@ void SecretServiceStore::read(const QString& key, QObject* context, ReadCallback
         fallbackRead(key, context, std::move(callback));
         return;
     }
+    const quint64 unlockGen = m_unlockGeneration;
     deliver(
         QtConcurrent::run(&m_pool,
                           [keyring = m_keyring.get(), key] {
                               return KeyringAnswer{.secret = keyring->lookup(key), .locked = keyring->locked()};
                           }),
-        this, [this, key, context = QPointer(context), callback = std::move(callback)](const KeyringAnswer& answer) {
+        this,
+        [this, key, unlockGen, context = QPointer(context),
+         callback = std::move(callback)](const KeyringAnswer& answer) {
             if (context == nullptr) {
                 return;
             }
@@ -388,8 +391,11 @@ void SecretServiceStore::read(const QString& key, QObject* context, ReadCallback
                 // The collection is locked, so "no such secret" means "not readable yet" rather than "never
                 // saved". Keep the keyring and say so: the UI can offer to unlock it, and the next save must
                 // still try the keyring instead of demoting every secret to the local file.
-                setLocked(true);
-                qCInfo(lcAuth) << "the desktop keyring is locked; its secrets cannot be read until it is unlocked";
+                // Do not clobber a newer successful unlock with a stale pre-unlock answer.
+                if (m_unlockGeneration == unlockGen) {
+                    setLocked(true);
+                    qCInfo(lcAuth) << "the desktop keyring is locked; its secrets cannot be read until it is unlocked";
+                }
             } else {
                 setLocked(false);
             }
@@ -489,30 +495,43 @@ void SecretServiceStore::readAtStartup(const QString& key, QObject* context, Sta
         return;
     }
 
-    read(key, context, [this, key, guard, done = std::move(done)](Result<std::optional<QByteArray>> secret) mutable {
-        if (guard == nullptr) {
-            return;
-        }
-        if ((secret && *secret) || !keyringLocked()) {
-            // Already readable (or not locked): deliver what we just read without a redundant second lookup.
-            done(std::move(secret), false);
-            return;
-        }
-        if (m_unlockInFlight) {
-            // Another startup reader is already showing the desktop's prompt: wait for its answer.
-            m_unlockWaiters.append({.key = key, .context = guard, .done = std::move(done)});
-            return;
-        }
-        m_unlockInFlight = true;
-        // Anchor on `this`, not `guard`: destroying the first caller must still clear m_unlockInFlight and wake
-        // any other startup readers waiting in m_unlockWaiters.
-        unlock(this, [this, key, guard, done = std::move(done)](const bool unlocked) mutable {
-            finishStartupUnlock(unlocked);
-            if (guard != nullptr) {
-                rereadAfterStartupUnlock(key, guard, std::move(done), !unlocked);
-            }
-        });
-    });
+    const quint64 unlockGen = m_unlockGeneration;
+    read(key, context,
+         [this, key, guard, unlockGen, done = std::move(done)](Result<std::optional<QByteArray>> secret) mutable {
+             if (guard == nullptr) {
+                 return;
+             }
+             if (secret && *secret) {
+                 // Already readable: deliver what we just read without a redundant second lookup.
+                 done(std::move(secret), false);
+                 return;
+             }
+             if (m_unlockGeneration != unlockGen) {
+                 // Another reader unlocked the keyring while this initial read (or its fallback check) was in flight:
+                 // the empty result predates the unlock, so read again now that the keyring is open.
+                 rereadAfterStartupUnlock(key, guard, std::move(done), false);
+                 return;
+             }
+             if (!keyringLocked()) {
+                 // Not locked and no unlock happened meanwhile: deliver what we just read without a redundant lookup.
+                 done(std::move(secret), false);
+                 return;
+             }
+             if (m_unlockInFlight) {
+                 // Another startup reader is already showing the desktop's prompt: wait for its answer.
+                 m_unlockWaiters.append({.key = key, .context = guard, .done = std::move(done)});
+                 return;
+             }
+             m_unlockInFlight = true;
+             // Anchor on `this`, not `guard`: destroying the first caller must still clear m_unlockInFlight and wake
+             // any other startup readers waiting in m_unlockWaiters.
+             unlock(this, [this, key, guard, done = std::move(done)](const bool unlocked) mutable {
+                 finishStartupUnlock(unlocked);
+                 if (guard != nullptr) {
+                     rereadAfterStartupUnlock(key, guard, std::move(done), !unlocked);
+                 }
+             });
+         });
 }
 
 void SecretServiceStore::unlock(QObject* context, std::function<void(bool)> done)
@@ -526,6 +545,7 @@ void SecretServiceStore::unlock(QObject* context, std::function<void(bool)> done
                               }),
             this, [this, context = QPointer(context), done = std::move(done)](const bool& unlocked) {
                 if (unlocked) {
+                    ++m_unlockGeneration;
                     m_startupUnlockRefused = false;  // a later unlock clears the startup refusal
                     setLocked(false);
                 }

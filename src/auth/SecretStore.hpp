@@ -182,6 +182,8 @@ private:
     std::atomic<bool> m_locked{false};
     bool m_unlockInFlight = false;
     bool m_startupUnlockRefused = false;
+    // Bumped every time an unlock succeeds: lets in-flight reads tell that an empty result predates the unlock.
+    quint64 m_unlockGeneration = 0;
     QList<StartupWaiter> m_unlockWaiters;
     QList<LockListener> m_lockListeners;
     std::unique_ptr<EncryptedFileSecretStore> m_file;
