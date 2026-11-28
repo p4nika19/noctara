@@ -228,6 +228,8 @@ Detail* CatalogController::detail(QHash<qint64, std::shared_ptr<Detail>>& cache,
     auto it = cache.find(id);
     if (it == cache.end()) {
         auto created = std::shared_ptr<Detail>(make(), [](Detail* d) { d->deleteLater(); });
+        // Parent to the controller so shutdown (~QObject) still frees entries whose deleteLater() runs after exec().
+        created->setParent(this);
         QQmlEngine::setObjectOwnership(created.get(), QQmlEngine::CppOwnership);
         it = cache.insert(id, std::move(created));
     }
@@ -376,9 +378,14 @@ void CatalogController::loadTrackPlaylists(qint64 trackId)
         return;
     }
     m_loadedTrackPlaylists.insert(trackId);
+    const quint64 generation = m_accountGeneration;
     api::fetch(m_api.client(), api::endpoints::trackPlaylists(trackId, 50), this,
-               [this, trackId](Result<api::Page<api::Entry>> result) {
+               [this, trackId, generation](Result<api::Page<api::Entry>> result) {
+                   if (generation != m_accountGeneration) {
+                       return;
+                   }
                    if (!result) {
+                       m_loadedTrackPlaylists.remove(trackId);  // allow retry after transient failure
                        return;
                    }
                    for (const api::Entry& entry : result->items) {
@@ -396,15 +403,18 @@ void CatalogController::addToPlaylist(qint64 playlistId, qint64 trackId)
         Q_EMIT notice(QStringLiteral("info"), tr("Sign in to add tracks to playlists."));
         return;
     }
-    std::deque<api::Id>& queue = m_playlistWrites[playlistId];
-    queue.push_back(trackId);
+    if (playlistId <= 0 || trackId <= 0) {
+        return;
+    }
+    std::deque<PlaylistWrite>& queue = m_playlistWrites[playlistId];
+    queue.push_back({.trackId = trackId, .add = true});
     if (queue.size() == 1) {
         writeNextToPlaylist(playlistId);
     }
 }
 
-// Read, then write the whole list back: SoundCloud replaces a playlist's tracks as a whole, so the change is made to
-// the list as it is now (never to a cached copy), and one change at a time.
+// Read, then write the whole list back: SoundCloud replaces a playlist's tracks as a whole, so every add and remove
+// is applied to the list as it is now (never to a cached copy), serialized one change at a time per playlist.
 void CatalogController::writeNextToPlaylist(api::Id playlistId)
 {
     const auto queue = m_playlistWrites.constFind(playlistId);
@@ -412,13 +422,15 @@ void CatalogController::writeNextToPlaylist(api::Id playlistId)
         m_playlistWrites.remove(playlistId);
         return;
     }
-    const api::Id trackId = queue->front();
+    const PlaylistWrite edit = queue->front();
     const quint64 generation = m_accountGeneration;
-    const auto failed = [this](ErrorCode code) {
-        Q_EMIT notice(QStringLiteral("error"), tr("Could not add the track: %1").arg(i18n::errorMessage(code)));
+    const auto failed = [this, add = edit.add](ErrorCode code) {
+        Q_EMIT notice(QStringLiteral("error"),
+                      (add ? tr("Could not add the track: %1") : tr("Could not remove the track: %1"))
+                          .arg(i18n::errorMessage(code)));
     };
     api::fetch(m_api.client(), api::endpoints::playlistForEdit(playlistId), this,
-               [this, playlistId, trackId, failed, generation](Result<api::Playlist> current) {
+               [this, playlistId, edit, failed, generation](Result<api::Playlist> current) {
                    if (generation != m_accountGeneration) {
                        return;
                    }
@@ -428,27 +440,48 @@ void CatalogController::writeNextToPlaylist(api::Id playlistId)
                        return;
                    }
                    std::vector<api::Id> ids;
-                   ids.reserve(current->tracks.size() + 1);
-                   for (const api::Track& track : current->tracks) {
-                       ids.push_back(track.id);
+                   ids.reserve(current->tracks.size() + (edit.add ? 1 : 0));
+                   if (edit.add) {
+                       for (const api::Track& track : current->tracks) {
+                           ids.push_back(track.id);
+                       }
+                       if (std::ranges::find(ids, edit.trackId) != ids.end()) {
+                           Q_EMIT notice(QStringLiteral("info"), tr("Already in “%1”.").arg(current->title));
+                           finishPlaylistWrite(playlistId);
+                           return;
+                       }
+                       ids.push_back(edit.trackId);
+                   } else {
+                       bool found = false;
+                       for (const api::Track& track : current->tracks) {
+                           if (track.id == edit.trackId && !found) {
+                               found = true;
+                               continue;
+                           }
+                           ids.push_back(track.id);
+                       }
+                       if (!found) {
+                           finishPlaylistWrite(playlistId);
+                           return;
+                       }
                    }
-                   if (std::ranges::find(ids, trackId) != ids.end()) {
-                       Q_EMIT notice(QStringLiteral("info"), tr("Already in “%1”.").arg(current->title));
-                       finishPlaylistWrite(playlistId);
-                       return;
-                   }
-                   ids.push_back(trackId);
                    api::fetch(m_api.client(), api::endpoints::setPlaylistTracks(playlistId, ids), this,
-                              [this, playlistId, trackId, failed, generation](Result<api::Playlist> updated) {
+                              [this, playlistId, edit, failed, generation](Result<api::Playlist> updated) {
                                   if (generation != m_accountGeneration) {
                                       return;
                                   }
                                   if (!updated) {
                                       failed(updated.error().code);
                                   } else {
-                                      m_playlistTrackIds[playlistId].insert(trackId);
-                                      Q_EMIT notice(QStringLiteral("success"),
-                                                    tr("Added to “%1”.").arg(updated->title));
+                                      if (edit.add) {
+                                          m_playlistTrackIds[playlistId].insert(edit.trackId);
+                                          Q_EMIT notice(QStringLiteral("success"),
+                                                        tr("Added to “%1”.").arg(updated->title));
+                                      } else {
+                                          m_playlistTrackIds[playlistId].remove(edit.trackId);
+                                          Q_EMIT notice(QStringLiteral("success"),
+                                                        tr("Removed from “%1”.").arg(updated->title));
+                                      }
                                       playlistUpdated(*updated);
                                   }
                                   finishPlaylistWrite(playlistId);
@@ -465,47 +498,11 @@ void CatalogController::removeFromPlaylist(qint64 playlistId, qint64 trackId)
     if (playlistId <= 0 || trackId <= 0) {
         return;
     }
-    const quint64 generation = m_accountGeneration;
-    const auto failed = [this](ErrorCode code) {
-        Q_EMIT notice(QStringLiteral("error"), tr("Could not remove the track: %1").arg(i18n::errorMessage(code)));
-    };
-    api::fetch(m_api.client(), api::endpoints::playlistForEdit(playlistId), this,
-               [this, playlistId, trackId, failed, generation](Result<api::Playlist> current) {
-                   if (generation != m_accountGeneration) {
-                       return;
-                   }
-                   if (!current) {
-                       failed(current.error().code);
-                       return;
-                   }
-                   std::vector<api::Id> ids;
-                   ids.reserve(current->tracks.size());
-                   bool found = false;
-                   for (const api::Track& track : current->tracks) {
-                       if (track.id == trackId && !found) {
-                           found = true;
-                           continue;
-                       }
-                       ids.push_back(track.id);
-                   }
-                   if (!found) {
-                       return;
-                   }
-                   api::fetch(m_api.client(), api::endpoints::setPlaylistTracks(playlistId, ids), this,
-                              [this, playlistId, trackId, failed, generation](Result<api::Playlist> updated) {
-                                  if (generation != m_accountGeneration) {
-                                      return;
-                                  }
-                                  if (!updated) {
-                                      failed(updated.error().code);
-                                  } else {
-                                      m_playlistTrackIds[playlistId].remove(trackId);
-                                      Q_EMIT notice(QStringLiteral("success"),
-                                                    tr("Removed from “%1”.").arg(updated->title));
-                                      playlistUpdated(*updated);
-                                  }
-                              });
-               });
+    std::deque<PlaylistWrite>& queue = m_playlistWrites[playlistId];
+    queue.push_back({.trackId = trackId, .add = false});
+    if (queue.size() == 1) {
+        writeNextToPlaylist(playlistId);
+    }
 }
 
 void CatalogController::finishPlaylistWrite(api::Id playlistId)

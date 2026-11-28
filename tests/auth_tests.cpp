@@ -765,6 +765,17 @@ TEST_SUITE("ui.catalog-writes")
         CHECK(h.tracks() == std::vector<qint64>{1, 9});
     }
 
+    TEST_CASE("adding and removing from one playlist are serialized so neither edit overwrites the other")
+    {
+        WriteHarness h;
+        QSignalSpy notice(h.catalog.get(), &ui::CatalogController::notice);
+        h.catalog->addToPlaylist(5, 9);
+        h.catalog->removeFromPlaylist(5, 1);
+        h.catalog->removeFromPlaylist(5, 2);
+        REQUIRE(test::waitUntil([&] { return notice.count() == 3; }, 5000));
+        CHECK(h.tracks() == std::vector<qint64>{9});
+    }
+
     TEST_CASE("a like shows at once and goes back when SoundCloud refuses it")
     {
         WriteHarness h;

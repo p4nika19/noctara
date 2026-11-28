@@ -145,8 +145,12 @@ private:
     QSet<api::Id> m_likedIds;              // from the likes list
     QHash<api::Id, bool> m_likeOverrides;  // toggled, SoundCloud's answer pending
     int m_likedRevision = 0;
-    QHash<api::Id, std::deque<api::Id>> m_playlistWrites;  // playlist -> tracks to add, the first one in progress
-    QHash<api::Id, QSet<api::Id>> m_playlistTrackIds;      // playlist -> track IDs
+    struct PlaylistWrite {
+        api::Id trackId = 0;
+        bool add = true;
+    };
+    QHash<api::Id, std::deque<PlaylistWrite>> m_playlistWrites;  // playlist -> queued edits, the first in progress
+    QHash<api::Id, QSet<api::Id>> m_playlistTrackIds;            // playlist -> track IDs
     QSet<api::Id> m_loadedTrackPlaylists;
     QString m_query;
     QString m_kind = QStringLiteral("all");

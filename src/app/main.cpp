@@ -480,10 +480,17 @@ int main(int argc, char** argv)
                                       .protectedBackend = &protectedPlayback.backend(),
                                       .metered = [&network] { return network.meteredActive(); },
                                       .statePath = paths.stateDir + QStringLiteral("/session.json")});
-    QObject::connect(&network, &net::NetworkService::configChanged, &player, [&cache, &player] {
-        cache.clear(cache::CacheService::Part::Metadata, &cache, [] {});
-        player.invalidateBlockedTracks();
-    });
+    QObject::connect(&network, &net::NetworkService::configChanged, &player,
+                     [&network, &cache, &player, lastProxy = network.config().proxy] mutable {
+                         const net::ProxyConfig& current = network.config().proxy;
+                         if (current.mode == lastProxy.mode && current.manual == lastProxy.manual &&
+                             current.bypass == lastProxy.bypass && current.bypassLocal == lastProxy.bypassLocal) {
+                             return;
+                         }
+                         lastProxy = current;
+                         cache.clear(cache::CacheService::Part::Metadata, &cache, [] {});
+                         player.invalidateBlockedTracks();
+                     });
     QObject::connect(&player, &media::PlaybackController::problem, &appController, [&appController](int code) {
         appController.showToast(QStringLiteral("error"), i18n::errorMessage(static_cast<ErrorCode>(code)));
     });
@@ -565,15 +572,15 @@ int main(int argc, char** argv)
                      &ui::AppController::reportConfigSaveFailed);
     config.setHotReloadEnabled(true);
 
-    QQmlApplicationEngine engine;
+    auto engine = std::make_unique<QQmlApplicationEngine>();
     // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
-    engine.addImageProvider(QStringLiteral("icon"), new ui::IconProvider);
+    engine->addImageProvider(QStringLiteral("icon"), new ui::IconProvider);
     // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
-    engine.addImageProvider(QStringLiteral("noise"), new ui::NoiseProvider);
+    engine->addImageProvider(QStringLiteral("noise"), new ui::NoiseProvider);
     // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
-    engine.addImageProvider(QStringLiteral("artwork"), new ui::ArtworkProvider(accent));
+    engine->addImageProvider(QStringLiteral("artwork"), new ui::ArtworkProvider(accent));
     // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): QQmlEngine takes ownership of image providers
-    engine.addImageProvider(QStringLiteral("cover"), new ui::CoverImageProvider(cache.images()));
+    engine->addImageProvider(QStringLiteral("cover"), new ui::CoverImageProvider(cache.images()));
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Theme", &theme);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "Format", &formatter);
     qmlRegisterSingletonInstance("Noctara", 1, 0, "SettingsUi", &settingsUi);
@@ -612,7 +619,7 @@ int main(int argc, char** argv)
     // the Account singleton above.
     qmlRegisterUncreatableType<ui::AccountController>("Noctara", 1, 0, "AccountController",
                                                       QStringLiteral("Provided by Account"));
-    QObject::connect(&languages, &i18n::LanguageManager::languageChanged, &engine, &QQmlEngine::retranslate);
+    QObject::connect(&languages, &i18n::LanguageManager::languageChanged, engine.get(), &QQmlEngine::retranslate);
 
     // Scripted runs (smoke tests, screenshots) start the same way every time.
     const bool scripted = cli.smokeTest || !cli.screenshot.isEmpty();
@@ -623,16 +630,16 @@ int main(int argc, char** argv)
         if (start.contains(u'/')) {
             initial.insert(QStringLiteral("settingsCategory"), start.section(u'/', 1, 1));
         }
-        engine.setInitialProperties(initial);
+        engine->setInitialProperties(initial);
     }
     {
         NOCTARA_TRACE_SCOPE("startup: load Main.qml");
-        engine.load(QUrl(QStringLiteral("qrc:/qml/Main.qml")));
+        engine->load(QUrl(QStringLiteral("qrc:/qml/Main.qml")));
     }
-    if (engine.rootObjects().isEmpty()) {
+    if (engine->rootObjects().isEmpty()) {
         return 1;
     }
-    if (auto* window = qobject_cast<QQuickWindow*>(engine.rootObjects().constFirst())) {
+    if (auto* window = qobject_cast<QQuickWindow*>(engine->rootObjects().constFirst())) {
         mainWindow = window;
         graphics.watch(window);
         // Main.qml starts hidden so GPU timestamps can be enabled before the scene graph initialises.
@@ -706,7 +713,7 @@ int main(int argc, char** argv)
         accent.setArtwork(cli.artwork, image);
     }
     if (cli.smokeTest) {
-        runSmokeTest(engine, settingsUi);
+        runSmokeTest(*engine, settingsUi);
     }
     if (!cli.play.isEmpty()) {
         (void)api::fetch(soundcloud.client(), api::endpoints::resolve(QUrl(cli.play)), &player,
@@ -724,6 +731,10 @@ int main(int argc, char** argv)
     }
 
     const int code = QCoreApplication::exec();
+    // Tear down QML while we can still drain DeferredDelete events posted when in-flight async image responses cancel.
+    engine.reset();
+    QCoreApplication::processEvents();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     config.flush();
     return code;
 }

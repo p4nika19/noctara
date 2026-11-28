@@ -6,6 +6,7 @@
 
 #include "core/Log.hpp"
 #include "net/CallbackChannel.hpp"
+#include "net/Redaction.hpp"
 #include "net/RetryPolicy.hpp"
 
 #include <QDateTime>
@@ -270,7 +271,7 @@ void ApiClient::onFinished(const std::shared_ptr<Flight>& flight, Result<net::Re
         complete(flight, fail(ErrorCode::Unauthorized, "401"));
         return;
     case 403:
-        qCWarning(lcApi) << "API 403 Forbidden for" << flight->request.url.toString() << "body:" << response.body;
+        qCWarning(lcApi).noquote() << "API 403 Forbidden for" << net::redactUrl(flight->request.url);
         complete(flight, fail(ErrorCode::Forbidden, "403"));
         return;
     case 404:

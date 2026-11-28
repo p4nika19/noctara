@@ -530,7 +530,7 @@ void PlaybackController::startCurrent(std::int64_t startMs, bool paused)
             m_hydratingUnplayable.insert(item->track.id);
             const std::uint64_t serial = m_trackSerial;
             const api::Id id = item->track.id;
-            hydrate({id}, [this, serial, id, startMs, paused] {
+            hydrate({id}, [this, serial, id, startMs] {
                 m_hydratingUnplayable.remove(id);
                 if (serial != m_trackSerial) {
                     return;
@@ -541,11 +541,12 @@ void PlaybackController::startCurrent(std::int64_t startMs, bool paused)
                 }
                 ErrorCode checkWhy = ErrorCode::NotPlayable;
                 if (!sourceFor(*now, &checkWhy)) {
-                    skipAfterError(checkWhy, paused);
+                    skipAfterError(checkWhy, !m_pendingPlay);
                     return;
                 }
-                startCurrent(startMs, paused);
+                startCurrent(startMs, !m_pendingPlay);
             });
+            Q_EMIT stateChanged();
             return;
         }
         skipAfterError(why, paused);
