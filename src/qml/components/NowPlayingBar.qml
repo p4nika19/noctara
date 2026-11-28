@@ -1,11 +1,13 @@
 import QtQuick
+import QtQuick.Templates as T
 import QtQuick.Window
 import Noctara
 
 // The floating "now playing" bar: cover and title, transport, the waveform scrubber with times, volume and the
 // queue. Liquid Glass applies here (one of the few surfaces that bend light). What it shows and its size follow
-// Layout → Player bar; narrow windows drop the volume slider first (the mute button stays), then the times beside
-// the scrubber. Clicking the cover opens the full-screen player; right-click opens the player menu.
+// Layout → Player bar; narrow windows collapse the inline volume slider into a hover popover above the mute button,
+// then drop the times beside the scrubber. Clicking the cover opens the full-screen player; right-click opens the
+// player menu.
 GlassPanel {
     id: bar
 
@@ -16,11 +18,56 @@ GlassPanel {
 
     readonly property real inset: Math.max(Theme.space.md, cornerInset)
     readonly property bool roomy: width > 900 * Theme.scale
+    // When the bar is too narrow for the inline volume slider, hovering the mute button reveals a vertical slider.
+    readonly property bool compactVolume: !roomy && Layout.playerVolume
+    readonly property bool volumeInteractive: muteButton.hovered || volumePopupHover.hovered
+                                              || volumePopupSlider.hovered || volumePopupSlider.pressed
     // Between the transport and the volume controls; the times give up their room before the scrubber gets too short.
     readonly property real scrubRoom: volume.x - transport.x - transport.width - Theme.space.lg * 2
     readonly property bool showTimes: scrubRoom - elapsed.implicitWidth - total.implicitWidth - Theme.space.md * 2
                                       >= 96 * Theme.scale
     readonly property real progress: Player.duration > 0 ? Math.min(1, Player.position / Player.duration) : 0
+
+    function positionVolumePopup() {
+        const overlay = volumePopup.parent
+        if (!overlay)
+            return
+        const anchor = muteButton.mapToItem(overlay, muteButton.width / 2, 0)
+        const barOrigin = bar.mapToItem(overlay, 0, 0)
+        const popupW = volumePopup.implicitWidth
+        const popupH = volumePopup.implicitHeight
+        const margin = Theme.space.sm
+        const gap = Theme.space.sm
+        const below = Layout.playerPosition === "top"
+        volumePopup.x = Math.max(margin, Math.min(anchor.x - popupW / 2, overlay.width - popupW - margin))
+        const desiredY = below ? barOrigin.y + bar.height + gap : barOrigin.y - popupH - gap
+        volumePopup.y = Math.max(margin, Math.min(desiredY, overlay.height - popupH - margin))
+    }
+
+    function syncVolumePopup() {
+        if (!bar.compactVolume || !bar.visible) {
+            volumeCloseTimer.stop()
+            if (volumePopup.visible)
+                volumePopup.close()
+            return
+        }
+        if (bar.volumeInteractive) {
+            volumeCloseTimer.stop()
+            bar.positionVolumePopup()
+            if (!volumePopup.visible)
+                volumePopup.open()
+        } else if (volumePopup.visible) {
+            volumeCloseTimer.restart()
+        }
+    }
+
+    onCompactVolumeChanged: syncVolumePopup()
+    onVisibleChanged: syncVolumePopup()
+    onVolumeInteractiveChanged: syncVolumePopup()
+    onWidthChanged: if (volumePopup.visible) positionVolumePopup()
+    onHeightChanged: if (volumePopup.visible) positionVolumePopup()
+    onXChanged: if (volumePopup.visible) positionVolumePopup()
+    onYChanged: if (volumePopup.visible) positionVolumePopup()
 
     level: 1
     liquid: true
@@ -214,6 +261,8 @@ GlassPanel {
         spacing: Theme.space.xs
 
         IconButton {
+            id: muteButton
+            objectName: "volumeMuteButton"
             anchors.verticalCenter: parent.verticalCenter
             width: Theme.space.controlHeightSmall
             height: width
@@ -221,9 +270,15 @@ GlassPanel {
             iconSize: Theme.space.iconSizeSmall
             iconName: Player.muted || Player.volume === 0 ? "volume-x" : (Player.volume < 0.5 ? "volume-1" : "volume-2")
             text: Player.muted ? qsTr("Unmute") : qsTr("Mute")
+            showTooltip: !bar.compactVolume
             onClicked: Player.toggleMute()
+            WheelHandler {
+                enabled: bar.compactVolume
+                onWheel: event => Player.volume = Math.max(0, Math.min(1, Player.volume + event.angleDelta.y / 1200))
+            }
         }
         Slider {
+            objectName: "volumeInlineSlider"
             anchors.verticalCenter: parent.verticalCenter
             visible: bar.roomy && Layout.playerVolume
             width: 96 * Theme.scale
@@ -235,6 +290,81 @@ GlassPanel {
             WheelHandler {
                 onWheel: event => Player.volume = Math.max(0, Math.min(1, Player.volume + event.angleDelta.y / 1200))
             }
+        }
+    }
+
+    // Brief grace period while the pointer moves across the gap between the mute button and the vertical slider.
+    Timer {
+        id: volumeCloseTimer
+        interval: 130
+        repeat: false
+        onTriggered: if (!bar.volumeInteractive) volumePopup.close()
+    }
+
+    Connections {
+        target: bar.Window.window
+        function onActiveChanged() {
+            if (bar.Window.window && !bar.Window.window.active && !volumePopupSlider.pressed) {
+                volumeCloseTimer.stop()
+                volumePopup.close()
+            }
+        }
+    }
+
+    T.Popup {
+        id: volumePopup
+        objectName: "volumePopup"
+        parent: T.Overlay.overlay
+        modal: false
+        focus: false
+        closePolicy: T.Popup.CloseOnEscape
+        leftPadding: Theme.space.xs
+        rightPadding: Theme.space.xs
+        topPadding: Theme.space.md
+        bottomPadding: Theme.space.md
+        implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
+        implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
+
+        contentItem: Item {
+            implicitWidth: volumePopupSlider.implicitWidth
+            implicitHeight: volumePopupSlider.implicitHeight
+
+            WheelHandler {
+                onWheel: event => Player.volume = Math.max(0, Math.min(1, Player.volume + event.angleDelta.y / 1200))
+            }
+
+            Slider {
+                id: volumePopupSlider
+                objectName: "volumePopupSlider"
+                anchors.centerIn: parent
+                orientation: Qt.Vertical
+                implicitHeight: 112 * Theme.scale
+                focusPolicy: Qt.NoFocus
+                from: 0
+                to: 1
+                value: Player.muted ? 0 : Player.volume
+                Accessible.name: qsTr("Volume")
+                onMoved: Player.volume = value
+            }
+        }
+        background: GlassPanel {
+            level: 2
+            liquid: true
+            radius: Math.min(Theme.radius.md, width / 2)
+            HoverHandler { id: volumePopupHover }
+        }
+        enter: Transition {
+            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.fast }
+            NumberAnimation {
+                property: "scale"
+                from: 0.94
+                to: 1
+                duration: Theme.motion.normal
+                easing.type: Theme.motion.easingStandard
+            }
+        }
+        exit: Transition {
+            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Math.round(Theme.motion.fast / 2) }
         }
     }
     IconButton {

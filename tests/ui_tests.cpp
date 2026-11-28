@@ -700,6 +700,19 @@ struct WindowHarness {
         REQUIRE(test::waitUntil([this] { return window->isExposed(); }));
     }
 
+    ~WindowHarness()
+    {
+        // Destroy the window and flush deferred QML delegate deletions before the engine shuts down.
+        window.reset();
+        QCoreApplication::processEvents();
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    }
+
+    WindowHarness(const WindowHarness&) = delete;
+    WindowHarness& operator=(const WindowHarness&) = delete;
+    WindowHarness(WindowHarness&&) = delete;
+    WindowHarness& operator=(WindowHarness&&) = delete;
+
     [[nodiscard]] QObject* object(const char* name) const { return window->property(name).value<QObject*>(); }
     [[nodiscard]] QQuickItem* item(const char* name) const { return qobject_cast<QQuickItem*>(object(name)); }
 };
@@ -2220,5 +2233,91 @@ TEST_SUITE("ui.settings-panes")
         REQUIRE(store.setUserValue(settings::keys::Language, QStringLiteral("en")).has_value());
         harness.engine.retranslate();
         CHECK(shows(QStringLiteral("Solid (no blur) / flat")));
+    }
+
+    TEST_CASE("a narrow player bar replaces the inline volume slider with a vertical hover popover")
+    {
+        stub::singleton("Layout",
+                        QStringLiteral("({playerSize: 'regular', playerPosition: 'bottom', playerWaveform: false,"
+                                       " playerTime: true, playerVolume: true, playerQueueButton: true})"));
+        QJSValue playerObj;
+        const WindowHarness harness(
+            R"(Window {
+                id: root
+                width: 1040; height: 600; visible: true
+                property alias bar: bar
+                NowPlayingBar {
+                    id: bar
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    anchors.margins: 16
+                    height: implicitHeight
+                }
+            })",
+            nullptr, [&playerObj](QJSEngine* js) {
+                playerObj = js->evaluate(QString::fromUtf8(kPlayerStub));
+                return playerObj;
+            });
+        QQuickWindow* window = harness.window.get();
+        QQuickItem* bar = harness.item("bar");
+        REQUIRE(bar != nullptr);
+        auto* muteButton = bar->findChild<QQuickItem*>(QStringLiteral("volumeMuteButton"));
+        auto* inlineSlider = bar->findChild<QQuickItem*>(QStringLiteral("volumeInlineSlider"));
+        auto* volumePopup = bar->findChild<QObject*>(QStringLiteral("volumePopup"));
+        auto* popupSlider = bar->findChild<QQuickItem*>(QStringLiteral("volumePopupSlider"));
+        REQUIRE(muteButton != nullptr);
+        REQUIRE(inlineSlider != nullptr);
+        REQUIRE(volumePopup != nullptr);
+        REQUIRE(popupSlider != nullptr);
+
+        // Wide window: inline slider is shown, hovering the mute icon does not open the popover.
+        CHECK(inlineSlider->isVisible());
+        const auto moveTo = [window](QQuickItem* item) {
+            const QPoint center = item->mapToScene(QPointF(item->width() / 2, item->height() / 2)).toPoint();
+            QTest::mouseMove(window, center);
+        };
+        moveTo(muteButton);
+        QCoreApplication::processEvents();
+        CHECK_FALSE(volumePopup->property("visible").toBool());
+
+        // Narrow/square window: inline slider hides, hovering the mute button opens the vertical slider above the bar.
+        window->resize(640, 640);
+        REQUIRE(test::waitUntil([&] { return !inlineSlider->isVisible(); }));
+        QTest::mouseMove(window, QPoint(4, 4));
+        QCoreApplication::processEvents();
+        moveTo(muteButton);
+        REQUIRE(test::waitUntil([&] { return volumePopup->property("visible").toBool(); }));
+        CHECK(popupSlider->property("orientation").toInt() == Qt::Vertical);
+        const qreal barTop = bar->mapToScene(QPointF(0, 0)).y();
+        CHECK(volumePopup->property("y").toReal() + volumePopup->property("height").toReal() <= barTop);
+
+        // Moving the pointer elsewhere inside the window closes the popover after its short hover grace period.
+        QTest::mouseMove(window, QPoint(12, 12));
+        REQUIRE(test::waitUntil([&] { return !volumePopup->property("visible").toBool(); }, 1000));
+
+        // Re-open, press and drag the vertical slider outside the popover, release inside the window: must stay open
+        // during the drag and close once released away from the popover.
+        moveTo(muteButton);
+        REQUIRE(test::waitUntil([&] { return volumePopup->property("visible").toBool(); }));
+        const QPoint sliderPos =
+            popupSlider->mapToScene(QPointF(popupSlider->width() / 2, popupSlider->height() * 0.65)).toPoint();
+        QTest::mouseMove(window, sliderPos);
+        QTest::mousePress(window, Qt::LeftButton, {}, sliderPos);
+        const QPoint outsideInsideWindow(12, 12);
+        QTest::mouseMove(window, outsideInsideWindow);
+        QCoreApplication::processEvents();
+        CHECK(volumePopup->property("visible").toBool());
+        QTest::mouseRelease(window, Qt::LeftButton, {}, outsideInsideWindow);
+        CHECK(playerObj.property(QStringLiteral("volume")).toNumber() != doctest::Approx(0.8));
+
+        REQUIRE(test::waitUntil([&] { return !volumePopup->property("visible").toBool(); }, 1000));
+
+        // Widening the window restores the inline slider and closes an open popover immediately.
+        moveTo(muteButton);
+        REQUIRE(test::waitUntil([&] { return volumePopup->property("visible").toBool(); }));
+        window->resize(1040, 640);
+        REQUIRE(
+            test::waitUntil([&] { return inlineSlider->isVisible() && !volumePopup->property("visible").toBool(); }));
     }
 }

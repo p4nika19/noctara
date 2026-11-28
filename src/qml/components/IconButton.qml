@@ -14,6 +14,8 @@ T.AbstractButton {
     property bool highlighted: false
     // False: no hover/press surface or halo (the owner draws its own selection, e.g. the navigation pill).
     property bool surface: true
+    // False: suppress the hover tooltip while keeping `text` as the accessible name (e.g. when a popover opens on hover).
+    property bool showTooltip: true
     property color iconColor: material === "primary" ? (Theme.glass.primaryOnAccent ? Theme.targetColors.onAccent
                                                                                     : Theme.targetColors.accent)
                             : (checked || highlighted ? Theme.targetColors.accent : Theme.targetColors.iconPrimary)
@@ -47,7 +49,7 @@ T.AbstractButton {
 
     LazyTooltip {
         host: control
-        shown: control.hovered && control.text.length > 0
+        shown: control.showTooltip && control.hovered && control.text.length > 0
         text: control.text
     }
 }

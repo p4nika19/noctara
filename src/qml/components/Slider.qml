@@ -8,21 +8,21 @@ T.Slider {
     // Light up the filled part (used for progress-like sliders; follows the "Progress glow" setting).
     property bool glow: false
 
-    implicitWidth: 200 * Theme.scale
-    implicitHeight: Theme.space.controlHeightSmall
+    implicitWidth: vertical ? Theme.space.controlHeightSmall : 200 * Theme.scale
+    implicitHeight: vertical ? 120 * Theme.scale : Theme.space.controlHeightSmall
     focusPolicy: Qt.StrongFocus
     hoverEnabled: true
 
     background: Item {
-        x: control.leftPadding
-        y: control.topPadding + control.availableHeight / 2 - height / 2
-        width: control.availableWidth
-        height: 6 * Theme.scale
+        x: control.vertical ? control.leftPadding + control.availableWidth / 2 - width / 2 : control.leftPadding
+        y: control.vertical ? control.topPadding : control.topPadding + control.availableHeight / 2 - height / 2
+        width: control.vertical ? 6 * Theme.scale : control.availableWidth
+        height: control.vertical ? control.availableHeight : 6 * Theme.scale
         opacity: control.enabled ? 1 : 0.45
 
         Rectangle {
             anchors.fill: parent
-            radius: height / 2
+            radius: Math.min(width, height) / 2
             color: Theme.dark ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(0, 0, 0, 0.12)
         }
         Shadow {
@@ -35,11 +35,12 @@ T.Slider {
         }
         Rectangle {
             id: fill
-            width: Math.max(height, control.visualPosition * parent.width)
-            height: parent.height
-            radius: height / 2
+            width: control.vertical ? parent.width : Math.max(height, control.visualPosition * parent.width)
+            height: control.vertical ? Math.max(width, (1 - control.visualPosition) * parent.height) : parent.height
+            y: control.vertical ? parent.height - height : 0
+            radius: Math.min(width, height) / 2
             gradient: Gradient {
-                orientation: Gradient.Horizontal
+                orientation: control.vertical ? Gradient.Vertical : Gradient.Horizontal
                 GradientStop { position: 0.0; color: Theme.colors.accentLight }
                 GradientStop { position: 1.0; color: Theme.colors.accent }
             }
@@ -47,8 +48,10 @@ T.Slider {
     }
     handle: Item {
         readonly property real diameter: 16 * Theme.scale
-        x: control.leftPadding + control.visualPosition * (control.availableWidth - width)
-        y: control.topPadding + control.availableHeight / 2 - height / 2
+        x: control.vertical ? control.leftPadding + control.availableWidth / 2 - width / 2
+                            : control.leftPadding + control.visualPosition * (control.availableWidth - width)
+        y: control.vertical ? control.topPadding + control.visualPosition * (control.availableHeight - height)
+                            : control.topPadding + control.availableHeight / 2 - height / 2
         width: diameter
         height: diameter
         opacity: control.enabled ? 1 : 0.45
