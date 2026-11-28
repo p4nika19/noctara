@@ -27,18 +27,6 @@ T.Dialog {
     padding: Math.max(Theme.space.xl, panel.cornerInset)
     closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside
 
-    function reCenter() {
-        var p = parent || T.Overlay.overlay
-        if (p && p.width > 0 && p.height > 0) {
-            x = Math.round((p.width - width) / 2)
-            y = Math.round((p.height - height) / 2)
-        }
-    }
-
-    onWidthChanged: reCenter()
-    onHeightChanged: reCenter()
-    onAboutToShow: reCenter()
-
     T.Overlay.modal: Rectangle {
         color: Theme.colors.scrim
         Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
@@ -46,16 +34,16 @@ T.Dialog {
     background: Rectangle {
         id: panel
         radius: Theme.radius.lg
-        color: Theme.dark ? "#161922" : "#ffffff"
-        border.width: 1.5 * Theme.scale
-        border.color: Theme.dark ? Qt.rgba(1, 1, 1, 0.22) : Qt.rgba(0, 0, 0, 0.22)
+        color: Theme.colors.solidOverlay
+        border.width: Math.max(1, Theme.space.hairline)
+        border.color: Theme.glass.flat ? Theme.colors.divider : Theme.colors.edge
 
-        readonly property real cornerInset: radius * (1 - Math.SQRT1_2)
+        readonly property real cornerInset: Math.min(radius, control.width / 2) * (1 - Math.SQRT1_2)
 
         Shadow {
             anchors.fill: parent
             z: -1
-            active: Graphics.hardware
+            active: Graphics.hardware && !Theme.glass.flat
             radius: panel.radius
             color: Theme.colors.shadow
             blur: 64 * Theme.scale
@@ -106,10 +94,7 @@ T.Dialog {
             }
         }
     }
-    onOpened: {
-        reCenter()
-        (control.initialFocus || confirm).forceActiveFocus()
-    }
+    onOpened: (control.initialFocus || confirm).forceActiveFocus()
     enter: Transition {
         NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.fast }
         NumberAnimation { property: "scale"; from: 0.96; to: 1; duration: Theme.motion.normal; easing.type: Theme.motion.easingStandard }

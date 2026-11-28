@@ -7,30 +7,44 @@ Dialog {
     id: dialog
 
     property string kind: ""
+    property CollectionModel sourceModel: null
     property var tracks: []
     property var selectedMap: ({})
     property int selectedCount: 0
 
-    function openFor(discoveryKind, model) {
-        kind = discoveryKind
+    function rebuildTracks(selectAll) {
         var list = []
-        var sel = {}
-        var count = model ? model.count : 0
+        var sel = selectAll ? {} : Object.assign({}, selectedMap)
+        var count = sourceModel ? sourceModel.count : 0
         for (var i = 0; i < count; ++i) {
-            var tId = model.itemIdAt(i)
+            var tId = sourceModel.itemIdAt(i)
             if (tId > 0) {
                 list.push({
                     id: tId,
-                    title: model.titleAt(i),
-                    artist: model.artistAt(i),
-                    artwork: model.artworkAt(i)
+                    title: sourceModel.titleAt(i),
+                    artist: sourceModel.artistAt(i),
+                    artwork: sourceModel.artworkAt(i)
                 })
-                sel[tId] = true
+                if (selectAll) {
+                    sel[tId] = true
+                }
             }
         }
         tracks = list
         selectedMap = sel
-        selectedCount = list.length
+        selectedCount = Object.keys(sel).length
+    }
+
+    Connections {
+        target: dialog.opened ? dialog.sourceModel : null
+        function onDataChanged() { dialog.rebuildTracks(false) }
+        function onCountChanged() { dialog.rebuildTracks(false) }
+    }
+
+    function openFor(discoveryKind, model) {
+        kind = discoveryKind
+        sourceModel = model
+        rebuildTracks(true)
 
         var own = Catalog.ownPlaylists()
         var baseTitle = discoveryKind === "weekly-wave" ? "Weekly Wave" : "Daily Drops"
@@ -122,7 +136,7 @@ Dialog {
             id: tracksLabel
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-            text: qsTr("Tracks (%1 of %2 selected)").arg(dialog.selectedCount).arg(dialog.tracks.length)
+            text: qsTr("Tracks (%1 of %2 selected)").arg(dialog.selectedCount, dialog.tracks.length)
             font: Theme.font.bodyStrong
             color: Theme.colors.textPrimary
         }
@@ -162,7 +176,8 @@ Dialog {
                 var maxScroll = Math.max(0, trackList.contentHeight - trackList.height)
                 if (maxScroll > 0) {
                     var delta = (event.angleDelta.y / 120) * 84 * Theme.scale
-                    trackList.contentY = Math.max(0, Math.min(maxScroll, trackList.contentY - delta))
+                    trackList.contentY = Math.max(trackList.originY,
+                                                  Math.min(trackList.originY + maxScroll, trackList.contentY - delta))
                 }
             }
         }
@@ -190,14 +205,14 @@ Dialog {
                     radius: Theme.radius.xs
                     color: trackRow.selected ? Theme.colors.accent : "transparent"
                     border.width: Theme.space.hairline
-                    border.color: trackRow.selected ? Theme.colors.accent : Theme.colors.borderSubtle
+                    border.color: trackRow.selected ? Theme.colors.accent : Theme.colors.divider
 
                     Icon {
                         anchors.centerIn: parent
                         visible: trackRow.selected
                         name: "check"
                         size: 12 * Theme.scale
-                        color: Theme.colors.onAccent
+                        color: Theme.targetColors.onAccent
                     }
                 }
 
@@ -237,14 +252,6 @@ Dialog {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: dialog.toggleTrack(trackRow.modelData.id)
-                onWheel: (wheel) => {
-                    var maxScroll = Math.max(0, trackList.contentHeight - trackList.height)
-                    if (maxScroll > 0) {
-                        var delta = (wheel.angleDelta.y / 120) * 84 * Theme.scale
-                        trackList.contentY = Math.max(0, Math.min(maxScroll, trackList.contentY - delta))
-                    }
-                    wheel.accepted = true
-                }
             }
         }
     }

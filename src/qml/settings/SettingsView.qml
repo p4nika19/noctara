@@ -55,14 +55,14 @@ Item {
         ListView {
             id: categories
             anchors.top: search.bottom
-            anchors.topMargin: Theme.space.md
+            anchors.topMargin: Theme.space.sm
             anchors.bottom: advanced.top
-            anchors.bottomMargin: Theme.space.md
+            anchors.bottomMargin: Theme.space.sm
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: Theme.space.sm
-            anchors.rightMargin: Theme.space.sm
-            clip: false
+            topMargin: Theme.space.xs
+            bottomMargin: Theme.space.sm
+            clip: true
             model: SettingsUi.categories
             spacing: Theme.space.xxs
             keyNavigationEnabled: true
@@ -80,62 +80,71 @@ Item {
                 Accessible.name: modelData.label
                 Accessible.selected: selected
 
-                // Same lit-glass treatment as the active navigation item.
-                Shadow {
+                // Keep horizontal breathing room inside the clipped ListView so the selected glow is not cut off.
+                Item {
+                    id: inner
                     anchors.fill: parent
-                    z: -1
-                    radius: highlight.radius
-                    blur: 30 * Theme.scale
-                    spread: -10 * Theme.scale
-                    offsetY: 8 * Theme.scale
-                    color: Qt.rgba(Theme.colors.accent.r, Theme.colors.accent.g, Theme.colors.accent.b,
-                                   entry.selected && Theme.glass.glowControls ? Theme.glass.glow * 0.9 : 0)
-                }
-                Rectangle {
-                    id: highlight
-                    anchors.fill: parent
-                    radius: Math.min(Theme.radius.button, height / 2)
-                    visible: entry.selected
-                    border.width: Theme.space.hairline
-                    border.color: Theme.dark ? Qt.rgba(1, 1, 1, 0.15)
-                                             : Qt.rgba(Theme.colors.accent.r, Theme.colors.accent.g, Theme.colors.accent.b, 0.3)
-                    gradient: Gradient {
-                        GradientStop { position: 0.0; color: Theme.dark ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.95) }
-                        GradientStop { position: 1.0; color: Theme.dark ? Qt.rgba(1, 1, 1, 0.04) : Qt.rgba(1, 1, 1, 0.6) }
+                    anchors.leftMargin: Theme.space.sm
+                    anchors.rightMargin: Theme.space.sm
+
+                    // Same lit-glass treatment as the active navigation item.
+                    Shadow {
+                        anchors.fill: parent
+                        z: -1
+                        radius: highlight.radius
+                        blur: 30 * Theme.scale
+                        spread: -10 * Theme.scale
+                        offsetY: 8 * Theme.scale
+                        color: Qt.rgba(Theme.colors.accent.r, Theme.colors.accent.g, Theme.colors.accent.b,
+                                       entry.selected && Theme.glass.glowControls && !Theme.glass.flat
+                                           ? Theme.glass.glow * 0.9 : 0)
                     }
-                }
-                StateLayer {
-                    radius: Math.min(Theme.radius.button, height / 2)
-                    hovered: area.containsMouse && !entry.selected
-                    pressed: area.pressed
-                }
-                Row {
-                    anchors.verticalCenter: parent.verticalCenter
-                    x: Theme.space.md
-                    spacing: Theme.space.md
-                    Icon {
+                    Rectangle {
+                        id: highlight
+                        anchors.fill: parent
+                        radius: Math.min(Theme.radius.button, height / 2)
+                        visible: entry.selected
+                        border.width: Theme.space.hairline
+                        border.color: Theme.dark ? Qt.rgba(1, 1, 1, 0.15)
+                                                 : Qt.rgba(Theme.colors.accent.r, Theme.colors.accent.g, Theme.colors.accent.b, 0.3)
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: Theme.dark ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.95) }
+                            GradientStop { position: 1.0; color: Theme.dark ? Qt.rgba(1, 1, 1, 0.04) : Qt.rgba(1, 1, 1, 0.6) }
+                        }
+                    }
+                    StateLayer {
+                        radius: Math.min(Theme.radius.button, height / 2)
+                        hovered: area.containsMouse && !entry.selected
+                        pressed: area.pressed
+                    }
+                    Row {
                         anchors.verticalCenter: parent.verticalCenter
-                        name: entry.modelData.icon
-                        size: Theme.space.iconSizeSmall
-                        color: entry.selected ? Theme.targetColors.accent : Theme.targetColors.iconSecondary
+                        x: Theme.space.md
+                        spacing: Theme.space.md
+                        Icon {
+                            anchors.verticalCenter: parent.verticalCenter
+                            name: entry.modelData.icon
+                            size: Theme.space.iconSizeSmall
+                            color: entry.selected ? Theme.targetColors.accent : Theme.targetColors.iconSecondary
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: inner.width - Theme.space.iconSizeSmall - Theme.space.md * 3
+                            text: entry.modelData.label
+                            font: Theme.font.bodyStrong
+                            color: entry.selected ? Theme.colors.textPrimary : Theme.colors.textSecondary
+                            elide: Text.ElideRight
+                        }
                     }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: entry.width - Theme.space.iconSizeSmall - Theme.space.md * 3
-                        text: entry.modelData.label
-                        font: Theme.font.bodyStrong
-                        color: entry.selected ? Theme.colors.textPrimary : Theme.colors.textSecondary
-                        elide: Text.ElideRight
-                    }
-                }
-                MouseArea {
-                    id: area
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        SettingsUi.searchText = ""
-                        root.categoryRequested(entry.modelData.id)
+                    MouseArea {
+                        id: area
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            SettingsUi.searchText = ""
+                            root.categoryRequested(entry.modelData.id)
+                        }
                     }
                 }
             }

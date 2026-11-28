@@ -15,6 +15,7 @@ Item {
                                          : qsTr("New releases based on your taste. Updated every day")
 
     Component.onCompleted: Catalog.ensure(kind)
+    onKindChanged: Catalog.ensure(kind)
 
     CollectionFilter {
         id: listFilter

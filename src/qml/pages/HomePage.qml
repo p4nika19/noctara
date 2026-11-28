@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Shapes
 import QtQuick.Window
 import Noctara
 import "../components"
@@ -128,7 +129,7 @@ Flickable {
                             offsetY: 0
                             spread: -4 * Theme.scale
                             color: Qt.rgba(Theme.colors.accent.r, Theme.colors.accent.g, Theme.colors.accent.b,
-                                           Theme.glass.glowCover ? Theme.glass.glow * 0.9 : 0)
+                                           Theme.glass.glowCover && !Theme.glass.flat ? Theme.glass.glow * 0.9 : 0)
                         }
                         CoverArt {
                             id: coverArt
@@ -174,50 +175,58 @@ Flickable {
             }
         }
 
-        Row {
-            id: discoveryRow
-            visible: Account.signedIn
+        Loader {
+            id: discoveryLoader
+            active: Account.signedIn
+            visible: active
             width: column.width
-            spacing: Theme.space.lg
+            height: active ? implicitHeight : 0
+            sourceComponent: Row {
+                id: discoveryRow
+                width: discoveryLoader.width
+                spacing: Theme.space.lg
 
-            property real waveProgress: 0
-            readonly property bool animating: Theme.glass.discoveryAnimated
-                && Window.window && Window.window.active
-                && Window.window.visibility !== Window.Minimized
+                property real waveProgress: 0
+                readonly property bool animating: Theme.glass.discoveryAnimated
+                    && Window.window && Window.window.active
+                    && Window.window.visibility !== Window.Minimized
 
-            NumberAnimation {
-                id: waveAnim
-                target: discoveryRow
-                property: "waveProgress"
-                from: 0.0
-                to: 1.0
-                duration: 36000
-                loops: Animation.Infinite
-                running: discoveryRow.visible
-                paused: running && !discoveryRow.animating
-            }
+                NumberAnimation {
+                    id: waveAnim
+                    target: discoveryRow
+                    property: "waveProgress"
+                    from: 0.0
+                    to: 1.0
+                    duration: 36000
+                    loops: Animation.Infinite
+                    running: discoveryRow.visible
+                    paused: running && !discoveryRow.animating
+                }
 
-            DiscoveryCard {
-                cardIndex: 0
-                totalRowWidth: discoveryRow.width
-                rowSpacing: discoveryRow.spacing
-                width: (column.width - Theme.space.lg) / 2
-                model: Catalog.dailyDrops
-                title: qsTr("Daily Drops")
-                description: qsTr("New releases based on your taste. Updated every day")
-                context: qsTr("Daily Drops")
-                kind: "daily-drops"
-            }
-            DiscoveryCard {
-                cardIndex: 1
-                totalRowWidth: discoveryRow.width
-                rowSpacing: discoveryRow.spacing
-                width: (column.width - Theme.space.lg) / 2
-                model: Catalog.weeklyWave
-                title: qsTr("Weekly Wave")
-                description: qsTr("The best of SoundCloud just for you. Updated every Monday")
-                context: qsTr("Weekly Wave")
-                kind: "weekly-wave"
+                DiscoveryCard {
+                    cardIndex: 0
+                    totalRowWidth: discoveryRow.width
+                    rowSpacing: discoveryRow.spacing
+                    waveProgress: discoveryRow.waveProgress
+                    width: (discoveryRow.width - Theme.space.lg) / 2
+                    model: Catalog.dailyDrops
+                    title: qsTr("Daily Drops")
+                    description: qsTr("New releases based on your taste. Updated every day")
+                    context: qsTr("Daily Drops")
+                    kind: "daily-drops"
+                }
+                DiscoveryCard {
+                    cardIndex: 1
+                    totalRowWidth: discoveryRow.width
+                    rowSpacing: discoveryRow.spacing
+                    waveProgress: discoveryRow.waveProgress
+                    width: (discoveryRow.width - Theme.space.lg) / 2
+                    model: Catalog.weeklyWave
+                    title: qsTr("Weekly Wave")
+                    description: qsTr("The best of SoundCloud just for you. Updated every Monday")
+                    context: qsTr("Weekly Wave")
+                    kind: "weekly-wave"
+                }
             }
         }
 
@@ -257,6 +266,7 @@ Flickable {
         property int cardIndex: 0
         property real totalRowWidth: 0
         property real rowSpacing: Theme.space.lg
+        property real waveProgress: 0
 
         readonly property bool isDaily: kind === "daily-drops"
 
@@ -304,180 +314,226 @@ Flickable {
         height: 164 * Theme.scale
 
         readonly property int trackCount: card.model ? card.model.count : 0
+        // Collage tiles are 57-114 px: sized artwork avoids downloading and decoding multi-megabyte originals.
         property var coverSources: [
-            card.model && card.model.count > 0 ? card.model.originalArtworkAt(0) : "",
-            card.model && card.model.count > 1 ? card.model.originalArtworkAt(1) : "",
-            card.model && card.model.count > 2 ? card.model.originalArtworkAt(2) : "",
-            card.model && card.model.count > 3 ? card.model.originalArtworkAt(3) : ""
+            card.model && card.model.count > 0 ? card.model.artworkAt(0) : "",
+            card.model && card.model.count > 1 ? card.model.artworkAt(1) : "",
+            card.model && card.model.count > 2 ? card.model.artworkAt(2) : "",
+            card.model && card.model.count > 3 ? card.model.artworkAt(3) : ""
         ]
 
         function refreshCovers() {
             if (!card.model) return
             var srcs = []
             for (var i = 0; i < 4; ++i) {
-                srcs.push(i < card.model.count ? card.model.originalArtworkAt(i) : "")
+                srcs.push(i < card.model.count ? card.model.artworkAt(i) : "")
             }
             card.coverSources = srcs
         }
 
         Connections {
             target: card.model
-            function onDataChanged() { card.refreshCovers() }
+            function onDataChanged(topLeft) { if (topLeft.row <= 3) card.refreshCovers() }
             function onCountChanged() { card.refreshCovers() }
-            function onRowsInserted() { card.refreshCovers() }
+            function onRowsInserted(parent, first) { if (first <= 3) card.refreshCovers() }
             function onModelReset() { card.refreshCovers() }
         }
 
         // 1. Static background patterns (tint gradient, ambient glow, subtle diagonal hatch)
-        // Painted strictly once into a cached image texture: never repainted during animation!
-        Canvas {
-            id: bgCanvas
+        // Drawn as vector Shapes instead of Canvas: avoids multi-megabyte offscreen bitmaps and Qt Canvas shutdown leaks.
+        Shape {
+            id: bgShape
             anchors.fill: parent
-            renderTarget: Canvas.Image
+            preferredRendererType: Shape.CurveRenderer
+            enabled: false
+            Accessible.ignored: true
 
-            function drawRoundedRect(ctx, x, y, w, h, r) {
-                var radius = Math.max(0, Math.min(r, w / 2, h / 2))
-                ctx.beginPath()
-                ctx.moveTo(x + radius, y)
-                ctx.lineTo(x + w - radius, y)
-                ctx.quadraticCurveTo(x + w, y, x + w, y + radius)
-                ctx.lineTo(x + w, y + h - radius)
-                ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h)
-                ctx.lineTo(x + radius, y + h)
-                ctx.quadraticCurveTo(x, y + h, x, y + h - radius)
-                ctx.lineTo(x, y + radius)
-                ctx.quadraticCurveTo(x, y, x + radius, y)
-                ctx.closePath()
-            }
+            readonly property real clampedRadius: Math.max(0, Math.min(card.radius, width / 2, height / 2))
 
-            onPaint: {
-                var ctx = getContext("2d")
-                ctx.clearRect(0, 0, width, height)
-                ctx.save()
-
-                // Clip strictly to the rounded card bounds (prevents corner bleeding)
-                drawRoundedRect(ctx, 0, 0, width, height, card.radius)
-                ctx.clip()
-
-                // Base subtle dark tint gradient
-                var grad = ctx.createLinearGradient(0, 0, width, 0)
-                grad.addColorStop(0.0, card.tintStart)
-                grad.addColorStop(1.0, card.tintEnd)
-                ctx.fillStyle = grad
-                ctx.fillRect(0, 0, width, height)
-
-                // Ambient radial glow
-                var radial = ctx.createRadialGradient(width * 0.25, height * 0.5, 0,
-                                                      width * 0.25, height * 0.5, width * 0.65)
-                radial.addColorStop(0.0, card.glowColor)
-                radial.addColorStop(1.0, "transparent")
-                ctx.fillStyle = radial
-                ctx.fillRect(0, 0, width, height)
-
-                // Subtle diagonal micro-texture hatch (batched in 1 draw call)
-                ctx.strokeStyle = Theme.dark ? "rgba(255, 255, 255, 0.035)" : "rgba(0, 0, 0, 0.025)"
-                ctx.lineWidth = 1
-                var hatchStep = 6 * Theme.scale
-                ctx.beginPath()
-                for (var hx = -height; hx < width; hx += hatchStep) {
-                    ctx.moveTo(hx, 0)
-                    ctx.lineTo(hx + height, height)
+            // Base subtle tint gradient clipped strictly to the rounded card bounds
+            ShapePath {
+                strokeWidth: 0
+                strokeColor: "transparent"
+                fillGradient: LinearGradient {
+                    x1: 0
+                    y1: 0
+                    x2: bgShape.width
+                    y2: 0
+                    GradientStop { position: 0.0; color: card.tintStart }
+                    GradientStop { position: 1.0; color: card.tintEnd }
                 }
-                ctx.stroke()
-
-                ctx.restore()
+                PathRectangle {
+                    width: bgShape.width
+                    height: bgShape.height
+                    radius: bgShape.clampedRadius
+                }
             }
 
-            onWidthChanged: requestPaint()
-            onHeightChanged: requestPaint()
-            property bool darkTheme: Theme.dark
-            onDarkThemeChanged: requestPaint()
-            Component.onCompleted: requestPaint()
+            // Ambient radial glow clipped to the rounded card bounds
+            ShapePath {
+                strokeWidth: 0
+                strokeColor: "transparent"
+                fillGradient: RadialGradient {
+                    centerX: bgShape.width * 0.25
+                    centerY: bgShape.height * 0.5
+                    focalX: bgShape.width * 0.25
+                    focalY: bgShape.height * 0.5
+                    centerRadius: Math.max(1, bgShape.width * 0.65)
+                    GradientStop { position: 0.0; color: card.glowColor }
+                    GradientStop { position: 1.0; color: "transparent" }
+                }
+                PathRectangle {
+                    width: bgShape.width
+                    height: bgShape.height
+                    radius: bgShape.clampedRadius
+                }
+            }
+
+            // Subtle diagonal micro-texture hatch clipped analytically to the rounded card bounds
+            ShapePath {
+                id: hatchPath
+                fillColor: "transparent"
+                strokeColor: Theme.dark ? "rgba(255, 255, 255, 0.035)" : "rgba(0, 0, 0, 0.025)"
+                strokeWidth: 1
+                PathMultiline {
+                    id: hatchLines
+                }
+            }
+
+            function rebuildHatch() {
+                var w = width
+                var h = height
+                if (w <= 0 || h <= 0) {
+                    hatchLines.paths = []
+                    return
+                }
+                var r = clampedRadius
+                var step = Math.max(2, 6 * Theme.scale)
+                var segs = []
+                for (var c = -h; c < w; c += step) {
+                    // Line x(t) = c + t, y(t) = t clipped to [0, w] x [0, h]
+                    var t0 = Math.max(0, -c)
+                    var t1 = Math.min(h, w - c)
+                    if (t1 <= t0) continue
+                    // Clip endpoints that fall inside any of the four rounded corner quadrants
+                    if (r > 0) {
+                        var clipCorner = function(cx, cy) {
+                            // Solve (c + t - cx)^2 + (t - cy)^2 <= r^2
+                            var dx = c - cx
+                            var dy = -cy
+                            var b = dx + dy
+                            var disc = 2 * r * r - (dx - dy) * (dx - dy)
+                            if (disc <= 0) return null
+                            var halfRoot = Math.sqrt(disc) * 0.5
+                            return [-b * 0.5 - halfRoot, -b * 0.5 + halfRoot]
+                        }
+                        var corners = [
+                            [r, r, function(x, y) { return x < r && y < r }],
+                            [w - r, r, function(x, y) { return x > w - r && y < r }],
+                            [r, h - r, function(x, y) { return x < r && y > h - r }],
+                            [w - r, h - r, function(x, y) { return x > w - r && y > h - r }]
+                        ]
+                        var skipped = false
+                        for (var ci = 0; ci < corners.length; ++ci) {
+                            var cx = corners[ci][0], cy = corners[ci][1], inQ = corners[ci][2]
+                            var s0 = inQ(c + t0, t0), s1 = inQ(c + t1, t1)
+                            if (!s0 && !s1) continue
+                            var iv = clipCorner(cx, cy)
+                            if (!iv) { skipped = true; break }
+                            if (s0) t0 = Math.max(t0, iv[0])
+                            if (s1) t1 = Math.min(t1, iv[1])
+                        }
+                        if (skipped) continue
+                    }
+                    if (t1 - t0 > 0.5) {
+                        segs.push([Qt.point(c + t0, t0), Qt.point(c + t1, t1)])
+                    }
+                }
+                hatchLines.paths = segs
+            }
+
+            onWidthChanged: rebuildHatch()
+            onHeightChanged: rebuildHatch()
+            onClampedRadiusChanged: rebuildHatch()
+            property real uiScale: Theme.scale
+            onUiScaleChanged: rebuildHatch()
+            Component.onCompleted: rebuildHatch()
         }
 
-        // 2. Continuous flowing wave curves: painted once onto a periodic strip and translated via GPU matrix
-        // (0% CPU, 0 Canvas redraws, 0 main thread overhead while animating).
+        // 2. Continuous flowing wave curves: built once as vector polylines across one harmonic period and translated
+        // via GPU transform (0% CPU, 0 redraws during animation, zero Canvas bitmap allocations).
         Item {
             id: waveContainer
             anchors.fill: parent
             clip: true
 
-            Canvas {
-                id: waveCanvas
+            Shape {
+                id: waveShape
                 y: 0
                 height: card.height
                 readonly property real period: card.totalRowWidth > 0 ? card.totalRowWidth : (card.width * 2 + card.rowSpacing)
                 width: card.width + period
-                x: - (discoveryRow.waveProgress * period)
-                renderTarget: Canvas.Image
+                x: -(card.waveProgress * period)
+                preferredRendererType: Shape.CurveRenderer
+                enabled: false
+                Accessible.ignored: true
 
-                onPaint: {
-                    var ctx = getContext("2d")
-                    ctx.clearRect(0, 0, width, height)
-                    ctx.save()
+                // Primary continuous wave ribbon (harmonic period L)
+                ShapePath {
+                    fillColor: "transparent"
+                    strokeColor: card.waveColor1
+                    strokeWidth: 2.5 * Theme.scale
+                    capStyle: ShapePath.RoundCap
+                    joinStyle: ShapePath.RoundJoin
+                    PathPolyline {
+                        id: wave1
+                    }
+                }
 
+                // Secondary harmonious ethereal ribbon (harmonic period L)
+                ShapePath {
+                    fillColor: "transparent"
+                    strokeColor: card.waveColor2
+                    strokeWidth: 1.5 * Theme.scale
+                    capStyle: ShapePath.RoundCap
+                    joinStyle: ShapePath.RoundJoin
+                    PathPolyline {
+                        id: wave2
+                    }
+                }
+
+                function rebuildWaves() {
+                    if (width <= 0 || height <= 0 || period <= 0) {
+                        wave1.path = []
+                        wave2.path = []
+                        return
+                    }
                     var globalOffset = card.cardIndex * (card.width + card.rowSpacing)
-                    var L = period > 0 ? period : 1
-                    var step = 4 * Theme.scale
-
-                    // Primary continuous wave ribbon (harmonic period L)
-                    ctx.strokeStyle = card.waveColor1
-                    ctx.lineWidth = 2.5 * Theme.scale
-                    ctx.lineCap = "round"
-                    ctx.lineJoin = "round"
-                    ctx.beginPath()
-                    var first = true
+                    var L = period
+                    var step = Math.max(4, 6 * Theme.scale)
+                    var p1 = []
+                    var p2 = []
                     for (var lx = -10; lx <= width + 10; lx += step) {
                         var gx = globalOffset + lx
                         var y1 = height * 0.55
                               + height * 0.22 * Math.sin((gx / L) * Math.PI * 4)
                               + height * 0.10 * Math.cos((gx / L) * Math.PI * 8)
-                        if (first) {
-                            ctx.moveTo(lx, y1)
-                            first = false
-                        } else {
-                            ctx.lineTo(lx, y1)
-                        }
-                    }
-                    ctx.stroke()
-
-                    // Secondary harmonious ethereal ribbon (harmonic period L)
-                    ctx.strokeStyle = card.waveColor2
-                    ctx.lineWidth = 1.5 * Theme.scale
-                    ctx.lineCap = "round"
-                    ctx.lineJoin = "round"
-                    ctx.beginPath()
-                    first = true
-                    for (var lx2 = -10; lx2 <= width + 10; lx2 += step) {
-                        var gx2 = globalOffset + lx2
                         var y2 = height * 0.42
-                              + height * 0.18 * Math.cos((gx2 / L) * Math.PI * 6 + 1.2)
-                              + height * 0.07 * Math.sin((gx2 / L) * Math.PI * 10)
-                        if (first) {
-                            ctx.moveTo(lx2, y2)
-                            first = false
-                        } else {
-                            ctx.lineTo(lx2, y2)
-                        }
+                              + height * 0.18 * Math.cos((gx / L) * Math.PI * 6 + 1.2)
+                              + height * 0.07 * Math.sin((gx / L) * Math.PI * 10)
+                        p1.push(Qt.point(lx, y1))
+                        p2.push(Qt.point(lx, y2))
                     }
-                    ctx.stroke()
-
-                    ctx.restore()
+                    wave1.path = p1
+                    wave2.path = p2
                 }
 
-                Connections {
-                    target: discoveryRow
-                    function onWidthChanged() {
-                        waveCanvas.requestPaint()
-                        bgCanvas.requestPaint()
-                    }
-                }
-
-                onWidthChanged: requestPaint()
-                onHeightChanged: requestPaint()
-                property bool darkTheme: Theme.dark
-                onDarkThemeChanged: requestPaint()
-                Component.onCompleted: requestPaint()
+                onWidthChanged: rebuildWaves()
+                onHeightChanged: rebuildWaves()
+                onPeriodChanged: rebuildWaves()
+                property real uiScale: Theme.scale
+                onUiScaleChanged: rebuildWaves()
+                Component.onCompleted: rebuildWaves()
             }
         }
 
@@ -538,7 +594,7 @@ Flickable {
                 visible: card.trackCount > 0 && card.trackCount < 4
                 anchors.fill: parent
                 anchors.margins: 3 * Theme.scale
-                radius: Theme.radius.md - 2 * Theme.scale
+                radius: Math.max(0, Theme.radius.md - 3 * Theme.scale)
                 fillMode: Image.PreserveAspectCrop
                 source: card.coverSources[0] || ""
             }
