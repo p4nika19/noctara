@@ -182,7 +182,7 @@ QVariant SettingsModel::data(const QModelIndex& index, int role) const
     case CategoryLabelRole: return translated(settings::categoryLabel(def.category));
     case StatusRole: return m_availability.statuses.value(latin(def.key));
     case ThemeNoteRole: {
-        if (m_theme == nullptr) {
+        if (m_theme == nullptr || m_store.effectiveLayer(schemaIndex) != settings::Layer::Default) {
             return QString();
         }
         const QVariant contribution = m_theme->themeValue(def.key);

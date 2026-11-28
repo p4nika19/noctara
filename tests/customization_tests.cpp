@@ -18,6 +18,7 @@
 #include "ui/KeyboardController.hpp"
 #include "ui/LayoutController.hpp"
 #include "ui/SettingsController.hpp"
+#include "ui/SettingsModel.hpp"
 #include "ui/ThemesController.hpp"
 
 #include <QCoreApplication>
@@ -208,23 +209,44 @@ rowHeight = 80
 
     TEST_CASE("a theme's button radius applies until an explicit Button shape overrides it")
     {
+        QTemporaryDir dir;
         settings::SettingsStore store(settings::Schema::builtin());
+        settings::ConfigFile config(store, dir.filePath(QStringLiteral("config.toml")), {});
+        i18n::LanguageManager languages(store);
         Theme theme(store, bundled());
+        ui::SettingsController controller(store, config, languages, &theme);
+        ui::SettingsModel* page = controller.page(QStringLiteral("appearance"));
+        REQUIRE(page != nullptr);
+        const auto themeNote = [page](std::string_view key) {
+            const QString target = QString::fromLatin1(key.data(), static_cast<qsizetype>(key.size()));
+            for (int row = 0; row < page->rowCount(); ++row) {
+                if (page->data(page->index(row), ui::SettingsModel::KeyRole).toString() == target) {
+                    return page->data(page->index(row), ui::SettingsModel::ThemeNoteRole).toString();
+                }
+            }
+            FAIL("missing row");
+            return QString();
+        };
+
         std::vector<ThemeIssue> issues;
         theme.setUserTheme(std::make_shared<const UserTheme>(
             *parseUserTheme("[radius]\nbutton = 12\n", QStringLiteral("rounded"), issues)));
         CHECK(theme.radius().button == doctest::Approx(12));
         CHECK(theme.themeValue(keys::ButtonShape).toDouble() == doctest::Approx(12));
+        CHECK_FALSE(themeNote(keys::ButtonShape).isEmpty());
 
         // An explicit user setting is an override on top of the theme, not a value the theme may overwrite.
         REQUIRE(store.setUserValue(keys::ButtonShape, QStringLiteral("soft")));
         CHECK(theme.radius().button == doctest::Approx(14));
+        CHECK(themeNote(keys::ButtonShape).isEmpty());
         REQUIRE(store.setUserValue(keys::ButtonShape, QStringLiteral("sharp")));
         CHECK(theme.radius().button == doctest::Approx(6));
+        CHECK(themeNote(keys::ButtonShape).isEmpty());
 
         // Resetting that override returns to the theme, not to the schema's default "pill".
         store.resetUserValue(keys::ButtonShape);
         CHECK(theme.radius().button == doctest::Approx(12));
+        CHECK_FALSE(themeNote(keys::ButtonShape).isEmpty());
     }
 
     TEST_CASE("a theme's accent is also the fallback while adaptive accent has no artwork")
@@ -240,6 +262,9 @@ rowHeight = 80
         const QColor after = theme.colors().accent;
         CHECK(after != before);
         CHECK(std::abs(after.hueF() - QColor(0xe0, 0x4a, 0x2a).hueF()) < 0.05F);
+        // The hex colour belongs to the static accent colour setting, not the boolean adaptive-accent toggle.
+        CHECK(theme.themeValue(keys::AccentColor).toString() == QStringLiteral("#e04a2a"));
+        CHECK_FALSE(theme.themeValue(keys::AccentAdaptive).isValid());
     }
 
     TEST_CASE("a theme's accent seeds the palette when the cover art does not decide")
@@ -255,6 +280,9 @@ rowHeight = 80
         const QColor after = theme.colors().accent;
         CHECK(after != before);
         CHECK(std::abs(after.hueF() - QColor(0xe0, 0x4a, 0x2a).hueF()) < 0.05F);
+        // The hex colour belongs to the static accent colour setting, not the boolean adaptive-accent toggle.
+        CHECK(theme.themeValue(keys::AccentColor).toString() == QStringLiteral("#e04a2a"));
+        CHECK_FALSE(theme.themeValue(keys::AccentAdaptive).isValid());
     }
 }
 

@@ -439,7 +439,7 @@ QVariant Theme::themeValue(std::string_view key) const
     if (is(keys::MonoFont) && !m_userTheme->monoFont.isEmpty()) {
         return m_userTheme->monoFont;
     }
-    if ((is(keys::AccentAdaptive) || is(keys::AccentColor)) && m_userTheme->accent) {
+    if (is(keys::AccentColor) && m_userTheme->accent) {
         const color::Srgb c = color::toSrgbGamutMapped(*m_userTheme->accent);
         return QColor::fromRgbF(static_cast<float>(c.r), static_cast<float>(c.g), static_cast<float>(c.b)).name();
     }
