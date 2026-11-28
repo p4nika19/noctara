@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Shapes
 import QtQuick.Window
 import Noctara
 import "../components"
@@ -340,200 +339,153 @@ Flickable {
         }
 
         // 1. Static background patterns (tint gradient, ambient glow, subtle diagonal hatch)
-        // Drawn as vector Shapes instead of Canvas: avoids multi-megabyte offscreen bitmaps and Qt Canvas shutdown leaks.
-        Shape {
-            id: bgShape
+        // Painted strictly once into a cached image texture: never repainted during animation!
+        Canvas {
+            id: bgCanvas
             anchors.fill: parent
-            preferredRendererType: Shape.CurveRenderer
-            enabled: false
-            Accessible.ignored: true
+            renderTarget: Canvas.Image
 
-            readonly property real clampedRadius: Math.max(0, Math.min(card.radius, width / 2, height / 2))
-
-            // Base subtle tint gradient clipped strictly to the rounded card bounds
-            ShapePath {
-                strokeWidth: 0
-                strokeColor: "transparent"
-                fillGradient: LinearGradient {
-                    x1: 0
-                    y1: 0
-                    x2: bgShape.width
-                    y2: 0
-                    GradientStop { position: 0.0; color: card.tintStart }
-                    GradientStop { position: 1.0; color: card.tintEnd }
-                }
-                PathRectangle {
-                    width: bgShape.width
-                    height: bgShape.height
-                    radius: bgShape.clampedRadius
-                }
+            function drawRoundedRect(ctx, x, y, w, h, r) {
+                var radius = Math.max(0, Math.min(r, w / 2, h / 2))
+                ctx.beginPath()
+                ctx.moveTo(x + radius, y)
+                ctx.arcTo(x + w, y, x + w, y + h, radius)
+                ctx.arcTo(x + w, y + h, x, y + h, radius)
+                ctx.arcTo(x, y + h, x, y, radius)
+                ctx.arcTo(x, y, x + w, y, radius)
+                ctx.closePath()
             }
 
-            // Ambient radial glow clipped to the rounded card bounds
-            ShapePath {
-                strokeWidth: 0
-                strokeColor: "transparent"
-                fillGradient: RadialGradient {
-                    centerX: bgShape.width * 0.25
-                    centerY: bgShape.height * 0.5
-                    focalX: bgShape.width * 0.25
-                    focalY: bgShape.height * 0.5
-                    centerRadius: Math.max(1, bgShape.width * 0.65)
-                    GradientStop { position: 0.0; color: card.glowColor }
-                    GradientStop { position: 1.0; color: "transparent" }
+            onPaint: {
+                var ctx = getContext("2d")
+                ctx.clearRect(0, 0, width, height)
+                ctx.save()
+
+                // Clip strictly to the rounded card bounds (prevents corner bleeding)
+                drawRoundedRect(ctx, 0, 0, width, height, card.radius)
+                ctx.clip()
+
+                // Base subtle dark tint gradient
+                var grad = ctx.createLinearGradient(0, 0, width, 0)
+                grad.addColorStop(0.0, card.tintStart)
+                grad.addColorStop(1.0, card.tintEnd)
+                ctx.fillStyle = grad
+                ctx.fillRect(0, 0, width, height)
+
+                // Ambient radial glow
+                var radial = ctx.createRadialGradient(width * 0.25, height * 0.5, 0,
+                                                      width * 0.25, height * 0.5, width * 0.65)
+                radial.addColorStop(0.0, card.glowColor)
+                radial.addColorStop(1.0, "transparent")
+                ctx.fillStyle = radial
+                ctx.fillRect(0, 0, width, height)
+
+                // Subtle diagonal micro-texture hatch (batched in 1 draw call)
+                ctx.strokeStyle = Theme.dark ? "rgba(255, 255, 255, 0.035)" : "rgba(0, 0, 0, 0.025)"
+                ctx.lineWidth = 1
+                var hatchStep = 6 * Theme.scale
+                ctx.beginPath()
+                for (var hx = -height; hx < width; hx += hatchStep) {
+                    ctx.moveTo(hx, 0)
+                    ctx.lineTo(hx + height, height)
                 }
-                PathRectangle {
-                    width: bgShape.width
-                    height: bgShape.height
-                    radius: bgShape.clampedRadius
-                }
+                ctx.stroke()
+
+                ctx.restore()
             }
 
-            // Subtle diagonal micro-texture hatch clipped analytically to the rounded card bounds
-            ShapePath {
-                id: hatchPath
-                fillColor: "transparent"
-                strokeColor: Theme.dark ? "rgba(255, 255, 255, 0.035)" : "rgba(0, 0, 0, 0.025)"
-                strokeWidth: 1
-                PathMultiline {
-                    id: hatchLines
-                }
-            }
-
-            function rebuildHatch() {
-                var w = width
-                var h = height
-                if (w <= 0 || h <= 0) {
-                    hatchLines.paths = []
-                    return
-                }
-                var r = clampedRadius
-                var step = Math.max(2, 6 * Theme.scale)
-                var segs = []
-                for (var c = -h; c < w; c += step) {
-                    // Line x(t) = c + t, y(t) = t clipped to [0, w] x [0, h]
-                    var t0 = Math.max(0, -c)
-                    var t1 = Math.min(h, w - c)
-                    if (t1 <= t0) continue
-                    // Clip endpoints that fall inside any of the four rounded corner quadrants
-                    if (r > 0) {
-                        var clipCorner = function(cx, cy) {
-                            // Solve (c + t - cx)^2 + (t - cy)^2 <= r^2
-                            var dx = c - cx
-                            var dy = -cy
-                            var b = dx + dy
-                            var disc = 2 * r * r - (dx - dy) * (dx - dy)
-                            if (disc <= 0) return null
-                            var halfRoot = Math.sqrt(disc) * 0.5
-                            return [-b * 0.5 - halfRoot, -b * 0.5 + halfRoot]
-                        }
-                        var corners = [
-                            [r, r, function(x, y) { return x < r && y < r }],
-                            [w - r, r, function(x, y) { return x > w - r && y < r }],
-                            [r, h - r, function(x, y) { return x < r && y > h - r }],
-                            [w - r, h - r, function(x, y) { return x > w - r && y > h - r }]
-                        ]
-                        var skipped = false
-                        for (var ci = 0; ci < corners.length; ++ci) {
-                            var cx = corners[ci][0], cy = corners[ci][1], inQ = corners[ci][2]
-                            var s0 = inQ(c + t0, t0), s1 = inQ(c + t1, t1)
-                            if (!s0 && !s1) continue
-                            var iv = clipCorner(cx, cy)
-                            if (!iv) { skipped = true; break }
-                            if (s0) t0 = Math.max(t0, iv[0])
-                            if (s1) t1 = Math.min(t1, iv[1])
-                        }
-                        if (skipped) continue
-                    }
-                    if (t1 - t0 > 0.5) {
-                        segs.push([Qt.point(c + t0, t0), Qt.point(c + t1, t1)])
-                    }
-                }
-                hatchLines.paths = segs
-            }
-
-            onWidthChanged: rebuildHatch()
-            onHeightChanged: rebuildHatch()
-            onClampedRadiusChanged: rebuildHatch()
+            onWidthChanged: requestPaint()
+            onHeightChanged: requestPaint()
+            property bool darkTheme: Theme.dark
+            onDarkThemeChanged: requestPaint()
+            property real cardRadius: card.radius
+            onCardRadiusChanged: requestPaint()
             property real uiScale: Theme.scale
-            onUiScaleChanged: rebuildHatch()
-            Component.onCompleted: rebuildHatch()
+            onUiScaleChanged: requestPaint()
+            Component.onCompleted: requestPaint()
         }
 
-        // 2. Continuous flowing wave curves: built once as vector polylines across one harmonic period and translated
-        // via GPU transform (0% CPU, 0 redraws during animation, zero Canvas bitmap allocations).
+        // 2. Continuous flowing wave curves: painted once onto a periodic strip and translated via GPU matrix
+        // (0% CPU, 0 Canvas redraws, 0 main thread overhead while animating).
         Item {
             id: waveContainer
             anchors.fill: parent
             clip: true
 
-            Shape {
-                id: waveShape
+            Canvas {
+                id: waveCanvas
                 y: 0
                 height: card.height
                 readonly property real period: card.totalRowWidth > 0 ? card.totalRowWidth : (card.width * 2 + card.rowSpacing)
                 width: card.width + period
                 x: -(card.waveProgress * period)
-                preferredRendererType: Shape.CurveRenderer
-                enabled: false
-                Accessible.ignored: true
+                renderTarget: Canvas.Image
 
-                // Primary continuous wave ribbon (harmonic period L)
-                ShapePath {
-                    fillColor: "transparent"
-                    strokeColor: card.waveColor1
-                    strokeWidth: 2.5 * Theme.scale
-                    capStyle: ShapePath.RoundCap
-                    joinStyle: ShapePath.RoundJoin
-                    PathPolyline {
-                        id: wave1
-                    }
-                }
+                onPaint: {
+                    var ctx = getContext("2d")
+                    ctx.clearRect(0, 0, width, height)
+                    ctx.save()
 
-                // Secondary harmonious ethereal ribbon (harmonic period L)
-                ShapePath {
-                    fillColor: "transparent"
-                    strokeColor: card.waveColor2
-                    strokeWidth: 1.5 * Theme.scale
-                    capStyle: ShapePath.RoundCap
-                    joinStyle: ShapePath.RoundJoin
-                    PathPolyline {
-                        id: wave2
-                    }
-                }
-
-                function rebuildWaves() {
-                    if (width <= 0 || height <= 0 || period <= 0) {
-                        wave1.path = []
-                        wave2.path = []
-                        return
-                    }
                     var globalOffset = card.cardIndex * (card.width + card.rowSpacing)
-                    var L = period
-                    var step = Math.max(4, 6 * Theme.scale)
-                    var p1 = []
-                    var p2 = []
+                    var L = period > 0 ? period : 1
+                    var step = 4 * Theme.scale
+
+                    // Primary continuous wave ribbon (harmonic period L)
+                    ctx.strokeStyle = card.waveColor1
+                    ctx.lineWidth = 2.5 * Theme.scale
+                    ctx.lineCap = "round"
+                    ctx.lineJoin = "round"
+                    ctx.beginPath()
+                    var first = true
                     for (var lx = -10; lx <= width + 10; lx += step) {
                         var gx = globalOffset + lx
                         var y1 = height * 0.55
                               + height * 0.22 * Math.sin((gx / L) * Math.PI * 4)
                               + height * 0.10 * Math.cos((gx / L) * Math.PI * 8)
-                        var y2 = height * 0.42
-                              + height * 0.18 * Math.cos((gx / L) * Math.PI * 6 + 1.2)
-                              + height * 0.07 * Math.sin((gx / L) * Math.PI * 10)
-                        p1.push(Qt.point(lx, y1))
-                        p2.push(Qt.point(lx, y2))
+                        if (first) {
+                            ctx.moveTo(lx, y1)
+                            first = false
+                        } else {
+                            ctx.lineTo(lx, y1)
+                        }
                     }
-                    wave1.path = p1
-                    wave2.path = p2
+                    ctx.stroke()
+
+                    // Secondary harmonious ethereal ribbon (harmonic period L)
+                    ctx.strokeStyle = card.waveColor2
+                    ctx.lineWidth = 1.5 * Theme.scale
+                    ctx.lineCap = "round"
+                    ctx.lineJoin = "round"
+                    ctx.beginPath()
+                    first = true
+                    for (var lx2 = -10; lx2 <= width + 10; lx2 += step) {
+                        var gx2 = globalOffset + lx2
+                        var y2 = height * 0.42
+                              + height * 0.18 * Math.cos((gx2 / L) * Math.PI * 6 + 1.2)
+                              + height * 0.07 * Math.sin((gx2 / L) * Math.PI * 10)
+                        if (first) {
+                            ctx.moveTo(lx2, y2)
+                            first = false
+                        } else {
+                            ctx.lineTo(lx2, y2)
+                        }
+                    }
+                    ctx.stroke()
+
+                    ctx.restore()
                 }
 
-                onWidthChanged: rebuildWaves()
-                onHeightChanged: rebuildWaves()
-                onPeriodChanged: rebuildWaves()
+                onPeriodChanged: {
+                    waveCanvas.requestPaint()
+                    bgCanvas.requestPaint()
+                }
+                onWidthChanged: requestPaint()
+                onHeightChanged: requestPaint()
+                property bool darkTheme: Theme.dark
+                onDarkThemeChanged: requestPaint()
                 property real uiScale: Theme.scale
-                onUiScaleChanged: rebuildWaves()
-                Component.onCompleted: rebuildWaves()
+                onUiScaleChanged: requestPaint()
+                Component.onCompleted: requestPaint()
             }
         }
 
@@ -555,10 +507,23 @@ Flickable {
             anchors.leftMargin: Math.max(Theme.space.lg, card.cornerInset)
             anchors.verticalCenter: parent.verticalCenter
 
+            readonly property real collageInset: 3 * Theme.scale
+            readonly property real tileCorner: Theme.coverShape === "square" ? 0
+                                             : Theme.coverShape === "circle" ? grid4.cell / 2
+                                             : Math.min(Theme.radius.xs, grid4.cell / 2)
+            readonly property real singleCoverCorner: Theme.coverShape === "square" ? 0
+                                                    : Theme.coverShape === "circle" ? (width - collageInset * 2) / 2
+                                                    : Math.min(Math.max(0, Theme.radius.md - collageInset),
+                                                               (width - collageInset * 2) / 2)
+            // Always concentric with the cover corners inside so tiles never protrude past the plate border.
+            readonly property real plateRadius: card.trackCount >= 4 ? tileCorner + collageInset
+                                              : (card.trackCount > 0 ? singleCoverCorner + collageInset
+                                                                     : Math.min(Theme.radius.md, width / 2))
+
             // Collage background plate
             Rectangle {
                 anchors.fill: parent
-                radius: Theme.radius.md
+                radius: collageContainer.plateRadius
                 color: Theme.colors.surfaceRaised
                 border.width: Theme.space.hairline
                 border.color: card.borderAccent
@@ -569,7 +534,7 @@ Flickable {
                 id: grid4
                 visible: card.trackCount >= 4
                 anchors.fill: parent
-                anchors.margins: 3 * Theme.scale
+                anchors.margins: collageContainer.collageInset
                 columns: 2
                 rows: 2
                 spacing: 2 * Theme.scale
@@ -582,7 +547,7 @@ Flickable {
                         required property int index
                         width: grid4.cell
                         height: grid4.cell
-                        radius: Theme.radius.xs
+                        radius: collageContainer.tileCorner
                         fillMode: Image.PreserveAspectCrop
                         source: card.coverSources[index] || ""
                     }
@@ -593,8 +558,8 @@ Flickable {
             CoverArt {
                 visible: card.trackCount > 0 && card.trackCount < 4
                 anchors.fill: parent
-                anchors.margins: 3 * Theme.scale
-                radius: Math.max(0, Theme.radius.md - 3 * Theme.scale)
+                anchors.margins: collageContainer.collageInset
+                radius: collageContainer.singleCoverCorner
                 fillMode: Image.PreserveAspectCrop
                 source: card.coverSources[0] || ""
             }
