@@ -206,8 +206,10 @@ install_dependencies() {
         return
     fi
     step "Checking the build dependencies for $OS_NAME ($PM)…" "Проверка зависимостей для сборки в $OS_NAME ($PM)…"
-    if [[ $PM == apt-get ]]; then "${SUDO[@]}" apt-get update -qq || true; fi
-    if [[ $PM == zypper ]]; then "${SUDO[@]}" zypper --non-interactive --quiet refresh || true; fi
+    if (( ${#SUDO[@]} > 0 || EUID == 0 )); then
+        if [[ $PM == apt-get ]]; then "${SUDO[@]}" apt-get update -qq || true; fi
+        if [[ $PM == zypper ]]; then "${SUDO[@]}" zypper --non-interactive --quiet refresh || true; fi
+    fi
     list=$(resolve_packages)
     if [[ -z $list ]]; then
         step "Build dependencies are already installed." "Зависимости для сборки уже установлены."

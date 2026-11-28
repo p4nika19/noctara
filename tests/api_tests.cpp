@@ -370,7 +370,6 @@ TEST_SUITE("api.discovery")
         track.artworkUrl = QStringLiteral("https://al.sndcdn.com/labs-abc-t500x500.jpg?q=abc");
         model.setEntries({{.item = track, .at = {}, .repostedBy = std::nullopt}});
         const QVariant artwork = model.artworkAt(0);
-        MESSAGE("artworkAt: " << artwork.toString());
         CHECK(artwork.toString() == track.artworkUrl);  // query strings are preserved
         CHECK(model.artworkAt(4).isNull());
         CHECK(model.originalArtworkAt(0).toString() == u"https://al.sndcdn.com/labs-abc-original.jpg?q=abc");
@@ -1380,16 +1379,12 @@ TEST_SUITE("models.filter")
         CHECK(idsOf(*filter.model()) == std::vector<Id>{1});
         REQUIRE(test::waitUntil([&] { return idsOf(*filter.model()) == std::vector<Id>{1, 2}; }));
     }
-}
 
-TEST_SUITE("zz.scratch")
-{
-    TEST_CASE("zz order fuzz")
+    TEST_CASE("repeated filter edits with stub hydration preserve source order")
     {
         using namespace Qt::StringLiterals;
         Harness h;
         h.transport.setHandler([](const net::Request& request) -> Result<net::Response> {
-            // lookupTracks: answer every requested id with a titled track
             const QString ids = QUrlQuery(request.url).queryItemValue(QStringLiteral("ids"), QUrl::FullyDecoded);
             QByteArrayList parts;
             for (const QString& id : ids.split(u',', Qt::SkipEmptyParts)) {
@@ -1420,18 +1415,18 @@ TEST_SUITE("zz.scratch")
         const QStringList texts{u"a"_s,  u"al"_s, u"alp"_s, u"al"_s,         u"a"_s,     u""_s,   u"o"_s,
                                 u"om"_s, u"o"_s,  u"odd"_s, u"hydrated"_s,   u"e"_s,     u"be"_s, u"b"_s,
                                 u""_s,   u"g"_s,  u"ga"_s,  u"gamma beta"_s, u"gamma"_s, u""_s};
+        bool hydrated = false;
         for (const QString& text : texts) {
             filter.setText(text);
-            {
-                QElapsedTimer t;
-                t.start();
-                while (t.elapsed() < 50) {
-                    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
-                }
+            if (!hydrated && !text.isEmpty()) {
+                REQUIRE(test::waitUntil([&] {
+                    const auto& all = source.entries();
+                    return std::ranges::none_of(all, [](const Entry& e) { return std::get<Track>(e.item).stub; });
+                }));
+                hydrated = true;
             }
             const std::vector<Id> now = idsOf(*filter.model());
             const std::vector<Id> src = idsOf(source);
-            // subsequence check
             std::size_t j = 0;
             for (Id id : now) {
                 while (j < src.size() && src[j] != id) {
@@ -1439,17 +1434,6 @@ TEST_SUITE("zz.scratch")
                 }
                 CHECK_MESSAGE(j < src.size(), "text '" << text.toStdString() << "' out of order");
                 ++j;
-            }
-            if (src != sourceOrder) {
-                QStringList a, b;
-                for (Id id : sourceOrder) {
-                    a << QString::number(id);
-                }
-                for (Id id : src) {
-                    b << QString::number(id);
-                }
-                MESSAGE("text '" << text.toStdString() << "'\nbefore " << a.join(u' ').toStdString() << "\nnow    "
-                                 << b.join(u' ').toStdString());
             }
             CHECK(src == sourceOrder);
         }
