@@ -125,6 +125,7 @@ private:
     State m_beforeVerify = SignedOut;  // restored when a candidate token is refused
     bool m_busy = false;
     bool m_browserBusy = false;
+    bool m_loadingStored = false;
     QString m_username;
     api::Id m_userId = 0;
     QString m_displayName;

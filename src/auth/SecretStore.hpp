@@ -4,7 +4,9 @@
 
 #include <QByteArray>
 #include <QHash>
+#include <QList>
 #include <QObject>
+#include <QPointer>
 #include <QString>
 #include <QThreadPool>
 
@@ -60,6 +62,9 @@ public:
         read(key, context,
              [done = std::move(done)](Result<std::optional<QByteArray>> secret) { done(std::move(secret), false); });
     }
+    // Notifies `context` when the desktop keyring's lock state changes (e.g. unlocked from another settings page).
+    using LockCallback = std::function<void(bool locked)>;
+    virtual void onLockStateChanged(QObject* /*context*/, LockCallback /*callback*/) {}
 };
 
 // Process memory only; used by tests and as the final fallback when no persistent store can be written.
@@ -146,8 +151,20 @@ public:
     void unlock(QObject* context, std::function<void(bool unlocked)> done) override;
     // Startup read: read once, and if the collection is locked, unlock it (with its prompt) and read again.
     void readAtStartup(const QString& key, QObject* context, StartupReadCallback done) override;
+    void onLockStateChanged(QObject* context, LockCallback callback) override;
 
 private:
+    struct LockListener {
+        QPointer<QObject> context;
+        LockCallback callback;
+    };
+    struct StartupWaiter {
+        QString key;
+        QPointer<QObject> context;
+        StartupReadCallback done;
+    };
+
+    void setLocked(bool locked);
     void fallbackRead(const QString& key, QObject* context, ReadCallback callback);
     void fallbackWrite(const QString& key, const QString& label, const QByteArray& secret, quint64 epoch,
                        QObject* context, WriteCallback callback);
@@ -155,7 +172,8 @@ private:
     [[nodiscard]] bool superseded(const QString& key, quint64 epoch) const { return m_epochs.value(key) != epoch; }
     // Single-flight for the startup unlock: the account and proxy controllers both read at startup, but the desktop
     // must show its password prompt only once. Later readers get the result of the first unlock.
-    void finishStartupUnlock(bool unlocked, QObject* context);
+    void rereadAfterStartupUnlock(const QString& key, QObject* context, StartupReadCallback done, bool unlockRefused);
+    void finishStartupUnlock(bool unlocked);
 
     QThreadPool m_pool;
     std::unique_ptr<IKeyring> m_keyring;
@@ -164,7 +182,8 @@ private:
     std::atomic<bool> m_locked{false};
     bool m_unlockInFlight = false;
     bool m_startupUnlockRefused = false;
-    QList<std::function<void(bool)>> m_unlockWaiters;
+    QList<StartupWaiter> m_unlockWaiters;
+    QList<LockListener> m_lockListeners;
     std::unique_ptr<EncryptedFileSecretStore> m_file;
     MemorySecretStore m_fallback;
     // Bumped by every write and remove of a key: a slow write's fallback is dropped once a newer call exists.

@@ -156,6 +156,50 @@ Flickable {
             }
         }
 
+        // --- Locked desktop keyring notice -----------------------------------------------------
+        GlassPanel {
+            id: keyringLockedBanner
+            width: parent.width
+            level: 2
+            radius: Theme.radius.md
+            visible: Account.keyringLocked && !root.signedIn
+            height: visible ? keyringLockedContent.implicitHeight + Theme.space.md * 2 : 0
+
+            Column {
+                id: keyringLockedContent
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.margins: Math.max(Theme.space.md, keyringLockedBanner.cornerInset)
+                spacing: Theme.space.sm
+
+                Row {
+                    width: parent.width
+                    spacing: Theme.space.sm
+                    Icon {
+                        name: "lock"
+                        size: Theme.space.iconSize
+                        color: Theme.targetColors.warning
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Text {
+                        width: parent.width - Theme.space.iconSize - parent.spacing
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: qsTr("Your session is saved, but the desktop keyring is locked. Unlock it to sign in.")
+                        font: Theme.font.body
+                        color: Theme.colors.textPrimary
+                        wrapMode: Text.Wrap
+                    }
+                }
+                Button {
+                    small: true
+                    iconName: "lock"
+                    text: qsTr("Unlock the keyring")
+                    onClicked: Account.unlockKeyring()
+                }
+            }
+        }
+
         // --- Sign in ---------------------------------------------------------------------------
         Column {
             id: signInColumn

@@ -29,14 +29,18 @@ struct KeyringState {
     bool failStore = false;
     bool failClear = false;
     bool holdStores = false;    // store() waits until the test releases it
+    bool holdUnlocks = false;   // unlock() waits until the test releases it
     bool locked = false;        // the collection is locked: lookups answer "not found", writes are refused
     bool refuseUnlock = false;  // the user dismissed the desktop's unlock prompt
+    int lookups = 0;
+    int unlocks = 0;
     int clears = 0;
 
     void release()
     {
         const std::scoped_lock lock(mutex);
         holdStores = false;
+        holdUnlocks = false;
         released.notify_all();
     }
     std::optional<QByteArray> entry(const QString& key)
@@ -56,6 +60,7 @@ public:
     Result<std::optional<QByteArray>> lookup(const QString& key) override
     {
         const std::scoped_lock lock(m_state->mutex);
+        ++m_state->lookups;
         if (m_state->failLookup) {
             return fail(ErrorCode::Unsupported, "fake keyring: unavailable");
         }
@@ -74,7 +79,9 @@ public:
 
     [[nodiscard]] bool unlock() override
     {
-        const std::scoped_lock lock(m_state->mutex);
+        std::unique_lock lock(m_state->mutex);
+        ++m_state->unlocks;
+        m_state->released.wait(lock, [&] { return !m_state->holdUnlocks; });
         if (m_state->refuseUnlock) {
             return false;
         }
@@ -422,7 +429,61 @@ TEST_SUITE("auth.secret-chain")
         settle();
         CHECK(read(store) == QByteArray("new-token"));
         CHECK_FALSE(keyring->entry(kKey).has_value());
+        CHECK(store.keyringBacked());  // locked, not absent: unlocking must restore keyring use
+        CHECK(store.keyringLocked());
         CHECK(store.persistent());  // the encrypted file holds it, so it survives a quit
+    }
+
+    TEST_CASE("readAtStartup does not re-read an already unlocked keyring")
+    {
+        QTemporaryDir directory;
+        auto keyring = std::make_shared<KeyringState>();
+        keyring->entries.insert(kKey, "saved-token");
+        auth::SecretServiceStore store(std::make_unique<FakeKeyring>(keyring), directory.path());
+
+        QObject context;
+        std::optional<Result<std::optional<QByteArray>>> result;
+        store.readAtStartup(kKey, &context,
+                            [&](Result<std::optional<QByteArray>> secret, bool) { result = std::move(secret); });
+        REQUIRE(test::waitUntil([&] { return result.has_value(); }));
+        REQUIRE(*result);
+        CHECK(**result == QByteArray("saved-token"));
+        CHECK(keyring->lookups == 1);
+    }
+
+    TEST_CASE("destroying the first startup caller mid-unlock still wakes concurrent readers and notifies listeners")
+    {
+        QTemporaryDir directory;
+        auto keyring = std::make_shared<KeyringState>();
+        keyring->entries.insert(kKey, "saved-token");
+        keyring->entries.insert(QStringLiteral("second.key"), "second-token");
+        keyring->locked = true;
+        keyring->holdUnlocks = true;
+        auth::SecretServiceStore store(std::make_unique<FakeKeyring>(keyring), directory.path());
+
+        QObject listenerContext;
+        std::vector<bool> lockEvents;
+        store.onLockStateChanged(&listenerContext, [&](bool locked) { lockEvents.push_back(locked); });
+
+        auto first = std::make_unique<QObject>();
+        QObject second;
+        std::optional<Result<std::optional<QByteArray>>> secondResult;
+        store.readAtStartup(kKey, first.get(), [](Result<std::optional<QByteArray>>, bool) {});
+        store.readAtStartup(QStringLiteral("second.key"), &second,
+                            [&](Result<std::optional<QByteArray>> secret, bool) { secondResult = std::move(secret); });
+        REQUIRE(test::waitUntil([&] {
+            const std::scoped_lock lock(keyring->mutex);
+            return keyring->unlocks == 1;
+        }));
+        first.reset();  // destroyed while the unlock prompt is still up
+        keyring->release();
+        REQUIRE(test::waitUntil([&] { return secondResult.has_value(); }));
+        REQUIRE(*secondResult);
+        CHECK(**secondResult == QByteArray("second-token"));
+        CHECK_FALSE(store.keyringLocked());
+        CHECK(keyring->unlocks == 1);
+        REQUIRE_FALSE(lockEvents.empty());
+        CHECK_FALSE(lockEvents.back());
     }
 
     TEST_CASE("a keyring that is not locked is not reported as locked")

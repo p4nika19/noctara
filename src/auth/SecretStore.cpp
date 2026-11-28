@@ -144,7 +144,9 @@ public:
     }
 
 private:
-    GCancellable* cancellable() const { return g_cancellable_is_cancelled(m_cancellable) ? nullptr : m_cancellable; }
+    // Always pass m_cancellable — even once cancelled, so queued calls return G_IO_ERROR_CANCELLED immediately
+    // instead of running uncancellable during shutdown.
+    GCancellable* cancellable() const { return m_cancellable; }
 
     // Created with the keyring and never reset: a cancelled lookup answers Cancelled instead of blocking, which is
     // what lets Noctara quit while the desktop waits for an unlock prompt nobody will answer.
@@ -161,6 +163,11 @@ void ignore(const Result<void>& /*result*/) {}
 // One worker-thread round trip to the keyring: the answer, plus whether the collection was locked when it was given.
 struct KeyringAnswer {
     Result<std::optional<QByteArray>> secret;
+    bool locked = false;
+};
+
+struct KeyringWrite {
+    Result<void> result;
     bool locked = false;
 };
 
@@ -303,6 +310,28 @@ void SecretServiceStore::removeFromFallbacks(const QString& key)
     }
 }
 
+void SecretServiceStore::setLocked(bool locked)
+{
+    if (m_locked.exchange(locked) == locked) {
+        return;
+    }
+    m_lockListeners.removeIf([](const LockListener& listener) { return listener.context.isNull(); });
+    const QList<LockListener> listeners = m_lockListeners;
+    for (const LockListener& listener : listeners) {
+        if (listener.context != nullptr) {
+            listener.callback(locked);
+        }
+    }
+}
+
+void SecretServiceStore::onLockStateChanged(QObject* context, LockCallback callback)
+{
+    if (context == nullptr || !callback) {
+        return;
+    }
+    m_lockListeners.append({QPointer(context), std::move(callback)});
+}
+
 void SecretServiceStore::read(const QString& key, QObject* context, ReadCallback callback)
 {
     if (!m_available) {
@@ -320,7 +349,7 @@ void SecretServiceStore::read(const QString& key, QObject* context, ReadCallback
             }
             const Result<std::optional<QByteArray>>& result = answer.secret;
             if (result && *result) {
-                m_locked = false;
+                setLocked(false);
                 const std::optional<QByteArray> keyringSecret = *result;
                 if (!m_file) {
                     callback(keyringSecret);
@@ -354,15 +383,15 @@ void SecretServiceStore::read(const QString& key, QObject* context, ReadCallback
                 qCInfo(lcAuth).noquote() << QString::fromStdString(result.error().describe())
                                          << "- using the local secret fallback";
                 m_available = false;
-                m_locked = false;
+                setLocked(false);
             } else if (answer.locked) {
                 // The collection is locked, so "no such secret" means "not readable yet" rather than "never
                 // saved". Keep the keyring and say so: the UI can offer to unlock it, and the next save must
                 // still try the keyring instead of demoting every secret to the local file.
-                m_locked = true;
+                setLocked(true);
                 qCInfo(lcAuth) << "the desktop keyring is locked; its secrets cannot be read until it is unlocked";
             } else {
-                m_locked = false;
+                setLocked(false);
             }
             // A keyring miss still checks the fallbacks: the secret may have been saved there in a session
             // without a keyring. The next write moves it into the keyring.
@@ -379,21 +408,23 @@ void SecretServiceStore::write(const QString& key, const QString& label, const Q
         return;
     }
     deliver(QtConcurrent::run(&m_pool,
-                              [keyring = m_keyring.get(), key, label, secret] {
+                              [keyring = m_keyring.get(), key, label, secret] -> KeyringWrite {
                                   // A locked collection cannot take a write: libsecret would open an unlock prompt and
                                   // block this worker thread until somebody answered it, which on a fresh desktop
                                   // session is nobody. Report it as a locked keyring instead, so the secret goes to the
                                   // local file and the user is told why.
                                   if (keyring->locked()) {
-                                      return Result<void>(
-                                          fail(ErrorCode::PermissionDenied, "secret service: the keyring is locked"));
+                                      return {.result = fail(ErrorCode::PermissionDenied,
+                                                             "secret service: the keyring is locked"),
+                                              .locked = true};
                                   }
-                                  return keyring->store(key, label, secret);
+                                  return {.result = keyring->store(key, label, secret), .locked = false};
                               }),
             this,
             [this, key, label, secret, epoch, context = QPointer(context),
-             callback = std::move(callback)](const Result<void>& result) {
-                if (result) {
+             callback = std::move(callback)](const KeyringWrite& outcome) {
+                if (outcome.result) {
+                    setLocked(false);
                     removeFromFallbacks(key);  // an older copy there must not outlive this one
                     if (context != nullptr) {
                         callback({});
@@ -401,8 +432,14 @@ void SecretServiceStore::write(const QString& key, const QString& label, const Q
                     return;
                 }
                 qCWarning(lcAuth).noquote()
-                    << QString::fromStdString(result.error().describe()) << "- using the local secret fallback";
-                m_available = false;
+                    << QString::fromStdString(outcome.result.error().describe()) << "- using the local secret fallback";
+                if (outcome.locked) {
+                    // The keyring exists and is merely locked: keep it available so unlocking restores keyring use.
+                    setLocked(true);
+                } else {
+                    m_available = false;
+                    setLocked(false);
+                }
                 if (superseded(key, epoch)) {
                     // Removed (or rewritten) while this write was waiting on the keyring: do not bring it back.
                     if (context != nullptr) {
@@ -414,68 +451,66 @@ void SecretServiceStore::write(const QString& key, const QString& label, const Q
             });
 }
 
-void SecretServiceStore::finishStartupUnlock(bool unlocked, QObject* context)
+void SecretServiceStore::rereadAfterStartupUnlock(const QString& key, QObject* context, StartupReadCallback done,
+                                                  bool unlockRefused)
 {
-    if (context != nullptr) {
-        m_locked = !unlocked;
-        m_startupUnlockRefused = !unlocked;
+    if (context == nullptr) {
+        return;
     }
+    // Read again after an unlock (or from fallbacks when a concurrent reader already saw the prompt dismissed).
+    SecretServiceStore::read(key, context,
+                             [done = std::move(done), unlockRefused](Result<std::optional<QByteArray>> secret) {
+                                 done(std::move(secret), unlockRefused);
+                             });
+}  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks): libstdc++ std::function frees its target via _M_manager
+
+void SecretServiceStore::finishStartupUnlock(bool unlocked)
+{
+    setLocked(!unlocked);
+    m_startupUnlockRefused = !unlocked;
     m_unlockInFlight = false;
-    const QList<std::function<void(bool)>> waiters = std::exchange(m_unlockWaiters, {});
-    for (const auto& waiter : waiters) {
-        QMetaObject::invokeMethod(context, [waiter, unlocked] { waiter(unlocked); }, Qt::QueuedConnection);
+    QList<StartupWaiter> waiters = std::exchange(m_unlockWaiters, {});
+    for (StartupWaiter& waiter : waiters) {
+        QMetaObject::invokeMethod(
+            this,
+            [this, waiter = std::move(waiter), unlocked] mutable {
+                rereadAfterStartupUnlock(waiter.key, waiter.context, std::move(waiter.done), !unlocked);
+            },
+            Qt::QueuedConnection);
     }
 }
 
 void SecretServiceStore::readAtStartup(const QString& key, QObject* context, StartupReadCallback done)
 {
     const QPointer<QObject> guard(context);
-    const auto donePtr = std::make_shared<StartupReadCallback>(std::move(done));
-    const auto resume = [this, key, guard, donePtr](bool unlockRefused) {
-        if (guard == nullptr) {
-            return;
-        }
-        // The first read discovers the lock state and already returned the secret when it was readable. Read again
-        // here after an unlock (or use the remembered refusal for a concurrent reader).
-        read(key, guard, [donePtr, unlockRefused](Result<std::optional<QByteArray>> secret) {
-            (*donePtr)(std::move(secret), unlockRefused);
-        });
-    };
-
     if (!m_unlockInFlight && m_startupUnlockRefused) {
         // The prompt was already shown and dismissed: do not raise it again for the second startup reader.
-        resume(true);
+        rereadAfterStartupUnlock(key, guard, std::move(done), true);
         return;
     }
 
-    read(key, context, [this, key, guard, resume](Result<std::optional<QByteArray>> secret) {
+    read(key, context, [this, key, guard, done = std::move(done)](Result<std::optional<QByteArray>> secret) mutable {
         if (guard == nullptr) {
             return;
         }
-        if (secret && *secret) {
-            // Already readable (the keyring got unlocked on its own): no prompt needed.
-            resume(false);
-            return;
-        }
-        if (!keyringLocked()) {
-            resume(false);
+        if ((secret && *secret) || !keyringLocked()) {
+            // Already readable (or not locked): deliver what we just read without a redundant second lookup.
+            done(std::move(secret), false);
             return;
         }
         if (m_unlockInFlight) {
             // Another startup reader is already showing the desktop's prompt: wait for its answer.
-            m_unlockWaiters.append([resume](bool unlocked) { resume(!unlocked); });
+            m_unlockWaiters.append({.key = key, .context = guard, .done = std::move(done)});
             return;
         }
         m_unlockInFlight = true;
-        unlock(guard, [this, guard, resume](const bool unlocked) {
-            if (guard == nullptr) {
-                if (m_unlockInFlight) {
-                    finishStartupUnlock(unlocked, nullptr);
-                }
-                return;
+        // Anchor on `this`, not `guard`: destroying the first caller must still clear m_unlockInFlight and wake
+        // any other startup readers waiting in m_unlockWaiters.
+        unlock(this, [this, key, guard, done = std::move(done)](const bool unlocked) mutable {
+            finishStartupUnlock(unlocked);
+            if (guard != nullptr) {
+                rereadAfterStartupUnlock(key, guard, std::move(done), !unlocked);
             }
-            finishStartupUnlock(unlocked, guard);
-            resume(!unlocked);
         });
     });
 }
@@ -491,8 +526,8 @@ void SecretServiceStore::unlock(QObject* context, std::function<void(bool)> done
                               }),
             this, [this, context = QPointer(context), done = std::move(done)](const bool& unlocked) {
                 if (unlocked) {
-                    m_locked = false;
                     m_startupUnlockRefused = false;  // a later unlock clears the startup refusal
+                    setLocked(false);
                 }
                 if (context != nullptr) {
                     done(unlocked);

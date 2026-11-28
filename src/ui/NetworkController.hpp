@@ -106,6 +106,7 @@ private:
     QString m_password;
     // Bumped by every save and forget: the startup read must not bring back what the user changed meanwhile.
     quint64 m_credentialsGeneration = 0;
+    bool m_loadingCredentials = false;
     bool m_dnsTesting = false;
     bool m_connectionTesting = false;
     // Kept raw and translated when read, so a language switch needs no new test.

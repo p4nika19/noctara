@@ -7,6 +7,7 @@
 
 #include "auth/SecretStore.hpp"
 #include "auth/Token.hpp"
+#include "core/Log.hpp"
 #include "i18n/ErrorMessages.hpp"
 
 #include <QVariantMap>
@@ -42,6 +43,12 @@ AccountController::AccountController(api::IApiClient& client, api::Session& sess
     connect(&m_session, &api::Session::rejected, this, &AccountController::onRejected);
     m_retry.setSingleShot(true);
     connect(&m_retry, &QTimer::timeout, this, &AccountController::checkSession);
+    m_secrets.onLockStateChanged(this, [this](bool locked) {
+        Q_EMIT changed();
+        if (!locked && !m_loadingStored && m_state == SignedOut && m_session.token().isEmpty()) {
+            loadStored();
+        }
+    });
     loadStored();
 }
 
@@ -165,17 +172,20 @@ void AccountController::importBrowserToken(const QString& profileId)
 
 void AccountController::loadStored()
 {
+    m_loadingStored = true;
     const int generation = m_generation;
     // A startup read may unlock the keyring for us: on GNOME the collection starts locked, and asking the desktop
     // once here means the saved session comes back without the user having to click anything.
     m_secrets.readAtStartup(QString::fromLatin1(kTokenKey), this,
                             [this, generation](Result<std::optional<QByteArray>> stored, bool unlockRefused) {
+                                m_loadingStored = false;
                                 Q_EMIT changed();  // the store knows its protection level after its first answer
                                 if (generation != m_generation) {
                                     return;  // the user signed in or out while the keyring was still answering
                                 }
                                 if (unlockRefused) {
-                                    qInfo() << "the desktop keyring is locked and the unlock prompt was dismissed";
+                                    qCInfo(lcAuth)
+                                        << "the desktop keyring is locked and the unlock prompt was dismissed";
                                     return;
                                 }
                                 if (!stored || !*stored || !auth::isPlausibleToken(**stored)) {

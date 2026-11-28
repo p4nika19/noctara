@@ -97,6 +97,12 @@ NetworkController::NetworkController(net::NetworkService& service, net::NetworkM
             m_recentThrottle.start();
         }
     });
+    m_secrets.onLockStateChanged(this, [this](bool locked) {
+        Q_EMIT credentialsChanged();
+        if (!locked && !m_loadingCredentials && m_username.isEmpty() && m_password.isEmpty()) {
+            loadCredentials();
+        }
+    });
     loadCredentials();
     refresh();
 }
@@ -273,11 +279,13 @@ void NetworkController::updateRowStatuses()
 
 void NetworkController::loadCredentials()
 {
+    m_loadingCredentials = true;
     m_secrets.readAtStartup(
         QString::fromLatin1(kCredentialsKey), this,
         [this, generation = m_credentialsGeneration](Result<std::optional<QByteArray>> secret, bool unlockRefused) {
+            m_loadingCredentials = false;
             if (unlockRefused) {
-                qInfo() << "the desktop keyring is locked; proxy credentials are not restored";
+                qCInfo(lcNet) << "the desktop keyring is locked; proxy credentials are not restored";
             }
             if (generation != m_credentialsGeneration || !secret || !*secret) {
                 Q_EMIT credentialsChanged();
